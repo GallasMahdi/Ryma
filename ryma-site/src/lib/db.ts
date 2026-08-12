@@ -4,111 +4,23 @@ import path from 'path';
 import fs from 'fs';
 import type { PatientRecord, PatientSession } from '@/types/admin';
 
-// ─── Dual Storage Engine: Turso (Cloud) vs local SQLite ──────────────────────
-const tursoUrl = process.env.TURSO_DATABASE_URL;
-const tursoToken = process.env.TURSO_AUTH_TOKEN;
-const isTurso = Boolean(tursoUrl);
-
+// ─── Dual Storage Engine: Dynamic Turso (Cloud) vs local SQLite ─────────────
 let _tursoClient: LibSqlClient | null = null;
-let _tursoSchemaInitPromise: Promise<void> | null = null;
+
+function isTursoEnabled(): boolean {
+  return Boolean(process.env.TURSO_DATABASE_URL);
+}
 
 function getTursoClient(): LibSqlClient {
   if (!_tursoClient) {
-    // Convert libsql:// to https:// for fast, stateless Serverless HTTP fetch
-    const httpUrl = (tursoUrl ?? '').replace(/^libsql:\/\//, 'https://');
+    const rawUrl = process.env.TURSO_DATABASE_URL ?? '';
+    const httpUrl = rawUrl.replace(/^libsql:\/\//, 'https://');
     _tursoClient = createClient({
       url: httpUrl,
-      authToken: tursoToken,
+      authToken: process.env.TURSO_AUTH_TOKEN,
     });
   }
   return _tursoClient;
-}
-
-async function ensureTursoSchema(): Promise<void> {
-  if (!isTurso) return;
-  if (!_tursoSchemaInitPromise) {
-    _tursoSchemaInitPromise = (async () => {
-      const client = getTursoClient();
-      const statements = [
-        `CREATE TABLE IF NOT EXISTS appointments (
-          id          TEXT PRIMARY KEY,
-          patientName TEXT NOT NULL,
-          email       TEXT,
-          phone       TEXT NOT NULL,
-          service     TEXT NOT NULL,
-          date        TEXT NOT NULL,
-          startTime   TEXT NOT NULL,
-          status      TEXT NOT NULL DEFAULT 'PENDING'
-                      CHECK (status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')),
-          notes       TEXT,
-          createdAt   TEXT NOT NULL,
-          updatedAt   TEXT NOT NULL,
-          UNIQUE(date, startTime)
-        )`,
-        `CREATE TABLE IF NOT EXISTS blocked_slots (
-          id    TEXT PRIMARY KEY,
-          date  TEXT NOT NULL,
-          time  TEXT NOT NULL,
-          UNIQUE(date, time)
-        )`,
-        `CREATE TABLE IF NOT EXISTS rate_limit_log (
-          ip        TEXT NOT NULL,
-          action    TEXT NOT NULL,
-          timestamp INTEGER NOT NULL
-        )`,
-        `CREATE TABLE IF NOT EXISTS patient_notes (
-          phone       TEXT PRIMARY KEY,
-          patientName TEXT NOT NULL,
-          content     TEXT NOT NULL DEFAULT '',
-          tags        TEXT NOT NULL DEFAULT '',
-          updatedAt   TEXT NOT NULL
-        )`,
-        `CREATE TABLE IF NOT EXISTS patients (
-          id                      TEXT PRIMARY KEY,
-          patientName             TEXT NOT NULL,
-          phone                   TEXT NOT NULL UNIQUE,
-          email                   TEXT,
-          gender                  TEXT,
-          dob                     TEXT,
-          cnamStatus              TEXT DEFAULT 'NON',
-          cnamNumber              TEXT,
-          referringDoctor         TEXT,
-          pathologyTags           TEXT NOT NULL DEFAULT '',
-          medicalHistory          TEXT NOT NULL DEFAULT '',
-          totalPrescribedSessions INTEGER NOT NULL DEFAULT 10,
-          createdAt               TEXT NOT NULL,
-          updatedAt               TEXT NOT NULL
-        )`,
-        `CREATE TABLE IF NOT EXISTS patient_sessions (
-          id           TEXT PRIMARY KEY,
-          patientId    TEXT NOT NULL,
-          date         TEXT NOT NULL,
-          time         TEXT,
-          serviceSlug  TEXT NOT NULL DEFAULT 'kinesitherapie-generale',
-          evaPainScore INTEGER NOT NULL DEFAULT 5,
-          sessionType  TEXT NOT NULL DEFAULT 'MANUAL',
-          notes        TEXT,
-          practitioner TEXT,
-          createdAt    TEXT NOT NULL,
-          FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE CASCADE
-        )`,
-        `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
-        `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
-        `CREATE INDEX IF NOT EXISTS idx_rate_limit ON rate_limit_log(ip, action, timestamp)`,
-        `CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone)`,
-        `CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient ON patient_sessions(patientId)`,
-      ];
-
-      for (const stmt of statements) {
-        try {
-          await client.execute(stmt);
-        } catch (err) {
-          console.warn('[Turso Schema Init]', err);
-        }
-      }
-    })();
-  }
-  return _tursoSchemaInitPromise;
 }
 
 // ─── Local SQLite Fallback Engine ─────────────────────────────────────────────
@@ -259,7 +171,7 @@ function initSchemaSync(db: Database.Database): void {
 
 // ─── Unified Async Query Abstraction ──────────────────────────────────────────
 async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]> {
-  if (isTurso) {
+  if (isTursoEnabled()) {
     const client = getTursoClient();
     const res = await client.execute({ sql, args });
     return res.rows as unknown as T[];
@@ -311,14 +223,12 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
   const id = 'apt_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
   const now = new Date().toISOString();
 
-  // Check if slot is blocked
   const blockedRows = await executeQuery('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [
     input.date,
     input.startTime,
   ]);
   if (blockedRows.length > 0) return { success: false, error: 'slot_blocked' };
 
-  // Check if slot is booked
   const conflictRows = await executeQuery(
     "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'",
     [input.date, input.startTime]
@@ -347,7 +257,6 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
     const rows = await executeQuery<Appointment>('SELECT * FROM appointments WHERE id = ?', [id]);
     const appointment = rows[0];
 
-    // Auto-upsert patient record
     await dbUpsertPatient({
       patientName: input.patientName,
       phone: input.phone,
@@ -426,11 +335,11 @@ export async function dbToggleBlockSlot(date: string, time: string): Promise<boo
   const existing = await executeQuery('SELECT id FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
   if (existing.length > 0) {
     await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
-    return false; // unblocked
+    return false;
   } else {
     const id = 'blk_' + Date.now().toString(36);
     await executeQuery('INSERT INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', [id, date, time]);
-    return true; // blocked
+    return true;
   }
 }
 
@@ -697,7 +606,7 @@ export async function dbBulkBlockSlots(date: string, times: string[], action: 'b
     if (action === 'unblock') {
       await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
     } else {
-      const id = 'blk_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+      const id = 'blk_' + Date.now().toString(36);
       await executeQuery('INSERT INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', [id, date, time]);
     }
   }
