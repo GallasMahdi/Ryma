@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
 
   // Rate limit: 5 bookings per IP per hour
-  const allowed = dbCheckRateLimit(ip, 'booking', 5, 60 * 60);
+  const allowed = await dbCheckRateLimit(ip, 'booking', 5, 60 * 60);
   if (!allowed) {
     return NextResponse.json(
       { error: 'Trop de demandes. Veuillez réessayer plus tard.' },
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Record attempt for rate limiting
-  dbRecordRateLimitAttempt(ip, 'booking');
+  await dbRecordRateLimitAttempt(ip, 'booking');
 
-  const result = dbCreateAppointment({
+  const result = await dbCreateAppointment({
     patientName: String(body.patientName).trim().slice(0, 100),
     email:       body.email ? String(body.email).trim().slice(0, 254) : undefined,
     phone:       String(body.phone).trim().slice(0, 30),

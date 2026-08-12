@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if ('status' in auth) return auth;
 
-  const patients = dbGetAllPatients();
-  const notes = dbGetAllPatientNotes();
+  const patients = await dbGetAllPatients();
+  const notes = await dbGetAllPatientNotes();
   return NextResponse.json({ patients, notes });
 }
 
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   const parsedSessions = Number(body.totalPrescribedSessions);
   const totalPrescribedSessions = !isNaN(parsedSessions) && parsedSessions > 0 ? parsedSessions : 10;
 
-  const patient = dbUpsertPatient({
+  const patient = await dbUpsertPatient({
     id: body.id ? String(body.id) : undefined,
     patientName,
     phone,
@@ -70,6 +70,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'ID ou téléphone requises' }, { status: 422 });
   }
 
-  dbDeletePatientRecord(target);
+  await dbDeletePatientRecord(target);
   return NextResponse.json({ ok: true });
 }

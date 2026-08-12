@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const endDate = searchParams.get('endDate');
 
   if (type === 'patients') {
-    const patients = dbGetAllPatients();
+    const patients = await dbGetAllPatients();
     
     let csv = 'ID;Nom Patient;Telephone;Email;Prise en charge CNAM;Numero CNAM;Medecin Traitant;Seances Prescrites;Deficit/Effetuées;Pathologies;Date Creation\n';
     
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Default: Appointments & Financial Export
-  let appointments = dbGetAppointments();
+  let appointments = await dbGetAppointments();
 
   if (startDate) {
     appointments = appointments.filter(a => a.date >= startDate);

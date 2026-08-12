@@ -6,8 +6,8 @@ export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if ('status' in auth) return auth; // 401
 
-  const backupStatus = dbGetBackupStatus();
-  const noShowCounts = dbGetNoShowCounts();
+  const backupStatus = await dbGetBackupStatus();
+  const noShowCounts = await dbGetNoShowCounts();
 
   return NextResponse.json({
     authenticated: true,

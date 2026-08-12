@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   const date   = searchParams.get('date')   ?? undefined;
   const search = searchParams.get('search') ?? undefined;
 
-  const appointments = dbGetAppointments({ status, date, search });
+  const appointments = await dbGetAppointments({ status, date, search });
   return NextResponse.json({ appointments }, { status: 200 });
 }
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: validation.error }, { status: 422 });
   }
 
-  const result = dbCreateAppointment({
+  const result = await dbCreateAppointment({
     patientName: String(body.patientName).trim().slice(0, 100),
     email:       body.email ? String(body.email).trim().slice(0, 254) : undefined,
     phone:       String(body.phone).trim().slice(0, 30),

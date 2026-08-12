@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
-import { getDb, dbToggleBlockSlot } from '@/lib/db';
+import { dbGetAppointments, dbGetBlockedSlots, dbToggleBlockSlot } from '@/lib/db';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 /**
  * GET /api/admin/slots?date=YYYY-MM-DD
@@ -18,8 +21,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Paramètre date invalide' }, { status: 400 });
   }
 
-  const db = getDb();
-
   const dayOfWeek = new Date(date + 'T12:00:00').getDay();
   if (dayOfWeek === 0) {
     const slots = VALID_TIME_SLOTS.map(time => ({
@@ -31,16 +32,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ slots });
   }
 
+  const appts = await dbGetAppointments({ date });
   const bookedMap = new Map(
-    (db.prepare(
-      "SELECT startTime, id FROM appointments WHERE date = ? AND status != 'CANCELLED'"
-    ).all(date) as { startTime: string; id: string }[]).map(r => [r.startTime, r.id])
+    appts.filter(a => a.status !== 'CANCELLED').map(a => [a.startTime, a.id])
   );
 
+  const blockedList = await dbGetBlockedSlots();
   const blocked = new Set(
-    (db.prepare(
-      'SELECT time FROM blocked_slots WHERE date = ?'
-    ).all(date) as { time: string }[]).map(r => r.time)
+    blockedList.filter(b => b.date === date).map(b => b.time)
   );
 
   const slots = VALID_TIME_SLOTS.map(time => {
@@ -79,10 +78,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Cannot block a slot that is already booked
-  const db = getDb();
-  const booked = db.prepare(
-    "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'"
-  ).get(date, time);
+  const appts = await dbGetAppointments({ date });
+  const booked = appts.some(a => a.startTime === time && a.status !== 'CANCELLED');
 
   if (booked) {
     return NextResponse.json(
@@ -91,6 +88,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const isNowBlocked = dbToggleBlockSlot(date, time);
+  const isNowBlocked = await dbToggleBlockSlot(date, time);
   return NextResponse.json({ blocked: isNowBlocked, date, time });
 }

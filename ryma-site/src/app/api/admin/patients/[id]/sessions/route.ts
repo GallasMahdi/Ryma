@@ -15,7 +15,7 @@ export async function POST(
   if ('status' in auth) return auth;
 
   const { id: patientId } = await params;
-  const patient = dbGetPatientById(patientId);
+  const patient = await dbGetPatientById(patientId);
 
   if (!patient) {
     return NextResponse.json({ error: 'Patient introuvable' }, { status: 404 });
@@ -36,7 +36,7 @@ export async function POST(
   const notes = body.notes ? String(body.notes).trim().slice(0, 2000) : null;
   const practitioner = body.practitioner ? String(body.practitioner).trim() : null;
 
-  const session = dbAddPatientSession({
+  const session = await dbAddPatientSession({
     patientId,
     date,
     time,
@@ -63,6 +63,6 @@ export async function DELETE(
     return NextResponse.json({ error: 'sessionId requis' }, { status: 422 });
   }
 
-  dbDeletePatientSession(sessionId);
+  await dbDeletePatientSession(sessionId);
   return NextResponse.json({ ok: true });
 }

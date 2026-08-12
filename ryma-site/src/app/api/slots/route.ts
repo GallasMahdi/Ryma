@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { dbGetAppointments, dbGetBlockedSlots } from '@/lib/db';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -26,20 +26,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ slots }, { status: 200 });
   }
 
-  const db = getDb();
-
   // Get booked times for this date (active appointments only)
+  const activeAppts = await dbGetAppointments({ date });
   const booked = new Set(
-    (db.prepare(
-      "SELECT startTime FROM appointments WHERE date = ? AND status != 'CANCELLED'"
-    ).all(date) as { startTime: string }[]).map(r => r.startTime)
+    activeAppts
+      .filter(a => a.status !== 'CANCELLED')
+      .map(a => a.startTime)
   );
 
   // Get blocked slots for this date
+  const blockedSlotsList = await dbGetBlockedSlots();
   const blocked = new Set(
-    (db.prepare(
-      'SELECT time FROM blocked_slots WHERE date = ?'
-    ).all(date) as { time: string }[]).map(r => r.time)
+    blockedSlotsList
+      .filter(b => b.date === date)
+      .map(b => b.time)
   );
 
   const todayStr = new Date().toISOString().split('T')[0];

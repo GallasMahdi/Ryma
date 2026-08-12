@@ -1,14 +1,120 @@
 import Database from 'better-sqlite3';
+import { createClient, type Client as LibSqlClient } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
 import type { PatientRecord, PatientSession } from '@/types/admin';
 
+// ─── Dual Storage Engine: Turso (Cloud) vs local SQLite ──────────────────────
+const tursoUrl = process.env.TURSO_DATABASE_URL;
+const tursoToken = process.env.TURSO_AUTH_TOKEN;
+const isTurso = Boolean(tursoUrl);
+
+let _tursoClient: LibSqlClient | null = null;
+let _tursoSchemaInitPromise: Promise<void> | null = null;
+
+function getTursoClient(): LibSqlClient {
+  if (!_tursoClient) {
+    _tursoClient = createClient({
+      url: tursoUrl!,
+      authToken: tursoToken,
+    });
+  }
+  return _tursoClient;
+}
+
+async function ensureTursoSchema(): Promise<void> {
+  if (!isTurso) return;
+  if (!_tursoSchemaInitPromise) {
+    _tursoSchemaInitPromise = (async () => {
+      const client = getTursoClient();
+      const statements = [
+        `CREATE TABLE IF NOT EXISTS appointments (
+          id          TEXT PRIMARY KEY,
+          patientName TEXT NOT NULL,
+          email       TEXT,
+          phone       TEXT NOT NULL,
+          service     TEXT NOT NULL,
+          date        TEXT NOT NULL,
+          startTime   TEXT NOT NULL,
+          status      TEXT NOT NULL DEFAULT 'PENDING'
+                      CHECK (status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')),
+          notes       TEXT,
+          createdAt   TEXT NOT NULL,
+          updatedAt   TEXT NOT NULL,
+          UNIQUE(date, startTime)
+        )`,
+        `CREATE TABLE IF NOT EXISTS blocked_slots (
+          id    TEXT PRIMARY KEY,
+          date  TEXT NOT NULL,
+          time  TEXT NOT NULL,
+          UNIQUE(date, time)
+        )`,
+        `CREATE TABLE IF NOT EXISTS rate_limit_log (
+          ip        TEXT NOT NULL,
+          action    TEXT NOT NULL,
+          timestamp INTEGER NOT NULL
+        )`,
+        `CREATE TABLE IF NOT EXISTS patient_notes (
+          phone       TEXT PRIMARY KEY,
+          patientName TEXT NOT NULL,
+          content     TEXT NOT NULL DEFAULT '',
+          tags        TEXT NOT NULL DEFAULT '',
+          updatedAt   TEXT NOT NULL
+        )`,
+        `CREATE TABLE IF NOT EXISTS patients (
+          id                      TEXT PRIMARY KEY,
+          patientName             TEXT NOT NULL,
+          phone                   TEXT NOT NULL UNIQUE,
+          email                   TEXT,
+          gender                  TEXT,
+          dob                     TEXT,
+          cnamStatus              TEXT DEFAULT 'NON',
+          cnamNumber              TEXT,
+          referringDoctor         TEXT,
+          pathologyTags           TEXT NOT NULL DEFAULT '',
+          medicalHistory          TEXT NOT NULL DEFAULT '',
+          totalPrescribedSessions INTEGER NOT NULL DEFAULT 10,
+          createdAt               TEXT NOT NULL,
+          updatedAt               TEXT NOT NULL
+        )`,
+        `CREATE TABLE IF NOT EXISTS patient_sessions (
+          id           TEXT PRIMARY KEY,
+          patientId    TEXT NOT NULL,
+          date         TEXT NOT NULL,
+          time         TEXT,
+          serviceSlug  TEXT NOT NULL DEFAULT 'kinesitherapie-generale',
+          evaPainScore INTEGER NOT NULL DEFAULT 5,
+          sessionType  TEXT NOT NULL DEFAULT 'MANUAL',
+          notes        TEXT,
+          practitioner TEXT,
+          createdAt    TEXT NOT NULL,
+          FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE CASCADE
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
+        `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
+        `CREATE INDEX IF NOT EXISTS idx_rate_limit ON rate_limit_log(ip, action, timestamp)`,
+        `CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone)`,
+        `CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient ON patient_sessions(patientId)`,
+      ];
+
+      for (const stmt of statements) {
+        try {
+          await client.execute(stmt);
+        } catch (err) {
+          console.warn('[Turso Schema Init]', err);
+        }
+      }
+    })();
+  }
+  return _tursoSchemaInitPromise;
+}
+
+// ─── Local SQLite Fallback Engine ─────────────────────────────────────────────
 function resolveDbPath(): string {
   if (process.env.DATABASE_PATH) {
     return path.resolve(process.env.DATABASE_PATH);
   }
 
-  // Detect serverless environment (Vercel, AWS Lambda, Netlify)
   const isServerless = Boolean(
     process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
   );
@@ -39,10 +145,10 @@ function resolveDbPath(): string {
   }
 }
 
-let _db: Database.Database | null = null;
+let _sqliteDb: Database.Database | null = null;
 
 export function getDb(): Database.Database {
-  if (!_db) {
+  if (!_sqliteDb) {
     const dbPath = resolveDbPath();
     const dbDir = path.dirname(dbPath);
 
@@ -54,24 +160,24 @@ export function getDb(): Database.Database {
       }
     }
 
-    _db = new Database(dbPath);
+    _sqliteDb = new Database(dbPath);
 
     try {
-      _db.pragma('journal_mode = WAL');
+      _sqliteDb.pragma('journal_mode = WAL');
     } catch {
-      _db.pragma('journal_mode = DELETE');
+      _sqliteDb.pragma('journal_mode = DELETE');
     }
 
-    _db.pragma('foreign_keys = ON');
-    _db.pragma('synchronous = NORMAL');
-    _db.pragma('busy_timeout = 5000');
-    _db.pragma('cache_size = -64000'); // 64MB memory page cache
-    initSchema(_db);
+    _sqliteDb.pragma('foreign_keys = ON');
+    _sqliteDb.pragma('synchronous = NORMAL');
+    _sqliteDb.pragma('busy_timeout = 5000');
+    _sqliteDb.pragma('cache_size = -64000');
+    initSchemaSync(_sqliteDb);
   }
-  return _db;
+  return _sqliteDb;
 }
 
-function initSchema(db: Database.Database): void {
+function initSchemaSync(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS appointments (
       id          TEXT PRIMARY KEY,
@@ -147,40 +253,28 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone);
     CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient ON patient_sessions(patientId);
   `);
-
-  migrateLegacyPatientNotes(db);
 }
 
-function migrateLegacyPatientNotes(db: Database.Database): void {
-  try {
-    const legacyNotes = db.prepare('SELECT * FROM patient_notes').all() as Array<{
-      phone: string;
-      patientName: string;
-      content: string;
-      tags: string;
-      updatedAt: string;
-    }>;
-
-    for (const legacy of legacyNotes) {
-      const existing = db.prepare('SELECT id FROM patients WHERE phone = ?').get(legacy.phone) as { id: string } | undefined;
-      if (!existing) {
-        const id = 'pat_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-        const now = legacy.updatedAt || new Date().toISOString();
-        db.prepare(`
-          INSERT OR IGNORE INTO patients
-            (id, patientName, phone, pathologyTags, medicalHistory, createdAt, updatedAt)
-          VALUES
-            (?, ?, ?, ?, ?, ?, ?)
-        `).run(id, legacy.patientName, legacy.phone, legacy.tags || '', legacy.content || '', now, now);
-      }
+// ─── Unified Async Query Abstraction ──────────────────────────────────────────
+async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]> {
+  if (isTurso) {
+    await ensureTursoSchema();
+    const client = getTursoClient();
+    const res = await client.execute({ sql, args });
+    return res.rows as unknown as T[];
+  } else {
+    const db = getDb();
+    const trimmed = sql.trim().toUpperCase();
+    if (trimmed.startsWith('SELECT') || trimmed.startsWith('PRAGMA')) {
+      return db.prepare(sql).all(...args) as T[];
+    } else {
+      const res = db.prepare(sql).run(...args);
+      return [{ changes: res.changes, lastInsertRowid: res.lastInsertRowid }] as unknown as T[];
     }
-  } catch {
-    /* Silent catch if legacy table missing */
   }
 }
 
-// ─── Appointment helpers ──────────────────────────────────────────────────────
-
+// ─── Public Export Types ──────────────────────────────────────────────────────
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
 
 export interface Appointment {
@@ -211,68 +305,69 @@ export type AddAppointmentResult =
   | { success: true; appointment: Appointment }
   | { success: false; error: 'slot_taken' | 'invalid_data' | 'slot_blocked' };
 
-/**
- * Atomically creates an appointment using a DB transaction.
- * The UNIQUE(date, startTime) constraint prevents double-bookings at the database level.
- * Even two simultaneous requests cannot both succeed.
- */
-export function dbCreateAppointment(input: CreateAppointmentInput): AddAppointmentResult {
-  const db = getDb();
-
+// ─── Appointment Helpers ──────────────────────────────────────────────────────
+export async function dbCreateAppointment(input: CreateAppointmentInput): Promise<AddAppointmentResult> {
   const id = 'apt_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
   const now = new Date().toISOString();
 
   // Check if slot is blocked
-  const blocked = db.prepare(
-    'SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?'
-  ).get(input.date, input.startTime);
-  if (blocked) return { success: false, error: 'slot_blocked' };
+  const blockedRows = await executeQuery('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [
+    input.date,
+    input.startTime,
+  ]);
+  if (blockedRows.length > 0) return { success: false, error: 'slot_blocked' };
 
-  const insert = db.prepare(`
-    INSERT OR IGNORE INTO appointments
-      (id, patientName, email, phone, service, date, startTime, status, notes, createdAt, updatedAt)
-    VALUES
-      (@id, @patientName, @email, @phone, @service, @date, @startTime, 'PENDING', @notes, @createdAt, @updatedAt)
-  `);
+  // Check if slot is booked
+  const conflictRows = await executeQuery(
+    "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'",
+    [input.date, input.startTime]
+  );
+  if (conflictRows.length > 0) return { success: false, error: 'slot_taken' };
 
-  const result = insert.run({
-    id,
-    patientName: input.patientName,
-    email: input.email ?? null,
-    phone: input.phone,
-    service: input.service,
-    date: input.date,
-    startTime: input.startTime,
-    notes: input.notes ?? null,
-    createdAt: now,
-    updatedAt: now,
-  });
+  try {
+    await executeQuery(
+      `INSERT INTO appointments
+        (id, patientName, email, phone, service, date, startTime, status, notes, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)`,
+      [
+        id,
+        input.patientName,
+        input.email ?? null,
+        input.phone,
+        input.service,
+        input.date,
+        input.startTime,
+        input.notes ?? null,
+        now,
+        now,
+      ]
+    );
 
-  // If 0 rows changed, the UNIQUE constraint triggered — slot was already taken
-  if (result.changes === 0) {
-    return { success: false, error: 'slot_taken' };
+    const rows = await executeQuery<Appointment>('SELECT * FROM appointments WHERE id = ?', [id]);
+    const appointment = rows[0];
+
+    // Auto-upsert patient record
+    await dbUpsertPatient({
+      patientName: input.patientName,
+      phone: input.phone,
+      email: input.email ?? null,
+      medicalHistory: input.notes ? `Réservation en ligne: ${input.notes}` : '',
+    });
+
+    return { success: true, appointment };
+  } catch (err: any) {
+    if (err?.message?.includes('UNIQUE') || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      return { success: false, error: 'slot_taken' };
+    }
+    throw err;
   }
-
-  const row = db.prepare('SELECT * FROM appointments WHERE id = ?').get(id) as Appointment;
-
-  // Auto-upsert patient into structured patients EMR table
-  dbUpsertPatient({
-    patientName: input.patientName,
-    phone: input.phone,
-    email: input.email ?? null,
-    medicalHistory: input.notes ? `Réservation en ligne: ${input.notes}` : '',
-  });
-
-  return { success: true, appointment: row };
 }
 
-export function dbGetAppointments(filters?: {
+export async function dbGetAppointments(filters?: {
   status?: string;
   date?: string;
   search?: string;
-}): Appointment[] {
-  const db = getDb();
-
+}): Promise<Appointment[]> {
   let sql = 'SELECT * FROM appointments WHERE 1=1';
   const params: (string | number)[] = [];
 
@@ -291,27 +386,24 @@ export function dbGetAppointments(filters?: {
   }
 
   sql += ' ORDER BY date DESC, startTime ASC';
-
-  return db.prepare(sql).all(...params) as Appointment[];
+  return executeQuery<Appointment>(sql, params);
 }
 
-export function dbGetAppointmentById(id: string): Appointment | null {
-  const db = getDb();
-  return (db.prepare('SELECT * FROM appointments WHERE id = ?').get(id) as Appointment) ?? null;
+export async function dbGetAppointmentById(id: string): Promise<Appointment | null> {
+  const rows = await executeQuery<Appointment>('SELECT * FROM appointments WHERE id = ?', [id]);
+  return rows[0] ?? null;
 }
 
-export function dbUpdateAppointment(
+export async function dbUpdateAppointment(
   id: string,
   fields: Partial<Pick<Appointment, 'status' | 'notes' | 'date' | 'startTime'>>
-): Appointment | null {
-  const db = getDb();
-
+): Promise<Appointment | null> {
   const updates: string[] = [];
   const params: (string | number)[] = [];
 
-  if (fields.status !== undefined) { updates.push('status = ?'); params.push(fields.status); }
-  if (fields.notes !== undefined)  { updates.push('notes = ?');  params.push(fields.notes ?? ''); }
-  if (fields.date !== undefined)   { updates.push('date = ?');   params.push(fields.date); }
+  if (fields.status !== undefined)    { updates.push('status = ?'); params.push(fields.status); }
+  if (fields.notes !== undefined)     { updates.push('notes = ?');  params.push(fields.notes ?? ''); }
+  if (fields.date !== undefined)      { updates.push('date = ?');   params.push(fields.date); }
   if (fields.startTime !== undefined) { updates.push('startTime = ?'); params.push(fields.startTime); }
 
   if (updates.length === 0) return dbGetAppointmentById(id);
@@ -320,83 +412,65 @@ export function dbUpdateAppointment(
   params.push(new Date().toISOString());
   params.push(id);
 
-  db.prepare(`UPDATE appointments SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+  await executeQuery(`UPDATE appointments SET ${updates.join(', ')} WHERE id = ?`, params);
   return dbGetAppointmentById(id);
 }
 
-// ─── Blocked slots helpers ────────────────────────────────────────────────────
-
-export function dbGetBlockedSlots(): { date: string; time: string }[] {
-  const db = getDb();
-  return db.prepare('SELECT date, time FROM blocked_slots').all() as { date: string; time: string }[];
+// ─── Blocked Slots Helpers ────────────────────────────────────────────────────
+export async function dbGetBlockedSlots(): Promise<{ date: string; time: string }[]> {
+  return executeQuery<{ date: string; time: string }>('SELECT date, time FROM blocked_slots');
 }
 
-export function dbToggleBlockSlot(date: string, time: string): boolean {
-  const db = getDb();
-
-  const existing = db.prepare('SELECT id FROM blocked_slots WHERE date = ? AND time = ?').get(date, time);
-  if (existing) {
-    db.prepare('DELETE FROM blocked_slots WHERE date = ? AND time = ?').run(date, time);
-    return false; // now unblocked
+export async function dbToggleBlockSlot(date: string, time: string): Promise<boolean> {
+  const existing = await executeQuery('SELECT id FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
+  if (existing.length > 0) {
+    await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
+    return false; // unblocked
   } else {
     const id = 'blk_' + Date.now().toString(36);
-    db.prepare('INSERT OR IGNORE INTO blocked_slots (id, date, time) VALUES (?, ?, ?)').run(id, date, time);
-    return true; // now blocked
+    await executeQuery('INSERT INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', [id, date, time]);
+    return true; // blocked
   }
 }
 
-export function dbIsSlotAvailable(date: string, time: string): boolean {
-  const db = getDb();
+export async function dbIsSlotAvailable(date: string, time: string): Promise<boolean> {
+  const blocked = await executeQuery('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
+  if (blocked.length > 0) return false;
 
-  const blocked = db.prepare('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?').get(date, time);
-  if (blocked) return false;
-
-  const booked = db.prepare(
-    "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'"
-  ).get(date, time);
-
-  return !booked;
+  const booked = await executeQuery(
+    "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'",
+    [date, time]
+  );
+  return booked.length === 0;
 }
 
-// ─── Rate limiting helpers ────────────────────────────────────────────────────
-
-/**
- * Returns true if the IP is allowed to perform the action.
- * Allows maxAttempts within windowSeconds.
- */
-export function dbCheckRateLimit(
+// ─── Rate Limiting Helpers ────────────────────────────────────────────────────
+export async function dbCheckRateLimit(
   ip: string,
   action: string,
   maxAttempts: number,
   windowSeconds: number
-): boolean {
-  const db = getDb();
+): Promise<boolean> {
   const windowStart = Date.now() - windowSeconds * 1000;
-
-  const count = (
-    db.prepare(
-      'SELECT COUNT(*) as cnt FROM rate_limit_log WHERE ip = ? AND action = ? AND timestamp > ?'
-    ).get(ip, action, windowStart) as { cnt: number }
-  ).cnt;
-
+  const rows = await executeQuery<{ cnt: number }>(
+    'SELECT COUNT(*) as cnt FROM rate_limit_log WHERE ip = ? AND action = ? AND timestamp > ?',
+    [ip, action, windowStart]
+  );
+  const count = Number(rows[0]?.cnt ?? 0);
   return count < maxAttempts;
 }
 
-export function dbRecordRateLimitAttempt(ip: string, action: string): void {
-  const db = getDb();
-  db.prepare('INSERT INTO rate_limit_log (ip, action, timestamp) VALUES (?, ?, ?)').run(
+export async function dbRecordRateLimitAttempt(ip: string, action: string): Promise<void> {
+  await executeQuery('INSERT INTO rate_limit_log (ip, action, timestamp) VALUES (?, ?, ?)', [
     ip,
     action,
-    Date.now()
-  );
-
-  // Prune old entries (older than 1 hour) to keep table small
+    Date.now(),
+  ]);
   const oneHourAgo = Date.now() - 3600 * 1000;
-  db.prepare('DELETE FROM rate_limit_log WHERE timestamp < ?').run(oneHourAgo);
+  await executeQuery('DELETE FROM rate_limit_log WHERE timestamp < ?', [oneHourAgo]);
 }
 
-// ─── Patient Notes helpers ────────────────────────────────────────────────────
-
+// ─── Patient Notes Helpers ────────────────────────────────────────────────────
 export interface PatientNote {
   phone: string;
   patientName: string;
@@ -405,88 +479,100 @@ export interface PatientNote {
   updatedAt: string;
 }
 
-export function dbGetAllPatientNotes(): PatientNote[] {
-  const db = getDb();
-  return db.prepare('SELECT * FROM patient_notes ORDER BY updatedAt DESC').all() as PatientNote[];
+export async function dbGetAllPatientNotes(): Promise<PatientNote[]> {
+  return executeQuery<PatientNote>('SELECT * FROM patient_notes ORDER BY updatedAt DESC');
 }
 
-export function dbGetPatientNote(phone: string): PatientNote | null {
-  const db = getDb();
-  return (db.prepare('SELECT * FROM patient_notes WHERE phone = ?').get(phone) as PatientNote) ?? null;
+export async function dbGetPatientNote(phone: string): Promise<PatientNote | null> {
+  const rows = await executeQuery<PatientNote>('SELECT * FROM patient_notes WHERE phone = ?', [phone]);
+  return rows[0] ?? null;
 }
 
-export function dbUpsertPatientNote(
+export async function dbUpsertPatientNote(
   phone: string,
   patientName: string,
   content: string,
   tags: string
-): PatientNote {
-  const db = getDb();
+): Promise<PatientNote> {
   const now = new Date().toISOString();
-  db.prepare(`
-    INSERT INTO patient_notes (phone, patientName, content, tags, updatedAt)
-    VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(phone) DO UPDATE SET
-      patientName = excluded.patientName,
-      content     = excluded.content,
-      tags        = excluded.tags,
-      updatedAt   = excluded.updatedAt
-  `).run(phone, patientName, content, tags, now);
-  return db.prepare('SELECT * FROM patient_notes WHERE phone = ?').get(phone) as PatientNote;
+  const existing = await dbGetPatientNote(phone);
+
+  if (existing) {
+    await executeQuery(
+      'UPDATE patient_notes SET patientName = ?, content = ?, tags = ?, updatedAt = ? WHERE phone = ?',
+      [patientName, content, tags, now, phone]
+    );
+  } else {
+    await executeQuery(
+      'INSERT INTO patient_notes (phone, patientName, content, tags, updatedAt) VALUES (?, ?, ?, ?, ?)',
+      [phone, patientName, content, tags, now]
+    );
+  }
+
+  const updated = await dbGetPatientNote(phone);
+  return updated!;
 }
 
-export function dbEnsurePatientNote(phone: string, patientName: string): PatientNote {
-  const db = getDb();
-  const existing = dbGetPatientNote(phone);
+export async function dbEnsurePatientNote(phone: string, patientName: string): Promise<PatientNote> {
+  const existing = await dbGetPatientNote(phone);
   if (existing) return existing;
 
   const now = new Date().toISOString();
-  db.prepare(`
-    INSERT OR IGNORE INTO patient_notes (phone, patientName, content, tags, updatedAt)
-    VALUES (?, ?, '', '', ?)
-  `).run(phone, patientName, now);
-
-  return dbGetPatientNote(phone)!;
+  await executeQuery(
+    'INSERT INTO patient_notes (phone, patientName, content, tags, updatedAt) VALUES (?, ?, \'\', \'\', ?)',
+    [phone, patientName, now]
+  );
+  return (await dbGetPatientNote(phone))!;
 }
 
-export function dbDeletePatientNote(phone: string): void {
-  const db = getDb();
-  db.prepare('DELETE FROM patient_notes WHERE phone = ?').run(phone);
+export async function dbDeletePatientNote(phone: string): Promise<void> {
+  await executeQuery('DELETE FROM patient_notes WHERE phone = ?', [phone]);
 }
 
 // ─── Structured Patient EMR Helpers ──────────────────────────────────────────
+export async function dbGetAllPatients(): Promise<PatientRecord[]> {
+  const patients = await executeQuery<PatientRecord>('SELECT * FROM patients ORDER BY updatedAt DESC');
+  const allSessions = await executeQuery<PatientSession>(
+    'SELECT * FROM patient_sessions ORDER BY date DESC, createdAt DESC'
+  );
 
-export function dbGetAllPatients(): PatientRecord[] {
-  const db = getDb();
-  const patients = db.prepare('SELECT * FROM patients ORDER BY updatedAt DESC').all() as PatientRecord[];
-  
-  // Attach sessions to each patient
-  const sessionStmt = db.prepare('SELECT * FROM patient_sessions WHERE patientId = ? ORDER BY date DESC, createdAt DESC');
+  const sessionsByPatient: Record<string, PatientSession[]> = {};
+  for (const s of allSessions) {
+    if (!sessionsByPatient[s.patientId]) sessionsByPatient[s.patientId] = [];
+    sessionsByPatient[s.patientId].push(s);
+  }
+
   return patients.map(p => ({
     ...p,
-    sessions: sessionStmt.all(p.id) as PatientSession[],
+    sessions: sessionsByPatient[p.id] ?? [],
   }));
 }
 
-export function dbGetPatientById(id: string): PatientRecord | null {
-  const db = getDb();
-  const patient = db.prepare('SELECT * FROM patients WHERE id = ?').get(id) as PatientRecord | undefined;
+export async function dbGetPatientById(id: string): Promise<PatientRecord | null> {
+  const rows = await executeQuery<PatientRecord>('SELECT * FROM patients WHERE id = ?', [id]);
+  const patient = rows[0];
   if (!patient) return null;
 
-  const sessions = db.prepare('SELECT * FROM patient_sessions WHERE patientId = ? ORDER BY date DESC, createdAt DESC').all(id) as PatientSession[];
+  const sessions = await executeQuery<PatientSession>(
+    'SELECT * FROM patient_sessions WHERE patientId = ? ORDER BY date DESC, createdAt DESC',
+    [id]
+  );
   return { ...patient, sessions };
 }
 
-export function dbGetPatientByPhone(phone: string): PatientRecord | null {
-  const db = getDb();
-  const patient = db.prepare('SELECT * FROM patients WHERE phone = ?').get(phone) as PatientRecord | undefined;
+export async function dbGetPatientByPhone(phone: string): Promise<PatientRecord | null> {
+  const rows = await executeQuery<PatientRecord>('SELECT * FROM patients WHERE phone = ?', [phone]);
+  const patient = rows[0];
   if (!patient) return null;
 
-  const sessions = db.prepare('SELECT * FROM patient_sessions WHERE patientId = ? ORDER BY date DESC, createdAt DESC').all(patient.id) as PatientSession[];
+  const sessions = await executeQuery<PatientSession>(
+    'SELECT * FROM patient_sessions WHERE patientId = ? ORDER BY date DESC, createdAt DESC',
+    [patient.id]
+  );
   return { ...patient, sessions };
 }
 
-export function dbUpsertPatient(input: {
+export async function dbUpsertPatient(input: {
   id?: string;
   patientName: string;
   phone: string;
@@ -499,80 +585,73 @@ export function dbUpsertPatient(input: {
   pathologyTags?: string;
   medicalHistory?: string;
   totalPrescribedSessions?: number;
-}): PatientRecord {
-  const db = getDb();
+}): Promise<PatientRecord> {
   const now = new Date().toISOString();
-  
-  const existing = input.id ? dbGetPatientById(input.id) : dbGetPatientByPhone(input.phone);
+  const existing = input.id ? await dbGetPatientById(input.id) : await dbGetPatientByPhone(input.phone);
   const id = existing?.id ?? input.id ?? ('pat_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6));
 
-  db.prepare(`
-    INSERT INTO patients (
-      id, patientName, phone, email, gender, dob, cnamStatus, cnamNumber,
-      referringDoctor, pathologyTags, medicalHistory, totalPrescribedSessions, createdAt, updatedAt
-    ) VALUES (
-      @id, @patientName, @phone, @email, @gender, @dob, @cnamStatus, @cnamNumber,
-      @referringDoctor, @pathologyTags, @medicalHistory, @totalPrescribedSessions, @createdAt, @updatedAt
-    )
-    ON CONFLICT(id) DO UPDATE SET
-      patientName             = excluded.patientName,
-      phone                   = excluded.phone,
-      email                   = excluded.email,
-      gender                  = excluded.gender,
-      dob                     = excluded.dob,
-      cnamStatus              = excluded.cnamStatus,
-      cnamNumber              = excluded.cnamNumber,
-      referringDoctor         = excluded.referringDoctor,
-      pathologyTags           = excluded.pathologyTags,
-      medicalHistory          = excluded.medicalHistory,
-      totalPrescribedSessions = excluded.totalPrescribedSessions,
-      updatedAt               = excluded.updatedAt
-    ON CONFLICT(phone) DO UPDATE SET
-      patientName             = excluded.patientName,
-      email                   = excluded.email,
-      gender                  = excluded.gender,
-      dob                     = excluded.dob,
-      cnamStatus              = excluded.cnamStatus,
-      cnamNumber              = excluded.cnamNumber,
-      referringDoctor         = excluded.referringDoctor,
-      pathologyTags           = excluded.pathologyTags,
-      medicalHistory          = excluded.medicalHistory,
-      totalPrescribedSessions = excluded.totalPrescribedSessions,
-      updatedAt               = excluded.updatedAt
-  `).run({
-    id,
-    patientName: input.patientName,
-    phone: input.phone,
-    email: input.email ?? null,
-    gender: input.gender ?? null,
-    dob: input.dob ?? null,
-    cnamStatus: input.cnamStatus ?? 'NON',
-    cnamNumber: input.cnamNumber ?? null,
-    referringDoctor: input.referringDoctor ?? null,
-    pathologyTags: input.pathologyTags ?? '',
-    medicalHistory: input.medicalHistory ?? '',
-    totalPrescribedSessions: input.totalPrescribedSessions ?? 10,
-    createdAt: existing?.createdAt ?? now,
-    updatedAt: now,
-  });
+  if (existing) {
+    await executeQuery(
+      `UPDATE patients SET
+        patientName = ?, phone = ?, email = ?, gender = ?, dob = ?,
+        cnamStatus = ?, cnamNumber = ?, referringDoctor = ?, pathologyTags = ?,
+        medicalHistory = ?, totalPrescribedSessions = ?, updatedAt = ?
+       WHERE id = ?`,
+      [
+        input.patientName,
+        input.phone,
+        input.email ?? null,
+        input.gender ?? null,
+        input.dob ?? null,
+        input.cnamStatus ?? 'NON',
+        input.cnamNumber ?? null,
+        input.referringDoctor ?? null,
+        input.pathologyTags ?? '',
+        input.medicalHistory ?? '',
+        input.totalPrescribedSessions ?? 10,
+        now,
+        id,
+      ]
+    );
+  } else {
+    await executeQuery(
+      `INSERT INTO patients (
+        id, patientName, phone, email, gender, dob, cnamStatus, cnamNumber,
+        referringDoctor, pathologyTags, medicalHistory, totalPrescribedSessions, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        input.patientName,
+        input.phone,
+        input.email ?? null,
+        input.gender ?? null,
+        input.dob ?? null,
+        input.cnamStatus ?? 'NON',
+        input.cnamNumber ?? null,
+        input.referringDoctor ?? null,
+        input.pathologyTags ?? '',
+        input.medicalHistory ?? '',
+        input.totalPrescribedSessions ?? 10,
+        existing?.createdAt ?? now,
+        now,
+      ]
+    );
+  }
 
-  // Also sync legacy patient_notes table for backwards compatibility
-  dbUpsertPatientNote(input.phone, input.patientName, input.medicalHistory ?? '', input.pathologyTags ?? '');
-
-  return dbGetPatientById(id)!;
+  await dbUpsertPatientNote(input.phone, input.patientName, input.medicalHistory ?? '', input.pathologyTags ?? '');
+  return (await dbGetPatientById(id))!;
 }
 
-export function dbDeletePatientRecord(idOrPhone: string): void {
-  const db = getDb();
-  const p = dbGetPatientById(idOrPhone) ?? dbGetPatientByPhone(idOrPhone);
+export async function dbDeletePatientRecord(idOrPhone: string): Promise<void> {
+  const p = (await dbGetPatientById(idOrPhone)) ?? (await dbGetPatientByPhone(idOrPhone));
   if (p) {
-    db.prepare('DELETE FROM patient_sessions WHERE patientId = ?').run(p.id);
-    db.prepare('DELETE FROM patients WHERE id = ?').run(p.id);
-    db.prepare('DELETE FROM patient_notes WHERE phone = ?').run(p.phone);
+    await executeQuery('DELETE FROM patient_sessions WHERE patientId = ?', [p.id]);
+    await executeQuery('DELETE FROM patients WHERE id = ?', [p.id]);
+    await executeQuery('DELETE FROM patient_notes WHERE phone = ?', [p.phone]);
   }
 }
 
-export function dbAddPatientSession(input: {
+export async function dbAddPatientSession(input: {
   patientId: string;
   date: string;
   time?: string | null;
@@ -581,60 +660,49 @@ export function dbAddPatientSession(input: {
   sessionType?: 'ONLINE' | 'MANUAL' | 'PAPER';
   notes?: string | null;
   practitioner?: string | null;
-}): PatientSession {
-  const db = getDb();
+}): Promise<PatientSession> {
   const id = 'sess_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
   const now = new Date().toISOString();
 
-  db.prepare(`
-    INSERT INTO patient_sessions
+  await executeQuery(
+    `INSERT INTO patient_sessions
       (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
-    VALUES
-      (@id, @patientId, @date, @time, @serviceSlug, @evaPainScore, @sessionType, @notes, @practitioner, @createdAt)
-  `).run({
-    id,
-    patientId: input.patientId,
-    date: input.date,
-    time: input.time ?? null,
-    serviceSlug: input.serviceSlug ?? 'kinesitherapie-generale',
-    evaPainScore: typeof input.evaPainScore === 'number' ? input.evaPainScore : 5,
-    sessionType: input.sessionType ?? 'MANUAL',
-    notes: input.notes ?? null,
-    practitioner: input.practitioner ?? null,
-    createdAt: now,
-  });
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.patientId,
+      input.date,
+      input.time ?? null,
+      input.serviceSlug ?? 'kinesitherapie-generale',
+      typeof input.evaPainScore === 'number' ? input.evaPainScore : 5,
+      input.sessionType ?? 'MANUAL',
+      input.notes ?? null,
+      input.practitioner ?? null,
+      now,
+    ]
+  );
 
-  // Touch patient updatedAt
-  db.prepare('UPDATE patients SET updatedAt = ? WHERE id = ?').run(now, input.patientId);
-
-  return db.prepare('SELECT * FROM patient_sessions WHERE id = ?').get(id) as PatientSession;
+  await executeQuery('UPDATE patients SET updatedAt = ? WHERE id = ?', [now, input.patientId]);
+  const rows = await executeQuery<PatientSession>('SELECT * FROM patient_sessions WHERE id = ?', [id]);
+  return rows[0];
 }
 
-export function dbDeletePatientSession(sessionId: string): void {
-  const db = getDb();
-  db.prepare('DELETE FROM patient_sessions WHERE id = ?').run(sessionId);
+export async function dbDeletePatientSession(sessionId: string): Promise<void> {
+  await executeQuery('DELETE FROM patient_sessions WHERE id = ?', [sessionId]);
 }
 
-export function dbBulkBlockSlots(date: string, times: string[], action: 'block' | 'unblock'): void {
-  const db = getDb();
-  const stmtDelete = db.prepare('DELETE FROM blocked_slots WHERE date = ? AND time = ?');
-  const stmtInsert = db.prepare('INSERT OR IGNORE INTO blocked_slots (id, date, time) VALUES (?, ?, ?)');
-
-  const transaction = db.transaction(() => {
-    for (const time of times) {
-      if (action === 'unblock') {
-        stmtDelete.run(date, time);
-      } else {
-        const id = 'blk_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-        stmtInsert.run(id, date, time);
-      }
+export async function dbBulkBlockSlots(date: string, times: string[], action: 'block' | 'unblock'): Promise<void> {
+  for (const time of times) {
+    if (action === 'unblock') {
+      await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
+    } else {
+      const id = 'blk_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+      await executeQuery('INSERT INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', [id, date, time]);
     }
-  });
-
-  transaction();
+  }
 }
 
-export function dbGetBackupStatus(): { lastBackupDate: string | null; backupCount: number; dbSizeBytes: number } {
+export async function dbGetBackupStatus(): Promise<{ lastBackupDate: string | null; backupCount: number; dbSizeBytes: number }> {
   const BACKUP_DIR = path.join(process.cwd(), 'data', 'backups');
   let lastBackupDate: string | null = null;
   let backupCount = 0;
@@ -669,19 +737,17 @@ export function dbGetBackupStatus(): { lastBackupDate: string | null; backupCoun
   return { lastBackupDate, backupCount, dbSizeBytes };
 }
 
-export function dbGetNoShowCounts(): Record<string, number> {
-  const db = getDb();
-  const rows = db.prepare(`
+export async function dbGetNoShowCounts(): Record<string, number> | Promise<Record<string, number>> {
+  const rows = await executeQuery<{ phone: string; cnt: number }>(`
     SELECT phone, COUNT(*) as cnt
     FROM appointments
     WHERE status IN ('CANCELLED', 'NO_SHOW')
     GROUP BY phone
-  `).all() as Array<{ phone: string; cnt: number }>;
+  `);
 
   const map: Record<string, number> = {};
   rows.forEach(r => {
-    map[r.phone] = r.cnt;
+    map[r.phone] = Number(r.cnt);
   });
   return map;
 }
-

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     slotsToProcess = body.times.map(t => String(t));
   }
 
-  dbBulkBlockSlots(date, slotsToProcess, action);
+  await dbBulkBlockSlots(date, slotsToProcess, action);
 
   return NextResponse.json({ success: true, date, scope, action, processedSlots: slotsToProcess.length });
 }

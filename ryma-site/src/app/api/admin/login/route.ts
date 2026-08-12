@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   // Rate limiting: 20 attempts per 15 minutes per IP (disabled in development)
   const isDev = process.env.NODE_ENV !== 'production';
-  const allowed = isDev || dbCheckRateLimit(ip, 'login', 20, 15 * 60);
+  const allowed = isDev || (await dbCheckRateLimit(ip, 'login', 20, 15 * 60));
   if (!allowed) {
     return NextResponse.json(
       { error: 'Trop de tentatives. Veuillez attendre 15 minutes.' },
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   const { password } = body;
 
   if (!password || typeof password !== 'string' || password.length > 128) {
-    dbRecordRateLimitAttempt(ip, 'login');
+    await dbRecordRateLimitAttempt(ip, 'login');
     return NextResponse.json(GENERIC_ERROR, { status: 401 });
   }
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const valid = await bcrypt.compare(password, storedHash);
 
   if (!valid) {
-    dbRecordRateLimitAttempt(ip, 'login');
+    await dbRecordRateLimitAttempt(ip, 'login');
     // Add a small delay to further slow brute-force attempts
     await new Promise(r => setTimeout(r, 500));
     return NextResponse.json(GENERIC_ERROR, { status: 401 });
