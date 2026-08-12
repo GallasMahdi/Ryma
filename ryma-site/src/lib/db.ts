@@ -14,8 +14,10 @@ let _tursoSchemaInitPromise: Promise<void> | null = null;
 
 function getTursoClient(): LibSqlClient {
   if (!_tursoClient) {
+    // Convert libsql:// to https:// for fast, stateless Serverless HTTP fetch
+    const httpUrl = (tursoUrl ?? '').replace(/^libsql:\/\//, 'https://');
     _tursoClient = createClient({
-      url: tursoUrl!,
+      url: httpUrl,
       authToken: tursoToken,
     });
   }
@@ -258,7 +260,6 @@ function initSchemaSync(db: Database.Database): void {
 // ─── Unified Async Query Abstraction ──────────────────────────────────────────
 async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]> {
   if (isTurso) {
-    await ensureTursoSchema();
     const client = getTursoClient();
     const res = await client.execute({ sql, args });
     return res.rows as unknown as T[];
