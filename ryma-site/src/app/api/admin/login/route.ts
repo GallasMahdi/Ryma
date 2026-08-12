@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(GENERIC_ERROR, { status: 401 });
   }
 
-  const storedHash = env.ADMIN_PASSWORD_HASH;
+  const storedHash = (env.ADMIN_PASSWORD_HASH ?? '').replace(/\\/g, '').trim();
   if (!storedHash) {
     // Server is misconfigured — do not reveal details to client
     console.error('[SECURITY] ADMIN_PASSWORD_HASH environment variable is not set.');
