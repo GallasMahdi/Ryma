@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import type { PatientRecord, PatientSession } from '@/types/admin';
 
-// ─── Dual Storage Engine: Dynamic Turso (Cloud) vs local SQLite ─────────────
+// ─── Dual Storage Engine: Dynamic Turso (Cloud) with Local Fallback ───────────
 let _tursoClient: LibSqlClient | null = null;
 
 function isTursoEnabled(): boolean {
@@ -169,21 +169,30 @@ function initSchemaSync(db: Database.Database): void {
   `);
 }
 
-// ─── Unified Async Query Abstraction ──────────────────────────────────────────
+// ─── Unified Async Query Abstraction with Automatic Fallback ──────────────────
 async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]> {
   if (isTursoEnabled()) {
-    const client = getTursoClient();
-    const res = await client.execute({ sql, args });
-    return res.rows as unknown as T[];
-  } else {
-    const db = getDb();
-    const trimmed = sql.trim().toUpperCase();
-    if (trimmed.startsWith('SELECT') || trimmed.startsWith('PRAGMA')) {
-      return db.prepare(sql).all(...args) as T[];
-    } else {
-      const res = db.prepare(sql).run(...args);
-      return [{ changes: res.changes, lastInsertRowid: res.lastInsertRowid }] as unknown as T[];
+    try {
+      const client = getTursoClient();
+      const res = await client.execute({ sql, args });
+      return res.rows as unknown as T[];
+    } catch (tursoErr) {
+      console.error('[Turso Error - Falling back to local SQLite]:', tursoErr);
+      return executeSqliteQuery<T>(sql, args);
     }
+  } else {
+    return executeSqliteQuery<T>(sql, args);
+  }
+}
+
+function executeSqliteQuery<T = any>(sql: string, args: any[] = []): T[] {
+  const db = getDb();
+  const trimmed = sql.trim().toUpperCase();
+  if (trimmed.startsWith('SELECT') || trimmed.startsWith('PRAGMA')) {
+    return db.prepare(sql).all(...args) as T[];
+  } else {
+    const res = db.prepare(sql).run(...args);
+    return [{ changes: res.changes, lastInsertRowid: res.lastInsertRowid }] as unknown as T[];
   }
 }
 
