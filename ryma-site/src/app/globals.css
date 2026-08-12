@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+/* ================================================================
+   RYMA OUICHKA — Design System v2
+   Palette: Blanc / Or Champagne / Crème chaude
+   Typography: Fraunces (serif) + Inter (sans) + IBM Plex Mono (mono)
+   ================================================================ */
+
+:root {
+  /* — Backgrounds — */
+  --color-bg:           #FAFAF8;
+  --color-bg-alt:       #F4F2EE;
+  --color-bg-card:      #FFFFFF;
+  --color-bg-deep:      #1A1412;
+
+  /* — Gold Palette — */
+  --color-gold:         #C49A3C;
+  --color-gold-light:   #E8C97A;
+  --color-gold-pale:    #F5E9C8;
+  --color-gold-dark:    #9A7428;
+
+  /* — Text — */
+  --color-text:         #1A1412;
+  --color-text-sub:     #4A4540;
+  --color-muted:        #8A8078;
+  --color-muted-light:  #B8B0A8;
+
+  /* — Borders & Glass — */
+  --color-border:       rgba(196, 154, 60, 0.2);
+  --color-border-light: rgba(196, 154, 60, 0.1);
+  --color-glass-bg:     rgba(255, 255, 255, 0.82);
+  --color-glass-border: rgba(196, 154, 60, 0.22);
+
+  /* — Legacy teal aliases (kept for compatibility) — */
+  --color-teal:         #C49A3C;
+  --color-teal-light:   #E8C97A;
+  --color-bronze:       #C49A3C;
+  --color-bronze-light: #E8C97A;
+  --color-cream:        #FAFAF8;
+
+  /* Typography — loaded via next/font in layout.tsx */
+  --font-serif: var(--font-fraunces, Georgia, serif);
+  --font-sans:  var(--font-inter, system-ui, -apple-system, sans-serif);
+  --font-mono:  var(--font-ibm-plex-mono, 'Courier New', monospace);
+}
+
+/* ======================== RESET ======================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 154, 60, 0.35) transparent;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ======================== TYPOGRAPHY ======================== */
+.font-serif {
+  font-family: var(--font-serif) !important;
+}
+
+.font-sans {
+  font-family: var(--font-sans) !important;
+}
+
+.font-mono {
+  font-family: var(--font-mono) !important;
+}
+
+/* ======================== GLASSMORPHISM (light) ======================== */
+.glass-panel {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(196, 154, 60, 0.06), 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.glass-panel-hover {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  border-color: rgba(196, 154, 60, 0.45);
+  box-shadow: 0 16px 48px -8px rgba(196, 154, 60, 0.18), 0 2px 8px rgba(0,0,0,0.05);
+  transform: translateY(-3px);
+}
+
+/* ======================== TEXT GRADIENTS ======================== */
+.text-gradient-bronze {
+  background: linear-gradient(135deg, #C49A3C 0%, #E8C97A 45%, #9A7428 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, #9A7428 0%, #C49A3C 40%, #E8C97A 70%, #C49A3C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-teal {
+  background: linear-gradient(135deg, #C49A3C 0%, #E8C97A 60%, #9A7428 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ======================== GOLD SHIMMER EFFECT ======================== */
+@keyframes goldShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer-gold {
+  background: linear-gradient(
+    90deg,
+    #C49A3C 0%,
+    #E8C97A 25%,
+    #F5E9C8 50%,
+    #E8C97A 75%,
+    #C49A3C 100%
+  );
+  background-size: 200% auto;
+  animation: goldShimmer 3s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ======================== SCROLLBAR ======================== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-alt);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(196, 154, 60, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold);
+}
+
+::selection {
+  background: rgba(196, 154, 60, 0.2);
+  color: var(--color-text);
+}
+
+/* ======================== BODY MAP ANIMATIONS ======================== */
+@keyframes drawSilhouette {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: drawSilhouette 3s ease-in-out 0.5s forwards;
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
+.point-pulse {
+  animation: pulseGlow 2.2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* ======================== RTL HELPERS ======================== */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+.ms-1 { margin-inline-start: 0.25rem; }
+.ms-2 { margin-inline-start: 0.5rem; }
+.ms-3 { margin-inline-start: 0.75rem; }
+.me-1 { margin-inline-end: 0.25rem; }
+.me-2 { margin-inline-end: 0.5rem; }
+.me-3 { margin-inline-end: 0.75rem; }
+.ps-4 { padding-inline-start: 1rem; }
+.ps-6 { padding-inline-start: 1.5rem; }
+.ps-7 { padding-inline-start: 1.75rem; }
+.pe-4 { padding-inline-end: 1rem; }
+.start-0 { inset-inline-start: 0; }
+.start-4 { inset-inline-start: 1rem; }
+.end-5  { inset-inline-end: 1.25rem; }
+.end-0  { inset-inline-end: 0; }
+
+/* ======================== UTILITY CLASSES ======================== */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* ======================== DIVIDER ======================== */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(196, 154, 60, 0.4), transparent);
+}
+
+/* ======================== SECTION BACKGROUNDS ======================== */
+.section-warm {
+  background: linear-gradient(180deg, #FAFAF8 0%, #F4F0E8 100%);
+}
+
+.section-gold-subtle {
+  background: linear-gradient(135deg, #FDFCF8 0%, #F9F4E8 50%, #FDFCF8 100%);
+}
