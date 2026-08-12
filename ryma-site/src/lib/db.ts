@@ -632,7 +632,7 @@ export async function dbUpsertPatient(input: {
         input.pathologyTags ?? '',
         input.medicalHistory ?? '',
         input.totalPrescribedSessions ?? 10,
-        existing?.createdAt ?? now,
+        now,
         now,
       ]
     );
@@ -737,7 +737,7 @@ export async function dbGetBackupStatus(): Promise<{ lastBackupDate: string | nu
   return { lastBackupDate, backupCount, dbSizeBytes };
 }
 
-export async function dbGetNoShowCounts(): Record<string, number> | Promise<Record<string, number>> {
+export async function dbGetNoShowCounts(): Promise<Record<string, number>> {
   const rows = await executeQuery<{ phone: string; cnt: number }>(`
     SELECT phone, COUNT(*) as cnt
     FROM appointments
