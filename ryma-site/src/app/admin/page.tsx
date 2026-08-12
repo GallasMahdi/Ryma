@@ -122,6 +122,10 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchAppointments();
+    const interval = setInterval(() => {
+      fetchAppointments();
+    }, 15000);
+    return () => clearInterval(interval);
   }, [fetchAppointments]);
 
   // ── Fetch patient notes ────────────────────────────────────────────────────

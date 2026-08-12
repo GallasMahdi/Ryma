@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 /**
  * GET /api/slots?date=YYYY-MM-DD
  * Public endpoint — returns slot availability for a given date.
@@ -52,12 +55,12 @@ export async function GET(request: NextRequest) {
     return { time, available: true };
   });
 
-  // Cache for 30 seconds — safe since bookings are real-time
+  // No caching to ensure real-time slot state
   return NextResponse.json(
     { slots },
     {
       status: 200,
-      headers: { 'Cache-Control': 'public, max-age=30' },
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
     }
   );
 }

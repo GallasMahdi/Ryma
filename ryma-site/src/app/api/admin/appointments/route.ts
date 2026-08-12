@@ -6,6 +6,9 @@ import {
 } from '@/lib/db';
 import { VALID_SERVICES, VALID_TIME_SLOTS, validateAppointmentInput } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // ─── GET /api/admin/appointments ────────────────────────────────────────────
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
