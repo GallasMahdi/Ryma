@@ -3,22 +3,65 @@ import path from 'path';
 import fs from 'fs';
 import type { PatientRecord, PatientSession } from '@/types/admin';
 
-const DB_PATH = process.env.DATABASE_PATH
-  ? path.resolve(process.env.DATABASE_PATH)
-  : path.join(process.cwd(), 'data', 'ryma.db');
+function resolveDbPath(): string {
+  if (process.env.DATABASE_PATH) {
+    return path.resolve(process.env.DATABASE_PATH);
+  }
 
-// Ensure the data directory exists
-const dbDir = path.dirname(DB_PATH);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+  // Detect serverless environment (Vercel, AWS Lambda, Netlify)
+  const isServerless = Boolean(
+    process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
+  );
+  const defaultLocalPath = path.join(process.cwd(), 'data', 'ryma.db');
+
+  if (isServerless) {
+    const tmpPath = path.join('/tmp', 'ryma.db');
+    if (!fs.existsSync(tmpPath)) {
+      try {
+        if (fs.existsSync(defaultLocalPath)) {
+          fs.copyFileSync(defaultLocalPath, tmpPath);
+        }
+      } catch (err) {
+        console.warn('[DB] Could not copy seed database to /tmp:', err);
+      }
+    }
+    return tmpPath;
+  }
+
+  try {
+    const dbDir = path.dirname(defaultLocalPath);
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+    return defaultLocalPath;
+  } catch {
+    return path.join('/tmp', 'ryma.db');
+  }
 }
 
 let _db: Database.Database | null = null;
 
 export function getDb(): Database.Database {
   if (!_db) {
-    _db = new Database(DB_PATH);
-    _db.pragma('journal_mode = WAL');
+    const dbPath = resolveDbPath();
+    const dbDir = path.dirname(dbPath);
+
+    if (!fs.existsSync(dbDir)) {
+      try {
+        fs.mkdirSync(dbDir, { recursive: true });
+      } catch {
+        /* Ignore mkdir errors on read-only system if /tmp */
+      }
+    }
+
+    _db = new Database(dbPath);
+
+    try {
+      _db.pragma('journal_mode = WAL');
+    } catch {
+      _db.pragma('journal_mode = DELETE');
+    }
+
     _db.pragma('foreign_keys = ON');
     _db.pragma('synchronous = NORMAL');
     _db.pragma('busy_timeout = 5000');
@@ -615,8 +658,9 @@ export function dbGetBackupStatus(): { lastBackupDate: string | null; backupCoun
 
   let dbSizeBytes = 0;
   try {
-    if (fs.existsSync(DB_PATH)) {
-      dbSizeBytes = fs.statSync(DB_PATH).size;
+    const currentDbPath = resolveDbPath();
+    if (fs.existsSync(/*turbopackIgnore: true*/ currentDbPath)) {
+      dbSizeBytes = fs.statSync(/*turbopackIgnore: true*/ currentDbPath).size;
     }
   } catch {
     /* silent */

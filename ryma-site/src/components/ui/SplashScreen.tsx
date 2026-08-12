@@ -134,8 +134,8 @@ function AnimatedTitle() {
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{
-            duration: 0.7,
-            delay: 1.0 + i * 0.055,
+            duration: 0.5,
+            delay: 0.3 + i * 0.03,
             ease: [0.33, 1, 0.68, 1],
           }}
           className={`inline-block text-4xl md:text-6xl lg:text-7xl font-light tracking-[0.18em] ${
@@ -156,12 +156,12 @@ function AnimatedTitle() {
 // Progress line
 function ProgressLine({ onComplete }: { onComplete: () => void }) {
   return (
-    <motion.div className="relative w-48 h-[1px] bg-white/10 mt-10 overflow-hidden">
+    <motion.div className="relative w-48 h-[1px] bg-white/10 mt-8 overflow-hidden">
       <motion.div
         className="absolute inset-y-0 left-0 bg-gradient-to-r from-transparent via-[#C49A3C] to-[#F5E9C8]"
         initial={{ x: '-100%' }}
         animate={{ x: '0%' }}
-        transition={{ duration: 2.5, delay: 1.8, ease: 'easeInOut' }}
+        transition={{ duration: 1.2, delay: 0.6, ease: 'easeInOut' }}
         onAnimationComplete={onComplete}
       />
     </motion.div>
@@ -185,13 +185,19 @@ export function SplashScreen() {
   }
 
   const handleProgressComplete = () => {
+    setExitReady(true);
     setTimeout(() => {
-      setExitReady(true);
-      setTimeout(() => {
-        setShowSplash(false);
-        sessionStorage.setItem('ryma_splash_v2', 'true');
-      }, 1200);
-    }, 300);
+      setShowSplash(false);
+      sessionStorage.setItem('ryma_splash_v2', 'true');
+    }, 600);
+  };
+
+  const handleSkip = () => {
+    setExitReady(true);
+    setTimeout(() => {
+      setShowSplash(false);
+      sessionStorage.setItem('ryma_splash_v2', 'true');
+    }, 400);
   };
 
   if (!isReady) {
@@ -203,9 +209,10 @@ export function SplashScreen() {
       {showSplash && (
         <motion.div
           key="splash"
-          className="fixed inset-0 z-[9999] overflow-hidden"
+          className="fixed inset-0 z-[9999] overflow-hidden cursor-pointer"
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
+          onClick={handleSkip}
         >
           {/* Curtain panels that slide up on exit */}
           <AnimatePresence>
@@ -221,8 +228,8 @@ export function SplashScreen() {
                     <motion.div
                       className="absolute h-[1px] w-[200%] bg-gradient-to-r from-transparent via-[#C49A3C]/30 to-transparent"
                       style={{ top: '50%', left: '-50%', transform: 'rotate(-12deg)' }}
-                      animate={{ left: ['−50%', '50%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                      animate={{ left: ['-50%', '50%'] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
                     />
                   </div>
                 </motion.div>
