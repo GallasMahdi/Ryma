@@ -627,6 +627,29 @@ function EmptyState({
   onSelectPoint: (p: MapPoint) => void;
   onResetZone: () => void;
 }) {
+  const [activePoleFilter, setActivePoleFilter] = useState<'all' | 'kinesitherapie' | 'minceur'>('all');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // Filter current points by pole filter if selected
+  const filteredPoints = useMemo(() => {
+    return currentPoints.filter((point) => {
+      if (activePoleFilter === 'all') return true;
+      const service = serviceBySlug.get(point.serviceSlug);
+      return service?.pole === activePoleFilter;
+    });
+  }, [currentPoints, activePoleFilter, serviceBySlug]);
+
+  // Track active card index during touch scrolling
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const el = scrollContainerRef.current;
+    const scrollLeft = el.scrollLeft;
+    const cardWidth = el.firstElementChild?.clientWidth ?? 280;
+    const index = Math.round(scrollLeft / (cardWidth + 12));
+    setActiveIndex(Math.min(Math.max(0, index), filteredPoints.length - 1));
+  };
+
   return (
     <motion.div
       key="empty"
@@ -636,24 +659,20 @@ function EmptyState({
       transition={{ duration: 0.2 }}
       className="flex flex-col gap-4"
     >
-      {/* Zone Diagnostic Header & Reset Focus Action */}
-      <div
-        className="flex items-center justify-between p-4 rounded-2xl border bg-white border-slate-200 text-slate-900 shadow-sm transition-colors"
-      >
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center font-bold bg-blue-50 text-blue-600"
-          >
-            <IconBodyScan size={18} />
+      {/* Zone Diagnostic Header & Reset Action */}
+      <div className="flex items-center justify-between p-4 rounded-2xl border bg-white border-[#E8E2D8] text-[#1A1412] shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold bg-[#FDFAF4] text-[#C49A3C] border border-[#C49A3C]/20 shadow-2xs">
+            <IconBodyScan size={19} />
           </div>
           <div>
-            <h3 className="text-sm font-bold leading-tight">
+            <h3 className="text-sm font-bold leading-tight font-serif text-[#1A1412]">
               {selectedZone === 'all'
                 ? lang === 'fr' ? 'Diagnostic Global' : 'تشخيص شامل'
                 : ZONE_LABELS[selectedZone][lang]}
             </h3>
-            <p className="text-[11px] text-slate-400">
-              {currentPoints.length} {lang === 'fr' ? 'soins disponibles' : 'علاجات متاحة'}
+            <p className="text-[11px] text-[#8A8078] font-mono font-medium">
+              {filteredPoints.length} {lang === 'fr' ? 'soins disponibles' : 'علاجات متاحة'}
             </p>
           </div>
         </div>
@@ -662,82 +681,194 @@ function EmptyState({
           <button
             type="button"
             onClick={onResetZone}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+            className="text-xs font-semibold px-3 py-1.5 rounded-full border border-[#C49A3C]/30 text-[#9A7428] bg-[#FDFAF4] hover:bg-[#F5E9C8] transition-colors"
           >
             {lang === 'fr' ? 'Tout le corps' : 'كامل الجسم'}
           </button>
         )}
       </div>
 
-      {/* Instruction hint */}
-      <div
-        className="flex items-start gap-3 p-3.5 rounded-xl border text-xs leading-relaxed bg-blue-50/80 border-blue-200/80 text-blue-800"
-      >
-        <IconBodyScan size={16} className="shrink-0 mt-0.5" />
-        <span>
-          {lang === 'fr'
-            ? 'Cliquez directement sur une partie du corps ou choisissez un soin ci-dessous.'
-            : 'انقر مباشرة على جزء من الجسم أو اختر علاجاً أدناه.'}
+      {/* Interactive Category Filter Pills */}
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 pt-0.5">
+        <button
+          type="button"
+          onClick={() => setActivePoleFilter('all')}
+          className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            activePoleFilter === 'all'
+              ? 'bg-[#C49A3C] text-white shadow-xs'
+              : 'bg-white text-[#6B6058] border border-[#E8E2D8] hover:border-[#C49A3C]/40'
+          }`}
+        >
+          {lang === 'fr' ? 'Tous les soins' : 'جميع العلاجات'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActivePoleFilter('kinesitherapie')}
+          className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            activePoleFilter === 'kinesitherapie'
+              ? 'bg-[#9A7428] text-white shadow-xs'
+              : 'bg-white text-[#6B6058] border border-[#E8E2D8] hover:border-[#C49A3C]/40'
+          }`}
+        >
+          {lang === 'fr' ? 'Kinésithérapie' : 'علاج طبيعي'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActivePoleFilter('minceur')}
+          className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            activePoleFilter === 'minceur'
+              ? 'bg-[#8A601E] text-white shadow-xs'
+              : 'bg-white text-[#6B6058] border border-[#E8E2D8] hover:border-[#C49A3C]/40'
+          }`}
+        >
+          {lang === 'fr' ? 'Minceur' : 'تنحيف'}
+        </button>
+      </div>
+
+      {/* Instruction hint with Mobile Swipe Hint */}
+      <div className="flex items-center justify-between p-3 rounded-xl border text-xs leading-relaxed bg-[#FDFAF4] border-[#C49A3C]/25 text-[#9A7428]">
+        <div className="flex items-center gap-2">
+          <IconBodyScan size={16} className="shrink-0 text-[#C49A3C]" />
+          <span className="font-medium">
+            {lang === 'fr'
+              ? 'Sélectionnez un soin pour cibler la zone'
+              : 'اختر علاجاً لتحديد المنطقة'}
+          </span>
+        </div>
+        <span className="sm:hidden text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded-md border border-[#C49A3C]/30 text-[#C49A3C] shrink-0">
+          ↔ {lang === 'fr' ? 'Glisser' : 'سحب'}
         </span>
       </div>
 
-      {/* Service grid */}
-      {currentPoints.length === 0 ? (
-        <div
-          className="p-8 rounded-2xl text-center border bg-slate-50 border-slate-200 text-slate-500"
-        >
+      {/* Services List Rendering */}
+      {filteredPoints.length === 0 ? (
+        <div className="p-8 rounded-2xl text-center border bg-white border-[#E8E2D8] text-[#8A8078]">
           <p className="text-sm">
             {lang === 'fr' ? 'Aucun soin pour ce filtre.' : 'لا توجد علاجات لهذا المرشح.'}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {currentPoints.map((point) => {
-            const service = serviceBySlug.get(point.serviceSlug);
-            if (!service) return null;
-            const isKine = service.pole === 'kinesitherapie';
+        <>
+          {/* MOBILE VIEW: Advanced Touch Carousel */}
+          <div className="sm:hidden relative">
+            <div
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-3 pb-3 pt-1 px-1 -mx-1"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              {filteredPoints.map((point, index) => {
+                const service = serviceBySlug.get(point.serviceSlug);
+                if (!service) return null;
+                const isKine = service.pole === 'kinesitherapie';
 
-            return (
-              <button
-                key={point.serviceSlug}
-                type="button"
-                onClick={() => onSelectPoint(point)}
-                className="group text-start p-4 rounded-2xl border bg-white border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              >
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span
-                    className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider ${
-                      isKine
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'bg-purple-50 text-purple-600'
-                    }`}
+                return (
+                  <div
+                    key={point.serviceSlug}
+                    onClick={() => onSelectPoint(point)}
+                    className="w-[82vw] max-w-[290px] shrink-0 snap-center group text-start p-4 rounded-2xl border bg-white border-[#E8E2D8] active:scale-[0.99] transition-all duration-200 shadow-xs flex flex-col justify-between"
                   >
-                    {point.label[lang]}
-                  </span>
-                  <span className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
-                    <IconClock size={10} /> {service.duration}
-                  </span>
-                </div>
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2.5">
+                        <span
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider ${
+                            isKine
+                              ? 'bg-[#F5E9C8] text-[#9A7428]'
+                              : 'bg-[#FDFAF4] text-[#C49A3C] border border-[#C49A3C]/20'
+                          }`}
+                        >
+                          {point.label[lang]}
+                        </span>
+                        <span className="text-[11px] text-[#8A8078] flex items-center gap-1 font-mono font-semibold">
+                          <IconClock size={12} className="text-[#C49A3C]" /> {service.duration}
+                        </span>
+                      </div>
 
-                <h4
-                  className="font-semibold text-xs leading-snug line-clamp-2 mb-2 transition-colors text-slate-900 group-hover:text-blue-600"
+                      <h4 className="font-serif font-bold text-sm leading-snug line-clamp-2 mb-2 text-[#1A1412]">
+                        {service.name[lang]}
+                      </h4>
+
+                      <p className="text-[11px] text-[#6B6058] line-clamp-2 mb-3 leading-relaxed">
+                        {service.shortDesc[lang]}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2.5 border-t border-[#E8E2D8]">
+                      <span className="font-mono text-sm font-bold text-[#C49A3C]">
+                        {service.price} DT
+                      </span>
+                      <span className="text-xs font-bold text-[#9A7428] flex items-center bg-[#FDFAF4] border border-[#C49A3C]/25 px-2.5 py-1 rounded-lg">
+                        {lang === 'fr' ? 'Découvrir' : 'استكشف'}
+                        <IconArrowRight size={12} className="ms-1 rtl-flip" />
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile Carousel Indicators */}
+            {filteredPoints.length > 1 && (
+              <div className="flex items-center justify-center gap-1.5 mt-2">
+                {filteredPoints.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i === activeIndex ? 'w-5 bg-[#C49A3C]' : 'w-1.5 bg-[#D4CEBE]'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* DESKTOP VIEW: 2-Column Grid */}
+          <div className="hidden sm:grid grid-cols-2 gap-3">
+            {filteredPoints.map((point) => {
+              const service = serviceBySlug.get(point.serviceSlug);
+              if (!service) return null;
+              const isKine = service.pole === 'kinesitherapie';
+
+              return (
+                <button
+                  key={point.serviceSlug}
+                  type="button"
+                  onClick={() => onSelectPoint(point)}
+                  className="group text-start p-4 rounded-2xl border bg-white border-[#E8E2D8] hover:border-[#C49A3C] hover:shadow-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C]"
                 >
-                  {service.name[lang]}
-                </h4>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span
+                      className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                        isKine
+                          ? 'bg-[#F5E9C8] text-[#9A7428]'
+                          : 'bg-[#FDFAF4] text-[#C49A3C] border border-[#C49A3C]/20'
+                      }`}
+                    >
+                      {point.label[lang]}
+                    </span>
+                    <span className="text-[10px] text-[#8A8078] flex items-center gap-1 font-mono">
+                      <IconClock size={10} className="text-[#C49A3C]" /> {service.duration}
+                    </span>
+                  </div>
 
-                <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-                  <span className="font-mono text-xs font-bold text-blue-600">
-                    {service.price} DT
-                  </span>
-                  <span className="text-[10px] font-medium text-slate-400 flex items-center group-hover:translate-x-0.5 transition-transform rtl:group-hover:-translate-x-0.5">
-                    {lang === 'fr' ? 'Détails' : 'تفاصيل'}
-                    <IconArrowRight size={10} className="ms-1 rtl-flip" />
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                  <h4 className="font-semibold text-xs leading-snug line-clamp-2 mb-2 transition-colors text-[#1A1412] group-hover:text-[#9A7428]">
+                    {service.name[lang]}
+                  </h4>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-[#E8E2D8]">
+                    <span className="font-mono text-xs font-bold text-[#C49A3C]">
+                      {service.price} DT
+                    </span>
+                    <span className="text-[10px] font-medium text-[#8A8078] flex items-center group-hover:translate-x-0.5 transition-transform rtl:group-hover:-translate-x-0.5">
+                      {lang === 'fr' ? 'Détails' : 'تفاصيل'}
+                      <IconArrowRight size={10} className="ms-1 rtl-flip" />
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
     </motion.div>
   );
