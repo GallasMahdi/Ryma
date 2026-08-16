@@ -6,10 +6,12 @@ import { IconX } from '@tabler/icons-react';
 import { SERVICES } from '@/data/services';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
 
+import { Lang } from '@/lib/i18n';
+
 interface AddAppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  lang: 'fr' | 'ar';
+  lang: Lang;
   newForm: {
     patientName: string;
     phone: string;
@@ -59,7 +61,7 @@ export function AddAppointmentModal({
 
             <div className="flex items-center justify-between">
               <h3 className="font-serif text-xl font-bold text-[#202020]">
-                {lang === 'fr' ? 'Créer un Rendez-vous' : 'إضافة موعد جديد'}
+                {lang === 'pt' ? 'Criar Consulta' : lang === 'en' ? 'Create Appointment' : 'Créer un Rendez-vous'}
               </h3>
               <button
                 onClick={onClose}

@@ -4,15 +4,22 @@
  */
 
 function validateEnv() {
+  const isProd = process.env.NODE_ENV === 'production';
   const sessionSecret = process.env.SESSION_SECRET;
-  const adminHash = process.env.ADMIN_PASSWORD_HASH;
+  const adminHash = process.env.ADMIN_PASSWORD_HASH ? process.env.ADMIN_PASSWORD_HASH.replace(/\\/g, '').trim() : '';
+
+  if (isProd) {
+    if (!sessionSecret || sessionSecret.trim() === '') {
+      throw new Error('[FATAL CONFIG ERROR] SESSION_SECRET environment variable is missing in production.');
+    }
+    if (!adminHash || adminHash.trim() === '') {
+      throw new Error('[FATAL CONFIG ERROR] ADMIN_PASSWORD_HASH environment variable is missing in production.');
+    }
+  }
 
   return {
-    SESSION_SECRET:
-      sessionSecret ?? 'c3a640f6a9b29b4c507540a4492d5b55be8c2002ebc420bbfc09f4b848908b46',
-    ADMIN_PASSWORD_HASH:
-      (adminHash ? adminHash.replace(/\\/g, '').trim() : '') ||
-      '$2b$12$mZ3/r/MFfB0bC14buxvXUuk5podIpggQ7sfis2Iyt5MnoZWeUh/Eu',
+    SESSION_SECRET: sessionSecret || 'development_only_session_secret_key_32bytes_minimum',
+    ADMIN_PASSWORD_HASH: adminHash || '$2b$12$mZ3/r/MFfB0bC14buxvXUuk5podIpggQ7sfis2Iyt5MnoZWeUh/Eu',
     DATABASE_PATH: process.env.DATABASE_PATH ?? '',
     NODE_ENV: process.env.NODE_ENV ?? 'development',
   };

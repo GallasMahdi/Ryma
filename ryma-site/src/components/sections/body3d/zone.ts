@@ -9,17 +9,17 @@ export interface HotspotPoint {
   cy: number;
   position3D?: [number, number, number];
   zone: BodyZone;
-  label: { fr: string; ar: string };
+  label: { fr: string; pt?: string; en?: string; ar?: string };
 }
 
 /**
  * 3D Bounding Volumes for Direct Body Part Raycasting Click & Hover
  */
-export const ZONE_VOLUMES: Record<Exclude<BodyZone, 'all'>, { position: [number, number, number]; args: [number, number, number]; label: { fr: string; ar: string } }> = {
-  torso: { position: [0, 1.05, 0.02],  args: [0.38, 0.42, 0.28], label: { fr: 'Buste & Abdomen', ar: 'الصدر والبطن' } },
-  arms:  { position: [0, 1.12, 0.0],   args: [0.72, 0.55, 0.24], label: { fr: 'Membres Supérieurs', ar: 'الأطراف العلوية' } },
-  legs:  { position: [0, 0.45, 0.0],   args: [0.44, 0.78, 0.28], label: { fr: 'Membres Inférieurs', ar: 'الأطراف السفلية' } },
-  back:  { position: [0, 1.05, -0.05], args: [0.38, 0.45, 0.24], label: { fr: 'Rachis & Dos', ar: 'الظهر والعمود الفقري' } },
+export const ZONE_VOLUMES: Record<Exclude<BodyZone, 'all'>, { position: [number, number, number]; args: [number, number, number]; label: { fr: string; pt?: string; en?: string; ar?: string } }> = {
+  torso: { position: [0, 1.05, 0.02],  args: [0.38, 0.42, 0.28], label: { fr: 'Buste & Abdomen', pt: 'Torso e Abdómen', en: 'Torso & Abdomen' } },
+  arms:  { position: [0, 1.12, 0.0],   args: [0.72, 0.55, 0.24], label: { fr: 'Membres Supérieurs', pt: 'Membros Superiores', en: 'Upper Limbs' } },
+  legs:  { position: [0, 0.45, 0.0],   args: [0.44, 0.78, 0.28], label: { fr: 'Membres Inférieurs', pt: 'Membros Inferiores', en: 'Lower Limbs' } },
+  back:  { position: [0, 1.05, -0.05], args: [0.38, 0.45, 0.24], label: { fr: 'Rachis & Dos', pt: 'Coluna e Costas', en: 'Spine & Back' } },
 };
 
 /**

@@ -1,17 +1,17 @@
-export type Lang = 'fr' | 'ar';
+export type Lang = 'pt' | 'en' | 'fr';
 
 export interface BlogPost {
   slug: string;
-  title: { fr: string; ar: string };
-  excerpt: { fr: string; ar: string };
-  content: { fr: string; ar: string };
+  title: { fr: string; pt?: string; en?: string; ar?: string };
+  excerpt: { fr: string; pt?: string; en?: string; ar?: string };
+  content: { fr: string; pt?: string; en?: string; ar?: string };
   category: string;
   relatedServiceSlug?: string;
   readingTime: number; // minutes
   publishedAt: string; // ISO date
   coverImage: string;
   tags: string[];
-  seoDescription: { fr: string; ar: string };
+  seoDescription: { fr: string; pt?: string; en?: string; ar?: string };
 }
 
 export const BLOG_POSTS: BlogPost[] = [

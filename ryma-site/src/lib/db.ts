@@ -25,16 +25,26 @@ function getTursoClient(): LibSqlClient {
 
 // ─── Local SQLite Fallback Engine ─────────────────────────────────────────────
 function resolveDbPath(): string {
+  const isProd = process.env.NODE_ENV === 'production';
+  const isServerless = Boolean(
+    process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
+  );
+
+  // In production serverless environments, Turso credentials are required to avoid ephemeral data loss
+  if (isProd && isServerless && (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN)) {
+    throw new Error(
+      '[FATAL DB CONFIG ERROR] Serverless production deployment requires TURSO_DATABASE_URL and TURSO_AUTH_TOKEN to be configured to prevent ephemeral data loss.'
+    );
+  }
+
   if (process.env.DATABASE_PATH) {
     return path.resolve(process.env.DATABASE_PATH);
   }
 
-  const isServerless = Boolean(
-    process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
-  );
   const defaultLocalPath = path.join(process.cwd(), 'data', 'ryma.db');
 
   if (isServerless) {
+    // Development or test serverless simulation
     const tmpPath = path.join('/tmp', 'ryma.db');
     if (!fs.existsSync(tmpPath)) {
       try {
@@ -54,7 +64,12 @@ function resolveDbPath(): string {
       fs.mkdirSync(dbDir, { recursive: true });
     }
     return defaultLocalPath;
-  } catch {
+  } catch (err) {
+    if (isProd) {
+      throw new Error(
+        `[FATAL DB CONFIG ERROR] Cannot write to persistent database directory at ${defaultLocalPath}. Ephemeral /tmp fallback is disabled in production.`
+      );
+    }
     return path.join('/tmp', 'ryma.db');
   }
 }

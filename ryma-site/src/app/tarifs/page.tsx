@@ -22,15 +22,17 @@ export default function TarifsPage() {
         <div className="relative mx-auto max-w-3xl px-6 md:px-12">
           <ScrollReveal>
             <Badge variant="gold" className="mb-4">
-              {lang === 'fr' ? 'Tarifs & Forfaits' : 'الأسعار والباقات'}
+              {lang === 'pt' ? 'Preços & Pacotes' : lang === 'en' ? 'Pricing & Packages' : 'Tarifs & Forfaits'}
             </Badge>
             <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-4">
-              {lang === 'fr' ? 'Nos Tarifs' : 'أسعارنا'}
+              {lang === 'pt' ? 'Os Nossos Valores' : lang === 'en' ? 'Our Rates' : 'Nos Tarifs'}
             </h1>
             <p className="text-[#6B6058] text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-              {lang === 'fr'
-                ? 'Tarifs à la séance ou forfaits économiques pour un programme complet. Prise en charge CNAM sur les soins kinésithérapeutiques avec prescription médicale.'
-                : 'أسعار للجلسة الواحدة أو باقات اقتصادية لبرنامج متكامل. تغطية CNAM على علاجات العلاج الطبيعي بوصفة طبية.'}
+              {lang === 'pt'
+                ? 'Preços por sessão individual ou pacotes promocionais para programas completos. Comparticipação médica e recibos de seguro disponíveis.'
+                : lang === 'en'
+                ? 'Single session rates or cost-effective packages for full programs. Health insurance receipts and CNAM coverage supported.'
+                : 'Tarifs à la séance ou forfaits économiques pour un programme complet. Prise en charge CNAM sur les soins kinésithérapeutiques avec prescription médicale.'}
             </p>
           </ScrollReveal>
         </div>
@@ -41,7 +43,7 @@ export default function TarifsPage() {
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <ScrollReveal className="mb-10 text-center md:text-start">
             <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-semibold">
-              {lang === 'fr' ? '— Nos Forfaits Recommandés —' : '— باقاتنا الموصى بها —'}
+              {lang === 'pt' ? '— Os Nossos Pacotes Recomendados —' : lang === 'en' ? '— Our Recommended Packages —' : '— Nos Forfaits Recommandés —'}
             </span>
           </ScrollReveal>
 
@@ -52,18 +54,18 @@ export default function TarifsPage() {
                   {pkg.popular && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#9A7428] text-[#1A1412] text-[11px] font-bold font-mono px-4 py-1.5 rounded-full flex items-center gap-1 shadow-sm">
                       <IconStar size={12} fill="currentColor" className="text-[#1A1412]" />
-                      {pkg.badge?.[lang]}
+                      {pkg.badge?.[lang] || pkg.badge?.pt || pkg.badge?.fr}
                     </div>
                   )}
                   {!pkg.popular && pkg.badge && (
-                    <Badge variant="gold" className="mb-4 self-start">{pkg.badge[lang]}</Badge>
+                    <Badge variant="gold" className="mb-4 self-start">{pkg.badge[lang] || pkg.badge?.pt || pkg.badge?.fr}</Badge>
                   )}
 
                   <h3 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-3 mt-2">
-                    {pkg.name[lang]}
+                    {pkg.name[lang] || pkg.name?.pt || pkg.name?.fr}
                   </h3>
                   <p className="text-sm text-[#6B6058] mb-6 leading-relaxed">
-                    {pkg.description[lang]}
+                    {pkg.description[lang] || pkg.description?.pt || pkg.description?.fr}
                   </p>
 
                   <div className="flex items-end gap-2 mb-2">
@@ -76,11 +78,11 @@ export default function TarifsPage() {
                     </span>
                   )}
                   <span className="font-mono text-xs font-semibold text-[#9A7428] bg-[#F5E9C8] px-2.5 py-1 rounded-full inline-block mb-6">
-                    {pkg.sessions} {lang === 'fr' ? 'séances incluses' : 'جلسات شاملة'}
+                    {pkg.sessions} {lang === 'pt' ? 'sessões incluídas' : lang === 'en' ? 'sessions included' : 'séances incluses'}
                   </span>
 
                   <ul className="space-y-3 mb-8 flex-1">
-                    {pkg.features[lang].map((feat, fi) => (
+                    {(pkg.features[lang] || pkg.features.pt || pkg.features.fr).map((feat, fi) => (
                       <li key={fi} className="flex items-start gap-2.5 text-sm text-[#332D28]">
                         <IconCheck size={16} className="text-[#C49A3C] mt-0.5 shrink-0" />
                         <span className="leading-snug">{feat}</span>
@@ -107,7 +109,7 @@ export default function TarifsPage() {
         <div className="mx-auto max-w-4xl px-6 md:px-12">
           <ScrollReveal className="mb-10 text-center">
             <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-semibold">
-              {lang === 'fr' ? '— Tarifs à la séance —' : '— أسعار الجلسة الواحدة —'}
+              {lang === 'pt' ? '— Preços por Sessão Individual —' : lang === 'en' ? '— Single Session Rates —' : '— Tarifs à la séance —'}
             </span>
           </ScrollReveal>
 
@@ -115,7 +117,7 @@ export default function TarifsPage() {
           <ScrollReveal className="mb-6">
             <h3 className="font-serif text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-3">
               <span className="w-8 h-px bg-[#C49A3C]/30 inline-block"></span>
-              {lang === 'fr' ? 'Kinésithérapie' : 'العلاج الطبيعي'}
+              {lang === 'pt' ? 'Fisioterapêutica' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
             </h3>
           </ScrollReveal>
           <div className="space-y-3 mb-12">
@@ -123,7 +125,7 @@ export default function TarifsPage() {
               <ScrollReveal key={service.slug} delay={i * 0.04}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#E8E2D8] px-6 py-4.5 rounded-xl hover:border-[#C49A3C]/50 hover:shadow-sm transition-all duration-200 gap-3">
                   <div>
-                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang]}</span>
+                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang] || service.name.pt || service.name.fr}</span>
                     <span className="font-mono text-xs font-medium text-[#8A8078] ms-3 bg-[#FAF6EE] px-2 py-0.5 rounded-md">{service.duration}</span>
                   </div>
                   <span className="font-mono text-lg font-bold text-[#C49A3C]">{service.price} {t.common.currency}</span>
@@ -136,7 +138,7 @@ export default function TarifsPage() {
           <ScrollReveal className="mb-6">
             <h3 className="font-serif text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-3">
               <span className="w-8 h-px bg-[#C49A3C]/30 inline-block"></span>
-              {lang === 'fr' ? 'Soins Minceur' : 'علاجات التنحيف'}
+              {lang === 'pt' ? 'Estética Corporal & Minceur' : lang === 'en' ? 'Slimming & Body Contouring' : 'Soins Minceur'}
             </h3>
           </ScrollReveal>
           <div className="space-y-3">
@@ -144,7 +146,7 @@ export default function TarifsPage() {
               <ScrollReveal key={service.slug} delay={i * 0.04}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#E8E2D8] px-6 py-4.5 rounded-xl hover:border-[#C49A3C]/50 hover:shadow-sm transition-all duration-200 gap-3">
                   <div>
-                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang]}</span>
+                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang] || service.name.pt || service.name.fr}</span>
                     <span className="font-mono text-xs font-medium text-[#8A8078] ms-3 bg-[#FAF6EE] px-2 py-0.5 rounded-md">{service.duration}</span>
                   </div>
                   <span className="font-mono text-lg font-bold text-[#C49A3C]">{service.price} {t.common.currency}</span>
@@ -164,12 +166,14 @@ export default function TarifsPage() {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#C49A3C] to-[#E8C97A]"></div>
               
               <span className="font-mono text-xs font-bold tracking-widest text-[#9A7428] uppercase block mb-4">
-                ℹ️ {lang === 'fr' ? 'Prise en charge CNAM' : 'تغطية CNAM'}
+                ℹ️ {lang === 'pt' ? 'Comparticipação & Seguros de Saúde' : lang === 'en' ? 'Insurance Coverage & CNAM' : 'Prise en charge CNAM'}
               </span>
               <p className="text-[#6B6058] text-[15px] leading-relaxed max-w-2xl mx-auto">
-                {lang === 'fr'
-                  ? 'Les séances de kinésithérapie réalisées sur prescription médicale peuvent être remboursées par la CNAM (Caisse Nationale d\'Assurance Maladie en Tunisie). Apportez votre ordonnance médicale lors de votre première séance.'
-                  : 'جلسات العلاج الطبيعي المنجزة بوصفة طبية قابلة للتعويض من CNAM. أحضري وصفتك الطبية في أول جلسة.'}
+                {lang === 'pt'
+                  ? 'As sessões de fisioterapia prescritas por um médico são elegíveis para comparticipação e reembolso através de recibos de seguro de saúde ou convenção CNAM. Apresente a sua prescrição médica na primeira consulta.'
+                  : lang === 'en'
+                  ? 'Physiotherapy sessions prescribed by a medical doctor are eligible for health insurance reimbursement and CNAM coverage. Please bring your medical prescription to your first visit.'
+                  : 'Les séances de kinésithérapie réalisées sur prescription médicale peuvent être remboursées par la CNAM (Caisse Nationale d\'Assurance Maladie en Tunisie). Apportez votre ordonnance médicale lors de votre première séance.'}
               </p>
             </div>
           </ScrollReveal>

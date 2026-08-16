@@ -34,8 +34,10 @@ import {
 } from '@/types/admin';
 import { SERVICES } from '@/data/services';
 
+import { Lang } from '@/lib/i18n';
+
 interface PatientNotesTabProps {
-  lang: 'fr' | 'ar';
+  lang: Lang;
   patientNotes: PatientNote[];
   patientsList?: PatientRecord[];
   onRefreshPatients?: () => void;
@@ -81,9 +83,12 @@ export function PatientNotesTab({
   deleteNote,
   appointments,
   setConfirmDialog,
-  createDirectPatientNote,
 }: PatientNotesTabProps) {
-  const isFr = lang === 'fr';
+  const txt = (frStr: string, enStr: string, ptStr: string) => {
+    if (lang === 'fr') return frStr;
+    if (lang === 'en') return enStr;
+    return ptStr;
+  };
 
   // Selected EMR Patient State
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -483,9 +488,11 @@ export function PatientNotesTab({
   // Delete Patient Handler
   const handleDeletePatient = (patient: PatientRecord) => {
     setConfirmDialog({
-      title: isFr
-        ? `Supprimer définitivement le dossier de ${patient.patientName} ?`
-        : `حذف ملف المريض ${patient.patientName} نهائياً؟`,
+      title: lang === 'pt'
+        ? `Eliminar definitivamente o processo de ${patient.patientName}?`
+        : lang === 'en'
+        ? `Permanently delete record for ${patient.patientName}?`
+        : `Supprimer définitivement le dossier de ${patient.patientName} ?`,
       onConfirm: async () => {
         // Use phone as the canonical key (works for both legacy and real patients)
         // Only pass real DB id if it's not a legacy placeholder
@@ -503,7 +510,7 @@ export function PatientNotesTab({
   // Delete Session Handler
   const handleDeleteSession = (patientId: string, sessionId: string) => {
     setConfirmDialog({
-      title: isFr ? 'Supprimer cette séance ?' : 'حذف هذه الجلسة؟',
+      title: lang === 'pt' ? 'Eliminar esta sessão?' : lang === 'en' ? 'Delete this session?' : 'Supprimer cette séance ?',
       onConfirm: async () => {
         await fetch(`/api/admin/patients/${patientId}/sessions?sessionId=${sessionId}`, {
           method: 'DELETE',
@@ -521,10 +528,10 @@ export function PatientNotesTab({
         <div>
           <div className="flex items-center gap-2 text-xs font-mono text-[#9A7428] font-bold uppercase tracking-wider mb-1">
             <IconStethoscope size={16} />
-            <span>{isFr ? 'Dossier Patient & EMR Médical' : 'الملف الطبي للمريض'}</span>
+            <span>{lang === 'pt' ? 'Processo Clínico & EMR Médico' : lang === 'en' ? 'Patient File & Medical EMR' : 'Dossier Patient & EMR Médical'}</span>
           </div>
           <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#202020]">
-            {isFr ? 'Gestion des Soins & Historique' : 'إدارة العلاج والسجل الطبي'}
+            {lang === 'pt' ? 'Gestão de Tratamentos & Histórico' : lang === 'en' ? 'Care Management & Medical History' : 'Gestion des Soins & Historique'}
           </h2>
         </div>
 
@@ -533,7 +540,7 @@ export function PatientNotesTab({
           className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#C6A15B] hover:bg-[#B5904B] text-white text-xs font-mono font-bold shadow-md transition-all shrink-0 cursor-pointer"
         >
           <IconUserPlus size={16} />
-          <span>{isFr ? '+ Nouveau Patient' : '+ مريض جديد'}</span>
+          <span>{lang === 'pt' ? '+ Novo Paciente' : lang === 'en' ? '+ New Patient' : '+ Nouveau Patient'}</span>
         </button>
       </div>
 
@@ -548,14 +555,14 @@ export function PatientNotesTab({
               type="text"
               value={noteSearch}
               onChange={e => setNoteSearch(e.target.value)}
-              placeholder={isFr ? 'Rechercher nom, téléphone, pathologie...' : 'بحث باسم، هاتف، أو حالة...'}
+              placeholder={lang === 'pt' ? 'Pesquisar nome, telefone, patologia...' : lang === 'en' ? 'Search name, phone, condition...' : 'Rechercher nom, téléphone, pathologie...'}
               className="w-full pl-10 pr-4 py-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-2xl text-xs font-mono text-[#202020] placeholder-[#77736B] focus:outline-none focus:border-[#C6A15B]"
             />
           </div>
 
           {/* Patients Counter */}
           <div className="flex justify-between items-center px-1 mb-3 text-xs font-mono text-[#77736B]">
-            <span>{isFr ? 'Dossiers enregistrés :' : 'الملفات المسجلة:'}</span>
+            <span>{lang === 'pt' ? 'Processos Registados :' : lang === 'en' ? 'Registered Records :' : 'Dossiers enregistrés :'}</span>
             <span className="font-bold text-[#C6A15B]">{filteredPatients.length}</span>
           </div>
 
@@ -563,7 +570,7 @@ export function PatientNotesTab({
           <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
             {filteredPatients.length === 0 ? (
               <div className="text-center py-12 text-[#77736B] text-xs font-mono">
-                {isFr ? 'Aucun dossier trouvé' : 'لم يتم العثور على ملفات'}
+                {lang === 'pt' ? 'Nenhum processo encontrado' : lang === 'en' ? 'No records found' : 'Aucun dossier trouvé'}
               </div>
             ) : (
               filteredPatients.map(p => {
@@ -599,7 +606,7 @@ export function PatientNotesTab({
 
                     <div className="text-right shrink-0">
                       <span className="font-mono text-[10px] bg-[#E9E6DF]/60 text-[#202020] px-2 py-1 rounded-full">
-                        {totalCompleted} {isFr ? 'séances' : 'جلسات'}
+                        {totalCompleted} {lang === 'pt' ? 'sessões' : lang === 'en' ? 'sessions' : 'séances'}
                       </span>
                     </div>
                   </button>
@@ -643,10 +650,10 @@ export function PatientNotesTab({
                   <button
                     onClick={() => openEditPatientModal(activePatient)}
                     className="p-2.5 rounded-xl bg-[#FAFAF8] hover:bg-[#F4F2EE] text-[#202020] font-mono text-xs font-bold transition-all border border-[#E9E6DF] flex items-center gap-1.5 cursor-pointer"
-                    title="Modifier le dossier"
+                    title={txt('Modifier le dossier', 'Edit file', 'Editar ficha')}
                   >
                     <IconPencil size={16} />
-                    <span className="hidden sm:inline">{isFr ? 'Modifier' : 'تعديل'}</span>
+                    <span className="hidden sm:inline">{txt('Modifier', 'Edit', 'Editar')}</span>
                   </button>
 
                   <a
@@ -661,14 +668,14 @@ export function PatientNotesTab({
                   <a
                     href={`tel:${activePatient.phone}`}
                     className="p-2.5 rounded-xl bg-[#C6A15B]/10 text-[#C6A15B] hover:bg-[#C6A15B]/20 transition-all border border-[#C6A15B]/30"
-                    title="Appeler"
+                    title={txt('Appeler', 'Call', 'Chamar')}
                   >
                     <IconPhoneCall size={18} />
                   </a>
                   <button
                     onClick={() => handleDeletePatient(activePatient)}
                     className="p-2.5 rounded-xl bg-[#A9655F]/10 text-[#A9655F] hover:bg-[#A9655F]/20 transition-all border border-[#A9655F]/30 cursor-pointer"
-                    title="Supprimer Dossier"
+                    title={txt('Supprimer Dossier', 'Delete File', 'Eliminar Ficha')}
                   >
                     <IconTrash size={18} />
                   </button>
@@ -683,13 +690,13 @@ export function PatientNotesTab({
                   </div>
                   <div>
                     <div className="font-mono text-xs text-[#77736B] uppercase font-bold flex items-center gap-2">
-                      <span>{isFr ? 'Ordonnance Kinesi :' : 'الوصفة الطبية:'}</span>
+                      <span>{txt('Ordonnance Kinesi :', 'Kine Prescription:', 'Prescrição Kinesi:')}</span>
                       {/* Prescribed Target Adjuster (- / +) */}
                       <div className="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-[#E8E2D8]">
                         <button
                           type="button"
                           onClick={() => updatePrescribedTarget(-1)}
-                          title={isFr ? 'Diminuer séances prescrites' : 'إنقاص الجلسات'}
+                          title={txt('Diminuer séances prescrites', 'Decrease prescribed sessions', 'Diminuir sessões prescritas')}
                           className="w-5 h-5 rounded bg-[#FAFAF8] hover:bg-[#E9E6DF] text-[#202020] font-mono font-bold flex items-center justify-center text-xs cursor-pointer"
                         >
                           -
@@ -700,7 +707,7 @@ export function PatientNotesTab({
                         <button
                           type="button"
                           onClick={() => updatePrescribedTarget(1)}
-                          title={isFr ? 'Augmenter séances prescrites' : 'زيادة الجلسات'}
+                          title={txt('Augmenter séances prescrites', 'Increase prescribed sessions', 'Aumentar sessões prescritas')}
                           className="w-5 h-5 rounded bg-[#FAFAF8] hover:bg-[#E9E6DF] text-[#202020] font-mono font-bold flex items-center justify-center text-xs cursor-pointer"
                         >
                           +
@@ -708,7 +715,7 @@ export function PatientNotesTab({
                       </div>
                     </div>
                     <div className="font-serif font-bold text-sm text-[#202020]">
-                      {activePatient.sessions?.length ?? 0} / {activePatient.totalPrescribedSessions ?? 10} {isFr ? 'séances effectuées' : 'جلسات منجزة'}
+                      {activePatient.sessions?.length ?? 0} / {activePatient.totalPrescribedSessions ?? 10} {txt('séances effectuées', 'sessions completed', 'sessões concluídas')}
                     </div>
                   </div>
                 </div>
@@ -730,7 +737,7 @@ export function PatientNotesTab({
                   className="px-4 py-2 bg-[#C6A15B] hover:bg-[#B5904B] text-white text-xs font-mono font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
                 >
                   <IconPlus size={14} />
-                  <span>{isFr ? '+ Séance' : '+ جلسة'}</span>
+                  <span>{txt('+ Séance', '+ Session', '+ Sessão')}</span>
                 </button>
               </div>
 
@@ -743,7 +750,7 @@ export function PatientNotesTab({
                     : 'border-transparent text-[#77736B] hover:text-[#202020]'
                     }`}
                 >
-                  {isFr ? '📋 Fiche Patient' : '📋 الملف الشخصي'}
+                  {txt('📋 Fiche Patient', '📋 Patient File', '📋 Ficha do Doente')}
                 </button>
                 <button
                   onClick={() => setActiveDossierTab('timeline')}
@@ -752,7 +759,7 @@ export function PatientNotesTab({
                     : 'border-transparent text-[#77736B] hover:text-[#202020]'
                     }`}
                 >
-                  {isFr ? '⏱️ Historique & Séances' : '⏱️ السجل والتاريخ'} ({combinedTimeline.length})
+                  {txt('⏱️ Historique & Séances', '⏱️ History & Sessions', '⏱️ Histórico & Sessões')} ({combinedTimeline.length})
                 </button>
                 <button
                   onClick={() => setActiveDossierTab('eva')}
@@ -761,7 +768,7 @@ export function PatientNotesTab({
                     : 'border-transparent text-[#77736B] hover:text-[#202020]'
                     }`}
                 >
-                  {isFr ? '📊 Évolution Douleur EVA' : '📊 مؤشر الألم'}
+                  {txt('📊 Évolution Douleur EVA', '📊 EVA Pain Evolution', '📊 Evolução da Dor EVA')}
                 </button>
               </div>
 
@@ -774,19 +781,19 @@ export function PatientNotesTab({
                       {/* Medical Details */}
                       <div className="bg-[#FAFAF8] p-4 rounded-2xl border border-[#E9E6DF] space-y-2">
                         <div className="font-mono text-xs font-bold text-[#9A7428] uppercase">
-                          {isFr ? 'Informations Médicales' : 'المعطيات الطبية'}
+                          {txt('Informations Médicales', 'Medical Information', 'Informação Médica')}
                         </div>
                         <div className="text-xs text-[#202020] space-y-1.5 font-mono">
-                          <div><strong>{isFr ? 'Médecin traitant :' : 'الطبيب المباشر:'}</strong> {activePatient.referringDoctor || (isFr ? 'Non renseigné' : 'غير محدد')}</div>
-                          <div><strong>{isFr ? 'Prise en charge CNAM :' : 'تغطية الكنام:'}</strong> {activePatient.cnamStatus || 'NON'} {activePatient.cnamNumber ? `(#${activePatient.cnamNumber})` : ''}</div>
-                          <div><strong>{isFr ? 'Prescription :' : 'الوصفة:'}</strong> {activePatient.totalPrescribedSessions || 10} {isFr ? 'séances' : 'جلسات'}</div>
+                          <div><strong>{txt('Médecin traitant :', 'Attending Physician:', 'Médico Assistente:')}</strong> {activePatient.referringDoctor || txt('Non renseigné', 'Not specified', 'Não especificado')}</div>
+                          <div><strong>{txt('Prise en charge CNAM :', 'CNAM Coverage:', 'Cobertura CNAM:')}</strong> {activePatient.cnamStatus || 'NON'} {activePatient.cnamNumber ? `(#${activePatient.cnamNumber})` : ''}</div>
+                          <div><strong>{txt('Prescription :', 'Prescription:', 'Prescrição:')}</strong> {activePatient.totalPrescribedSessions || 10} {txt('séances', 'sessions', 'sessões')}</div>
                         </div>
                       </div>
 
                       {/* Pathology Tags */}
                       <div className="bg-[#FAFAF8] p-4 rounded-2xl border border-[#E9E6DF] space-y-2">
                         <div className="font-mono text-xs font-bold text-[#9A7428] uppercase">
-                          {isFr ? 'Pathologies & Tag' : 'الحالات والأعراض'}
+                          {txt('Pathologies & Tag', 'Pathologies & Tags', 'Patologias & Tags')}
                         </div>
                         <div className="flex flex-wrap gap-1.5 pt-1">
                           {activePatient.pathologyTags ? (
@@ -796,7 +803,7 @@ export function PatientNotesTab({
                               </span>
                             ))
                           ) : (
-                            <span className="text-xs text-[#77736B] font-mono">{isFr ? 'Aucun tag' : 'بدون حالات'}</span>
+                            <span className="text-xs text-[#77736B] font-mono">{txt('Aucun tag', 'No tags', 'Sem tags')}</span>
                           )}
                         </div>
                       </div>
@@ -806,14 +813,14 @@ export function PatientNotesTab({
                     <div className="bg-[#FAFAF8] p-5 rounded-2xl border border-[#E9E6DF] space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="font-mono text-xs font-bold text-[#9A7428] uppercase">
-                          {isFr ? 'Antécédents & Notes Thérapeutiques' : 'الملاحظات والسوابق الطبية'}
+                          {txt('Antécédents & Notes Thérapeutiques', 'History & Therapeutic Notes', 'Antecedentes & Notas Terapêuticas')}
                         </div>
                         <button
                           onClick={saveNote}
                           disabled={savingNote}
                           className="px-3 py-1.5 bg-[#C6A15B] text-white rounded-xl text-xs font-mono font-bold hover:bg-[#B5904B] transition-all cursor-pointer"
                         >
-                          {savingNote ? (isFr ? 'Sauvegarde...' : 'جاري الحفظ...') : (isFr ? 'Enregistrer Note' : 'حفظ الملاحظة')}
+                          {savingNote ? txt('Sauvegarde...', 'Saving...', 'A guardar...') : txt('Enregistrer Note', 'Save Note', 'Guardar Nota')}
                         </button>
                       </div>
 
@@ -821,7 +828,7 @@ export function PatientNotesTab({
                         value={noteForm.content}
                         onChange={e => setNoteForm(prev => ({ ...prev, content: e.target.value }))}
                         rows={6}
-                        placeholder={isFr ? 'Saisissez les détails cliniques, antécédents et objectifs du patient...' : 'أدخل التفاصيل والأهداف العلاجية للمريض...'}
+                        placeholder={txt('Saisissez les détails cliniques, antécédents et objectifs du patient...', 'Enter clinical details, medical history and patient goals...', 'Introduza os detalhes clínicos, antecedentes e objetivos do doente...')}
                         className="w-full p-3.5 bg-white border border-[#E9E6DF] rounded-xl text-xs font-mono text-[#202020] placeholder-[#77736B] focus:outline-none focus:border-[#C6A15B]"
                       />
                     </div>
@@ -833,7 +840,7 @@ export function PatientNotesTab({
                   <div className="space-y-3">
                     {combinedTimeline.length === 0 ? (
                       <div className="text-center py-12 text-[#77736B] text-xs font-mono">
-                        {isFr ? 'Aucune séance ou rendez-vous enregistré' : 'لا توجد جلسات أو مواعيد مسجلة'}
+                        {txt('Aucune séance ou rendez-vous enregistré', 'No sessions or appointments recorded', 'Sem sessões ou consultas registadas')}
                       </div>
                     ) : (
                       combinedTimeline.map(item => (
@@ -883,18 +890,18 @@ export function PatientNotesTab({
                   <div className="space-y-5 p-4 bg-[#FAFAF8] border border-[#E9E6DF] rounded-2xl">
                     <div className="flex items-center justify-between">
                       <h4 className="font-serif font-bold text-base text-[#202020]">
-                        {isFr ? 'Trajectoire de la Douleur (Échelle EVA 0–10)' : 'تطور مؤشر الألم EVA'}
+                        {txt('Trajectoire de la Douleur (Échelle EVA 0–10)', 'Pain Trajectory (EVA Scale 0–10)', 'Trajetória da Dor (Escala EVA 0–10)')}
                       </h4>
                       {evaAnalytics && (
                         <div className="font-mono text-xs font-bold text-[#6F8F72] bg-[#6F8F72]/15 px-3 py-1 rounded-full">
-                          {isFr ? `Amélioration : -${evaAnalytics.diff} points` : `تحسن: -${evaAnalytics.diff} نقاط`}
+                          {txt(`Amélioration : -${evaAnalytics.diff} points`, `Improvement: -${evaAnalytics.diff} points`, `Melhoria: -${evaAnalytics.diff} pontos`)}
                         </div>
                       )}
                     </div>
 
                     {!activePatient.sessions || activePatient.sessions.length === 0 ? (
                       <div className="text-center py-8 text-[#77736B] text-xs font-mono">
-                        {isFr ? 'Aucun score EVA enregistré dans les séances' : 'لا يوجد مؤشر ألم مسجل'}
+                        {txt('Aucun score EVA enregistré dans les séances', 'No EVA score recorded in sessions', 'Nenhum valor EVA registado nas sessões')}
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -908,7 +915,7 @@ export function PatientNotesTab({
                                   type="button"
                                   onClick={() => handleDeleteSession(activePatient.id, s.id)}
                                   className="p-1 rounded-lg text-[#A9655F]/60 hover:text-[#A9655F] hover:bg-[#A9655F]/10 transition-all cursor-pointer"
-                                  title={isFr ? 'Supprimer cette séance' : 'حذف هذه الجلسة'}
+                                  title={txt('Supprimer cette séance', 'Delete this session', 'Eliminar esta sessão')}
                                 >
                                   <IconTrash size={12} />
                                 </button>
@@ -936,7 +943,7 @@ export function PatientNotesTab({
           ) : (
             <div className="text-center py-24 text-[#77736B] text-xs font-mono flex flex-col items-center justify-center h-full">
               <IconUser size={48} className="mb-3 text-[#E9E6DF]" />
-              <span>{isFr ? 'Sélectionnez un patient dans la liste' : 'اختر مريضاً من القائمة'}</span>
+              <span>{txt('Sélectionnez un patient dans la liste', 'Select a patient from the list', 'Selecione um doente da lista')}</span>
             </div>
           )}
         </div>
@@ -954,7 +961,7 @@ export function PatientNotesTab({
             >
               <div className="flex justify-between items-center border-b border-[#E9E6DF] pb-3">
                 <h3 className="font-serif font-bold text-lg text-[#202020]">
-                  {isFr ? 'Créer une Fiche Patient' : 'إنشاء ملف مريض جديد'}
+                  {txt('Créer une Fiche Patient', 'Create Patient File', 'Criar Ficha de Doente')}
                 </h3>
                 <button onClick={() => setIsNewPatientModalOpen(false)} className="text-[#77736B] hover:text-[#202020]">
                   <IconX size={20} />
@@ -1067,7 +1074,7 @@ export function PatientNotesTab({
             >
               <div className="flex justify-between items-center border-b border-[#E9E6DF] pb-3">
                 <h3 className="font-serif font-bold text-lg text-[#202020]">
-                  {isFr ? `+ Séance pour ${activePatient.patientName}` : `+ إضافة جلسة لـ ${activePatient.patientName}`}
+                  {txt(`+ Séance pour ${activePatient.patientName}`, `+ Session for ${activePatient.patientName}`, `+ Sessão para ${activePatient.patientName}`)}
                 </h3>
                 <button onClick={() => setIsAddSessionModalOpen(false)} className="text-[#77736B] hover:text-[#202020]">
                   <IconX size={20} />
@@ -1173,7 +1180,7 @@ export function PatientNotesTab({
             >
               <div className="flex justify-between items-center border-b border-[#E9E6DF] pb-3">
                 <h3 className="font-serif font-bold text-lg text-[#202020]">
-                  {isFr ? 'Modifier le Dossier Patient' : 'تعديل الملف الطبي للمريض'}
+                  {txt('Modifier le Dossier Patient', 'Edit Patient File', 'Editar Ficha do Doente')}
                 </h3>
                 <button onClick={() => setIsEditPatientModalOpen(false)} className="text-[#77736B] hover:text-[#202020]">
                   <IconX size={20} />
@@ -1207,7 +1214,7 @@ export function PatientNotesTab({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-mono font-bold text-[#C6A15B] mb-1">
-                      {isFr ? 'Séances Prescrites *' : 'الجلسات المحددة *'}
+                      {txt('Séances Prescrites *', 'Prescribed Sessions *', 'Sessões Prescritas *')}
                     </label>
                     <input
                       type="number"

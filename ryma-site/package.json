@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "db:backup": "node scripts/backup-db.mjs"
+    "db:backup": "node scripts/backup-db.mjs",
+    "db:reset": "node scripts/reset-db.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

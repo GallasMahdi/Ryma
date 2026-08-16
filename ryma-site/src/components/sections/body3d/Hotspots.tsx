@@ -85,12 +85,14 @@ const ZoneHitbox = memo(function ZoneHitbox({
 /*  Main Direct Body Selection Group                                    */
 /* ------------------------------------------------------------------ */
 
+import type { Lang } from '@/lib/i18n';
+
 interface HotspotsProps {
   points: HotspotPoint[];
   serviceBySlug: Map<string, Service>;
   view: ViewSide;
   theme: ViewerTheme;
-  lang: 'fr' | 'ar';
+  lang: Lang;
   selectionSlug: string | null;
   hoveredSlug: string | null;
   selectedZone: BodyZone;

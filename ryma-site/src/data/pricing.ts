@@ -1,18 +1,18 @@
 export interface PricingPackage {
   id: string;
-  name: { fr: string; ar: string };
-  badge?: { fr: string; ar: string };
-  description: { fr: string; ar: string };
+  name: { fr: string; pt: string; en: string };
+  badge?: { fr: string; pt: string; en: string };
+  description: { fr: string; pt: string; en: string };
   price: number;
   originalPrice?: number;
   sessions: number;
-  features: { fr: string[]; ar: string[] };
+  features: { fr: string[]; pt: string[]; en: string[] };
   popular?: boolean;
   serviceSlug?: string;
 }
 
 export interface SinglePriceItem {
-  name: { fr: string; ar: string };
+  name: { fr: string; pt: string; en: string };
   duration: string;
   price: number;
   pole: 'kinesitherapie' | 'minceur';
@@ -22,14 +22,23 @@ export interface SinglePriceItem {
 export const PRICING_PACKAGES: PricingPackage[] = [
   {
     id: 'pack-minceur-starter',
-    name: { fr: 'Pack Découverte Minceur', ar: 'باقة اكتشاف التنحيف' },
-    badge: { fr: 'Idéal Débutantes', ar: 'مثالي للمبتدئات' },
+    name: {
+      fr: 'Pack Découverte Minceur',
+      pt: 'Pacote Descoberta Emagrecimento',
+      en: 'Slimming Discovery Pack',
+    },
+    badge: {
+      fr: 'Idéal Débutantes',
+      pt: 'Ideal para Iniciantes',
+      en: 'Ideal for Beginners',
+    },
     description: {
       fr: 'Une initiation complète aux soins minceur avec bilan personnalisé et drainage.',
-      ar: 'مقدمة كاملة لعلاجات التنحيف مع تقييم مخصص وصرف لمفاوي.',
+      pt: 'Uma introdução completa aos cuidados de emagrecimento com avaliação personalizada e drenagem.',
+      en: 'A complete introduction to body slimming care with personalized assessment and drainage.',
     },
-    price: 290,
-    originalPrice: 340,
+    price: 95,
+    originalPrice: 120,
     sessions: 5,
     features: {
       fr: [
@@ -39,26 +48,42 @@ export const PRICING_PACKAGES: PricingPackage[] = [
         '1 Massage Amincissant',
         'Suivi des mesures',
       ],
-      ar: [
-        '1 تقييم تنحيف مجاني (60 دقيقة)',
-        '2 جلسات تكهيف بالموجات فوق الصوتية',
-        '2 جلسات علاج بالضغط',
-        '1 تدليك منحف',
-        'متابعة القياسات',
+      pt: [
+        '1 Avaliação de Emagrecimento Gratuita (60 min)',
+        '2 Sessões de Cavitação Ultrassónica',
+        '2 Sessões de Pressoterapia',
+        '1 Massagem Modeladora',
+        'Acompanhamento de medições',
+      ],
+      en: [
+        '1 Free Slimming Assessment (60 min)',
+        '2 Ultrasonic Cavitation Sessions',
+        '2 Pressotherapy Sessions',
+        '1 Sculpting Massage',
+        'Measurement tracking',
       ],
     },
   },
   {
     id: 'pack-sculpt-expert',
-    name: { fr: 'Pack Silhouette Expert (10 séances)', ar: 'باقة نحت الجسم الاحترافية (10 جلسات)' },
-    badge: { fr: 'Le Plus Populaire', ar: 'الأكثر شعبية' },
+    name: {
+      fr: 'Pack Silhouette Expert (10 séances)',
+      pt: 'Pacote Silhueta Expert (10 sessões)',
+      en: 'Expert Body Sculpt Pack (10 sessions)',
+    },
+    badge: {
+      fr: 'Le Plus Populaire',
+      pt: 'Mais Popular',
+      en: 'Most Popular',
+    },
     popular: true,
     description: {
       fr: 'Programme intensif sur-mesure pour perte centimétrique et lissage de la cellulite.',
-      ar: 'برنامج مكثف مخصص لفقدان السنتيمترات وتنعيم السيلوليت.',
+      pt: 'Programa intensivo à medida para perda de centímetros e redução da celulite.',
+      en: 'Intensive tailored program for centimeter loss and cellulite reduction.',
     },
-    price: 580,
-    originalPrice: 720,
+    price: 180,
+    originalPrice: 230,
     sessions: 10,
     features: {
       fr: [
@@ -69,26 +94,43 @@ export const PRICING_PACKAGES: PricingPackage[] = [
         '1 Séances Cryolipolyse offerte',
         'Suivi photo Avant/Après',
       ],
-      ar: [
-        '1 تقييم تنحيف مجاني',
-        '4 جلسات تكهيف أو ليزر ليبو',
-        '3 جلسات ترددات راديوية لشد الجسم',
-        '3 جلسات علاج بالضغط / صرف لمفاوي',
-        '1 جلسة تحليل الدهون بالتبريد مجانية',
-        'متابعة بالصور قبل وبعد',
+      pt: [
+        '1 Avaliação de Emagrecimento Gratuita',
+        '4 Sessões de Cavitação ou Laser Lipo',
+        '3 Sessões de Radiofrequência Firmadora',
+        '3 Sessões de Pressoterapia / Drenagem',
+        '1 Sessão de Criolipólise Grátis',
+        'Registo fotográfico Antes/Depois',
+      ],
+      en: [
+        '1 Free Slimming Assessment',
+        '4 Cavitation or Lipo Laser Sessions',
+        '3 Firming Radiofrequency Sessions',
+        '3 Pressotherapy / Drainage Sessions',
+        '1 Free Cryolipolysis Session',
+        'Before/After photo tracking',
       ],
     },
   },
   {
     id: 'pack-post-partum',
-    name: { fr: 'Pack Récupération Post-Partum', ar: 'باقة تعافي ما بعد الولادة' },
-    badge: { fr: 'Spécial Mamans', ar: 'خاص بالأمهات' },
+    name: {
+      fr: 'Pack Récupération Post-Partum',
+      pt: 'Pacote Recuperação Pós-Parto',
+      en: 'Postpartum Recovery Pack',
+    },
+    badge: {
+      fr: 'Spécial Mamans',
+      pt: 'Especial Mães',
+      en: 'Moms Special',
+    },
     description: {
       fr: 'Rééducation périnéale, renforcement abdominal hypopressif et soins fermeté.',
-      ar: 'إعادة تأهيل العجان والبطن وتقوية العضلات والشد.',
+      pt: 'Reabilitação perineal, fortalecimento abdominal hipopressivo e cuidados firmadores.',
+      en: 'Pelvic floor rehabilitation, hypopressive abdominal strengthening, and firming care.',
     },
-    price: 490,
-    originalPrice: 600,
+    price: 150,
+    originalPrice: 190,
     sessions: 8,
     features: {
       fr: [
@@ -98,25 +140,41 @@ export const PRICING_PACKAGES: PricingPackage[] = [
         '2 Séances Pressothérapie Jambes Légères',
         'Conseils posture avec bébé',
       ],
-      ar: [
-        '1 تقييم شامل للعجان والوضعية',
-        '4 جلسات علاجي طبيعي لما بعد الولادة',
-        '2 جلسات ترددات راديوية للبطن',
-        '2 جلسات علاج بالضغط للساقين',
-        'نصائح الوضعية أثناء رعاية الطفل',
+      pt: [
+        '1 Avaliação Perineal e Postural completa',
+        '4 Sessões de Fisioterapia Pós-Parto',
+        '2 Sessões de Radiofrequência Abdominal',
+        '2 Sessões de Pressoterapia para Pernas',
+        'Conselhos de postura no dia a dia',
+      ],
+      en: [
+        '1 Full Pelvic Floor & Postural Assessment',
+        '4 Postpartum Physiotherapy Sessions',
+        '2 Abdominal Radiofrequency Sessions',
+        '2 Leg Pressotherapy Sessions',
+        'Postural guidance with baby',
       ],
     },
   },
   {
     id: 'pack-kine-sante',
-    name: { fr: 'Cure Kinésithérapie Douleur & Posture', ar: 'دورة العلاج الطبيعي للآلام والوضعية' },
-    badge: { fr: 'Prise en charge CNAM possible', ar: 'إمكانية تغطية CNAM' },
+    name: {
+      fr: 'Cure Kinésithérapie Douleur & Posture',
+      pt: 'Programa Fisioterapia Dor & Postura',
+      en: 'Physiotherapy Pain & Posture Care',
+    },
+    badge: {
+      fr: 'Prise en charge CNAM possible',
+      pt: 'Comparticipação Disponível',
+      en: 'Insurance Coverage Available',
+    },
     description: {
       fr: 'Programme thérapeutique pour douleurs chroniques, sciatique et mal de dos.',
-      ar: 'برنامج علاجي للآلام المزمنة والعرق النسا وآلام الظهر.',
+      pt: 'Programa terapêutico para dores crónicas, ciática e dores de costas.',
+      en: 'Therapeutic program for chronic pain, sciatica, and back pain relief.',
     },
-    price: 360,
-    originalPrice: 420,
+    price: 120,
+    originalPrice: 150,
     sessions: 6,
     features: {
       fr: [
@@ -125,11 +183,17 @@ export const PRICING_PACKAGES: PricingPackage[] = [
         '2 Séances Électrothérapie / TENS / Ultrasons',
         'Programme d\'exercices à domicile',
       ],
-      ar: [
-        '1 تقييم وضعي شامل',
-        '4 جلسات علاج طبيعي أو تدليك علاجي',
-        '2 جلسات علاج كهربائي / موجات صوتية',
-        'برنامج تمارين منزلية',
+      pt: [
+        '1 Avaliação Postural RPG',
+        '4 Sessões de RPG ou Massagem Terapêutica',
+        '2 Sessões de Eletroterapia / TENS / Ultrassom',
+        'Programa de exercícios para casa',
+      ],
+      en: [
+        '1 GPR Postural Assessment',
+        '4 GPR or Therapeutic Massage Sessions',
+        '2 Electrotherapy / TENS / Ultrasound Sessions',
+        'Home exercise program',
       ],
     },
   },

@@ -40,31 +40,31 @@ export default function ContactPage() {
   const contactItems = [
     {
       icon: IconPhone,
-      label: { fr: 'Téléphone', ar: 'الهاتف' },
+      label: { fr: 'Téléphone', pt: 'Telefone', en: 'Phone' },
       value: t.common.phone,
       href: `tel:${t.common.phone}`,
     },
     {
       icon: IconBrandWhatsapp,
-      label: { fr: 'WhatsApp', ar: 'واتساب' },
+      label: { fr: 'WhatsApp', pt: 'WhatsApp', en: 'WhatsApp' },
       value: t.common.whatsapp,
       href: `https://wa.me/${t.common.whatsapp.replace(/[^0-9]/g, '')}`,
     },
     {
       icon: IconMail,
-      label: { fr: 'Email', ar: 'البريد الإلكتروني' },
+      label: { fr: 'Email', pt: 'E-mail', en: 'Email' },
       value: t.common.email,
       href: `mailto:${t.common.email}`,
     },
     {
       icon: IconMapPin,
-      label: { fr: 'Adresse', ar: 'العنوان' },
+      label: { fr: 'Adresse', pt: 'Morada', en: 'Address' },
       value: t.common.address,
-      href: 'https://maps.google.com/?q=Ezzahra+Tunisie',
+      href: 'https://maps.google.com/?q=Lisboa+Portugal',
     },
     {
       icon: IconClock,
-      label: { fr: 'Horaires', ar: 'أوقات العمل' },
+      label: { fr: 'Horaires', pt: 'Horário', en: 'Opening Hours' },
       value: t.common.hours,
       href: null,
     },
@@ -72,82 +72,76 @@ export default function ContactPage() {
 
   return (
     <>
-      {/* ── Hero ─────────────────────────────────────── */}
-      <section className="relative pt-28 pb-14 overflow-hidden text-center bg-gradient-to-b from-[#FDF9F2] to-[#FAFAF8]">
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(245,233,200,0.5) 0%, transparent 70%)' }} />
-        <div className="relative mx-auto max-w-3xl px-6 md:px-12">
+      <section className="relative pt-28 pb-20 overflow-hidden bg-gradient-to-b from-[#FDF9F2] to-[#FAFAF8]">
+        <div className="relative mx-auto max-w-5xl px-6 md:px-12 text-center">
           <ScrollReveal>
-            <Badge variant="gold" className="mb-4">
-              {lang === 'fr' ? 'Nous Contacter' : 'اتصل بنا'}
-            </Badge>
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-4">
-              {lang === 'fr' ? 'Contactez-nous' : 'تواصل معنا'}
+            <span className="font-mono text-xs tracking-widest text-[#C49A3C] uppercase font-semibold">
+              — {t.contact.heroBadge} —
+            </span>
+            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mt-4 mb-4">
+              {t.contact.heroTitle}
             </h1>
-            <p className="text-[#6B6058] text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-              {lang === 'fr'
-                ? 'Posez vos questions, demandez des informations ou prenez rendez-vous directement via le formulaire.'
-                : 'اطرحي أسئلتك أو اطلبي معلومات أو احجزي موعداً مباشرة عبر النموذج.'}
+            <p className="text-[#6B6058] max-w-xl mx-auto text-lg leading-relaxed">
+              {t.contact.heroSub}
             </p>
           </ScrollReveal>
         </div>
       </section>
 
-      {/* ── Content ─────────────────────────────────────── */}
-      <section className="py-12 pb-24 bg-[#FAFAF8]">
+      <section className="py-16 pb-28 bg-[#FAFAF8]">
         <div className="mx-auto max-w-6xl px-6 md:px-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Left: Contact info + Map */}
-            <div className="space-y-6">
-              <ScrollReveal>
-                <GlassCard hoverEffect={false}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+            {/* Coords */}
+            <div className="space-y-8">
+              <ScrollReveal delay={0.1}>
+                <div className="bg-white border border-[#E8E2D8] rounded-3xl p-8 shadow-sm">
                   <h2 className="font-serif text-2xl font-bold text-[#1A1412] mb-6">
-                    {lang === 'fr' ? 'Informations de contact' : 'معلومات الاتصال'}
+                    {t.contact.coordsTitle}
                   </h2>
-                  <div className="space-y-5">
+                  <div className="space-y-6">
                     {contactItems.map(({ icon: Icon, label, value, href }, i) => (
                       <div key={i} className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-[#F5E9C8] border border-[#C49A3C]/30 flex items-center justify-center shrink-0">
-                          <Icon size={18} className="text-[#9A7428]" />
+                        <div className="w-11 h-11 rounded-xl bg-[#F5E9C8] border border-[#C49A3C]/30 flex items-center justify-center shrink-0">
+                          <Icon size={20} className="text-[#9A7428]" />
                         </div>
                         <div>
-                          <div className="font-mono text-xs text-[#8A8078] uppercase tracking-wide mb-0.5 font-medium">
-                            {label[lang]}
+                          <div className="font-mono text-xs text-[#8A8078] uppercase tracking-wide mb-1 font-semibold">
+                            {label[lang as keyof typeof label] || label.pt || label.fr}
                           </div>
                           {href ? (
                             <a href={href} target={href.startsWith('http') ? '_blank' : undefined}
                               rel="noopener noreferrer"
-                              className="text-sm font-semibold text-[#1A1412] hover:text-[#9A7428] transition-colors">
+                              className="text-base font-semibold text-[#1A1412] hover:text-[#9A7428] transition-colors">
                               {value}
                             </a>
                           ) : (
-                            <span className="text-sm font-semibold text-[#1A1412]">{value}</span>
+                            <span className="text-base font-semibold text-[#1A1412]">{value}</span>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
-                </GlassCard>
+                </div>
               </ScrollReveal>
 
-              {/* Map embed placeholder */}
-              <ScrollReveal delay={0.1}>
+              {/* Map embed card */}
+              <ScrollReveal delay={0.15}>
                 <div
-                  className="bg-white border border-[#C49A3C]/20 overflow-hidden rounded-2xl flex items-center justify-center p-8 shadow-sm"
-                  style={{ height: '260px', background: 'linear-gradient(135deg, #FDFAF4, #F5E9C8 80%)' }}
+                  className="bg-white border border-[#C49A3C]/20 overflow-hidden rounded-3xl flex items-center justify-center p-8 shadow-sm"
+                  style={{ height: '240px', background: 'linear-gradient(135deg, #FDFAF4, #F5E9C8 80%)' }}
                 >
                   <div className="text-center">
                     <div className="w-12 h-12 rounded-full bg-white border border-[#C49A3C]/30 flex items-center justify-center mx-auto mb-3 shadow-sm">
                       <IconMapPin size={24} className="text-[#9A7428]" />
                     </div>
-                    <p className="text-sm font-semibold text-[#1A1412]">{lang === 'fr' ? 'Carte Google Maps' : 'خريطة جوجل'}</p>
+                    <p className="text-base font-semibold text-[#1A1412]">{lang === 'pt' ? 'Mapa Interativo' : lang === 'en' ? 'Interactive Map' : 'Carte Google Maps'}</p>
                     <a
-                      href="https://maps.google.com/?q=Ezzahra+Tunisie"
+                      href="https://maps.google.com/?q=Lisboa+Portugal"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-mono text-xs font-bold text-[#9A7428] hover:text-[#C49A3C] transition-colors mt-2 inline-block"
                     >
-                      {lang === 'fr' ? 'Ouvrir dans Google Maps' : 'فتح في خرائط جوجل'} →
+                      {lang === 'pt' ? 'Abrir no Google Maps' : lang === 'en' ? 'Open in Google Maps' : 'Ouvrir dans Google Maps'} →
                     </a>
                   </div>
                 </div>
@@ -156,10 +150,13 @@ export default function ContactPage() {
 
             {/* Right: Contact Form */}
             <ScrollReveal delay={0.1}>
-              <GlassCard hoverEffect={false}>
-                <h2 className="font-serif text-2xl font-bold text-[#1A1412] mb-6">
-                  {lang === 'fr' ? 'Envoyez-nous un message' : 'أرسلي لنا رسالة'}
+              <GlassCard hoverEffect={false} className="p-8 md:p-10 border border-[#C49A3C]/20">
+                <h2 className="font-serif text-2xl font-bold text-[#1A1412] mb-2">
+                  {t.contact.formTitle}
                 </h2>
+                <p className="text-sm text-[#8A8078] mb-8">
+                  {t.contact.formSub}
+                </p>
 
                 {submitted ? (
                   <div className="flex flex-col items-center justify-center text-center py-10 gap-4">
@@ -167,12 +164,10 @@ export default function ContactPage() {
                       <IconCheck size={28} className="text-[#9A7428]" />
                     </div>
                     <h3 className="font-serif text-2xl font-bold text-[#1A1412]">
-                      {lang === 'fr' ? 'Message envoyé !' : 'تم إرسال الرسالة!'}
+                      {t.contact.successTitle}
                     </h3>
                     <p className="text-[#6B6058] text-sm leading-relaxed">
-                      {lang === 'fr'
-                        ? 'Nous vous répondrons dans les 24 heures. Pour un rendez-vous rapide, contactez-nous sur WhatsApp.'
-                        : 'سنرد عليك في غضون 24 ساعة. للحجز السريع، تواصلي معنا على واتساب.'}
+                      {t.contact.successMsg}
                     </p>
                     <Button href="/rendez-vous" variant="primary">
                       {t.common.bookAppointment}
@@ -183,7 +178,7 @@ export default function ContactPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="font-mono text-xs text-[#8A8078] uppercase tracking-wide block mb-1.5 font-medium">
-                          {lang === 'fr' ? 'Nom & Prénom' : 'الاسم واللقب'} *
+                          {t.contact.nameLabel} *
                         </label>
                         <input
                           id="contact-name"
@@ -192,13 +187,13 @@ export default function ContactPage() {
                           required
                           value={form.name}
                           onChange={handleChange}
-                          placeholder={lang === 'fr' ? 'Votre nom' : 'اسمك'}
+                          placeholder={lang === 'pt' ? 'O seu nome' : lang === 'en' ? 'Your name' : 'Votre nom'}
                           className={inputClass}
                         />
                       </div>
                       <div>
                         <label className="font-mono text-xs text-[#8A8078] uppercase tracking-wide block mb-1.5 font-medium">
-                          {lang === 'fr' ? 'Téléphone' : 'الهاتف'} *
+                          {t.contact.phoneLabel} *
                         </label>
                         <input
                           id="contact-phone"
@@ -207,7 +202,7 @@ export default function ContactPage() {
                           required
                           value={form.phone}
                           onChange={handleChange}
-                          placeholder="+216 XX XXX XXX"
+                          placeholder="+351 9XX XXX XXX"
                           className={inputClass}
                         />
                       </div>
@@ -215,7 +210,7 @@ export default function ContactPage() {
 
                     <div>
                       <label className="font-mono text-xs text-[#8A8078] uppercase tracking-wide block mb-1.5 font-medium">
-                        {lang === 'fr' ? 'Email' : 'البريد الإلكتروني'}
+                        {t.contact.emailLabel}
                       </label>
                       <input
                         id="contact-email"
@@ -223,14 +218,14 @@ export default function ContactPage() {
                         name="email"
                         value={form.email}
                         onChange={handleChange}
-                        placeholder={lang === 'fr' ? 'votre@email.com' : 'بريدك@email.com'}
+                        placeholder={lang === 'pt' ? 'seu.email@exemplo.pt' : lang === 'en' ? 'your.email@example.com' : 'votre@email.com'}
                         className={inputClass}
                       />
                     </div>
 
                     <div>
                       <label className="font-mono text-xs text-[#8A8078] uppercase tracking-wide block mb-1.5 font-medium">
-                        {lang === 'fr' ? 'Sujet' : 'الموضوع'}
+                        {lang === 'pt' ? 'Assunto' : lang === 'en' ? 'Subject' : 'Sujet'}
                       </label>
                       <select
                         id="contact-subject"
@@ -240,18 +235,18 @@ export default function ContactPage() {
                         className={inputClass}
                       >
                         <option value="">
-                          {lang === 'fr' ? '— Choisir un sujet —' : '— اختر موضوعاً —'}
+                          {lang === 'pt' ? '— Selecione o assunto —' : lang === 'en' ? '— Select a subject —' : '— Choisir un sujet —'}
                         </option>
-                        <option value="rdv">{lang === 'fr' ? 'Prise de rendez-vous' : 'حجز موعد'}</option>
-                        <option value="info">{lang === 'fr' ? 'Demande d\'information' : 'طلب معلومات'}</option>
-                        <option value="devis">{lang === 'fr' ? 'Demande de devis' : 'طلب عرض سعر'}</option>
-                        <option value="other">{lang === 'fr' ? 'Autre' : 'أخرى'}</option>
+                        <option value="rdv">{lang === 'pt' ? 'Marcação de Consulta' : lang === 'en' ? 'Book Appointment' : 'Prise de rendez-vous'}</option>
+                        <option value="info">{lang === 'pt' ? 'Pedido de Informação' : lang === 'en' ? 'Information Request' : 'Demande d\'information'}</option>
+                        <option value="devis">{lang === 'pt' ? 'Orçamento de Pacotes' : lang === 'en' ? 'Package Pricing' : 'Demande de devis'}</option>
+                        <option value="other">{lang === 'pt' ? 'Outro Assunto' : lang === 'en' ? 'Other' : 'Autre'}</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="font-mono text-xs text-[#8A8078] uppercase tracking-wide block mb-1.5 font-medium">
-                        {lang === 'fr' ? 'Message' : 'الرسالة'} *
+                        {t.contact.messageLabel} *
                       </label>
                       <textarea
                         id="contact-message"
@@ -260,7 +255,7 @@ export default function ContactPage() {
                         value={form.message}
                         onChange={handleChange}
                         rows={4}
-                        placeholder={lang === 'fr' ? 'Votre message...' : 'رسالتك...'}
+                        placeholder={lang === 'pt' ? 'A sua mensagem...' : lang === 'en' ? 'Your message...' : 'Votre message...'}
                         className={`${inputClass} resize-none`}
                       />
                     </div>
@@ -272,8 +267,8 @@ export default function ContactPage() {
                       disabled={loading}
                     >
                       {loading
-                        ? (lang === 'fr' ? 'Envoi en cours...' : 'جارٍ الإرسال...')
-                        : (lang === 'fr' ? 'Envoyer le Message' : 'إرسال الرسالة')}
+                        ? '...'
+                        : t.contact.sendBtn}
                     </Button>
                   </form>
                 )}

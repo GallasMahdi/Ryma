@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES } from '@/data/services';
+import { SERVICES, getLocalizedText } from '@/data/services';
 import {
   IconPhone,
   IconMail,
@@ -50,9 +50,11 @@ export function Footer() {
               </div>
             </Link>
             <p className="text-sm text-[#8A8070] leading-relaxed mb-6">
-              {lang === 'fr'
-                ? 'Cabinet de kinésithérapie et de soins minceur à Ezzahra, Tunisie. Une approche globale pour votre santé et votre bien-être.'
-                : 'عيادة العلاج الطبيعي وعلاجات التنحيف بالزهراء، تونس. نهج شامل لصحتك ورفاهيتك.'}
+              {lang === 'pt'
+                ? 'Clínica de fisioterapia e tratamentos corporais estéticos avançados. Uma abordagem médica global para a sua saúde e bem-estar.'
+                : lang === 'en'
+                ? 'Physiotherapy and slimming care practice. A comprehensive medical approach for your health and well-being.'
+                : 'Cabinet de kinésithérapie et de soins minceur. Une approche globale pour votre santé et votre bien-être.'}
             </p>
 
             {/* Social */}
@@ -79,7 +81,7 @@ export function Footer() {
           {/* Navigation */}
           <div>
             <h4 className="font-mono text-[10px] tracking-widest text-[#C49A3C] uppercase mb-5 font-semibold">
-              {lang === 'fr' ? 'Navigation' : 'التنقل'}
+              {lang === 'pt' ? 'Navegação' : lang === 'en' ? 'Navigation' : 'Navigation'}
             </h4>
             <ul className="space-y-2.5">
               {[
@@ -106,16 +108,16 @@ export function Footer() {
           {/* Services */}
           <div>
             <h4 className="font-mono text-[10px] tracking-widest text-[#C49A3C] uppercase mb-5 font-semibold">
-              {lang === 'fr' ? 'Nos Soins' : 'علاجاتنا'}
+              {lang === 'pt' ? 'Tratamentos' : lang === 'en' ? 'Treatments' : 'Nos Soins'}
             </h4>
             <ul className="space-y-2.5">
               {services.map((service) => (
                 <li key={service.slug}>
                   <Link
                     href={`/services/${service.slug}`}
-                    className="text-sm text-[#8A8070] hover:text-white transition-colors line-clamp-1 group inline-flex items-center gap-1"
+                    className="text-sm text-[#8A8078] hover:text-white transition-colors line-clamp-1 group inline-flex items-center gap-1"
                   >
-                    <span className="group-hover:translate-x-0.5 transition-transform">{service.name[lang]}</span>
+                    <span className="group-hover:translate-x-0.5 transition-transform">{getLocalizedText(service.name, lang)}</span>
                   </Link>
                 </li>
               ))}
@@ -124,7 +126,7 @@ export function Footer() {
                   href="/services"
                   className="inline-flex items-center gap-1 text-xs font-semibold text-[#C49A3C] hover:text-[#E8C97A] transition-colors mt-1"
                 >
-                  {lang === 'fr' ? 'Voir tout' : 'عرض الكل'}
+                  {lang === 'pt' ? 'Ver todos' : lang === 'en' ? 'View all' : 'Voir tout'}
                   <IconArrowUpRight size={12} />
                 </Link>
               </li>
@@ -134,7 +136,7 @@ export function Footer() {
           {/* Contact */}
           <div>
             <h4 className="font-mono text-[10px] tracking-widest text-[#C49A3C] uppercase mb-5 font-semibold">
-              {lang === 'fr' ? 'Contact & Horaires' : 'الاتصال والمواعيد'}
+              {lang === 'pt' ? 'Contacto e Horário' : lang === 'en' ? 'Contact & Hours' : 'Contact & Horaires'}
             </h4>
             <ul className="space-y-4">
               <li className="flex items-start gap-3 text-sm text-[#8A8070]">
@@ -173,13 +175,13 @@ export function Footer() {
           </span>
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/mentions-legales" className="hover:text-[#C49A3C] transition-colors">
-              {lang === 'fr' ? 'Mentions légales' : 'إشعار قانوني'}
+              {lang === 'pt' ? 'Aviso Legal' : lang === 'en' ? 'Legal Notice' : 'Mentions légales'}
             </Link>
             <Link href="/confidentialite" className="hover:text-[#C49A3C] transition-colors">
-              {lang === 'fr' ? 'Confidentialité' : 'الخصوصية'}
+              {lang === 'pt' ? 'Privacidade' : lang === 'en' ? 'Privacy Policy' : 'Confidentialité'}
             </Link>
             <Link href="/conditions-utilisation" className="hover:text-[#C49A3C] transition-colors">
-              {lang === 'fr' ? 'Conditions d\'utilisation' : 'شروط الاستخدام'}
+              {lang === 'pt' ? 'Termos de Uso' : lang === 'en' ? 'Terms of Use' : 'Conditions d\'utilisation'}
             </Link>
           </div>
         </div>

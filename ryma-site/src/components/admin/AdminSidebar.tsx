@@ -9,10 +9,12 @@ import {
   IconSparkles,
 } from '@tabler/icons-react';
 
+import { Lang } from '@/lib/i18n';
+
 interface AdminSidebarProps {
   activeTab: 'appointments' | 'slots' | 'analytics' | 'patients';
   setActiveTab: (tab: 'appointments' | 'slots' | 'analytics' | 'patients') => void;
-  lang: 'fr' | 'ar';
+  lang: Lang;
   totalAppointments: number;
   totalNotes: number;
 }
@@ -28,7 +30,7 @@ export function AdminSidebar({
     <aside className="w-64 bg-white border-e border-[#E9E6DF] p-4 hidden md:flex flex-col justify-between shrink-0 shadow-[1px_0_3px_rgba(0,0,0,0.02)] z-10">
       <div className="space-y-6">
         <div className="font-mono text-[10px] uppercase text-[#77736B] tracking-widest px-3 font-semibold">
-          {lang === 'fr' ? 'Menu Principal' : 'القائمة الرئيسية'}
+          {lang === 'fr' ? 'Menu Principal' : lang === 'en' ? 'Main Menu' : 'Menu Principal'}
         </div>
 
         <nav className="space-y-1.5">
@@ -42,7 +44,7 @@ export function AdminSidebar({
           >
             <div className="flex items-center gap-3">
               <IconListCheck size={18} className={activeTab === 'appointments' ? 'text-[#C6A15B]' : ''} />
-              <span>{lang === 'fr' ? 'Rendez-vous' : 'المواعيد'}</span>
+              <span>{lang === 'fr' ? 'Rendez-vous' : lang === 'en' ? 'Appointments' : 'Consultas'}</span>
             </div>
             <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
               activeTab === 'appointments'
@@ -61,7 +63,7 @@ export function AdminSidebar({
           >
             <div className="flex items-center gap-3">
               <IconCalendarEvent size={18} className={activeTab === 'slots' ? 'text-[#C6A15B]' : ''} />
-              <span>{lang === 'fr' ? 'Créneaux & Planning' : 'إدارة التوقيت'}</span>
+              <span>{lang === 'fr' ? 'Créneaux & Planning' : lang === 'en' ? 'Slots & Schedule' : 'Horários & Agenda'}</span>
             </div>
           </button>
 
@@ -75,7 +77,7 @@ export function AdminSidebar({
           >
             <div className="flex items-center gap-3">
               <IconChartBar size={18} className={activeTab === 'analytics' ? 'text-[#C6A15B]' : ''} />
-              <span>{lang === 'fr' ? 'Statistiques' : 'الإحصائيات'}</span>
+              <span>{lang === 'fr' ? 'Statistiques' : lang === 'en' ? 'Analytics' : 'Estatísticas'}</span>
             </div>
           </button>
 
@@ -89,7 +91,7 @@ export function AdminSidebar({
           >
             <div className="flex items-center gap-3">
               <IconNotes size={18} className={activeTab === 'patients' ? 'text-[#C6A15B]' : ''} />
-              <span>{lang === 'fr' ? 'Dossiers Patients' : 'ملفات المرضى'}</span>
+              <span>{lang === 'fr' ? 'Dossiers Patients' : lang === 'en' ? 'Patient Records' : 'Fichas de Doentes'}</span>
             </div>
             <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
               activeTab === 'patients'
@@ -106,7 +108,11 @@ export function AdminSidebar({
           <span>Cabinet Ryma</span>
         </div>
         <p className="text-[11px] text-[#77736B] leading-relaxed font-sans">
-          Base de données SQLite synchronisée. Accès sécurisé HTTP-Only.
+          {lang === 'fr'
+            ? 'Base de données SQLite synchronisée. Accès sécurisé HTTP-Only.'
+            : lang === 'en'
+            ? 'Synchronized database. Secure HTTP-Only access.'
+            : 'Base de dados sincronizada. Acesso seguro HTTP-Only.'}
         </p>
       </div>
     </aside>

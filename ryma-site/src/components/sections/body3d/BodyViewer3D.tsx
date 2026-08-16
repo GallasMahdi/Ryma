@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Service } from '@/data/services';
+import type { Lang } from '@/lib/i18n';
 import { ZONE_CAMERA_TARGETS, type BodyGender, type BodyZone, type HotspotPoint, type ViewSide, type ViewerTheme } from './zone';
 import { HumanModel } from './AnatomicalModel';
 import { Hotspots } from './Hotspots';
@@ -66,7 +67,7 @@ export interface BodyViewer3DProps {
   onHoverChange: (slug: string | null) => void;
   onZoneHoverChange?: (zone: BodyZone | null) => void;
   reduced: boolean;
-  lang: 'fr' | 'ar';
+  lang: Lang;
   ariaLabel: string;
   onKeyDown?: (e: React.KeyboardEvent) => void;
 }

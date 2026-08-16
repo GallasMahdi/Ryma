@@ -1,4 +1,5 @@
-import { SERVICES } from '@/data/services';
+import { SERVICES, getLocalizedText } from '@/data/services';
+import { Lang } from '@/lib/i18n';
 
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
 
@@ -62,8 +63,9 @@ export interface SlotInfo {
   appointmentId: string | null;
 }
 
-export function getServiceName(slug: string, lang: 'fr' | 'ar'): string {
-  return SERVICES.find(s => s.slug === slug)?.name[lang] ?? slug;
+export function getServiceName(slug: string, lang: Lang): string {
+  const service = SERVICES.find(s => s.slug === slug);
+  return service ? getLocalizedText(service.name, lang) : slug;
 }
 
 export function getServicePrice(slug: string): number {
@@ -87,7 +89,7 @@ export function shiftDateString(dateStr: string, deltaDays: number): string {
   return d.toISOString().split('T')[0];
 }
 
-export function formatSlotDateLabel(dateStr: string, lang: 'fr' | 'ar'): { title: string; subtitle: string; isSunday: boolean } {
+export function formatSlotDateLabel(dateStr: string, lang: Lang): { title: string; subtitle: string; isSunday: boolean } {
   const d = new Date(dateStr + 'T12:00:00');
   const todayStr = new Date().toISOString().split('T')[0];
   const tomorrowObj = new Date();
@@ -96,19 +98,20 @@ export function formatSlotDateLabel(dateStr: string, lang: 'fr' | 'ar'): { title
 
   const isSunday = d.getDay() === 0;
 
-  let title = d.toLocaleDateString(lang === 'fr' ? 'fr-TN' : 'ar-TN', { weekday: 'long' });
-  if (dateStr === todayStr) title = lang === 'fr' ? "Aujourd'hui" : "اليوم";
-  else if (dateStr === tomorrowStr) title = lang === 'fr' ? "Demain" : "غداً";
+  const locale = lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
+  let title = d.toLocaleDateString(locale, { weekday: 'long' });
+  if (dateStr === todayStr) title = lang === 'pt' ? 'Hoje' : lang === 'en' ? 'Today' : "Aujourd'hui";
+  else if (dateStr === tomorrowStr) title = lang === 'pt' ? 'Amanhã' : lang === 'en' ? 'Tomorrow' : 'Demain';
 
-  const subtitle = d.toLocaleDateString(lang === 'fr' ? 'fr-TN' : 'ar-TN', { day: 'numeric', month: 'long', year: 'numeric' });
+  const subtitle = d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
 
   return { title, subtitle, isSunday };
 }
 
-export const STATUS_CONFIG: Record<AppointmentStatus, { fr: string; ar: string; color: string; bg: string; border: string }> = {
-  PENDING:   { fr: 'En attente',   ar: 'في الانتظار', color: 'text-[#B08A45]', bg: 'bg-[#B08A45]/15', border: 'border-[#B08A45]/30' },
-  CONFIRMED: { fr: 'Confirmé',     ar: 'مؤكد',        color: 'text-[#6F8F72]', bg: 'bg-[#6F8F72]/15', border: 'border-[#6F8F72]/30' },
-  CANCELLED: { fr: 'Annulé',       ar: 'ملغى',        color: 'text-[#A9655F]', bg: 'bg-[#A9655F]/15', border: 'border-[#A9655F]/30' },
-  COMPLETED: { fr: 'Terminé',      ar: 'منتهي',       color: 'text-[#5B82A6]', bg: 'bg-[#5B82A6]/15', border: 'border-[#5B82A6]/30' },
-  NO_SHOW:   { fr: 'Non présenté', ar: 'لم يحضر',     color: 'text-[#77736B]', bg: 'bg-[#77736B]/15', border: 'border-[#77736B]/30' },
+export const STATUS_CONFIG: Record<AppointmentStatus, { fr: string; pt: string; en: string; color: string; bg: string; border: string }> = {
+  PENDING:   { fr: 'En attente',   pt: 'Pendente',      en: 'Pending',     color: 'text-[#B08A45]', bg: 'bg-[#B08A45]/15', border: 'border-[#B08A45]/30' },
+  CONFIRMED: { fr: 'Confirmé',     pt: 'Confirmado',    en: 'Confirmed',   color: 'text-[#6F8F72]', bg: 'bg-[#6F8F72]/15', border: 'border-[#6F8F72]/30' },
+  CANCELLED: { fr: 'Annulé',       pt: 'Cancelado',     en: 'Cancelled',   color: 'text-[#A9655F]', bg: 'bg-[#A9655F]/15', border: 'border-[#A9655F]/30' },
+  COMPLETED: { fr: 'Terminé',      pt: 'Concluído',     en: 'Completed',   color: 'text-[#5B82A6]', bg: 'bg-[#5B82A6]/15', border: 'border-[#5B82A6]/30' },
+  NO_SHOW:   { fr: 'Non présenté', pt: 'Falta à Consulta', en: 'No-Show',     color: 'text-[#77736B]', bg: 'bg-[#77736B]/15', border: 'border-[#77736B]/30' },
 };

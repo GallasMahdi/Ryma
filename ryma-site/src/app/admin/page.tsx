@@ -113,7 +113,14 @@ export default function AdminPage() {
       setAppointments(data.appointments);
     } catch (err) {
       if ((err as Error).message !== 'Session expirée') {
-        if (!isSilent) setAppointmentsError(lang === 'fr' ? 'Erreur de chargement des rendez-vous' : 'خطأ في تحميل المواعيد');
+        if (!isSilent)
+          setAppointmentsError(
+            lang === 'fr'
+              ? 'Erreur de chargement des rendez-vous'
+              : lang === 'en'
+              ? 'Error loading appointments'
+              : 'Erro ao carregar consultas'
+          );
       }
     } finally {
       if (!isSilent) setLoadingAppointments(false);
@@ -208,7 +215,14 @@ export default function AdminPage() {
         body: JSON.stringify({ status }),
       });
       slotCacheRef.current = {};
-      showMsg('success', lang === 'fr' ? 'Statut mis à jour' : 'تم تحديث الحالة');
+      showMsg(
+        'success',
+        lang === 'fr'
+          ? 'Statut mis à jour'
+          : lang === 'en'
+          ? 'Status updated'
+          : 'Estado atualizado'
+      );
     } catch (err) {
       setAppointments(prevList);
       showMsg('error', (err as Error).message);
@@ -223,7 +237,14 @@ export default function AdminPage() {
     try {
       await apiFetch(`/api/admin/appointments/${id}`, { method: 'DELETE' });
       slotCacheRef.current = {};
-      showMsg('success', lang === 'fr' ? 'Rendez-vous annulé' : 'تم إلغاء الموعد');
+      showMsg(
+        'success',
+        lang === 'fr'
+          ? 'Rendez-vous annulé'
+          : lang === 'en'
+          ? 'Appointment cancelled'
+          : 'Consulta cancelada'
+      );
     } catch (err) {
       setAppointments(prevList);
       showMsg('error', (err as Error).message);
@@ -249,7 +270,14 @@ export default function AdminPage() {
         body: JSON.stringify({ date, time }),
       });
       delete slotCacheRef.current[date];
-      showMsg('success', lang === 'fr' ? 'Créneau mis à jour' : 'تم تحديث التوقيت');
+      showMsg(
+        'success',
+        lang === 'fr'
+          ? 'Créneau mis à jour'
+          : lang === 'en'
+          ? 'Slot updated'
+          : 'Horário atualizado'
+      );
     } catch (err) {
       // Revert state on network/validation error
       fetchSlots(date, true);
@@ -276,7 +304,14 @@ export default function AdminPage() {
         startTime: '09:00', notes: '',
       });
       slotCacheRef.current = {};
-      showMsg('success', lang === 'fr' ? 'Rendez-vous créé' : 'تم إنشاء الموعد');
+      showMsg(
+        'success',
+        lang === 'fr'
+          ? 'Rendez-vous créé'
+          : lang === 'en'
+          ? 'Appointment created'
+          : 'Consulta criada'
+      );
     } catch (err) {
       setAddingError((err as Error).message);
     } finally {
@@ -305,7 +340,14 @@ export default function AdminPage() {
       });
       setPatientNotes(prev => prev.map(n => n.phone === data.note.phone ? data.note : n));
       setSelectedNote(data.note);
-      showMsg('success', lang === 'fr' ? 'Note sauvegardée' : 'تم حفظ الملاحظة');
+      showMsg(
+        'success',
+        lang === 'fr'
+          ? 'Note sauvegardée'
+          : lang === 'en'
+          ? 'Note saved'
+          : 'Nota guardada'
+      );
     } catch (err) {
       showMsg('error', (err as Error).message);
     } finally {
@@ -318,7 +360,14 @@ export default function AdminPage() {
       await apiFetch(`/api/admin/patients?phone=${encodeURIComponent(phone)}`, { method: 'DELETE' });
       setPatientNotes(prev => prev.filter(n => n.phone !== phone));
       if (selectedNote?.phone === phone) setSelectedNote(null);
-      showMsg('success', lang === 'fr' ? 'Note supprimée' : 'تم حذف الملاحظة');
+      showMsg(
+        'success',
+        lang === 'fr'
+          ? 'Note supprimée'
+          : lang === 'en'
+          ? 'Note deleted'
+          : 'Nota eliminada'
+      );
     } catch (err) {
       showMsg('error', (err as Error).message);
     }
@@ -334,7 +383,14 @@ export default function AdminPage() {
       setPatientNotes(prev => [data.note, ...prev.filter(n => n.phone !== phone)]);
       setSelectedNote(data.note);
       setNoteForm({ content: data.note.content, tags: data.note.tags });
-      showMsg('success', lang === 'fr' ? 'Dossier patient créé' : 'تم إنشاء ملف المريض');
+      showMsg(
+        'success',
+        lang === 'fr'
+          ? 'Dossier patient créé'
+          : lang === 'en'
+          ? 'Patient file created'
+          : 'Ficha de doente criada'
+      );
       return data.note;
     } catch (err) {
       showMsg('error', (err as Error).message);
@@ -379,9 +435,12 @@ export default function AdminPage() {
   }, [appointments]);
 
   const analyticsData = useMemo(() => {
-    const dowLabels = lang === 'fr'
-      ? ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-      : ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
+    const dowLabels =
+      lang === 'fr'
+        ? ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+        : lang === 'en'
+        ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        : ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
     const dowCounts = Array(7).fill(0);
     appointments.forEach(a => {
       const d = new Date(a.date + 'T12:00:00');
@@ -460,7 +519,7 @@ export default function AdminPage() {
                   onClick={() => setConfirmDialog(null)}
                   className="px-4 py-2.5 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-xs font-mono text-[#77736B] hover:text-[#202020] hover:bg-[#F4F2EE] transition-all"
                 >
-                  {lang === 'fr' ? 'Annuler' : 'إلغاء'}
+                  {lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar'}
                 </button>
                 <button
                   onClick={() => {
@@ -469,7 +528,7 @@ export default function AdminPage() {
                   }}
                   className="px-4 py-2.5 rounded-xl bg-[#A9655F] hover:bg-[#8F534D] text-white text-xs font-mono font-bold shadow-md transition-all"
                 >
-                  {lang === 'fr' ? 'Confirmer' : 'تأكيد'}
+                  {lang === 'fr' ? 'Confirmer' : lang === 'en' ? 'Confirm' : 'Confirmar'}
                 </button>
               </div>
             </motion.div>

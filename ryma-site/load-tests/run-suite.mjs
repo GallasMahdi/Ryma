@@ -157,8 +157,14 @@ async function runLoadAndStressTest() {
 async function runConcurrencyRaceConditionTest() {
   console.log('\n[3/7] 🎯 RUNNING CRITICAL APPOINTMENT CONCURRENCY TEST...');
   const concurrentVUs = 50;
-  const targetDate = '2026-09-30';
+  const targetDate = '2026-11-20';
   const targetTime = '10:00';
+
+  // Ensure clean target slot before launching concurrent requests
+  const initDb = new Database(DB_PATH);
+  initDb.prepare('DELETE FROM appointments WHERE date = ? AND startTime = ?').run(targetDate, targetTime);
+  initDb.prepare("DELETE FROM rate_limit_log WHERE ip LIKE '192.168.1.%'").run();
+  initDb.close();
 
   console.log(
     `   Simulating ${concurrentVUs} users attempting to book the EXACT SAME SLOT (${targetDate} ${targetTime}) simultaneously...`

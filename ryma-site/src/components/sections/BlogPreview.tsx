@@ -19,18 +19,18 @@ export function BlogPreview() {
         <ScrollReveal className="flex items-end justify-between gap-6 mb-12 flex-wrap">
           <div>
             <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-semibold block mb-3">
-              — {lang === 'fr' ? 'Blog Santé & Bien-être' : 'مدونة الصحة والعافية'} —
+              — {lang === 'pt' ? 'Blog de Saúde e Bem-Estar' : lang === 'en' ? 'Health & Wellness Blog' : 'Blog Santé & Bien-être'} —
             </span>
             <h2 className="font-serif text-4xl md:text-5xl font-bold text-[#1A1412]">
-              {lang === 'fr' ? 'Nos Derniers Articles' : 'أحدث مقالاتنا'}
+              {lang === 'pt' ? 'Artigos Mais Recentes' : lang === 'en' ? 'Latest Articles' : 'Nos Derniers Articles'}
             </h2>
           </div>
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-[#9A7428] hover:text-[#C49A3C] transition-colors shrink-0 bg-[#F5E9C8] border border-[#C49A3C]/30 px-4 py-2 rounded-full"
           >
-            <span>{lang === 'fr' ? 'Tous les articles' : 'جميع المقالات'}</span>
-            <IconArrowRight size={14} className="rtl-flip" />
+            <span>{lang === 'pt' ? 'Todos os artigos' : lang === 'en' ? 'All articles' : 'Tous les articles'}</span>
+            <IconArrowRight size={14} />
           </Link>
         </ScrollReveal>
 
@@ -43,7 +43,7 @@ export function BlogPreview() {
                   <div className="aspect-[16/10] w-full flex-shrink-0 relative overflow-hidden rounded-t-2xl bg-slate-900">
                     <Image
                       src={post.coverImage}
-                      alt={post.title[lang]}
+                      alt={post.title[lang] || post.title.pt || post.title.en || post.title.fr}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
                       className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
@@ -60,7 +60,7 @@ export function BlogPreview() {
                     {/* Reading Time Badge */}
                     <span className="absolute end-3 top-3 flex items-center gap-1 font-mono text-[10px] font-semibold text-white backdrop-blur-md bg-slate-900/75 px-2.5 py-1 rounded-full border border-white/20">
                       <IconClock size={11} className="text-blue-400" />
-                      {post.readingTime} {lang === 'fr' ? 'min' : 'دقيقة'}
+                      {post.readingTime} {t.blog.readTime}
                     </span>
                   </div>
 
@@ -69,21 +69,21 @@ export function BlogPreview() {
                       <Badge variant="gold">{post.category}</Badge>
                       <span className="flex items-center gap-1 font-mono text-xs text-[#8A8078]">
                         <IconClock size={12} className="text-[#C49A3C]" />
-                        {post.readingTime} {lang === 'fr' ? 'min' : 'دقيقة'}
+                        {post.readingTime} {t.blog.readTime}
                       </span>
                     </div>
 
                     <h3 className="font-serif text-lg font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors mb-3 leading-snug flex-1">
-                      {post.title[lang]}
+                      {post.title[lang] || post.title.pt || post.title.en || post.title.fr}
                     </h3>
 
                     <p className="text-sm text-[#6B6058] line-clamp-2 mb-5 leading-relaxed">
-                      {post.excerpt[lang]}
+                      {post.excerpt[lang] || post.excerpt.pt || post.excerpt.en || post.excerpt.fr}
                     </p>
 
                     <div className="flex items-center justify-between pt-4 border-t border-[#E8E2D8]">
                       <span className="font-mono text-xs text-[#8A8078]">
-                        {new Date(post.publishedAt).toLocaleDateString(lang === 'fr' ? 'fr-TN' : 'ar-TN', {
+                        {new Date(post.publishedAt).toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
                           day: 'numeric', month: 'long', year: 'numeric'
                         })}
                       </span>

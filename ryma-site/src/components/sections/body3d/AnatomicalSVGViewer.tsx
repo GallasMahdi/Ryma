@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Service } from '@/data/services';
 import type { BodyGender, BodyZone, HotspotPoint, ViewSide } from './zone';
+import type { Lang } from '@/lib/i18n';
 
 /* ------------------------------------------------------------------ */
 /*  Design Tokens                                                       */
@@ -28,7 +29,7 @@ export interface AnatomicalSVGViewerProps {
   selectedZone: BodyZone;
   onSelect: (p: HotspotPoint) => void;
   onZoneSelect?: (z: BodyZone) => void;
-  lang: 'fr' | 'ar';
+  lang: Lang;
 }
 
 /* ------------------------------------------------------------------ */
@@ -355,14 +356,14 @@ export function AnatomicalSVGViewer({
         <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
         <span>
           {currentActiveZone === 'all'
-            ? lang === 'fr' ? 'Tout le corps' : 'كامل الجسم'
+            ? lang === 'pt' ? 'Corpo Inteiro' : lang === 'en' ? 'Full Body' : 'Tout le corps'
             : currentActiveZone === 'torso'
-            ? lang === 'fr' ? 'Buste & Abdomen' : 'الصدر والبطن'
+            ? lang === 'pt' ? 'Torso e Abdómen' : lang === 'en' ? 'Torso & Abdomen' : 'Buste & Abdomen'
             : currentActiveZone === 'legs'
-            ? lang === 'fr' ? 'Membres Inférieurs' : 'الأطراف السفلية'
+            ? lang === 'pt' ? 'Membros Inferiores' : lang === 'en' ? 'Lower Limbs' : 'Membres Inférieurs'
             : currentActiveZone === 'arms'
-            ? lang === 'fr' ? 'Membres Supérieurs' : 'الأطراف العلوية'
-            : lang === 'fr' ? 'Rachis & Dos' : 'الظهر والعمود الفقري'}
+            ? lang === 'pt' ? 'Membros Superiores' : lang === 'en' ? 'Upper Limbs' : 'Membres Supérieurs'
+            : lang === 'pt' ? 'Coluna e Costas' : lang === 'en' ? 'Spine & Back' : 'Rachis & Dos'}
         </span>
       </div>
     </div>

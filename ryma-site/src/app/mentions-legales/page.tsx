@@ -7,9 +7,7 @@ import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { IconScale, IconShieldCheck, IconFileText, IconArrowLeft } from '@tabler/icons-react';
 
 export default function MentionsLegalesPage() {
-  const { lang } = useLanguage();
-
-  const isFr = lang === 'fr';
+  const { lang, t } = useLanguage();
 
   return (
     <div className="bg-[#FAFAF8] min-h-screen text-[#1A1412] pt-28 pb-24">
@@ -19,8 +17,8 @@ export default function MentionsLegalesPage() {
             href="/"
             className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-[#9A7428] hover:text-[#C49A3C] transition-colors mb-8 bg-[#F5E9C8] border border-[#C49A3C]/30 px-4 py-2 rounded-full"
           >
-            <IconArrowLeft size={14} className="rtl-flip" />
-            <span>{isFr ? 'Retour à l\'accueil' : 'العودة للرئيسية'}</span>
+            <IconArrowLeft size={14} />
+            <span>{t.common.backToHome}</span>
           </Link>
 
           <div className="flex items-center gap-3 mb-4">
@@ -28,17 +26,19 @@ export default function MentionsLegalesPage() {
               <IconScale size={24} />
             </div>
             <span className="font-mono text-xs font-bold text-[#9A7428] tracking-widest uppercase">
-              {isFr ? 'Information Réglementaire' : 'معلومات تنظيمية'}
+              {lang === 'pt' ? 'Informação Regulamentar' : lang === 'en' ? 'Regulatory Compliance' : 'Information Réglementaire'}
             </span>
           </div>
 
           <h1 className="font-serif text-3xl md:text-5xl font-bold text-[#1A1412] mb-6">
-            {isFr ? 'Mentions Légales' : 'الإشعار القانوني'}
+            {lang === 'pt' ? 'Aviso Legal' : lang === 'en' ? 'Legal Notice' : 'Mentions Légales'}
           </h1>
           <p className="text-[#6B6058] text-lg mb-10 leading-relaxed border-b border-[#E8E2D8] pb-6">
-            {isFr
-              ? 'Conformément à la législation en vigueur, vous trouverez ci-dessous toutes les informations légales relatives à la publication et à l\'utilisation du site officiel du Cabinet Ryma Ouichka.'
-              : 'وفقاً للتشريعات المعمول بها، تجدون أدناه جميع المعلومات القانونية المتعلقة بنشر واستخدام الموقع الرسمي لعيادة ريما ويشكة.'}
+            {lang === 'pt'
+              ? 'Em conformidade com a legislação aplicável, encontra abaixo todas as informações legais relativas à utilização do website oficial do Ryma Ouichka.'
+              : lang === 'en'
+              ? 'In accordance with current regulations, below is the legal information regarding the publication and use of Dr. Ryma Ouichka official website.'
+              : 'Conformément à la législation en vigueur, vous trouverez ci-dessous toutes les informations légales relatives à la publication et à l\'utilisation du site officiel du Cabinet Ryma Ouichka.'}
           </p>
         </ScrollReveal>
 
@@ -47,15 +47,15 @@ export default function MentionsLegalesPage() {
           <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-xs">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-2">
               <IconFileText className="text-[#9A7428]" size={20} />
-              {isFr ? '1. Éditeur du site' : '1. ناشر الموقع'}
+              {lang === 'pt' ? '1. Identificação e Entidade' : lang === 'en' ? '1. Website Publisher' : '1. Éditeur du site'}
             </h2>
             <div className="space-y-2 text-sm md:text-base">
-              <p><strong>{isFr ? 'Nom du cabinet :' : 'اسم العيادة:'}</strong> Cabinet Ryma Ouichka — Kinésithérapie & Soins Minceur</p>
-              <p><strong>{isFr ? 'Praticienne responsable :' : 'الممارسة المسؤولة:'}</strong> Ryma Ouichka (Kinésithérapeute diplômée d&apos;État)</p>
-              <p><strong>{isFr ? 'Adresse du cabinet :' : 'عنوان العيادة:'}</strong> Avenue Habib Bourguiba, Ezzahra 2034, Gouvernorat de Ben Arous, Tunisie</p>
-              <p><strong>{isFr ? 'Téléphone :' : 'الهاتف:'}</strong> +216 71 800 123 / +216 20 123 456</p>
-              <p><strong>{isFr ? 'Email de contact :' : 'البريد الإلكتروني:'}</strong> contact@ryma-ouichka.tn</p>
-              <p><strong>{isFr ? 'Agrément & Statut :' : 'الترخيص والحالة:'}</strong> Exercice professionnel autorisé sous le contrôle des autorités de santé tunisiennes. Prise en charge CNAM agréée.</p>
+              <p><strong>{lang === 'pt' ? 'Nome da Clínica :' : lang === 'en' ? 'Practice Name :' : 'Nom du cabinet :'}</strong> Clínica Ryma Ouichka — Fisioterapia & Estética Avançada</p>
+              <p><strong>{lang === 'pt' ? 'Profissional Responsável :' : lang === 'en' ? 'Licensed Practitioner :' : 'Praticienne responsable :'}</strong> Dra. Ryma Ouichka (Fisioterapeuta Licenciada)</p>
+              <p><strong>{lang === 'pt' ? 'Morada da Clínica :' : lang === 'en' ? 'Clinic Address :' : 'Adresse du cabinet :'}</strong> Lisboa, Portugal</p>
+              <p><strong>{lang === 'pt' ? 'Telefone :' : lang === 'en' ? 'Phone :' : 'Téléphone :'}</strong> {t.common.phone}</p>
+              <p><strong>{lang === 'pt' ? 'E-mail :' : lang === 'en' ? 'Email :' : 'Email de contact :'}</strong> {t.common.email}</p>
+              <p><strong>{lang === 'pt' ? 'Estatuto & Recibos :' : lang === 'en' ? 'Licensing & Insurance :' : 'Agrément & Statut :'}</strong> Exercício profissional licenciado pelas autoridades de saúde competentes. Recibos elegíveis para comparticipação e seguros de saúde.</p>
             </div>
           </div>
 
@@ -63,46 +63,56 @@ export default function MentionsLegalesPage() {
           <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-xs">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-2">
               <IconShieldCheck className="text-[#9A7428]" size={20} />
-              {isFr ? '2. Hébergement du site' : '2. استضافة الموقع'}
+              {lang === 'pt' ? '2. Alojamento e Segurança' : lang === 'en' ? '2. Hosting & Security' : '2. Hébergement du site'}
             </h2>
             <p className="text-sm md:text-base">
-              {isFr
-                ? 'Le site est hébergé sur des serveurs sécurisés haute disponibilité bénéficiant de certifications de sécurité avancées et d\'un chiffrement SSL / TLS.'
-                : 'يتم استضافة الموقع على خوادم آمنة عالية التوفر تتمتع بشهادات أمان متقدمة وتشفير SSL / TLS.'}
+              {lang === 'pt'
+                ? 'Este website encontra-se alojado em servidores seguros de alta disponibilidade com certificação avançada de proteção de dados e encriptação SSL / TLS.'
+                : lang === 'en'
+                ? 'This site is hosted on high-availability secure servers featuring advanced security standards and SSL/TLS encryption.'
+                : 'Le site est hébergé sur des serveurs sécurisés haute disponibilité bénéficiant de certifications de sécurité avancées et d\'un chiffrement SSL / TLS.'}
             </p>
           </div>
 
           {/* 3. Propriété Intellectuelle */}
           <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-xs">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4">
-              {isFr ? '3. Propriété intellectuelle' : '3. الملكية الفكرية'}
+              {lang === 'pt' ? '3. Propriedade Intelectual' : lang === 'en' ? '3. Intellectual Property' : '3. Propriété intellectuelle'}
             </h2>
             <p className="text-sm md:text-base mb-4">
-              {isFr
-                ? 'L\'ensemble des éléments figurant sur ce site (textes, visuels, photographies, logos, graphismes, structure de l\'outil d\'anatomie 2D) est protégé par les dispositions du Code du droit d\'auteur tunisien et de la propriété intellectuelle internationale.'
-                : 'جميع العناصر المعروضة على هذا الموقع (النصوص، الصور، الشعارات، الرسومات، هيلكة أداة التشريح ثلاثية/ثنائية الأبعاد) محمية بموجب أحكام قانون حقوق المؤلف التونسي والملكية الفكرية الدولية.'}
+              {lang === 'pt'
+                ? 'Todos os elementos integrados neste website (textos, imagens, grafismos, logotipo, estrutura do visualizador anatómico) estão protegidos pela legislação de direitos de autor e propriedade intelectual.'
+                : lang === 'en'
+                ? 'All materials on this website (text, photos, logos, graphics, anatomical viewer engine) are protected by applicable intellectual property and copyright laws.'
+                : 'L\'ensemble des éléments figurant sur ce site (textes, visuels, photographies, logos, graphismes, structure de l\'outil d\'anatomie 2D) est protégé par les dispositions du Code du droit d\'auteur et de la propriété intellectuelle internationale.'}
             </p>
             <p className="text-sm md:text-base text-[#6B6058]">
-              {isFr
-                ? 'Toute reproduction, représentation, modification ou adaptation sans l\'autorisation écrite préalable du Cabinet Ryma Ouichka est strictement interdite.'
-                : 'يُحظر تماماً أي إعادة إنتاج أو تمثيل أو تعديل أو تكييف دون إذن كتابي مسبق من عيادة ريما ويشكة.'}
+              {lang === 'pt'
+                ? 'Qualquer reprodução, adaptação ou utilização não autorizada por escrito é estritamente proibida.'
+                : lang === 'en'
+                ? 'Any reproduction or distribution without prior written consent from Dr. Ryma Ouichka is strictly prohibited.'
+                : 'Toute reproduction, représentation, modification ou adaptation sans l\'autorisation écrite préalable du Cabinet Ryma Ouichka est strictement interdite.'}
             </p>
           </div>
 
           {/* 4. Avertissement Médical */}
           <div className="bg-white border border-[#C49A3C]/40 rounded-2xl p-6 md:p-8 shadow-xs bg-gradient-to-br from-white to-[#FDF9F2]">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4 text-[#9A7428]">
-              {isFr ? '4. Avertissement médical & Responsabilité' : '4. التحذير الطبي والمسؤولية'}
+              {lang === 'pt' ? '4. Aviso Médico & Responsabilidade' : lang === 'en' ? '4. Medical Disclaimer' : '4. Avertissement médical & Responsabilité'}
             </h2>
             <p className="text-sm md:text-base mb-3">
-              {isFr
-                ? 'Les informations et conseils publiés sur ce site (articles de blog, descriptions de soins, bilans posturaux) sont fournis à titre informatif et éducatif.'
-                : 'المعلومات والنصائح المنشورة على هذا الموقع (مقالات المدونة، وصف العلاجات، التقييمات) مقدمة لأغراض إعلامية وتثقيفية فقط.'}
+              {lang === 'pt'
+                ? 'As informações e orientações prestadas neste website têm caráter puramente informativo e pedagógico.'
+                : lang === 'en'
+                ? 'The health and treatment details provided on this website are for general informational and educational purposes only.'
+                : 'Les informations et conseils publiés sur ce site (articles de blog, descriptions de soins, bilans posturaux) sont fournis à titre informatif et éducatif.'}
             </p>
             <p className="text-sm md:text-base font-medium text-[#1A1412]">
-              {isFr
-                ? 'Elles ne remplacent en aucun cas un diagnostic ou une consultation médicale directe. Tout traitement fait l\'objet d\'une évaluation préalable en cabinet.'
-                : 'لا تستبدل بأي حال من الأحوال التشخيص أو الاستشارة الطبية المباشرة. يخضع كل علاج لتقييم مسبق في العيادة.'}
+              {lang === 'pt'
+                ? 'Não substituem, em caso algum, um diagnóstico ou consulta médica presencial. Todos os tratamentos dependem de uma avaliação prévia em clínica.'
+                : lang === 'en'
+                ? 'They do not constitute medical advice or replace a formal clinical evaluation by a qualified doctor.'
+                : 'Elles ne remplacent en aucun cas un diagnostic ou une consultation médicale directe. Tout traitement fait l\'objet d\'une évaluation préalable en cabinet.'}
             </p>
           </div>
         </ScrollReveal>

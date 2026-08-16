@@ -101,20 +101,20 @@ export default function BlogPostPage({ params }: Props) {
               </span>
               <span className="flex items-center gap-1.5 font-mono text-xs text-[#7A6E65] bg-white/70 px-3 py-1 rounded-full border border-[#E8E2D8]">
                 <IconClock size={13} className="text-[#9A7428]" />
-                {post.readingTime} {lang === 'fr' ? 'min de lecture' : 'دقائق قراءة'}
+                {post.readingTime} {t.blog.readTime}
               </span>
               <span className="font-mono text-xs text-[#7A6E65] bg-white/70 px-3 py-1 rounded-full border border-[#E8E2D8]">
-                {new Date(post.publishedAt).toLocaleDateString(lang === 'fr' ? 'fr-TN' : 'ar-TN', {
+                {new Date(post.publishedAt).toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
                   day: 'numeric', month: 'long', year: 'numeric'
                 })}
               </span>
             </div>
 
             <h1 className="font-serif text-3xl md:text-5xl font-bold text-[#1A1412] mb-6 leading-tight">
-              {post.title[lang]}
+              {post.title[lang] || post.title.pt || post.title.en || post.title.fr}
             </h1>
             <p className="text-[#5A4E46] text-lg md:text-xl leading-relaxed">
-              {post.excerpt[lang]}
+              {post.excerpt[lang] || post.excerpt.pt || post.excerpt.en || post.excerpt.fr}
             </p>
           </ScrollReveal>
         </div>
@@ -130,7 +130,7 @@ export default function BlogPostPage({ params }: Props) {
               <div className="aspect-[16/9] w-full relative overflow-hidden rounded-2xl mb-10 border border-[#E8E2D8] shadow-lg bg-slate-900">
                 <Image
                   src={post.coverImage}
-                  alt={post.title[lang]}
+                  alt={post.title[lang] || post.title.pt || post.title.en || post.title.fr}
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 66vw"
@@ -141,7 +141,7 @@ export default function BlogPostPage({ params }: Props) {
 
               {/* Rendered Text */}
               <div className="prose prose-stone max-w-none">
-                {renderContent(post.content[lang])}
+                {renderContent(post.content[lang] || post.content.pt || post.content.en || post.content.fr)}
               </div>
 
               {/* Tags */}
@@ -198,7 +198,7 @@ export default function BlogPostPage({ params }: Props) {
               {/* Other Articles Card */}
               <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 shadow-xs">
                 <div className="font-mono text-xs text-[#9A7428] uppercase font-bold tracking-wider mb-5 pb-3 border-b border-[#E8E2D8]">
-                  {lang === 'fr' ? 'Autres articles à lire' : 'مقالات أخرى قرائية'}
+                  {t.blog.relatedTitle}
                 </div>
                 <div className="space-y-5">
                   {otherPosts.map((p) => (
@@ -206,7 +206,7 @@ export default function BlogPostPage({ params }: Props) {
                       <div className="w-12 h-12 rounded-xl relative overflow-hidden bg-slate-900 shrink-0 border border-[#E8E2D8]">
                         <Image
                           src={p.coverImage}
-                          alt={p.title[lang]}
+                          alt={p.title[lang] || p.title.pt || p.title.en || p.title.fr}
                           fill
                           sizes="48px"
                           className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -214,10 +214,10 @@ export default function BlogPostPage({ params }: Props) {
                       </div>
                       <div>
                         <p className="text-sm text-[#1A1412] group-hover:text-[#9A7428] transition-colors leading-snug font-semibold line-clamp-2">
-                          {p.title[lang]}
+                          {p.title[lang] || p.title.pt || p.title.en || p.title.fr}
                         </p>
                         <span className="font-mono text-[11px] text-[#8A8078] mt-1 block">
-                          {p.readingTime} min
+                          {p.readingTime} {t.common.minutes}
                         </span>
                       </div>
                     </Link>

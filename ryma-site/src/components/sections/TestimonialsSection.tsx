@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/i18n';
 import { TESTIMONIALS } from '@/data/testimonials';
+import { getLocalizedText } from '@/data/services';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { IconStar, IconQuote, IconArrowRight } from '@tabler/icons-react';
 
@@ -24,16 +25,19 @@ export function TestimonialsSection() {
       <div className="mx-auto max-w-7xl px-6 md:px-12 relative z-10">
         {/* Section Header */}
         <ScrollReveal className="text-center mb-14">
+
           <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-semibold block mb-2">
-            — {lang === 'fr' ? 'Témoignages Patients' : 'شهادات المرضى'} —
+            — {lang === 'pt' ? 'Testemunhos de Pacientes' : lang === 'en' ? 'Patient Testimonials' : 'Témoignages Patients'} —
           </span>
           <h2 className="font-serif text-4xl md:text-5xl font-bold text-[#1A1412] mt-2 mb-4">
-            {lang === 'fr' ? 'Ce que disent nos patients' : 'ما يقوله مرضانا'}
+            {lang === 'pt' ? 'O que dizem os nossos pacientes' : lang === 'en' ? 'What Our Patients Say' : 'Ce que disent nos patients'}
           </h2>
           <p className="text-[#6B6058] max-w-xl mx-auto text-base">
-            {lang === 'fr'
-              ? 'Découvrez les retours de nos patients sur leur accompagnement en kinésithérapie et soins minceur.'
-              : 'اكتشفي آراء مرضانا حول تجربتهم في عيادتنا للعلاج الطبيعي والتنحيف.'}
+            {lang === 'pt'
+              ? 'Descubra a experiência dos nossos pacientes com os nossos tratamentos de fisioterapia e estética corporal.'
+              : lang === 'en'
+              ? 'Discover feedback from our patients on their physiotherapy and body contouring journey.'
+              : 'Découvrez les retours de nos patients sur leur accompagnement en kinésithérapie et soins minceur.'}
           </p>
         </ScrollReveal>
 
@@ -55,7 +59,7 @@ export function TestimonialsSection() {
 
                   {/* Comment */}
                   <p className="text-[#332D28] leading-relaxed text-sm md:text-base mb-6 font-normal italic">
-                    &ldquo;{testimonial.comment[lang]}&rdquo;
+                    &ldquo;{getLocalizedText(testimonial.comment, lang)}&rdquo;
                   </p>
                 </div>
 
@@ -67,7 +71,7 @@ export function TestimonialsSection() {
                     </div>
                     <div>
                       <div className="font-semibold text-[#1A1412] text-sm">{testimonial.name}</div>
-                      <div className="text-xs text-[#8A8078]">{testimonial.role[lang]}</div>
+                      <div className="text-xs text-[#8A8078]">{getLocalizedText(testimonial.role, lang)}</div>
                     </div>
                   </div>
                   <span className="font-mono text-xs font-medium text-[#9A7428] bg-[#F5E9C8] px-2.5 py-1 rounded-full">
@@ -85,8 +89,8 @@ export function TestimonialsSection() {
             href="/avis"
             className="inline-flex items-center gap-2 font-medium text-sm text-[#9A7428] bg-white border border-[#C49A3C]/30 px-6 py-3 rounded-full hover:bg-[#F5E9C8] hover:text-[#1A1412] hover:border-[#C49A3C]/60 shadow-sm transition-all duration-200"
           >
-            <span>{lang === 'fr' ? 'Voir tous les avis' : 'عرض جميع التقييمات'}</span>
-            <IconArrowRight size={16} className="rtl-flip text-[#C49A3C]" />
+            <span>{lang === 'pt' ? 'Ver todas as avaliações' : lang === 'en' ? 'View all reviews' : 'Voir tous les avis'}</span>
+            <IconArrowRight size={16} className="text-[#C49A3C]" />
           </Link>
         </ScrollReveal>
       </div>

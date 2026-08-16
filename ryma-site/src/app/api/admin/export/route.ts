@@ -3,6 +3,18 @@ import { requireAdmin } from '@/lib/requireAdmin';
 import { dbGetAppointments, dbGetAllPatients } from '@/lib/db';
 import { getServicePrice } from '@/types/admin';
 
+function sanitizeCsvField(val: unknown): string {
+  if (val === null || val === undefined) return '""';
+  if (typeof val === 'number') return String(val);
+
+  let str = String(val);
+  // Neutralize CSV formula injection if string starts with =, +, -, @, \t, or \r
+  if (/^[=\+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  return `"${str.replace(/"/g, '""')}"`;
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if ('status' in auth) return auth;
@@ -20,17 +32,17 @@ export async function GET(request: NextRequest) {
     patients.forEach(p => {
       const completed = p.sessions?.length ?? 0;
       const row = [
-        p.id,
-        `"${p.patientName.replace(/"/g, '""')}"`,
-        `"${p.phone}"`,
-        `"${p.email ?? ''}"`,
-        p.cnamStatus ?? 'NON',
-        `"${p.cnamNumber ?? ''}"`,
-        `"${p.referringDoctor ?? ''}"`,
-        p.totalPrescribedSessions ?? 10,
-        completed,
-        `"${(p.pathologyTags ?? '').replace(/"/g, '""')}"`,
-        p.createdAt,
+        sanitizeCsvField(p.id),
+        sanitizeCsvField(p.patientName),
+        sanitizeCsvField(p.phone),
+        sanitizeCsvField(p.email ?? ''),
+        sanitizeCsvField(p.cnamStatus ?? 'NON'),
+        sanitizeCsvField(p.cnamNumber ?? ''),
+        sanitizeCsvField(p.referringDoctor ?? ''),
+        sanitizeCsvField(p.totalPrescribedSessions ?? 10),
+        sanitizeCsvField(completed),
+        sanitizeCsvField(p.pathologyTags ?? ''),
+        sanitizeCsvField(p.createdAt),
       ];
       csv += row.join(';') + '\n';
     });
@@ -59,15 +71,15 @@ export async function GET(request: NextRequest) {
   appointments.forEach(a => {
     const price = getServicePrice(a.service);
     const row = [
-      a.id,
-      a.date,
-      a.startTime,
-      `"${a.patientName.replace(/"/g, '""')}"`,
-      `"${a.phone}"`,
-      `"${a.service}"`,
-      a.status,
-      price,
-      `"${(a.notes ?? '').replace(/"/g, '""')}"`,
+      sanitizeCsvField(a.id),
+      sanitizeCsvField(a.date),
+      sanitizeCsvField(a.startTime),
+      sanitizeCsvField(a.patientName),
+      sanitizeCsvField(a.phone),
+      sanitizeCsvField(a.service),
+      sanitizeCsvField(a.status),
+      sanitizeCsvField(price),
+      sanitizeCsvField(a.notes ?? ''),
     ];
     csv += row.join(';') + '\n';
   });

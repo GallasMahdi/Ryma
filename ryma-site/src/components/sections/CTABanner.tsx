@@ -10,9 +10,9 @@ export function CTABanner() {
   const { lang, t } = useLanguage();
 
   const trustItems = [
-    { text: lang === 'fr' ? 'Prise en charge CNAM possible' : 'إمكانية تغطية CNAM' },
-    { text: lang === 'fr' ? 'Sans engagement' : 'بدون التزام' },
-    { text: lang === 'fr' ? 'Rappel automatique 24h avant' : 'تذكير تلقائي قبل 24 ساعة' },
+    { text: lang === 'pt' ? 'Possibilidade de comparticipação CNAM' : lang === 'en' ? 'CNAM insurance coverage available' : 'Prise en charge CNAM possible' },
+    { text: lang === 'pt' ? 'Sem compromisso' : lang === 'en' ? 'No commitment required' : 'Sans engagement' },
+    { text: lang === 'pt' ? 'Lembrete automático 24h antes' : lang === 'en' ? 'Automatic 24h SMS reminder' : 'Rappel automatique 24h avant' },
   ];
 
   return (
@@ -36,17 +36,21 @@ export function CTABanner() {
       <div className="relative mx-auto max-w-4xl px-6 md:px-12 text-center">
         <ScrollReveal>
           <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-semibold mb-4 block">
-            {lang === 'fr' ? '— Prêt(e) à commencer votre parcours ? —' : '— هل أنت مستعدة لبدء رحلتك؟ —'}
+            {lang === 'pt' ? '— Pronto(a) para começar a sua transformação ? —' : lang === 'en' ? '— Ready to start your health journey ? —' : '— Prêt(e) à commencer votre parcours ? —'}
           </span>
           <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-6">
-            {lang === 'fr'
-              ? <>Votre bien-être,<br /><span className="text-gradient-gold">notre priorité</span></>
-              : <>رفاهيتك،<br /><span className="text-gradient-gold">أولويتنا</span></>}
+            {lang === 'pt'
+              ? <>O seu bem-estar,<br /><span className="text-gradient-gold">a nossa prioridade</span></>
+              : lang === 'en'
+              ? <>Your well-being,<br /><span className="text-gradient-gold">our priority</span></>
+              : <>Votre bien-être,<br /><span className="text-gradient-gold">notre priorité</span></>}
           </h2>
           <p className="text-[#6B5A3A] text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
-            {lang === 'fr'
-              ? 'Prenez rendez-vous en ligne ou contactez-nous sur WhatsApp. Premier bilan offert pour tout nouveau programme de 10 séances.'
-              : 'احجزي موعداً عبر الإنترنت أو تواصلي معنا على واتساب. التقييم الأول مجاني لكل برنامج جديد من 10 جلسات.'}
+            {lang === 'pt'
+              ? 'Agende a sua consulta online ou envie-nos uma mensagem no WhatsApp. Primeira avaliação oferecida no plano de 10 sessões.'
+              : lang === 'en'
+              ? 'Book your appointment online or contact us directly via WhatsApp. Complimentary initial assessment with 10-session packages.'
+              : 'Prenez rendez-vous en ligne ou contactez-nous sur WhatsApp. Premier bilan offert pour tout nouveau programme de 10 séances.'}
           </p>
         </ScrollReveal>
 
@@ -61,7 +65,7 @@ export function CTABanner() {
             size="lg"
           >
             <IconBrandWhatsapp size={18} className="me-2" />
-            {lang === 'fr' ? 'WhatsApp Direct' : 'واتساب مباشر'}
+            {lang === 'pt' ? 'WhatsApp Direto' : lang === 'en' ? 'Direct WhatsApp' : 'WhatsApp Direct'}
           </Button>
         </ScrollReveal>
 

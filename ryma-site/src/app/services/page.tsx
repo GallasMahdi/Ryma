@@ -29,15 +29,17 @@ export default function ServicesPage() {
         <div className="relative mx-auto max-w-4xl px-6 md:px-12 text-center">
           <ScrollReveal>
             <Badge variant="gold" className="mb-6">
-              {lang === 'fr' ? 'Catalogue Complet des Soins' : 'كتالوج العلاجات الكامل'}
+              {lang === 'pt' ? 'Catálogo Completo de Tratamentos' : lang === 'en' ? 'Complete Treatment Catalog' : 'Catalogue Complet des Soins'}
             </Badge>
             <h1 className="font-serif text-5xl md:text-6xl font-bold text-[#1A1412] mb-4">
-              {lang === 'fr' ? '13 Soins Spécialisés' : '13 علاجاً متخصصاً'}
+              {lang === 'pt' ? '13 Tratamentos Especializados' : lang === 'en' ? '13 Specialized Treatments' : '13 Soins Spécialisés'}
             </h1>
             <p className="text-[#6B6058] text-lg max-w-2xl mx-auto leading-relaxed">
-              {lang === 'fr'
-                ? 'Des soins thérapeutiques aux technologies minceur de pointe, découvrez tout ce que le cabinet Ryma Ouichka propose pour votre santé et votre silhouette.'
-                : 'من العلاجات الطبية إلى أحدث تقنيات التنحيف، اكتشفي كل ما تقدمه عيادة ريما ويشكة لصحتك وقوامك.'}
+              {lang === 'pt'
+                ? 'Dos tratamentos clínicos de fisioterapia às tecnologias de remodelação corporal de ponta, descubra os cuidados especializados da clínica Ryma Ouichka.'
+                : lang === 'en'
+                ? 'From therapeutic physiotherapy to state-of-the-art slimming technologies, discover all treatments offered by Dr. Ryma Ouichka.'
+                : 'Des soins thérapeutiques aux technologies minceur de pointe, découvrez tout ce que le cabinet Ryma Ouichka propose pour votre santé et votre silhouette.'}
             </p>
           </ScrollReveal>
         </div>
@@ -52,14 +54,16 @@ export default function ServicesPage() {
                 <IconStethoscope size={17} />
               </div>
               <Badge variant="teal" className="text-sm px-5 py-2">
-                {lang === 'fr' ? 'Kinésithérapie Thérapeutique' : 'العلاج الطبيعي العلاجي'}
+                {lang === 'pt' ? 'Fisioterapia Terapêutica' : lang === 'en' ? 'Therapeutic Physiotherapy' : 'Kinésithérapie Thérapeutique'}
               </Badge>
               <div className="h-px flex-1 bg-gradient-to-r from-[#C49A3C]/25 to-transparent" />
             </div>
             <p className="text-[#8A8078] max-w-3xl text-sm leading-relaxed">
-              {lang === 'fr'
-                ? 'Techniques manuelles et électrophysiques pour traiter les douleurs, corriger la posture et accompagner la rééducation post-traumatique ou post-partum. Prise en charge CNAM possible sur prescription médicale.'
-                : 'تقنيات يدوية وفيزيائية لعلاج الآلام وتصحيح الوضعية ومرافقة إعادة التأهيل. إمكانية تغطية CNAM بوصفة طبية.'}
+              {lang === 'pt'
+                ? 'Técnicas manuais e eletroterapia para tratar a dor, reabilitar lesões, corrigir a postura e acompanhar a recuperação pós-parto. Comparticipação médica elegível com prescrição.'
+                : lang === 'en'
+                ? 'Manual techniques and electrotherapy to manage pain, correct posture, and support trauma or postpartum rehab. Medical insurance & receipts supported.'
+                : 'Techniques manuelles et électrophysiques pour traiter les douleurs, corriger la posture et accompagner la rééducation post-traumatique ou post-partum. Prise en charge CNAM possible sur prescription médicale.'}
             </p>
           </ScrollReveal>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -81,14 +85,16 @@ export default function ServicesPage() {
                 <IconFlame size={17} />
               </div>
               <Badge variant="bronze" className="text-sm px-5 py-2">
-                {lang === 'fr' ? 'Technologies Minceur Non-Invasives' : 'تقنيات التنحيف غير الجراحية'}
+                {lang === 'pt' ? 'Estética Corporal & Remodelação Não Invasiva' : lang === 'en' ? 'Non-Invasive Body Contouring' : 'Technologies Minceur Non-Invasives'}
               </Badge>
               <div className="h-px flex-1 bg-gradient-to-r from-[#C49A3C]/25 to-transparent" />
             </div>
             <p className="text-[#8A8078] max-w-3xl text-sm leading-relaxed">
-              {lang === 'fr'
-                ? "Équipements de dernière génération pour sculpter, raffermir et affiner votre silhouette sans chirurgie ni temps d'arrêt. Résultats progressifs et durables."
-                : 'معدات من أحدث جيل لنحت الجسم وشده وتنحيفه بدون جراحة ولا توقف عن الأنشطة. نتائج تدريجية ودائمة.'}
+              {lang === 'pt'
+                ? 'Equipamentos médicos de última geração para esculpir, firmar e reduzir o volume corporal sem cirurgia. Resultados progressivos e duradouros.'
+                : lang === 'en'
+                ? 'State-of-the-art medical devices to sculpt, firm, and refine your silhouette without surgery or downtime. Progressive and lasting results.'
+                : "Équipements de dernière génération pour sculpter, raffermir et affiner votre silhouette sans chirurgie ni temps d'arrêt. Résultats progressifs et durables."}
             </p>
           </ScrollReveal>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -106,9 +112,11 @@ export default function ServicesPage() {
         <div className="mx-auto max-w-xl px-6 md:px-12 text-center">
           <ScrollReveal>
             <p className="text-[#8A8078] mb-6 leading-relaxed">
-              {lang === 'fr'
-                ? 'Vous ne savez pas quel soin vous convient ? Commencez par un bilan personnalisé gratuit.'
-                : 'لا تعرفين أي علاج يناسبك؟ ابدئي بتقييم شخصي مجاني.'}
+              {lang === 'pt'
+                ? 'Tem dúvidas sobre qual o tratamento ideal para si? Comece com uma consulta de avaliação personalizada.'
+                : lang === 'en'
+                ? 'Not sure which treatment suits your needs best? Start with a complimentary initial assessment.'
+                : 'Vous ne savez pas quel soin vous convient ? Commencez par un bilan personnalisé gratuit.'}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button href="/rendez-vous" variant="primary">

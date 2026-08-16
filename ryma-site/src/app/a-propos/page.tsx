@@ -10,20 +10,20 @@ import { Button } from '@/components/ui/Button';
 import { CounterAnimation } from '@/components/animation/CounterAnimation';
 
 const DIPLOMAS = [
-  { fr: 'Diplôme de Kinésithérapie — ISTS Tunis (2012)', ar: 'دبلوم العلاج الطبيعي — ISTS تونس (2012)' },
-  { fr: 'Formation en Rééducation Périnéale — Lyon, France (2014)', ar: 'تكوين في إعادة التأهيل العجاني — ليون، فرنسا (2014)' },
-  { fr: 'Certification Drainage Lymphatique Manuel — Méthode Vodder (2015)', ar: 'شهادة الصرف اللمفاوي اليدوي — طريقة فودر (2015)' },
-  { fr: 'Diplôme en Médecine Esthétique Non-invasive — Tunis (2017)', ar: 'دبلوم الطب التجميلي غير الجراحي — تونس (2017)' },
-  { fr: 'Formation Cryolipolyse & Cavitation Ultrasonique — Paris (2019)', ar: 'تكوين تحليل الدهون بالتبريد والتكهيف — باريس (2019)' },
-  { fr: 'Certification Rééducation Posturale Globale (RPG) — Méthode Souchard (2021)', ar: 'شهادة إعادة التأهيل الوضعي الشامل — طريقة سوشار (2021)' },
+  { fr: 'Diplôme de Kinésithérapie — ISTS (2012)', pt: 'Licenciatura em Fisioterapia — ISTS (2012)', en: 'Physiotherapy Degree — ISTS (2012)' },
+  { fr: 'Formation en Rééducation Périnéale — Lyon (2014)', pt: 'Especialização em Reabilitação Perineal — Lyon (2014)', en: 'Specialization in Pelvic Floor Rehab — Lyon (2014)' },
+  { fr: 'Certification Drainage Lymphatique Vodder (2015)', pt: 'Certificação em Drenagem Linfática Manual — Vodder (2015)', en: 'Manual Lymphatic Drainage Certification — Vodder (2015)' },
+  { fr: 'Diplôme en Médecine Esthétique Non-invasive (2017)', pt: 'Diploma em Estética Avançada Não Invasiva (2017)', en: 'Non-Invasive Aesthetic Medicine Diploma (2017)' },
+  { fr: 'Formation Cryolipolyse & Cavitation — Paris (2019)', pt: 'Formação em Criolipólise e Cavitação — Paris (2019)', en: 'Cryolipolysis & Cavitation Training — Paris (2019)' },
+  { fr: 'Certification RPG — Méthode Souchard (2021)', pt: 'Certificação em Reeducação Postural Global (RPG) — Método Souchard (2021)', en: 'Global Postural Reeducation (RPG) Certification (2021)' },
 ];
 
 const TIMELINE = [
-  { year: '2012', fr: 'Diplôme et ouverture du premier cabinet à Ezzahra', ar: 'دبلوم وافتتاح أول عيادة بالزهراء' },
-  { year: '2015', fr: 'Spécialisation en drainage lymphatique et soins minceur', ar: 'التخصص في الصرف اللمفاوي وعلاجات التنحيف' },
-  { year: '2017', fr: 'Introduction des premières technologies esthétiques non-invasives', ar: 'إدخال أولى تقنيات التجميل غير الجراحية' },
-  { year: '2020', fr: 'Agrandissement du cabinet et équipement de pointe', ar: 'توسيع العيادة وتجهيزها بأحدث المعدات' },
-  { year: '2024', fr: 'Plus de 1200 patientes accompagnées — 8 ans d\'expertise', ar: 'أكثر من 1200 مريضة — 8 سنوات من الخبرة' },
+  { year: '2012', fr: 'Diplôme et ouverture du cabinet', pt: 'Obtenção do diploma e abertura da clínica', en: 'Graduation and opening of the clinical practice' },
+  { year: '2015', fr: 'Spécialisation en drainage et minceur', pt: 'Especialização em drenagem linfática e estética', en: 'Specialization in lymphatic drainage and body contouring' },
+  { year: '2017', fr: 'Technologies esthétiques non-invasives', pt: 'Introdução de tecnologias de remodelação de ponta', en: 'Introduction of advanced non-invasive technologies' },
+  { year: '2020', fr: 'Agrandissement de la clinique', pt: 'Expansão da clínica e renovação tecnológica', en: 'Clinic expansion and state-of-the-art equipment upgrade' },
+  { year: '2024', fr: 'Plus de 1200 patientes accompagnées', pt: 'Mais de 1200 pacientes acompanhadas com sucesso', en: 'Over 1,200 satisfied patients served' },
 ];
 
 export default function AboutPage() {
@@ -40,19 +40,23 @@ export default function AboutPage() {
         <div className="relative mx-auto max-w-5xl px-6 md:px-12 text-center">
           <ScrollReveal>
             <Badge variant="gold" className="mb-6">
-              {lang === 'fr' ? 'À Propos de Ryma Ouichka' : 'عن ريما ويشكة'}
+              {lang === 'pt' ? 'Sobre a Dra. Ryma Ouichka' : lang === 'en' ? 'About Dr. Ryma Ouichka' : 'À Propos de Ryma Ouichka'}
             </Badge>
             <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-bold text-[#1A1412] mb-6">
-              {lang === 'fr' ? (
-                <>Une vocation,<br /><span className="bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#9A7428] bg-clip-text text-transparent">une expertise</span></>
+              {lang === 'pt' ? (
+                <>Uma vocação,<br /><span className="bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#9A7428] bg-clip-text text-transparent">uma especialização</span></>
+              ) : lang === 'en' ? (
+                <>A passion,<br /><span className="bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#9A7428] bg-clip-text text-transparent">medical expertise</span></>
               ) : (
-                <>رسالة،<br /><span className="bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#9A7428] bg-clip-text text-transparent">وخبرة</span></>
+                <>Une vocation,<br /><span className="bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#9A7428] bg-clip-text text-transparent">une expertise</span></>
               )}
             </h1>
             <p className="text-[#6B6058] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-              {lang === 'fr'
-                ? 'Kinésithérapeute diplômée avec 8 ans d\'expérience à Ezzahra, Ryma Ouichka conjugue expertise médicale et technologies de pointe pour votre santé et votre silhouette.'
-                : 'معالجة فيزيائية حاملة للشهادة مع 8 سنوات من الخبرة بالزهراء، تجمع ريما ويشكة بين الخبرة الطبية وأحدث التقنيات لصحتك وقوامك.'}
+              {lang === 'pt'
+                ? 'Fisioterapeuta diplomada com 12 anos de experiência clínica, Ryma Ouichka alia o rigor médico às tecnologias de vanguarda para a sua saúde e remodelação corporal.'
+                : lang === 'en'
+                ? 'Certified Physiotherapist with 12 years of clinical practice, Ryma Ouichka combines medical expertise and state-of-the-art technologies for your health and body contouring.'
+                : 'Kinésithérapeute diplômée avec 12 ans d\'expérience, Ryma Ouichka conjugue expertise médicale et technologies de pointe pour votre santé et votre silhouette.'}
             </p>
           </ScrollReveal>
         </div>
@@ -67,7 +71,7 @@ export default function AboutPage() {
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border-2 border-[#C49A3C]/40 shadow-xl group">
                 <Image
                   src="/ryma_ouichka.jpg"
-                  alt="Ryma Ouichka — Kinésithérapeute Ezzahra"
+                  alt="Ryma Ouichka — Fisioterapeuta"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
@@ -80,14 +84,18 @@ export default function AboutPage() {
                 <div className="absolute bottom-16 inset-x-6 text-center text-white">
                   <h3 className="font-serif text-2xl font-bold mb-1 drop-shadow-md">Ryma Ouichka</h3>
                   <span className="font-mono text-xs font-semibold text-[#E8C97A] tracking-wider uppercase bg-[#1A1412]/60 backdrop-blur-md px-3 py-1 rounded-full border border-[#C49A3C]/40 inline-block shadow-sm">
-                    {lang === 'fr' ? 'Kinésithérapeute & Esthéticienne Médicale' : 'معالجة فيزيائية وتجميل طبي'}
+                    {lang === 'pt' ? 'Fisioterapeuta & Estética Médica' : lang === 'en' ? 'Physiotherapist & Medical Aesthetics' : 'Kinésithérapeute & Esthéticienne Médicale'}
                   </span>
                 </div>
 
                 {/* Tags bottom bar */}
                 <div className="absolute bottom-0 inset-x-0 p-4 bg-white/90 backdrop-blur-md border-t border-[#C49A3C]/30">
                   <div className="flex gap-2.5 justify-center">
-                    {['8+ ans d\'expérience', '1200+ patients', 'Prise en charge CNAM'].map((tag) => (
+                    {[
+                      lang === 'pt' ? '12+ anos de prática' : lang === 'en' ? '12+ years experience' : '12+ ans d\'expérience',
+                      lang === 'pt' ? '1200+ pacientes' : lang === 'en' ? '1,200+ patients' : '1200+ patients',
+                      lang === 'pt' ? 'Comparticipação CNAM' : lang === 'en' ? 'CNAM Approved' : 'Prise en charge CNAM',
+                    ].map((tag) => (
                       <span key={tag} className="font-mono text-[11px] bg-[#F5E9C8] border border-[#C49A3C]/40 px-2.5 py-1 rounded-full text-[#9A7428] font-bold">
                         {tag}
                       </span>
@@ -97,50 +105,40 @@ export default function AboutPage() {
               </div>
             </ScrollReveal>
 
-            <ScrollReveal direction="right">
-              <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase mb-4 block font-semibold">
-                {lang === 'fr' ? '— Ma philosophie de soin —' : '— فلسفتي في العلاج —'}
-              </span>
-              <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#1A1412] mb-6">
-                {lang === 'fr' ? 'L\'humain au cœur de chaque soin' : 'الإنسان في قلب كل علاج'}
-              </h2>
-              <div className="space-y-4 text-[#6B6058] leading-relaxed text-base">
-                {lang === 'fr' ? (
-                  <>
-                    <p>Originaire de Tunisie, j'ai toujours été fascinée par le corps humain et ses capacités de résilience et de transformation. Mon parcours de kinésithérapeute a démarré par une passion pour aider les autres à se sentir bien dans leur corps.</p>
-                    <p>Au fil des années, j'ai élargi mon expertise aux techniques d'amincissement non-invasives, convaincu qu'une approche globale — alliant rééducation, traitement de la douleur et soins esthétiques — est la voie la plus efficace vers le bien-être durable.</p>
-                    <p>Ma philosophie est simple : chaque patiente est unique, chaque programme doit l'être aussi. Je refuse les solutions génériques et les promesses miraculeuses. Je préfère des résultats réels, obtenus progressivement, qui respectent votre corps et votre rythme.</p>
-                  </>
-                ) : (
-                  <>
-                    <p>تونسية الأصل، افتتنت دائماً بالجسم البشري وقدرته على الصمود والتحول. بدأت مسيرتي كمعالجة فيزيائية بشغف لمساعدة الآخرين على الشعور بالرضا في أجسادهم.</p>
-                    <p>على مر السنين، وسّعت خبرتي لتشمل تقنيات التنحيف غير الجراحية، مقتنعةً بأن النهج الشامل هو الطريق الأكثر فعالية للعافية الدائمة.</p>
-                    <p>فلسفتي بسيطة: كل مريضة فريدة، وكل برنامج يجب أن يكون كذلك. أرفض الحلول العامة والوعود المعجزة. أفضّل نتائج حقيقية تُحترم فيها طبيعة جسمك وإيقاعك.</p>
-                  </>
-                )}
+            <ScrollReveal delay={0.15}>
+              <div className="space-y-5 text-[#6B6058] text-base leading-relaxed">
+                <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#1A1412] mb-6">
+                  {t.about.bioTitle}
+                </h2>
+                <p>
+                  {t.about.bioText1}
+                </p>
+                <p>
+                  {t.about.bioText2}
+                </p>
               </div>
             </ScrollReveal>
           </div>
         </div>
       </section>
 
-      {/* ── Stats ────────────────────────────────────── */}
-      <section className="py-16 bg-[#FAFAF8]">
+      {/* ── Stats Band ───────────────────────────────── */}
+      <section className="py-12 bg-[#F5E9C8]/40 border-y border-[#C49A3C]/20">
         <div className="mx-auto max-w-5xl px-6 md:px-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { end: 1200, suffix: '+', label: { fr: 'Patients accompagnés', ar: 'مريضة مرافَقة' } },
-              { end: 8, suffix: '+', label: { fr: 'Années d\'expérience', ar: 'سنوات الخبرة' } },
-              { end: 13, suffix: '', label: { fr: 'Soins proposés', ar: 'علاجاً متاحاً' } },
-              { end: 6, suffix: '', label: { fr: 'Certifications', ar: 'شهادات' } },
+              { end: 1200, suffix: '+', label: { fr: 'Patientes accompagnées', pt: 'Pacientes Satisfeitas', en: 'Satisfied Patients' } },
+              { end: 12, suffix: ' ans', label: { fr: "D'expérience clinique", pt: 'Anos de Experiência Clínicos', en: 'Years of Clinical Practice' } },
+              { end: 100, suffix: '%', label: { fr: 'Soins personnalisés', pt: 'Tratamentos Personalizados', en: 'Personalized Protocols' } },
+              { end: 13, suffix: '', label: { fr: 'Soins spécialisés', pt: 'Tratamentos Especializados', en: 'Specialized Treatments' } },
             ].map((stat, i) => (
-              <ScrollReveal key={i} delay={i * 0.08}>
-                <div className="bg-white border border-[#E8E2D8] rounded-2xl text-center py-8 px-4 shadow-sm hover:border-[#C49A3C]/40 transition-colors">
-                  <div className="font-serif text-4xl font-bold text-[#C49A3C] mb-2">
+              <ScrollReveal key={i} delay={i * 0.1}>
+                <div>
+                  <div className="font-serif text-3xl md:text-4xl font-bold text-[#C49A3C] mb-1">
                     <CounterAnimation end={stat.end} suffix={stat.suffix} />
                   </div>
                   <div className="font-mono text-xs font-semibold text-[#8A8078] tracking-wide uppercase">
-                    {stat.label[lang]}
+                    {stat.label[lang] || stat.label.pt || stat.label.fr}
                   </div>
                 </div>
               </ScrollReveal>
@@ -154,10 +152,10 @@ export default function AboutPage() {
         <div className="mx-auto max-w-5xl px-6 md:px-12">
           <ScrollReveal className="mb-10">
             <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase mb-3 block font-semibold">
-              {lang === 'fr' ? '— Diplômes & Certifications —' : '— الدبلومات والشهادات —'}
+              — {lang === 'pt' ? 'Diplomas & Certificações' : lang === 'en' ? 'Diplomas & Certifications' : 'Diplômes & Certifications'} —
             </span>
             <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#1A1412]">
-              {lang === 'fr' ? 'Une formation continue rigoureuse' : 'تكوين مستمر ودقيق'}
+              {lang === 'pt' ? 'Formação Clínica Contínua e Rigorosa' : lang === 'en' ? 'Rigorous Continuous Education' : 'Une formation continue rigoureuse'}
             </h2>
           </ScrollReveal>
 
@@ -168,7 +166,9 @@ export default function AboutPage() {
                   <div className="w-8 h-8 rounded-full bg-[#F5E9C8] border border-[#C49A3C]/30 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-[#9A7428] text-xs font-bold">{i + 1}</span>
                   </div>
-                  <p className="text-sm font-semibold text-[#1A1412] leading-relaxed">{diploma[lang]}</p>
+                  <p className="text-sm font-semibold text-[#1A1412] leading-relaxed">
+                    {diploma[lang as keyof typeof diploma] || diploma.pt || diploma.fr}
+                  </p>
                 </div>
               </ScrollReveal>
             ))}
@@ -181,7 +181,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-3xl px-6 md:px-12">
           <ScrollReveal className="mb-10">
             <h2 className="font-serif text-3xl font-bold text-[#1A1412]">
-              {lang === 'fr' ? 'Mon Parcours' : 'مسيرتي'}
+              {lang === 'pt' ? 'Percurso Profissional' : lang === 'en' ? 'Career Journey' : 'Mon Parcours'}
             </h2>
           </ScrollReveal>
 
@@ -202,7 +202,9 @@ export default function AboutPage() {
                     </div>
                     <div className="pb-8">
                       <div className="font-mono text-xs font-bold text-[#C49A3C] mb-1">{item.year}</div>
-                      <p className="text-[#332D28] font-medium leading-relaxed">{item[lang]}</p>
+                      <p className="text-[#332D28] font-medium leading-relaxed">
+                        {item[lang as keyof typeof item] || item.pt || item.fr}
+                      </p>
                     </div>
                   </div>
                 </ScrollReveal>
@@ -217,10 +219,10 @@ export default function AboutPage() {
         <div className="mx-auto max-w-xl px-6 md:px-12 text-center">
           <ScrollReveal>
             <h2 className="font-serif text-3xl font-bold text-[#1A1412] mb-4">
-              {lang === 'fr' ? 'Prenez rendez-vous' : 'احجزي موعداً'}
+              {lang === 'pt' ? 'Agende a sua Consulta' : lang === 'en' ? 'Book Your Appointment' : 'Prenez rendez-vous'}
             </h2>
             <p className="text-[#6B6058] mb-8 text-base">
-              {lang === 'fr' ? 'Le premier bilan est offert pour tout programme de 10 séances ou plus.' : 'التقييم الأول مجاني لكل برنامج من 10 جلسات أو أكثر.'}
+              {lang === 'pt' ? 'Primeira avaliação oferecida em pacotes de 10 sessões ou mais.' : lang === 'en' ? 'Complimentary initial assessment with packages of 10 sessions or more.' : 'Le premier bilan est offert pour tout programme de 10 séances ou plus.'}
             </p>
             <Button href="/rendez-vous" variant="primary" size="lg">
               {t.common.bookAppointment}

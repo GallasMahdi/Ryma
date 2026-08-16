@@ -1,8 +1,22 @@
 export type ServicePole = 'kinesitherapie' | 'minceur' | 'bilan';
 
+export type LocalizedString = {
+  fr: string;
+  pt?: string;
+  en?: string;
+  ar?: string;
+};
+
+export type LocalizedList = {
+  fr: string[];
+  pt?: string[];
+  en?: string[];
+  ar?: string[];
+};
+
 export interface ServiceFAQ {
-  q: { fr: string; ar: string };
-  a: { fr: string; ar: string };
+  q: LocalizedString;
+  a: LocalizedString;
 }
 
 export interface Service {
@@ -10,18 +24,33 @@ export interface Service {
   pole: ServicePole;
   icon: string; // SVG path or name
   bodyMapPoint: { x: number; y: number; view: 'front' | 'back' | 'both' };
-  name: { fr: string; ar: string };
-  shortDesc: { fr: string; ar: string };
-  longDesc: { fr: string; ar: string };
+  name: LocalizedString;
+  shortDesc: LocalizedString;
+  longDesc: LocalizedString;
   duration: string; // "45 min"
-  price: number; // TND
-  sessionFlow: { fr: string[]; ar: string[] };
-  indications: { fr: string[]; ar: string[] };
-  contraindications: { fr: string[]; ar: string[] };
+  price: number;
+  sessionFlow: LocalizedList;
+  indications: LocalizedList;
+  contraindications: LocalizedList;
   faq: ServiceFAQ[];
   hasBeforeAfter: boolean;
   keywords: string[];
 }
+
+export function getLocalizedText(obj: LocalizedString | undefined, lang: string): string {
+  if (!obj) return '';
+  if (lang === 'pt' && obj.pt) return obj.pt;
+  if (lang === 'en' && obj.en) return obj.en;
+  return obj.fr || obj.pt || obj.en || '';
+}
+
+export function getLocalizedList(obj: LocalizedList | undefined, lang: string): string[] {
+  if (!obj) return [];
+  if (lang === 'pt' && obj.pt) return obj.pt;
+  if (lang === 'en' && obj.en) return obj.en;
+  return obj.fr || obj.pt || obj.en || [];
+}
+
 
 export const SERVICES: Service[] = [
   {

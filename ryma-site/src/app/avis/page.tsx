@@ -28,15 +28,17 @@ export default function AvisPage() {
         <div className="relative mx-auto max-w-3xl px-6 md:px-12">
           <ScrollReveal>
             <Badge variant="rose" className="mb-4">
-              {lang === 'fr' ? 'Avis & Témoignages' : 'التقييمات والشهادات'}
+              {lang === 'pt' ? 'Avaliações & Testemunhos' : lang === 'en' ? 'Reviews & Testimonials' : 'Avis & Témoignages'}
             </Badge>
             <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-4">
-              {lang === 'fr' ? 'Nos patients témoignent' : 'شهادات مرضانا'}
+              {lang === 'pt' ? 'Testemunhos dos Nossos Pacientes' : lang === 'en' ? 'What Our Patients Say' : 'Nos patients témoignent'}
             </h1>
             <p className="text-[#6B6058] text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-              {lang === 'fr'
-                ? 'Découvrez les retours authentiques de nos patients suite à leurs séances de soins au cabinet.'
-                : 'اكتشفي الآراء الحقيقية لمرضانا بعد جلسات العلاج في العيادة.'}
+              {lang === 'pt'
+                ? 'Descubra a experiência autêntica dos nossos pacientes após os tratamentos de fisioterapia e estética na nossa clínica.'
+                : lang === 'en'
+                ? 'Discover authentic feedback from our patients following their specialized treatment programs.'
+                : 'Découvrez les retours authentiques de nos patients suite à leurs séances de soins au cabinet.'}
             </p>
 
             {/* Average rating pill */}
@@ -48,7 +50,7 @@ export default function AvisPage() {
               </div>
               <span className="font-mono font-bold text-[#C49A3C] text-xl">{avgRating}</span>
               <span className="text-[#6B6058] text-sm font-medium">
-                /5 — {TESTIMONIALS.length} {lang === 'fr' ? 'avis vérifiés' : 'تقييمات موثوقة'}
+                /5 — {TESTIMONIALS.length} {lang === 'pt' ? 'avaliações verificadas' : lang === 'en' ? 'verified reviews' : 'avis vérifiés'}
               </span>
             </div>
           </ScrollReveal>
@@ -76,12 +78,12 @@ export default function AvisPage() {
 
                       {service && (
                         <Badge variant="teal" className="mb-3 text-xs">
-                          {service.name[lang]}
+                          {service.name[lang] || service.name.pt || service.name.fr}
                         </Badge>
                       )}
 
                       <p className="text-[#332D28] leading-relaxed text-sm md:text-[15px] mb-6 italic">
-                        &ldquo;{review.comment[lang]}&rdquo;
+                        &ldquo;{review.comment[lang] || review.comment.pt || review.comment.fr}&rdquo;
                       </p>
                     </div>
 
@@ -92,7 +94,7 @@ export default function AvisPage() {
                         </div>
                         <div>
                           <div className="font-semibold text-[#1A1412] text-sm">{review.name}</div>
-                          <div className="text-xs text-[#8A8078]">{review.role[lang]}</div>
+                          <div className="text-xs text-[#8A8078]">{review.role[lang] || review.role.pt || review.role.fr}</div>
                         </div>
                       </div>
                       <div className="text-end">
@@ -101,7 +103,7 @@ export default function AvisPage() {
                         </span>
                         {review.verified && (
                           <div className="font-mono text-[11px] text-[#9A7428] font-bold flex items-center justify-end gap-1">
-                            <IconCheck size={12} /> {lang === 'fr' ? 'Vérifié' : 'موثوق'}
+                            <IconCheck size={12} /> {lang === 'pt' ? 'Verificado' : lang === 'en' ? 'Verified' : 'Vérifié'}
                           </div>
                         )}
                       </div>
@@ -116,12 +118,14 @@ export default function AvisPage() {
           <ScrollReveal className="mt-12">
             <div className="bg-white border border-dashed border-[#C49A3C]/40 rounded-2xl p-6 text-center shadow-sm">
               <p className="font-mono text-xs text-[#9A7428] tracking-widest uppercase mb-2 font-bold">
-                {lang === 'fr' ? 'Widget Google Reviews' : 'أداة Google Reviews'}
+                {lang === 'pt' ? 'Widget Google Reviews' : lang === 'en' ? 'Google Reviews Widget' : 'Widget Google Reviews'}
               </p>
               <p className="text-sm text-[#6B6058]">
-                {lang === 'fr'
-                  ? '→ Intégrer le widget Google Business ici une fois la fiche créée.'
-                  : '→ دمج أداة Google Business هنا بعد إنشاء الملف.'}
+                {lang === 'pt'
+                  ? '→ Sincronização direta com a ficha do Google Business.'
+                  : lang === 'en'
+                  ? '→ Direct sync with Google Business Profile.'
+                  : '→ Intégrer le widget Google Business ici une fois la fiche créée.'}
               </p>
             </div>
           </ScrollReveal>
@@ -133,12 +137,14 @@ export default function AvisPage() {
         <div className="mx-auto max-w-lg px-6 md:px-12">
           <ScrollReveal>
             <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#1A1412] mb-4">
-              {lang === 'fr' ? 'Prête à vivre votre expérience ?' : 'مستعدة لتجربتك الخاصة؟'}
+              {lang === 'pt' ? 'Pronta para iniciar a sua transformação?' : lang === 'en' ? 'Ready for your transformation?' : 'Prête à vivre votre expérience ?'}
             </h2>
             <p className="text-[#6B6058] text-sm mb-6">
-              {lang === 'fr'
-                ? 'Réservez votre bilan individuel et découvrez un programme sur mesure.'
-                : 'احجزي تقييمك الفردي واكتشفي برنامجاً مخصصاً.'}
+              {lang === 'pt'
+                ? 'Agende a sua consulta de avaliação e descubra um plano de tratamento personalizado.'
+                : lang === 'en'
+                ? 'Book your individual assessment and discover your customized care plan.'
+                : 'Réservez votre bilan individuel et découvrez un programme sur mesure.'}
             </p>
             <Button href="/rendez-vous" variant="primary" size="lg">
               {t.common.bookAppointment}

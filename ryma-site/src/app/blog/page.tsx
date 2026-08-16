@@ -47,7 +47,7 @@ export default function BlogPage() {
                     <div className="aspect-[16/10] w-full flex-shrink-0 relative overflow-hidden bg-slate-900">
                       <Image
                         src={post.coverImage}
-                        alt={post.title[lang]}
+                        alt={post.title[lang] || post.title.pt || post.title.en || post.title.fr}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
@@ -63,21 +63,21 @@ export default function BlogPage() {
                         <Badge variant="gold">{post.category}</Badge>
                         <span className="flex items-center gap-1 font-mono text-xs text-[#8A8078]">
                           <IconClock size={12} className="text-[#C49A3C]" />
-                          {post.readingTime} {lang === 'fr' ? 'min' : 'دقيقة'}
+                          {post.readingTime} {t.blog.readTime}
                         </span>
                       </div>
 
                       <h2 className="font-serif text-xl font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors mb-3 flex-1 leading-snug">
-                        {post.title[lang]}
+                        {post.title[lang] || post.title.pt || post.title.en || post.title.fr}
                       </h2>
 
                       <p className="text-sm text-[#6B6058] line-clamp-3 mb-5 leading-relaxed">
-                        {post.excerpt[lang]}
+                        {post.excerpt[lang] || post.excerpt.pt || post.excerpt.en || post.excerpt.fr}
                       </p>
 
                       <div className="flex items-center justify-between pt-4 border-t border-[#E8E2D8]">
                         <span className="font-mono text-xs text-[#8A8078]">
-                          {new Date(post.publishedAt).toLocaleDateString(lang === 'fr' ? 'fr-TN' : 'ar-TN', {
+                          {new Date(post.publishedAt).toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
                             day: 'numeric', month: 'long'
                           })}
                         </span>

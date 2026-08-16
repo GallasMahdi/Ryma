@@ -29,15 +29,20 @@ function getFirstDayOfMonth(year: number, month: number) {
 }
 
 const MONTH_NAMES_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const MONTH_NAMES_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const MONTH_NAMES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MONTH_NAMES_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
 const DAY_NAMES_FR = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
-const DAY_NAMES_AR = ['أح','إث','ثل','أر','خم','جم','سب'];
+const DAY_NAMES_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DAY_NAMES_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 // ── Step Indicator ───────────────────────────────────────────
 function StepIndicator({ step, lang }: { step: BookingStep; lang: string }) {
-  const steps = lang === 'fr'
-    ? ['Soin', 'Date', 'Créneau', 'Coordonnées']
-    : ['العلاج', 'التاريخ', 'التوقيت', 'بياناتك'];
+  const steps = lang === 'pt'
+    ? ['Tratamento', 'Data', 'Horário', 'Os Seus Dados']
+    : lang === 'en'
+    ? ['Treatment', 'Date', 'Slot', 'Your Info']
+    : ['Soin', 'Date', 'Créneau', 'Coordonnées'];
 
   return (
     <div className="flex items-center justify-center gap-2 mb-12">
@@ -155,23 +160,25 @@ export default function RendezVousPage() {
       if (!res.ok) {
         if (data.error === 'slot_taken' || data.error === 'slot_blocked') {
           setSlotError(
-            lang === 'fr'
-              ? "Ce créneau vient tout juste d'être réservé par une autre personne. Veuillez sélectionner un autre horaire."
-              : "تم حجز هذا التوقيت للتو من طرف شخص آخر. يرجى اختيار توقيت آخر."
+            lang === 'pt'
+              ? 'Este horário acabou de ser reservado por outro cliente. Por favor, escolha outro horário.'
+              : lang === 'en'
+              ? 'This slot was just booked by someone else. Please select another time.'
+              : "Ce créneau vient tout juste d'être réservé par une autre personne. Veuillez sélectionner un autre horaire."
           );
           setSelectedSlot(null);
           // Refresh slots to get latest availability
           await fetchSlots(selectedDate);
           setStep(3);
         } else {
-          setSlotError(data.error ?? (lang === 'fr' ? 'Erreur de réservation. Réessayez.' : 'خطأ في الحجز. حاول مجدداً.'));
+          setSlotError(data.error ?? (lang === 'pt' ? 'Erro no agendamento. Tente novamente.' : lang === 'en' ? 'Booking error. Please try again.' : 'Erreur de réservation. Réessayez.'));
         }
         return;
       }
 
       setStep(5);
     } catch {
-      setSlotError(lang === 'fr' ? 'Erreur réseau. Réessayez.' : 'خطأ في الشبكة. حاول مجدداً.');
+      setSlotError(lang === 'pt' ? 'Erro de rede. Tente novamente.' : lang === 'en' ? 'Network error. Please try again.' : 'Erreur réseau. Réessayez.');
     } finally {
       setLoading(false);
     }
@@ -185,7 +192,7 @@ export default function RendezVousPage() {
       <section className="pt-28 pb-8 text-center bg-gradient-to-b from-[#FDF9F2] to-[#FAFAF8]">
         <div className="mx-auto max-w-2xl px-6">
           <Badge variant="gold" className="mb-4">
-            {lang === 'fr' ? 'Réservation en ligne' : 'الحجز عبر الإنترنت'}
+            {lang === 'pt' ? 'Agendamento Online' : lang === 'en' ? 'Online Booking' : 'Réservation en ligne'}
           </Badge>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-[#1A1412] mb-3">
             {t.booking.title}
@@ -224,7 +231,7 @@ export default function RendezVousPage() {
                         <span className={`font-mono text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
                           service.pole === 'kinesitherapie' ? 'bg-[#F5E9C8] text-[#9A7428]' : 'bg-[#FDFAF4] text-[#C49A3C] border border-[#C49A3C]/20'
                         }`}>
-                          {service.pole === 'kinesitherapie' ? (lang === 'fr' ? 'Kiné' : 'علاج طبيعي') : (lang === 'fr' ? 'Minceur' : 'تنحيف')}
+                          {service.pole === 'kinesitherapie' ? (lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physio' : 'Kiné') : (lang === 'pt' ? 'Estética' : lang === 'en' ? 'Slimming' : 'Minceur')}
                         </span>
                         <span className="font-mono text-[15px] font-bold text-[#C49A3C]">{service.price} {t.common.currency}</span>
                       </div>
@@ -265,19 +272,19 @@ export default function RendezVousPage() {
                       <IconArrowLeft size={20} className="rtl-flip" />
                     </button>
                     <span className="font-serif text-xl font-bold text-[#1A1412] capitalize">
-                      {lang === 'fr' ? MONTH_NAMES_FR[calMonth] : MONTH_NAMES_AR[calMonth]} {calYear}
+                      {(lang === 'pt' ? MONTH_NAMES_PT : lang === 'en' ? MONTH_NAMES_EN : MONTH_NAMES_FR)[calMonth]} {calYear}
                     </span>
                     <button
                       onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }}
                       className="p-2 rounded-xl hover:bg-[#F5E9C8] text-[#8A8078] hover:text-[#9A7428] transition-colors"
                     >
-                      <IconArrowRight size={20} className="rtl-flip" />
+                      <IconArrowRight size={20} />
                     </button>
                   </div>
 
                   {/* Day headers */}
                   <div className="grid grid-cols-7 gap-1 mb-3">
-                    {(lang === 'fr' ? DAY_NAMES_FR : DAY_NAMES_AR).map(d => (
+                    {(lang === 'pt' ? DAY_NAMES_PT : lang === 'en' ? DAY_NAMES_EN : DAY_NAMES_FR).map((d: string) => (
                       <div key={d} className="text-center font-mono text-xs font-bold text-[#9A7428] py-1 uppercase">{d}</div>
                     ))}
                   </div>
@@ -310,14 +317,14 @@ export default function RendezVousPage() {
 
                   {selectedDate && (
                     <div className="mt-6 text-center font-mono text-sm font-semibold text-[#9A7428] bg-[#F5E9C8] py-2 rounded-lg border border-[#C49A3C]/20">
-                      ✓ {new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'fr' ? 'fr-TN' : 'ar-TN', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      ✓ {new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </div>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between mt-8">
                   <Button variant="outline" onClick={() => setStep(1)} className="px-5">
-                    <IconArrowLeft size={16} className="me-2 rtl-flip" />
+                    <IconArrowLeft size={16} className="me-2" />
                     {t.common.back}
                   </Button>
                   <Button
@@ -327,7 +334,7 @@ export default function RendezVousPage() {
                     className="px-8"
                   >
                     {t.common.next}
-                    <IconArrowRight size={16} className="ms-2 rtl-flip" />
+                    <IconArrowRight size={16} className="ms-2" />
                   </Button>
                 </div>
               </motion.div>
@@ -342,17 +349,17 @@ export default function RendezVousPage() {
               >
                 <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412] mb-3">{t.booking.step3Title}</h2>
                 <p className="text-[#6B6058] text-[15px] mb-8">
-                  {t.booking.availableSlots} <span className="font-semibold text-[#9A7428]">{selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'fr' ? 'fr-TN' : 'ar-TN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                  {t.booking.availableSlots} <span className="font-semibold text-[#9A7428]">{selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                 </p>
 
                 {loadingSlots ? (
                   <div className="flex items-center justify-center py-12 text-[#8A8078]">
                     <div className="w-6 h-6 border-2 border-[#C49A3C] border-t-transparent rounded-full animate-spin mr-3" />
-                    <span className="font-mono text-sm">{lang === 'fr' ? 'Chargement des créneaux...' : 'جارٍ تحميل المواعيد...'}</span>
+                    <span className="font-mono text-sm">{lang === 'pt' ? 'A carregar horários...' : lang === 'en' ? 'Loading slots...' : 'Chargement des créneaux...'}</span>
                   </div>
                 ) : availableSlots.length === 0 ? (
                   <div className="text-center py-10 text-[#8A8078] font-mono text-sm">
-                    {lang === 'fr' ? 'Aucun créneau disponible pour cette date.' : 'لا توجد مواعيد متاحة لهذا اليوم.'}
+                    {lang === 'pt' ? 'Nenhum horário disponível para esta data.' : lang === 'en' ? 'No slots available for this date.' : 'Aucun créneau disponible pour cette date.'}
                   </div>
                 ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
@@ -378,13 +385,13 @@ export default function RendezVousPage() {
 
                 <div className="flex flex-wrap items-center gap-6 mt-8 p-4 bg-white border border-[#E8E2D8] rounded-xl text-xs text-[#6B6058] font-mono font-medium justify-center">
                   <span className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 rounded-sm bg-white border border-[#E8E2D8]" /> {lang === 'fr' ? 'Disponible' : 'متاح'}
+                    <span className="w-3.5 h-3.5 rounded-sm bg-white border border-[#E8E2D8]" /> {lang === 'pt' ? 'Disponível' : lang === 'en' ? 'Available' : 'Disponible'}
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 rounded-sm bg-[#FAFAF8] border border-[#E8E2D8]/50" /> {lang === 'fr' ? 'Réservé' : 'محجوز'}
+                    <span className="w-3.5 h-3.5 rounded-sm bg-[#FAFAF8] border border-[#E8E2D8]/50" /> {lang === 'pt' ? 'Reservado' : lang === 'en' ? 'Booked' : 'Réservé'}
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 rounded-sm bg-[#C49A3C] shadow-sm" /> {lang === 'fr' ? 'Sélectionné' : 'مختار'}
+                    <span className="w-3.5 h-3.5 rounded-sm bg-[#C49A3C] shadow-sm" /> {lang === 'pt' ? 'Selecionado' : lang === 'en' ? 'Selected' : 'Sélectionné'}
                   </span>
                 </div>
 
@@ -396,7 +403,7 @@ export default function RendezVousPage() {
 
                 <div className="flex items-center justify-between mt-8">
                   <Button variant="outline" onClick={() => setStep(2)} className="px-5">
-                    <IconArrowLeft size={16} className="me-2 rtl-flip" />
+                    <IconArrowLeft size={16} className="me-2" />
                     {t.common.back}
                   </Button>
                   <Button
@@ -406,7 +413,7 @@ export default function RendezVousPage() {
                     className="px-8"
                   >
                     {t.common.next}
-                    <IconArrowRight size={16} className="ms-2 rtl-flip" />
+                    <IconArrowRight size={16} className="ms-2" />
                   </Button>
                 </div>
               </motion.div>
@@ -425,17 +432,17 @@ export default function RendezVousPage() {
                 <div className="bg-white border border-[#C49A3C]/30 rounded-2xl p-5 md:p-6 mb-8 shadow-sm">
                   <div className="grid grid-cols-3 gap-4 text-center divide-x divide-[#E8E2D8]">
                     <div className="px-2">
-                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'fr' ? 'Soin' : 'العلاج'}</div>
-                      <div className="text-[13px] md:text-sm font-semibold text-[#1A1412] leading-tight">{selectedService?.name[lang]}</div>
+                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'pt' ? 'Tratamento' : lang === 'en' ? 'Treatment' : 'Soin'}</div>
+                      <div className="text-[13px] md:text-sm font-semibold text-[#1A1412] leading-tight">{selectedService?.name[lang] || selectedService?.name.pt || selectedService?.name.fr}</div>
                     </div>
                     <div className="px-2">
-                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'fr' ? 'Date' : 'التاريخ'}</div>
+                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'pt' ? 'Data' : lang === 'en' ? 'Date' : 'Date'}</div>
                       <div className="text-[13px] md:text-sm font-semibold text-[#1A1412] capitalize">
-                        {selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'fr' ? 'fr-TN' : 'ar-TN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
                     </div>
                     <div className="px-2">
-                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'fr' ? 'Heure' : 'الوقت'}</div>
+                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'pt' ? 'Horário' : lang === 'en' ? 'Slot' : 'Heure'}</div>
                       <div className="text-base md:text-lg font-mono font-bold text-[#C49A3C]">{selectedSlot}</div>
                     </div>
                   </div>
@@ -456,7 +463,7 @@ export default function RendezVousPage() {
                         required
                         value={form.name}
                         onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                        placeholder={lang === 'fr' ? 'Votre nom complet' : 'اسمك الكامل'}
+                        placeholder={lang === 'pt' ? 'O seu nome completo' : lang === 'en' ? 'Your full name' : 'Votre nom complet'}
                         className={inputClass}
                       />
                     </div>
@@ -470,7 +477,7 @@ export default function RendezVousPage() {
                         required
                         value={form.phone}
                         onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
-                        placeholder="+216 XX XXX XXX"
+                        placeholder="+351 9XX XXX XXX"
                         className={inputClass}
                       />
                     </div>
@@ -485,7 +492,7 @@ export default function RendezVousPage() {
                       type="email"
                       value={form.email}
                       onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                      placeholder={lang === 'fr' ? 'votre@email.com' : 'بريدك@email.com'}
+                      placeholder={lang === 'pt' ? 'seu.email@exemplo.pt' : lang === 'en' ? 'your.email@example.com' : 'votre@email.com'}
                       className={inputClass}
                     />
                   </div>
@@ -499,14 +506,14 @@ export default function RendezVousPage() {
                       rows={3}
                       value={form.notes}
                       onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                      placeholder={lang === 'fr' ? 'Motif de consultation, antécédents importants...' : 'سبب الاستشارة، تاريخ طبي مهم...'}
+                      placeholder={lang === 'pt' ? 'Motivo da consulta, sintomas, antecedentes...' : lang === 'en' ? 'Reason for visit, symptoms, medical history...' : 'Motif de consultation, antécédents importants...'}
                       className={`${inputClass} resize-none`}
                     />
                   </div>
 
                   <div className="flex items-center justify-between pt-6 mt-4 border-t border-[#E8E2D8]">
                     <Button type="button" variant="outline" onClick={() => setStep(3)}>
-                      <IconArrowLeft size={16} className="me-2 rtl-flip" />
+                      <IconArrowLeft size={16} className="me-2" />
                       {t.common.back}
                     </Button>
                     <Button type="submit" variant="primary" disabled={loading || !form.name || !form.phone} className="px-8">
@@ -544,17 +551,17 @@ export default function RendezVousPage() {
                 <div className="bg-white border border-[#E8E2D8] p-6 mb-10 max-w-sm mx-auto rounded-2xl shadow-sm">
                   <div className="grid grid-cols-3 text-center gap-4 divide-x divide-[#E8E2D8]">
                     <div className="px-1">
-                      <div className="font-mono text-[10px] font-bold text-[#8A8078] uppercase mb-1">{lang === 'fr' ? 'Soin' : 'العلاج'}</div>
-                      <div className="text-xs font-semibold text-[#1A1412] mt-1 leading-tight">{selectedService?.name[lang]}</div>
+                      <div className="font-mono text-[10px] font-bold text-[#8A8078] uppercase mb-1">{lang === 'pt' ? 'Tratamento' : lang === 'en' ? 'Treatment' : 'Soin'}</div>
+                      <div className="text-xs font-semibold text-[#1A1412] mt-1 leading-tight">{selectedService?.name[lang] || selectedService?.name.pt || selectedService?.name.fr}</div>
                     </div>
                     <div className="px-1">
-                      <div className="font-mono text-[10px] font-bold text-[#8A8078] uppercase mb-1">{lang === 'fr' ? 'Date' : 'التاريخ'}</div>
+                      <div className="font-mono text-[10px] font-bold text-[#8A8078] uppercase mb-1">{lang === 'pt' ? 'Data' : lang === 'en' ? 'Date' : 'Date'}</div>
                       <div className="text-xs font-semibold text-[#1A1412] mt-1">
-                        {selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'fr' ? 'fr-TN' : 'ar-TN', { day: 'numeric', month: 'short' })}
+                        {selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })}
                       </div>
                     </div>
                     <div className="px-1">
-                      <div className="font-mono text-[10px] font-bold text-[#8A8078] uppercase mb-1">{lang === 'fr' ? 'Heure' : 'الوقت'}</div>
+                      <div className="font-mono text-[10px] font-bold text-[#8A8078] uppercase mb-1">{lang === 'pt' ? 'Horário' : lang === 'en' ? 'Slot' : 'Heure'}</div>
                       <div className="font-mono text-[15px] font-bold text-[#C49A3C] mt-1">{selectedSlot}</div>
                     </div>
                   </div>

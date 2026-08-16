@@ -13,8 +13,10 @@ interface AnalyticsData {
   completionRate: number;
 }
 
+import { Lang } from '@/lib/i18n';
+
 interface AnalyticsTabProps {
-  lang: 'fr' | 'ar';
+  lang: Lang;
   stats: {
     total: number;
     confirmed: number;
@@ -33,10 +35,10 @@ export function AnalyticsTab({ lang, stats, analyticsData }: AnalyticsTabProps) 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: lang === 'fr' ? 'Taux de confirmation' : 'نسبة التأكيد', value: `${stats.total > 0 ? Math.round((stats.confirmed / stats.total) * 100) : 0}%`, color: 'text-[#6F8F72]', border: 'border-[#6F8F72]/30' },
-          { label: lang === 'fr' ? 'Taux d\'annulation' : 'نسبة الإلغاء', value: `${analyticsData.cancelRate}%`, color: 'text-[#A9655F]', border: 'border-[#A9655F]/30' },
-          { label: lang === 'fr' ? 'Taux d\'achèvement' : 'نسبة الاكتمال', value: `${analyticsData.completionRate}%`, color: 'text-[#5B82A6]', border: 'border-[#5B82A6]/30' },
-          { label: lang === 'fr' ? 'Revenu total estimé' : 'إجمالي المداخيل', value: `${stats.revenue} TND`, color: 'text-[#C6A15B]', border: 'border-[#C6A15B]/30' },
+          { label: lang === 'pt' ? 'Taxa de confirmação' : lang === 'en' ? 'Confirmation rate' : 'Taux de confirmation', value: `${stats.total > 0 ? Math.round((stats.confirmed / stats.total) * 100) : 0}%`, color: 'text-[#6F8F72]', border: 'border-[#6F8F72]/30' },
+          { label: lang === 'pt' ? 'Taxa de cancelamento' : lang === 'en' ? 'Cancellation rate' : 'Taux d\'annulation', value: `${analyticsData.cancelRate}%`, color: 'text-[#A9655F]', border: 'border-[#A9655F]/30' },
+          { label: lang === 'pt' ? 'Taxa de conclusão' : lang === 'en' ? 'Completion rate' : 'Taux d\'achèvement', value: `${analyticsData.completionRate}%`, color: 'text-[#5B82A6]', border: 'border-[#5B82A6]/30' },
+          { label: lang === 'pt' ? 'Receita estimada total' : lang === 'en' ? 'Total estimated revenue' : 'Revenu total estimé', value: `${stats.revenue} €`, color: 'text-[#C6A15B]', border: 'border-[#C6A15B]/30' },
         ].map(kpi => (
           <div key={kpi.label} className={`p-5 rounded-2xl bg-white border ${kpi.border} space-y-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]`}>
             <div className="text-[10px] font-mono uppercase text-[#77736B] font-semibold">{kpi.label}</div>
@@ -51,8 +53,8 @@ export function AnalyticsTab({ lang, stats, analyticsData }: AnalyticsTabProps) 
         {/* Day of Week Bar Chart */}
         <div className="p-6 rounded-3xl bg-white border border-[#E9E6DF] space-y-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
           <div>
-            <div className="font-mono text-[10px] uppercase text-[#77736B] mb-1 font-semibold">{lang === 'fr' ? 'Jours les plus actifs' : 'أكثر الأيام نشاطاً'}</div>
-            <div className="font-serif text-lg font-bold text-[#202020]">{lang === 'fr' ? 'Répartition par Jour de Semaine' : 'التوزيع حسب يوم الأسبوع'}</div>
+            <div className="font-mono text-[10px] uppercase text-[#77736B] mb-1 font-semibold">{lang === 'pt' ? 'Dias mais ativos' : lang === 'en' ? 'Peak activity days' : 'Jours les plus actifs'}</div>
+            <div className="font-serif text-lg font-bold text-[#202020]">{lang === 'pt' ? 'Distribuição por Dia da Semana' : lang === 'en' ? 'Day of Week Distribution' : 'Répartition par Jour de Semaine'}</div>
           </div>
           {(() => {
             const max = Math.max(...analyticsData.dowCounts, 1);
@@ -86,11 +88,11 @@ export function AnalyticsTab({ lang, stats, analyticsData }: AnalyticsTabProps) 
         {/* Top Services Bar Chart */}
         <div className="p-6 rounded-3xl bg-white border border-[#E9E6DF] space-y-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
           <div>
-            <div className="font-mono text-[10px] uppercase text-[#77736B] mb-1 font-semibold">{lang === 'fr' ? 'Demande par soin' : 'الطلب حسب العلاج'}</div>
-            <div className="font-serif text-lg font-bold text-[#202020]">{lang === 'fr' ? 'Soins les Plus Demandés' : 'العلاجات الأكثر طلباً'}</div>
+            <div className="font-mono text-[10px] uppercase text-[#77736B] mb-1 font-semibold">{lang === 'pt' ? 'Procura por tratamento' : lang === 'en' ? 'Demand by treatment' : 'Demande par soin'}</div>
+            <div className="font-serif text-lg font-bold text-[#202020]">{lang === 'pt' ? 'Tratamentos Mais Solicitados' : lang === 'en' ? 'Most Requested Treatments' : 'Soins les Plus Demandés'}</div>
           </div>
           {analyticsData.topServices.length === 0 ? (
-            <div className="text-center text-[#77736B] text-sm py-8 font-mono">{lang === 'fr' ? 'Aucune donnée' : 'لا توجد بيانات'}</div>
+            <div className="text-center text-[#77736B] text-sm py-8 font-mono">{lang === 'pt' ? 'Sem dados' : lang === 'en' ? 'No data' : 'Aucune donnée'}</div>
           ) : (() => {
             const max = Math.max(...analyticsData.topServices.map(s => s[1]), 1);
             return (
@@ -121,11 +123,11 @@ export function AnalyticsTab({ lang, stats, analyticsData }: AnalyticsTabProps) 
       {/* Charts Row 2: Peak Hours */}
       <div className="p-6 rounded-3xl bg-white border border-[#E9E6DF] space-y-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
         <div>
-          <div className="font-mono text-[10px] uppercase text-[#77736B] mb-1 font-semibold">{lang === 'fr' ? 'Créneaux les plus chargés' : 'الأوقات الأكثر ازدحاماً'}</div>
-          <div className="font-serif text-lg font-bold text-[#202020]">{lang === 'fr' ? 'Heures de Pointe' : 'ساعات الذروة'}</div>
+          <div className="font-mono text-[10px] uppercase text-[#77736B] mb-1 font-semibold">{lang === 'pt' ? 'Horários de maior afluência' : lang === 'en' ? 'Peak slots' : 'Créneaux les plus chargés'}</div>
+          <div className="font-serif text-lg font-bold text-[#202020]">{lang === 'pt' ? 'Horários de Ponta' : lang === 'en' ? 'Peak Hours' : 'Heures de Pointe'}</div>
         </div>
         {analyticsData.peakHours.length === 0 ? (
-          <div className="text-center text-[#77736B] text-sm py-4 font-mono">{lang === 'fr' ? 'Aucune donnée' : 'لا توجد بيانات'}</div>
+          <div className="text-center text-[#77736B] text-sm py-4 font-mono">{lang === 'pt' ? 'Sem dados' : lang === 'en' ? 'No data' : 'Aucune donnée'}</div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
             {analyticsData.peakHours.map(([hour, count], i) => {
@@ -154,11 +156,11 @@ export function AnalyticsTab({ lang, stats, analyticsData }: AnalyticsTabProps) 
       {/* Status distribution */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {([
-          { key: 'PENDING', label: lang === 'fr' ? 'En attente' : 'انتظار', count: stats.pending, color: '#B08A45' },
-          { key: 'CONFIRMED', label: lang === 'fr' ? 'Confirmés' : 'مؤكد', count: stats.confirmed, color: '#6F8F72' },
-          { key: 'COMPLETED', label: lang === 'fr' ? 'Terminés' : 'منتهي', count: stats.completed, color: '#5B82A6' },
-          { key: 'CANCELLED', label: lang === 'fr' ? 'Annulés' : 'ملغى', count: stats.cancelled, color: '#A9655F' },
-          { key: 'NO_SHOW', label: lang === 'fr' ? 'Non présentés' : 'لم يحضر', count: stats.noShow, color: '#77736B' },
+          { key: 'PENDING', label: lang === 'pt' ? 'Pendentes' : lang === 'en' ? 'Pending' : 'En attente', count: stats.pending, color: '#B08A45' },
+          { key: 'CONFIRMED', label: lang === 'pt' ? 'Confirmados' : lang === 'en' ? 'Confirmed' : 'Confirmés', count: stats.confirmed, color: '#6F8F72' },
+          { key: 'COMPLETED', label: lang === 'pt' ? 'Concluídos' : lang === 'en' ? 'Completed' : 'Terminés', count: stats.completed, color: '#5B82A6' },
+          { key: 'CANCELLED', label: lang === 'pt' ? 'Cancelados' : lang === 'en' ? 'Cancelled' : 'Annulés', count: stats.cancelled, color: '#A9655F' },
+          { key: 'NO_SHOW', label: lang === 'pt' ? 'Faltas' : lang === 'en' ? 'No-shows' : 'Non présentés', count: stats.noShow, color: '#77736B' },
         ] as const).map(s => (
           <div key={s.key} className="p-4 rounded-2xl bg-white border border-[#E9E6DF] space-y-2 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
             <div className="font-mono text-[10px] uppercase font-semibold" style={{ color: s.color }}>{s.label}</div>

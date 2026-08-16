@@ -11,8 +11,8 @@ import React, {
 } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import dynamic from 'next/dynamic';
-import { useLanguage, type Translations } from '@/lib/i18n';
-import { SERVICES, Service, ServicePole } from '@/data/services';
+import { useLanguage, type Translations, type Lang } from '@/lib/i18n';
+import { SERVICES, Service, ServicePole, getLocalizedText, getLocalizedList } from '@/data/services';
 import { Button } from '@/components/ui/Button';
 import {
   IconX,
@@ -52,7 +52,7 @@ interface MapPoint {
   cy: number;
   position3D?: [number, number, number];
   zone: BodyZone;
-  label: { fr: string; ar: string };
+  label: { fr: string; pt?: string; en?: string; ar?: string };
   spec?: { comfort: number; speed: number; precision: number };
 }
 
@@ -74,40 +74,40 @@ const ZONE_ICONS: Record<BodyZone, React.ReactNode> = {
   back:  <IconBone size={13} />,
 };
 
-const ZONE_LABELS: Record<BodyZone, { fr: string; ar: string }> = {
-  all:   { fr: 'Tout le corps', ar: 'كامل الجسم' },
-  torso: { fr: 'Buste & Abdomen', ar: 'الصدر والبطن' },
-  legs:  { fr: 'Membres Inférieurs', ar: 'الأطراف السفلية' },
-  arms:  { fr: 'Membres Supérieurs', ar: 'الأطراف العلوية' },
-  back:  { fr: 'Rachis & Dos', ar: 'الظهر والعمود الفقري' },
+const ZONE_LABELS: Record<BodyZone, { fr: string; pt: string; en: string }> = {
+  all:   { fr: 'Tout le corps', pt: 'Corpo Inteiro', en: 'Full Body' },
+  torso: { fr: 'Buste & Abdomen', pt: 'Torso e Abdómen', en: 'Torso & Abdomen' },
+  legs:  { fr: 'Membres Inférieurs', pt: 'Membros Inferiores', en: 'Lower Limbs' },
+  arms:  { fr: 'Membres Supérieurs', pt: 'Membros Superiores', en: 'Upper Limbs' },
+  back:  { fr: 'Rachis & Dos', pt: 'Coluna e Costas', en: 'Spine & Back' },
 };
 
 const ZONE_ORDER: BodyZone[] = ['all', 'torso', 'legs', 'arms', 'back'];
 
-const POLE_FILTERS: { id: ServicePole | 'all'; label: { fr: string; ar: string } }[] = [
-  { id: 'all',            label: { fr: 'Tous',           ar: 'الكل' } },
-  { id: 'kinesitherapie', label: { fr: 'Kinésithérapie', ar: 'علاج طبيعي' } },
-  { id: 'minceur',        label: { fr: 'Minceur',        ar: 'تنحيف' } },
+const POLE_FILTERS: { id: ServicePole | 'all'; label: { fr: string; pt: string; en: string } }[] = [
+  { id: 'all',            label: { fr: 'Tous',           pt: 'Todos',          en: 'All' } },
+  { id: 'kinesitherapie', label: { fr: 'Kinésithérapie', pt: 'Fisioterapia',   en: 'Physiotherapy' } },
+  { id: 'minceur',        label: { fr: 'Minceur',        pt: 'Emagrecimento',  en: 'Slimming' } },
 ];
 
 const FRONT_POINTS: MapPoint[] = [
-  { serviceSlug: 'bilan-minceur', cx: 50, cy: 14, position3D: [0.0, 1.54, 0.12], zone: 'all', label: { fr: 'Diagnostic Global', ar: 'تشخيص شامل' }, spec: { comfort: 100, speed: 100, precision: 100 } },
-  { serviceSlug: 'electrotherapie', cx: 76, cy: 36, position3D: [0.20, 1.34, 0.10], zone: 'arms', label: { fr: 'Articulations Épaules', ar: 'مفاصل الكتفين' }, spec: { comfort: 88, speed: 94, precision: 92 } },
-  { serviceSlug: 'drainage-lymphatique', cx: 24, cy: 42, position3D: [-0.22, 1.22, 0.08], zone: 'arms', label: { fr: 'Membres Supérieurs', ar: 'الأطراف العلوية' }, spec: { comfort: 98, speed: 92, precision: 96 } },
-  { serviceSlug: 'cavitation', cx: 50, cy: 50, position3D: [0.0, 1.02, 0.20], zone: 'torso', label: { fr: 'Sangle Abdominale', ar: 'عضلات البطن' }, spec: { comfort: 92, speed: 85, precision: 95 } },
-  { serviceSlug: 'radiofrequence', cx: 31, cy: 50, position3D: [-0.15, 0.98, 0.16], zone: 'torso', label: { fr: 'Hanches & Taille', ar: 'الخاصرة والخصر' }, spec: { comfort: 96, speed: 86, precision: 94 } },
-  { serviceSlug: 'cryolipolyse', cx: 39, cy: 57, position3D: [0.15, 0.94, 0.16], zone: 'torso', label: { fr: "Poignées d'amour", ar: 'الخصر الجانبي' }, spec: { comfort: 85, speed: 92, precision: 96 } },
-  { serviceSlug: 'reeducation-post-partum', cx: 50, cy: 58, position3D: [0.0, 0.84, 0.18], zone: 'torso', label: { fr: 'Périnée & Bassin', ar: 'العجان والحوض' }, spec: { comfort: 95, speed: 90, precision: 98 } },
-  { serviceSlug: 'ultrasons', cx: 73, cy: 52, position3D: [0.11, 0.68, 0.15], zone: 'legs', label: { fr: 'Quadriceps / Cuisse', ar: 'عضلات الفخذ' }, spec: { comfort: 94, speed: 88, precision: 90 } },
-  { serviceSlug: 'laser-lipo', cx: 67, cy: 56, position3D: [-0.10, 0.48, 0.16], zone: 'legs', label: { fr: 'Genoux & Articulations', ar: 'الركبتين والمفاصل' }, spec: { comfort: 90, speed: 88, precision: 92 } },
-  { serviceSlug: 'pressotherapie', cx: 50, cy: 72, position3D: [0.0, 0.32, 0.14], zone: 'legs', label: { fr: 'Membres Inférieurs', ar: 'الأطراف السفلية' }, spec: { comfort: 99, speed: 95, precision: 97 } },
+  { serviceSlug: 'bilan-minceur', cx: 50, cy: 14, position3D: [0.0, 1.54, 0.12], zone: 'all', label: { fr: 'Diagnostic Global', pt: 'Avaliação Global', en: 'Global Assessment' }, spec: { comfort: 100, speed: 100, precision: 100 } },
+  { serviceSlug: 'electrotherapie', cx: 76, cy: 36, position3D: [0.20, 1.34, 0.10], zone: 'arms', label: { fr: 'Articulations Épaules', pt: 'Ombros e Articulações', en: 'Shoulders & Joints' }, spec: { comfort: 88, speed: 94, precision: 92 } },
+  { serviceSlug: 'drainage-lymphatique', cx: 24, cy: 42, position3D: [-0.22, 1.22, 0.08], zone: 'arms', label: { fr: 'Membres Supérieurs', pt: 'Membros Superiores', en: 'Upper Limbs' }, spec: { comfort: 98, speed: 92, precision: 96 } },
+  { serviceSlug: 'cavitation', cx: 50, cy: 50, position3D: [0.0, 1.02, 0.20], zone: 'torso', label: { fr: 'Sangle Abdominale', pt: 'Zona Abdominal', en: 'Abdominal Wall' }, spec: { comfort: 92, speed: 85, precision: 95 } },
+  { serviceSlug: 'radiofrequence', cx: 31, cy: 50, position3D: [-0.15, 0.98, 0.16], zone: 'torso', label: { fr: 'Hanches & Taille', pt: 'Ancas e Cintura', en: 'Hips & Waist' }, spec: { comfort: 96, speed: 86, precision: 94 } },
+  { serviceSlug: 'cryolipolyse', cx: 39, cy: 57, position3D: [0.15, 0.94, 0.16], zone: 'torso', label: { fr: "Poignées d'amour", pt: 'Gordura Localizada', en: 'Love Handles' }, spec: { comfort: 85, speed: 92, precision: 96 } },
+  { serviceSlug: 'reeducation-post-partum', cx: 50, cy: 58, position3D: [0.0, 0.84, 0.18], zone: 'torso', label: { fr: 'Périnée & Bassin', pt: 'Períneo e Bacia', en: 'Pelvic Floor & Pelvis' }, spec: { comfort: 95, speed: 90, precision: 98 } },
+  { serviceSlug: 'ultrasons', cx: 73, cy: 52, position3D: [0.11, 0.68, 0.15], zone: 'legs', label: { fr: 'Quadriceps / Cuisse', pt: 'Quadríceps / Coxa', en: 'Quadriceps / Thigh' }, spec: { comfort: 94, speed: 88, precision: 90 } },
+  { serviceSlug: 'laser-lipo', cx: 67, cy: 56, position3D: [-0.10, 0.48, 0.16], zone: 'legs', label: { fr: 'Genoux & Articulations', pt: 'Joelhos e Articulações', en: 'Knees & Joints' }, spec: { comfort: 90, speed: 88, precision: 92 } },
+  { serviceSlug: 'pressotherapie', cx: 50, cy: 72, position3D: [0.0, 0.32, 0.14], zone: 'legs', label: { fr: 'Membres Inférieurs', pt: 'Membros Inferiores', en: 'Lower Limbs' }, spec: { comfort: 99, speed: 95, precision: 97 } },
 ];
 
 const BACK_POINTS: MapPoint[] = [
-  { serviceSlug: 'reeducation-posturale', cx: 50, cy: 28, position3D: [0.0, 1.30, 0.16], zone: 'back', label: { fr: 'Rachis & Omoplates', ar: 'العمود الفقري' }, spec: { comfort: 94, speed: 90, precision: 98 } },
-  { serviceSlug: 'massage-therapeutique', cx: 50, cy: 42, position3D: [0.0, 1.05, 0.18], zone: 'back', label: { fr: 'Région Lombaire', ar: 'أسفل الظهر' }, spec: { comfort: 97, speed: 92, precision: 96 } },
-  { serviceSlug: 'massage-amincissant', cx: 55, cy: 62, position3D: [0.11, 0.82, 0.18], zone: 'legs', label: { fr: 'Fessiers & Ischios', ar: 'الأرداف والفخذ' }, spec: { comfort: 90, speed: 88, precision: 93 } },
-  { serviceSlug: 'drainage-lymphatique', cx: 26, cy: 44, position3D: [-0.22, 1.20, 0.08], zone: 'arms', label: { fr: 'Bras Postérieur', ar: 'الذراع الخلفي' }, spec: { comfort: 98, speed: 92, precision: 96 } },
+  { serviceSlug: 'reeducation-posturale', cx: 50, cy: 28, position3D: [0.0, 1.30, 0.16], zone: 'back', label: { fr: 'Rachis & Omoplates', pt: 'Coluna e Omoplatas', en: 'Spine & Shoulder Blades' }, spec: { comfort: 94, speed: 90, precision: 98 } },
+  { serviceSlug: 'massage-therapeutique', cx: 50, cy: 42, position3D: [0.0, 1.05, 0.18], zone: 'back', label: { fr: 'Région Lombaire', pt: 'Região Lombar', en: 'Lumbar Region' }, spec: { comfort: 97, speed: 92, precision: 96 } },
+  { serviceSlug: 'massage-amincissant', cx: 55, cy: 62, position3D: [0.11, 0.82, 0.18], zone: 'legs', label: { fr: 'Fessiers & Ischios', pt: 'Glúteos e Isquiotibiais', en: 'Glutes & Hamstrings' }, spec: { comfort: 90, speed: 88, precision: 93 } },
+  { serviceSlug: 'drainage-lymphatique', cx: 26, cy: 44, position3D: [-0.22, 1.20, 0.08], zone: 'arms', label: { fr: 'Bras Postérieur', pt: 'Braço Posterior', en: 'Posterior Arm' }, spec: { comfort: 98, speed: 92, precision: 96 } },
 ];
 
 const POINTS_BY_VIEW: Record<ViewSide, MapPoint[]> = {
@@ -175,12 +175,12 @@ function Chip({
 
 export type MedicalGoal = 'all' | 'douleur' | 'minceur' | 'drainage' | 'post-partum';
 
-const MEDICAL_GOALS: { id: MedicalGoal; label: { fr: string; ar: string }; icon: React.ReactNode }[] = [
-  { id: 'all',         label: { fr: 'Tous les objectifs',       ar: 'جميع الأهداف' }, icon: <IconSparkles size={14} /> },
-  { id: 'douleur',     label: { fr: 'Anti-douleur & Santé',    ar: 'تخفيف الألم والتأهيل' }, icon: <IconStethoscope size={14} /> },
-  { id: 'minceur',     label: { fr: 'Minceur & Remodelage',    ar: 'التنحيف والرشاقة' }, icon: <IconFlame size={14} /> },
-  { id: 'drainage',    label: { fr: 'Drainage & Lymphe',       ar: 'التصريف والتروية' }, icon: <IconDroplet size={14} /> },
-  { id: 'post-partum', label: { fr: 'Post-Partum & Périnée',   ar: 'تأهيل ما بعد الولادة' }, icon: <IconAdjustmentsHorizontal size={14} /> },
+const MEDICAL_GOALS: { id: MedicalGoal; label: { fr: string; pt: string; en: string }; icon: React.ReactNode }[] = [
+  { id: 'all',         label: { fr: 'Tous les objectifs',       pt: 'Todos os Objetivos',    en: 'All Goals' }, icon: <IconSparkles size={14} /> },
+  { id: 'douleur',     label: { fr: 'Anti-douleur & Santé',    pt: 'Alívio da Dor e Saúde', en: 'Pain Relief & Health' }, icon: <IconStethoscope size={14} /> },
+  { id: 'minceur',     label: { fr: 'Minceur & Remodelage',    pt: 'Emagrecimento e Escultura', en: 'Slimming & Sculpting' }, icon: <IconFlame size={14} /> },
+  { id: 'drainage',    label: { fr: 'Drainage & Lymphe',       pt: 'Drenagem e Linfa',       en: 'Drainage & Lymph' }, icon: <IconDroplet size={14} /> },
+  { id: 'post-partum', label: { fr: 'Post-Partum & Périnée',   pt: 'Pós-Parto e Períneo',    en: 'Postpartum & Pelvic Floor' }, icon: <IconAdjustmentsHorizontal size={14} /> },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -193,7 +193,7 @@ function LuxuryZoneSegment({
   onZoneChange,
   zoneCounts,
 }: {
-  lang: 'fr' | 'ar';
+  lang: Lang;
   zone: BodyZone;
   onZoneChange: (z: BodyZone) => void;
   zoneCounts: Record<BodyZone, number>;
@@ -203,7 +203,7 @@ function LuxuryZoneSegment({
       className="w-full max-w-3xl mx-auto p-1.5 rounded-2xl bg-white border border-slate-200 shadow-lg shadow-slate-900/5 backdrop-blur-xl flex items-center justify-between gap-1 overflow-x-auto"
       style={{ scrollbarWidth: 'none' }}
       role="group"
-      aria-label={lang === 'fr' ? 'Zones anatomiques' : 'المناطق الرياضية'}
+      aria-label="Zones anatomiques"
     >
       {ZONE_ORDER.map((z) => {
         const isSelected = zone === z;
@@ -254,7 +254,7 @@ function GoalFilterBar({
   goal,
   onGoalChange,
 }: {
-  lang: 'fr' | 'ar';
+  lang: Lang;
   goal: MedicalGoal;
   onGoalChange: (g: MedicalGoal) => void;
 }) {
@@ -274,7 +274,7 @@ function GoalFilterBar({
             }`}
           >
             <span className={isSel ? 'text-white' : 'text-blue-600'}>{g.icon}</span>
-            <span>{g.label[lang]}</span>
+            <span>{g.label[lang] || g.label.pt || g.label.fr}</span>
           </button>
         );
       })}
@@ -371,7 +371,7 @@ function Accordion({
 interface ServiceDetailCardProps {
   point: MapPoint;
   service: Service;
-  lang: 'fr' | 'ar';
+  lang: Lang;
   t: Translations;
   onClose: () => void;
 }
@@ -387,8 +387,8 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
 
   const isKine = service.pole === 'kinesitherapie';
   const poleBadgeLabel = isKine
-    ? lang === 'fr' ? 'Kinésithérapie' : 'علاج طبيعي'
-    : lang === 'fr' ? 'Soin Minceur' : 'تنحيف';
+    ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
+    : lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming Care' : 'Soin Minceur';
 
   return (
     <motion.div
@@ -438,7 +438,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
                   }}
                 >
                   <IconMapPin size={9} aria-hidden="true" />
-                  {point.label[lang]}
+                  {getLocalizedText(point.label, lang)}
                 </span>
               </div>
 
@@ -447,7 +447,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
                 className="font-serif text-xl font-bold leading-snug"
                 style={{ color: NAVY }}
               >
-                {service.name[lang]}
+                {getLocalizedText(service.name, lang)}
               </h3>
             </div>
 
@@ -455,7 +455,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
             <button
               type="button"
               onClick={onClose}
-              aria-label={lang === 'fr' ? 'Fermer' : 'إغلاق'}
+              aria-label={lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer'}
               className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               style={{ color: SLATE, background: SURFACE, border: `1px solid ${BORDER}` }}
             >
@@ -466,24 +466,24 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
           {/* Key metrics */}
           <div className="grid grid-cols-3 gap-2.5 mb-5">
             <StatCell
-              label={lang === 'fr' ? 'Par séance' : 'للجلسة'}
-              value={<>{service.price} <span className="text-sm font-normal">DT</span></>}
+              label={lang === 'pt' ? 'Por sessão' : lang === 'en' ? 'Per Session' : 'Par séance'}
+              value={<>{service.price} <span className="text-sm font-normal">{t.common.currency}</span></>}
             />
             <StatCell
-              label={lang === 'fr' ? 'Durée' : 'المدة'}
+              label={lang === 'pt' ? 'Duração' : lang === 'en' ? 'Duration' : 'Durée'}
               value={service.duration}
-              sub={<span className="flex items-center gap-1"><IconClock size={10} />{lang === 'fr' ? 'par session' : 'لكل جلسة'}</span>}
+              sub={<span className="flex items-center gap-1"><IconClock size={10} />{lang === 'pt' ? 'por sessão' : lang === 'en' ? 'per session' : 'par session'}</span>}
             />
             <StatCell
               label="CNAM"
               value={
                 isKine ? (
                   <span className="text-sm font-semibold" style={{ color: EMERALD }}>
-                    {lang === 'fr' ? 'Couvert' : 'مشمول'}
+                    {lang === 'pt' ? 'Com Comparticipação' : lang === 'en' ? 'Covered' : 'Couvert'}
                   </span>
                 ) : (
                   <span className="text-sm font-medium" style={{ color: SLATE }}>
-                    {lang === 'fr' ? 'Hors CNAM' : 'غير مشمول'}
+                    {lang === 'pt' ? 'Sem Comparticipação' : lang === 'en' ? 'Private' : 'Hors CNAM'}
                   </span>
                 )
               }
@@ -495,20 +495,20 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
             className="text-sm leading-relaxed mb-5"
             style={{ color: SLATE }}
           >
-            {service.shortDesc[lang]}
+            {getLocalizedText(service.shortDesc, lang)}
           </p>
 
           {/* Indications — clean checklist */}
-          {service.indications[lang].length > 0 && (
+          {getLocalizedList(service.indications, lang).length > 0 && (
             <div className="mb-5">
               <h4
                 className="text-xs font-semibold uppercase tracking-wider mb-3"
                 style={{ color: NAVY }}
               >
-                {lang === 'fr' ? 'Indications' : 'دواعي الاستخدام'}
+                {t.servicePage.indicationsTitle}
               </h4>
               <ul className="space-y-2">
-                {service.indications[lang].map((item, i) => (
+                {getLocalizedList(service.indications, lang).map((item, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm" style={{ color: SLATE }}>
                     <IconCheck
                       size={14}
@@ -523,16 +523,16 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
           )}
 
           {/* Protocol steps */}
-          {service.sessionFlow[lang].length > 0 && (
+          {getLocalizedList(service.sessionFlow, lang).length > 0 && (
             <div className="mb-5">
               <h4
                 className="text-xs font-semibold uppercase tracking-wider mb-3"
                 style={{ color: NAVY }}
               >
-                {lang === 'fr' ? 'Déroulement de la séance' : 'مراحل الجلسة'}
+                {t.servicePage.sessionTitle}
               </h4>
               <ol className="space-y-2">
-                {service.sessionFlow[lang].map((step, i) => (
+                {getLocalizedList(service.sessionFlow, lang).map((step, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span
                       className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
@@ -550,17 +550,13 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
           )}
 
           {/* Contraindications — collapsed by default */}
-          {service.contraindications[lang].length > 0 && (
+          {getLocalizedList(service.contraindications, lang).length > 0 && (
             <div className="mb-5">
               <Accordion
-                label={
-                  lang === 'fr'
-                    ? `Contre-indications (${service.contraindications[lang].length})`
-                    : `موانع الاستخدام (${service.contraindications[lang].length})`
-                }
+                label={`${t.servicePage.contraindicationsTitle} (${getLocalizedList(service.contraindications, lang).length})`}
               >
                 <ul className="space-y-2">
-                  {service.contraindications[lang].map((item, i) => (
+                  {getLocalizedList(service.contraindications, lang).map((item, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-sm" style={{ color: SLATE }}>
                       <IconBan
                         size={13}
@@ -609,7 +605,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
 });
 
 /* ------------------------------------------------------------------ */
-/*  Default prompt (no selection)                                       */
+/*  Default prompt (no selection)                                     */
 /* ------------------------------------------------------------------ */
 
 function EmptyState({
@@ -620,13 +616,14 @@ function EmptyState({
   onSelectPoint,
   onResetZone,
 }: {
-  lang: 'fr' | 'ar';
+  lang: Lang;
   selectedZone: BodyZone;
   currentPoints: MapPoint[];
   serviceBySlug: Map<string, Service>;
   onSelectPoint: (p: MapPoint) => void;
   onResetZone: () => void;
 }) {
+  const { t } = useLanguage();
   const [activePoleFilter, setActivePoleFilter] = useState<'all' | 'kinesitherapie' | 'minceur'>('all');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -668,11 +665,11 @@ function EmptyState({
           <div>
             <h3 className="text-sm font-bold leading-tight font-serif text-[#1A1412]">
               {selectedZone === 'all'
-                ? lang === 'fr' ? 'Diagnostic Global' : 'تشخيص شامل'
-                : ZONE_LABELS[selectedZone][lang]}
+                ? lang === 'pt' ? 'Diagnóstico Global' : lang === 'en' ? 'Global Assessment' : 'Diagnostic Global'
+                : getLocalizedText(ZONE_LABELS[selectedZone], lang)}
             </h3>
             <p className="text-[11px] text-[#8A8078] font-mono font-medium">
-              {filteredPoints.length} {lang === 'fr' ? 'soins disponibles' : 'علاجات متاحة'}
+              {filteredPoints.length} {lang === 'pt' ? 'tratamentos disponíveis' : lang === 'en' ? 'treatments available' : 'soins disponibles'}
             </p>
           </div>
         </div>
@@ -683,7 +680,7 @@ function EmptyState({
             onClick={onResetZone}
             className="text-xs font-semibold px-3 py-1.5 rounded-full border border-[#C49A3C]/30 text-[#9A7428] bg-[#FDFAF4] hover:bg-[#F5E9C8] transition-colors"
           >
-            {lang === 'fr' ? 'Tout le corps' : 'كامل الجسم'}
+            {getLocalizedText(ZONE_LABELS.all, lang)}
           </button>
         )}
       </div>
@@ -699,7 +696,7 @@ function EmptyState({
               : 'bg-white text-[#6B6058] border border-[#E8E2D8] hover:border-[#C49A3C]/40'
           }`}
         >
-          {lang === 'fr' ? 'Tous les soins' : 'جميع العلاجات'}
+          {lang === 'pt' ? 'Todos os Cuidados' : lang === 'en' ? 'All Care' : 'Tous les soins'}
         </button>
         <button
           type="button"
@@ -710,54 +707,43 @@ function EmptyState({
               : 'bg-white text-[#6B6058] border border-[#E8E2D8] hover:border-[#C49A3C]/40'
           }`}
         >
-          {lang === 'fr' ? 'Kinésithérapie' : 'علاج طبيعي'}
+          {lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
         </button>
         <button
           type="button"
           onClick={() => setActivePoleFilter('minceur')}
           className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
             activePoleFilter === 'minceur'
-              ? 'bg-[#8A601E] text-white shadow-xs'
+              ? 'bg-[#9A7428] text-white shadow-xs'
               : 'bg-white text-[#6B6058] border border-[#E8E2D8] hover:border-[#C49A3C]/40'
           }`}
         >
-          {lang === 'fr' ? 'Minceur' : 'تنحيف'}
+          {lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
         </button>
       </div>
 
-      {/* Instruction hint with Mobile Swipe Hint */}
-      <div className="flex items-center justify-between p-3 rounded-xl border text-xs leading-relaxed bg-[#FDFAF4] border-[#C49A3C]/25 text-[#9A7428]">
-        <div className="flex items-center gap-2">
-          <IconBodyScan size={16} className="shrink-0 text-[#C49A3C]" />
-          <span className="font-medium">
-            {lang === 'fr'
-              ? 'Sélectionnez un soin pour cibler la zone'
-              : 'اختر علاجاً لتحديد المنطقة'}
-          </span>
-        </div>
-        <span className="sm:hidden text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded-md border border-[#C49A3C]/30 text-[#C49A3C] shrink-0">
-          ↔ {lang === 'fr' ? 'Glisser' : 'سحب'}
-        </span>
-      </div>
-
-      {/* Services List Rendering */}
+      {/* Cards Slider Container */}
       {filteredPoints.length === 0 ? (
-        <div className="p-8 rounded-2xl text-center border bg-white border-[#E8E2D8] text-[#8A8078]">
-          <p className="text-sm">
-            {lang === 'fr' ? 'Aucun soin pour ce filtre.' : 'لا توجد علاجات لهذا المرشح.'}
+        <div className="p-8 text-center bg-white border border-[#E8E2D8] rounded-2xl text-[#8A8078]">
+          <p className="text-xs font-mono">
+            {lang === 'pt'
+              ? 'Nenhum cuidado encontrado para esta combinação.'
+              : lang === 'en'
+              ? 'No care found for this combination.'
+              : 'Aucun soin trouvé pour cette combinaison.'}
           </p>
         </div>
       ) : (
         <>
-          {/* MOBILE VIEW: Advanced Touch Carousel */}
-          <div className="sm:hidden relative">
+          {/* MOBILE Carousel (< 640px) */}
+          <div className="block sm:hidden">
             <div
               ref={scrollContainerRef}
               onScroll={handleScroll}
-              className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-3 pb-3 pt-1 px-1 -mx-1"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 pt-1 -mx-4 px-4"
+              style={{ scrollSnapType: 'x mandatory' }}
             >
-              {filteredPoints.map((point, index) => {
+              {filteredPoints.map((point) => {
                 const service = serviceBySlug.get(point.serviceSlug);
                 if (!service) return null;
                 const isKine = service.pole === 'kinesitherapie';
@@ -765,11 +751,10 @@ function EmptyState({
                 return (
                   <div
                     key={point.serviceSlug}
-                    onClick={() => onSelectPoint(point)}
-                    className="w-[82vw] max-w-[290px] shrink-0 snap-center group text-start p-4 rounded-2xl border bg-white border-[#E8E2D8] active:scale-[0.99] transition-all duration-200 shadow-xs flex flex-col justify-between"
+                    className="snap-center shrink-0 w-[270px] flex flex-col justify-between p-4.5 rounded-2xl border bg-white border-[#E8E2D8] shadow-xs active:scale-[0.98] transition-all"
                   >
                     <div>
-                      <div className="flex items-center justify-between gap-2 mb-2.5">
+                      <div className="flex items-center justify-between gap-2 mb-2">
                         <span
                           className={`inline-block px-2.5 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider ${
                             isKine
@@ -777,7 +762,7 @@ function EmptyState({
                               : 'bg-[#FDFAF4] text-[#C49A3C] border border-[#C49A3C]/20'
                           }`}
                         >
-                          {point.label[lang]}
+                          {getLocalizedText(point.label, lang)}
                         </span>
                         <span className="text-[11px] text-[#8A8078] flex items-center gap-1 font-mono font-semibold">
                           <IconClock size={12} className="text-[#C49A3C]" /> {service.duration}
@@ -785,31 +770,35 @@ function EmptyState({
                       </div>
 
                       <h4 className="font-serif font-bold text-sm leading-snug line-clamp-2 mb-2 text-[#1A1412]">
-                        {service.name[lang]}
+                        {getLocalizedText(service.name, lang)}
                       </h4>
 
                       <p className="text-[11px] text-[#6B6058] line-clamp-2 mb-3 leading-relaxed">
-                        {service.shortDesc[lang]}
+                        {getLocalizedText(service.shortDesc, lang)}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between pt-2.5 border-t border-[#E8E2D8]">
                       <span className="font-mono text-sm font-bold text-[#C49A3C]">
-                        {service.price} DT
+                        {service.price} {t.common.currency}
                       </span>
-                      <span className="text-xs font-bold text-[#9A7428] flex items-center bg-[#FDFAF4] border border-[#C49A3C]/25 px-2.5 py-1 rounded-lg">
-                        {lang === 'fr' ? 'Découvrir' : 'استكشف'}
-                        <IconArrowRight size={12} className="ms-1 rtl-flip" />
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onSelectPoint(point)}
+                        className="text-xs font-bold text-[#9A7428] flex items-center bg-[#FDFAF4] border border-[#C49A3C]/25 px-2.5 py-1 rounded-lg"
+                      >
+                        {t.common.readMore}
+                        <IconArrowRight size={12} className="ms-1" />
+                      </button>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Mobile Carousel Indicators */}
+            {/* Mobile Carousel Page Dots */}
             {filteredPoints.length > 1 && (
-              <div className="flex items-center justify-center gap-1.5 mt-2">
+              <div className="flex justify-center gap-1.5 mt-2">
                 {filteredPoints.map((_, i) => (
                   <div
                     key={i}
@@ -844,7 +833,7 @@ function EmptyState({
                           : 'bg-[#FDFAF4] text-[#C49A3C] border border-[#C49A3C]/20'
                       }`}
                     >
-                      {point.label[lang]}
+                      {getLocalizedText(point.label, lang)}
                     </span>
                     <span className="text-[10px] text-[#8A8078] flex items-center gap-1 font-mono">
                       <IconClock size={10} className="text-[#C49A3C]" /> {service.duration}
@@ -852,16 +841,16 @@ function EmptyState({
                   </div>
 
                   <h4 className="font-semibold text-xs leading-snug line-clamp-2 mb-2 transition-colors text-[#1A1412] group-hover:text-[#9A7428]">
-                    {service.name[lang]}
+                    {getLocalizedText(service.name, lang)}
                   </h4>
 
                   <div className="flex items-center justify-between pt-1 border-t border-[#E8E2D8]">
                     <span className="font-mono text-xs font-bold text-[#C49A3C]">
-                      {service.price} DT
+                      {service.price} {t.common.currency}
                     </span>
-                    <span className="text-[10px] font-medium text-[#8A8078] flex items-center group-hover:translate-x-0.5 transition-transform rtl:group-hover:-translate-x-0.5">
-                      {lang === 'fr' ? 'Détails' : 'تفاصيل'}
-                      <IconArrowRight size={10} className="ms-1 rtl-flip" />
+                    <span className="text-[10px] font-medium text-[#8A8078] flex items-center group-hover:translate-x-0.5 transition-transform">
+                      {t.common.readMore}
+                      <IconArrowRight size={10} className="ms-1" />
                     </span>
                   </div>
                 </button>
@@ -887,7 +876,7 @@ function MobileBottomSheet({
 }: {
   point: MapPoint | null;
   service: Service | null;
-  lang: 'fr' | 'ar';
+  lang: Lang;
   t: Translations;
   onClose: () => void;
 }) {
@@ -968,7 +957,7 @@ function ViewToggle({
   onViewChange,
 }: {
   view: ViewSide;
-  lang: 'fr' | 'ar';
+  lang: Lang;
   t: Translations;
   onViewChange: (v: ViewSide) => void;
 }) {
@@ -977,7 +966,7 @@ function ViewToggle({
       className="inline-flex items-center p-0.5 rounded-full border"
       style={{ background: WHITE, borderColor: BORDER }}
       role="group"
-      aria-label={lang === 'fr' ? 'Vue du corps' : 'اتجاه الجسم'}
+      aria-label={lang === 'pt' ? 'Vista do Corpo' : lang === 'en' ? 'Body View' : 'Vue du corps'}
     >
       {(['front', 'back'] as const).map((v) => (
         <button
@@ -1042,12 +1031,10 @@ export function BodyMap() {
       // 4. Instant Search Filter
       if (searchQuery.trim() !== '') {
         const q = searchQuery.toLowerCase();
-        const nameFr = svc.name.fr.toLowerCase();
-        const nameAr = svc.name.ar.toLowerCase();
-        const labelFr = p.label.fr.toLowerCase();
-        const labelAr = p.label.ar.toLowerCase();
-        const descFr = svc.shortDesc.fr.toLowerCase();
-        if (!nameFr.includes(q) && !nameAr.includes(q) && !labelFr.includes(q) && !labelAr.includes(q) && !descFr.includes(q)) {
+        const nameText = getLocalizedText(svc.name, lang).toLowerCase();
+        const labelText = getLocalizedText(p.label, lang).toLowerCase();
+        const descText = getLocalizedText(svc.shortDesc, lang).toLowerCase();
+        if (!nameText.includes(q) && !labelText.includes(q) && !descText.includes(q)) {
           return false;
         }
       }
@@ -1141,7 +1128,7 @@ export function BodyMap() {
             <span
               className="text-[11px] font-semibold uppercase tracking-widest text-blue-600"
             >
-              {lang === 'fr' ? 'Diagnostic & Carte des soins' : 'تشخيص وخريطة العلاجات'}
+              {lang === 'pt' ? 'Diagnóstico Interativo de Cuidados' : lang === 'en' ? 'Interactive Care Assessment' : 'Diagnostic & Carte des soins'}
             </span>
           </div>
 
@@ -1184,7 +1171,7 @@ export function BodyMap() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={lang === 'fr' ? 'Rechercher un soin, symptôme...' : 'بحث عن علاج أو عارض...'}
+                placeholder={lang === 'pt' ? 'Pesquisar tratamento, sintoma...' : lang === 'en' ? 'Search treatment, symptom...' : 'Rechercher un soin, symptôme...'}
                 className="w-full ps-9 pe-8 py-2 text-xs rounded-full border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
               />
               {searchQuery && (
@@ -1219,16 +1206,16 @@ export function BodyMap() {
             <div className="w-full flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-200/60">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-slate-700">
-                  {currentPoints.length} {lang === 'fr' ? 'soins trouvés' : 'علاجات مطابقة'}
+                  {currentPoints.length} {lang === 'pt' ? 'cuidados encontrados' : lang === 'en' ? 'treatments found' : 'soins trouvés'}
                 </span>
                 {selectedZone !== 'all' && (
                   <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
-                    Zone: {ZONE_LABELS[selectedZone][lang]}
+                    Zone: {getLocalizedText(ZONE_LABELS[selectedZone], lang)}
                   </span>
                 )}
                 {selectedGoal !== 'all' && (
                   <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
-                    Objectif: {MEDICAL_GOALS.find((g) => g.id === selectedGoal)?.label[lang]}
+                    Objectif: {getLocalizedText(MEDICAL_GOALS.find((g) => g.id === selectedGoal)!.label, lang)}
                   </span>
                 )}
                 {searchQuery && (
@@ -1243,7 +1230,7 @@ export function BodyMap() {
                 className="text-blue-600 hover:text-blue-800 font-semibold underline underline-offset-2 flex items-center gap-1"
               >
                 <IconX size={12} />
-                <span>{lang === 'fr' ? 'Réinitialiser' : 'إعادة ضبط'}</span>
+                <span>{lang === 'pt' ? 'Repor' : lang === 'en' ? 'Reset' : 'Réinitialiser'}</span>
               </button>
             </div>
           )}
@@ -1284,15 +1271,15 @@ export function BodyMap() {
                   style={{ background: BLUE }}
                 />
                 {view === 'front'
-                  ? lang === 'fr' ? 'Antérieur' : 'أمامي'
-                  : lang === 'fr' ? 'Postérieur' : 'خلفي'}
+                  ? lang === 'pt' ? 'Anterior' : lang === 'en' ? 'Front' : 'Antérieur'
+                  : lang === 'pt' ? 'Posterior' : lang === 'en' ? 'Back' : 'Postérieur'}
               </div>
 
               {/* Keyboard navigation hint */}
               <div
                 className="absolute bottom-6 end-6 text-[9px] tracking-wider hidden sm:block text-slate-400"
               >
-                {lang === 'fr' ? '← → naviguer' : '← → للتنقل'}
+                {lang === 'pt' ? '← → navegar' : lang === 'en' ? '← → navigate' : '← → naviguer'}
               </div>
             </div>
 
@@ -1301,7 +1288,7 @@ export function BodyMap() {
               className="text-center mt-3 text-[11px] font-medium tracking-wide flex items-center justify-center gap-1.5 text-slate-500"
             >
               <IconBodyScan size={14} />
-              <span>{lang === 'fr' ? 'Cliquez sur une partie du corps pour afficher les soins' : 'انقر على جزء من الجسم لرؤية العلاجات'}</span>
+              <span>{lang === 'pt' ? 'Clique numa zona do corpo para ver os cuidados associados' : lang === 'en' ? 'Click a body part to view associated treatments' : 'Cliquez sur une partie du corps pour afficher les soins'}</span>
             </p>
           </motion.div>
 

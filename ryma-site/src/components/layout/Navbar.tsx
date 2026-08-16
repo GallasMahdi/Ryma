@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES } from '@/data/services';
+import { SERVICES, getLocalizedText } from '@/data/services';
 import { Button } from '@/components/ui/Button';
 import {
   IconMenu2,
@@ -21,7 +21,7 @@ import {
 } from '@tabler/icons-react';
 
 export function Navbar() {
-  const { lang, t, toggleLang } = useLanguage();
+  const { lang, t, toggleLang, setLang } = useLanguage();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -69,7 +69,7 @@ export function Navbar() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C49A3C]" />
               </span>
               <span className="text-[#F5E9C8] font-semibold tracking-wider uppercase text-[10px]">
-                {lang === 'fr' ? 'Cabinet Ouvert' : 'العيادة مفتوحة'}
+                {lang === 'pt' ? 'Clínica Aberta' : lang === 'en' ? 'Clinic Open' : 'Cabinet Ouvert'}
               </span>
               <span className="text-[#B8A88A]">— {t.common.location}</span>
             </span>
@@ -91,7 +91,7 @@ export function Navbar() {
             <span className="h-3 w-px bg-[#C49A3C]/30" />
             <span className="flex items-center gap-1.5 text-[#E8C97A] font-medium tracking-wide">
               <IconSparkles size={13} className="text-[#C49A3C]" />
-              {lang === 'fr' ? 'Prise en charge CNAM' : 'تغطية CNAM متوفرة'}
+              {lang === 'pt' ? 'Comparticipação CNAM' : lang === 'en' ? 'CNAM Coverage' : 'Prise en charge CNAM'}
             </span>
           </div>
         </div>
@@ -188,13 +188,13 @@ export function Navbar() {
                         <div className="bg-white border border-[#C49A3C]/25 rounded-2xl shadow-[0_20px_60px_rgba(196,154,60,0.15),_0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
                           <div className="px-6 py-3.5 border-b border-[#C49A3C]/15 bg-[#FDFAF4] flex items-center justify-between">
                             <span className="text-[11px] font-semibold tracking-widest text-[#9A7428] uppercase">
-                              {lang === 'fr' ? 'Nos Pôles de Soins' : 'أقطاب العلاجات'}
+                              {lang === 'pt' ? 'Os Nossos Polos de Cuidados' : lang === 'en' ? 'Our Treatment Centers' : 'Nos Pôles de Soins'}
                             </span>
                             <Link
                               href="/services"
                               className="inline-flex items-center gap-1 text-xs font-semibold text-[#C49A3C] hover:text-[#9A7428] transition-colors"
                             >
-                              {lang === 'fr' ? 'Voir tout le catalogue' : 'عرض الكتالوج كامل'}
+                              {lang === 'pt' ? 'Ver catálogo completo' : lang === 'en' ? 'View all treatments' : 'Voir tout le catalogue'}
                               <IconArrowUpRight size={14} />
                             </Link>
                           </div>
@@ -204,7 +204,7 @@ export function Navbar() {
                               <div className="flex items-center gap-2 mb-3 pb-1 border-b border-[#C49A3C]/10">
                                 <IconStethoscope size={16} className="text-[#9A7428]" />
                                 <span className="text-xs font-bold uppercase tracking-wider text-[#9A7428]">
-                                  {lang === 'fr' ? 'Kinésithérapie' : 'علاج طبيعي'}
+                                  {lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
                                 </span>
                               </div>
                               <div className="space-y-1">
@@ -216,14 +216,14 @@ export function Navbar() {
                                   >
                                     <div>
                                       <div className="text-[13px] font-semibold text-[#1A1412] group-hover:text-[#9A7428] transition-colors">
-                                        {s.name[lang]}
+                                        {getLocalizedText(s.name, lang)}
                                       </div>
                                       <div className="text-[11px] text-[#6B6058] line-clamp-1">
-                                        {s.shortDesc[lang]}
+                                        {getLocalizedText(s.shortDesc, lang)}
                                       </div>
                                     </div>
                                     <span className="font-mono text-xs font-bold text-[#C49A3C] ml-2 shrink-0">
-                                      {s.price} DT
+                                      {s.price} {t.common.currency}
                                     </span>
                                   </Link>
                                 ))}
@@ -234,7 +234,7 @@ export function Navbar() {
                               <div className="flex items-center gap-2 mb-3 pb-1 border-b border-[#C49A3C]/10">
                                 <IconFlame size={16} className="text-[#C49A3C]" />
                                 <span className="text-xs font-bold uppercase tracking-wider text-[#C49A3C]">
-                                  {lang === 'fr' ? 'Soins Minceur' : 'تنحيف'}
+                                  {lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
                                 </span>
                               </div>
                               <div className="space-y-1">
@@ -269,14 +269,22 @@ export function Navbar() {
 
               {/* ── Right Actions ── */}
               <div className="hidden xl:flex items-center gap-2.5 shrink-0">
-                {/* Language Switcher */}
-                <button
-                  onClick={toggleLang}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold text-[#9A7428] bg-[#F5E9C8] border border-[#C49A3C]/30 hover:bg-[#EDE0B8] transition-all whitespace-nowrap"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3C]" />
-                  {lang === 'fr' ? 'العربية' : 'FR'}
-                </button>
+                {/* Multi-Language Selector */}
+                <div className="inline-flex items-center gap-0.5 p-1 bg-[#F4F0E8] rounded-full border border-[#C49A3C]/25 text-xs font-mono font-bold">
+                  {(['pt', 'en', 'fr'] as const).map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => setLang(l)}
+                      className={`px-2.5 py-0.5 rounded-full transition-all uppercase ${
+                        lang === l
+                          ? 'bg-[#C49A3C] text-white shadow-sm font-extrabold'
+                          : 'text-[#8A8078] hover:text-[#C49A3C]'
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
 
                 {/* Booking Button */}
                 <Button
@@ -294,9 +302,9 @@ export function Navbar() {
               <div className="flex xl:hidden items-center gap-2 shrink-0">
                 <button
                   onClick={toggleLang}
-                  className="text-xs font-bold text-[#9A7428] bg-[#F5E9C8] border border-[#C49A3C]/30 px-2.5 py-1 rounded-full"
+                  className="text-xs font-mono font-extrabold text-[#9A7428] bg-[#F5E9C8] border border-[#C49A3C]/30 px-2.5 py-1 rounded-full uppercase"
                 >
-                  {lang === 'fr' ? 'عربي' : 'FR'}
+                  {lang}
                 </button>
                 <button
                   onClick={() => setMobileOpen(!mobileOpen)}
@@ -306,6 +314,7 @@ export function Navbar() {
                   {mobileOpen ? <IconX size={22} /> : <IconMenu2 size={22} />}
                 </button>
               </div>
+
 
             </div>
           </div>

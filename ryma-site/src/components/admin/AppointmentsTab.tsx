@@ -30,8 +30,10 @@ import {
   getServicePrice,
 } from '@/types/admin';
 
+import { Lang } from '@/lib/i18n';
+
 interface AppointmentsTabProps {
-  lang: 'fr' | 'ar';
+  lang: Lang;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   filter: AppointmentStatus | 'all';
@@ -68,6 +70,12 @@ export function AppointmentsTab({
   openPatientNote,
   noShowCounts,
 }: AppointmentsTabProps) {
+  const txt = (frStr: string, enStr: string, ptStr: string) => {
+    if (lang === 'fr') return frStr;
+    if (lang === 'en') return enStr;
+    return ptStr;
+  };
+
   const [viewMode, setViewMode] = useState<'cards' | 'table' | 'grouped'>('cards');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'upcoming'>('all');
 
@@ -154,12 +162,12 @@ export function AppointmentsTab({
                 {item.patientName}
               </span>
               <span className={`font-mono text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${st.bg} ${st.color} ${st.border}`}>
-                {st[lang]}
+                {st[lang] || st.pt || st.fr}
               </span>
               {(noShowCounts?.[item.phone] ?? 0) >= 2 && (
                 <span className="bg-[#A9655F]/15 border border-[#A9655F]/30 text-[#A9655F] font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
                   <IconAlertCircle size={12} />
-                  <span>{lang === 'fr' ? `Client Risqué (${noShowCounts![item.phone]} Annulations)` : `عميل حذر (${noShowCounts![item.phone]} إلغاء)`}</span>
+                  <span>{txt(`Client Risqué (${noShowCounts![item.phone]} Annulations)`, `High-Risk Client (${noShowCounts![item.phone]} Cancellations)`, `Cliente de Risco (${noShowCounts![item.phone]} Cancelamentos)`)}</span>
                 </span>
               )}
               {price > 0 && (
@@ -208,25 +216,27 @@ export function AppointmentsTab({
             href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
               lang === 'fr'
                 ? `Bonjour ${item.patientName}, nous vous rappelons votre rendez-vous pour ${getServiceName(item.service, 'fr')} le ${item.date} à ${item.startTime} au Cabinet Ryma Kiné. Merci de confirmer votre présence.`
-                : `مرحباً ${item.patientName}، نذكركم بموعدكم يوم ${item.date} على الساعة ${item.startTime} في عيادة ريمة للتدليك والعلاج الطبيعي.`
+                : lang === 'en'
+                ? `Hello ${item.patientName}, this is a reminder for your appointment for ${getServiceName(item.service, 'en')} on ${item.date} at ${item.startTime} at Ryma Kiné Clinic. Please confirm your attendance.`
+                : `Olá ${item.patientName}, lembramos a sua consulta de ${getServiceName(item.service, 'pt')} no dia ${item.date} às ${item.startTime} na Clínica Ryma Kiné. Por favor confirme a sua presença.`
             )}`}
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors shadow-xs flex items-center gap-1 font-mono text-xs font-bold"
-            title={lang === 'fr' ? 'Rappel WhatsApp' : 'تذكير واتساب'}
+            title={txt('Rappel WhatsApp', 'WhatsApp Reminder', 'Lembrete WhatsApp')}
           >
             <IconBrandWhatsapp size={16} />
-            <span className="hidden xl:inline">{lang === 'fr' ? 'Rappel' : 'تذكير'}</span>
+            <span className="hidden xl:inline">{txt('Rappel', 'Reminder', 'Lembrete')}</span>
           </a>
 
           {/* Patient Dossier Trigger */}
           <button
             onClick={() => openPatientNote(item)}
             className="p-2 px-3 rounded-xl bg-[#FAF6EE] border border-[#E8D7B0] text-[#9B793A] hover:bg-[#F4ECE0] transition-colors flex items-center gap-1.5 text-xs font-mono font-semibold shadow-xs"
-            title={lang === 'fr' ? 'Dossier Patient' : 'ملف المريض'}
+            title={txt('Dossier Patient', 'Patient File', 'Ficha do Doente')}
           >
             <IconNotes size={16} className="text-[#C6A15B]" />
-            <span className="hidden sm:inline">{lang === 'fr' ? 'Dossier' : 'الملف'}</span>
+            <span className="hidden sm:inline">{txt('Dossier', 'File', 'Ficha')}</span>
           </button>
 
           {/* Quick Status Modifiers */}
@@ -235,7 +245,7 @@ export function AppointmentsTab({
               onClick={() => updateStatus(item.id, 'CONFIRMED')}
               className="px-3 py-1.5 rounded-xl bg-[#6F8F72]/15 border border-[#6F8F72]/30 text-[#6F8F72] font-mono text-xs font-semibold hover:bg-[#6F8F72]/25 transition-colors"
             >
-              ✓ {lang === 'fr' ? 'Confirmer' : 'تأكيد'}
+              ✓ {txt('Confirmer', 'Confirm', 'Confirmar')}
             </button>
           )}
 
@@ -244,18 +254,18 @@ export function AppointmentsTab({
               onClick={() => updateStatus(item.id, 'COMPLETED')}
               className="px-3 py-1.5 rounded-xl bg-[#5B82A6]/15 border border-[#5B82A6]/30 text-[#5B82A6] font-mono text-xs font-semibold hover:bg-[#5B82A6]/25 transition-colors"
             >
-              ✓ {lang === 'fr' ? 'Terminer' : 'إتمام'}
+              ✓ {txt('Terminer', 'Complete', 'Concluir')}
             </button>
           )}
 
           {item.status !== 'CANCELLED' && (
             <button
               onClick={() => setConfirmDialog({
-                title: lang === 'fr' ? 'Annuler ce rendez-vous ?' : 'إلغاء هذا الموعد؟',
+                title: txt('Annuler ce rendez-vous ?', 'Cancel this appointment?', 'Cancelar esta consulta?'),
                 onConfirm: () => softDeleteAppointment(item.id)
               })}
               className="p-2 rounded-xl bg-[#A9655F]/10 border border-[#A9655F]/20 text-[#A9655F] hover:bg-[#A9655F]/20 transition-colors"
-              title={lang === 'fr' ? 'Annuler' : 'إلغاء'}
+              title={txt('Annuler', 'Cancel', 'Cancelar')}
             >
               <IconTrash size={16} />
             </button>
@@ -267,45 +277,6 @@ export function AppointmentsTab({
 
   return (
     <div className="space-y-4 font-sans">
-
-      {/* Top Summary Bar & Analytics Chips */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-2xl bg-white border border-[#E9E6DF] flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-          <div>
-            <div className="font-mono text-[10px] uppercase font-semibold text-[#77736B]">{lang === 'fr' ? 'Rdv Affichés' : 'المواعيد'}</div>
-            <div className="font-mono text-lg font-bold text-[#202020]">{summaryMetrics.totalCount}</div>
-          </div>
-          <IconUser size={18} className="text-[#77736B]" />
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-white border border-[#E9E6DF] flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-          <div>
-            <div className="font-mono text-[10px] uppercase font-semibold text-[#6F8F72]">{lang === 'fr' ? "Aujourd'hui" : 'اليوم'}</div>
-            <div className="font-mono text-lg font-bold text-[#6F8F72]">{summaryMetrics.todayCount}</div>
-          </div>
-          <IconClock size={18} className="text-[#6F8F72]" />
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-[#FAF6EE] border border-[#C6A15B]/30 flex items-center justify-between shadow-[0_2px_8px_rgba(198,161,91,0.06)]">
-          <div>
-            <div className="font-mono text-[10px] uppercase font-semibold text-[#9B793A] flex items-center gap-1">
-              {summaryMetrics.pendingCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-[#C6A15B] animate-ping" />}
-              <span>{lang === 'fr' ? 'À valider' : 'قيد الانتظار'}</span>
-            </div>
-            <div className="font-mono text-lg font-bold text-[#C6A15B]">{summaryMetrics.pendingCount}</div>
-          </div>
-          <IconAlertCircle size={18} className="text-[#C6A15B]" />
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-[#FAF6EE] border border-[#C6A15B]/30 flex items-center justify-between shadow-[0_2px_8px_rgba(198,161,91,0.06)]">
-          <div>
-            <div className="font-mono text-[10px] uppercase font-semibold text-[#9B793A]">{lang === 'fr' ? 'Chiffre Estimé' : 'المداخيل'}</div>
-            <div className="font-mono text-lg font-bold text-[#9B793A]">{summaryMetrics.totalRevenue} TND</div>
-          </div>
-          <IconCurrencyDinar size={18} className="text-[#9B793A]" />
-        </div>
-      </div>
-
       {/* Control Bar: Search, Status Filter, Date Filter & View Switcher */}
       <div className="flex flex-col space-y-3 bg-white p-4 rounded-3xl border border-[#E9E6DF] shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
         
@@ -317,7 +288,7 @@ export function AppointmentsTab({
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={lang === 'fr' ? 'Rechercher patient, téléphone, soin...' : 'بحث عن مريض، هاتف، علاج...'}
+              placeholder={txt('Rechercher patient, téléphone, soin...', 'Search patient, phone, care...', 'Pesquisar doente, telefone, cuidado...')}
               className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] placeholder-[#77736B]/50 rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] transition-all font-sans"
             />
           </div>
@@ -331,10 +302,10 @@ export function AppointmentsTab({
                   ? 'bg-white text-[#202020] shadow-xs border border-[#E9E6DF]'
                   : 'text-[#77736B] hover:text-[#202020]'
               }`}
-              title={lang === 'fr' ? 'Vue Cartes' : 'عرض بطاقات'}
+              title={txt('Vue Cartes', 'Card View', 'Vista Cartões')}
             >
               <IconLayoutGrid size={15} className={viewMode === 'cards' ? 'text-[#C6A15B]' : ''} />
-              <span className="hidden md:inline">{lang === 'fr' ? 'Cartes' : 'بطاقات'}</span>
+              <span className="hidden md:inline">{txt('Cartes', 'Cards', 'Cartões')}</span>
             </button>
 
             <button
@@ -344,10 +315,10 @@ export function AppointmentsTab({
                   ? 'bg-white text-[#202020] shadow-xs border border-[#E9E6DF]'
                   : 'text-[#77736B] hover:text-[#202020]'
               }`}
-              title={lang === 'fr' ? 'Vue Tableau' : 'عرض جدول'}
+              title={txt('Vue Tableau', 'Table View', 'Vista Tabela')}
             >
               <IconTable size={15} className={viewMode === 'table' ? 'text-[#C6A15B]' : ''} />
-              <span className="hidden md:inline">{lang === 'fr' ? 'Tableau' : 'جدول'}</span>
+              <span className="hidden md:inline">{txt('Tableau', 'Table', 'Tabela')}</span>
             </button>
 
             <button
@@ -357,10 +328,10 @@ export function AppointmentsTab({
                   ? 'bg-white text-[#202020] shadow-xs border border-[#E9E6DF]'
                   : 'text-[#77736B] hover:text-[#202020]'
               }`}
-              title={lang === 'fr' ? 'Vue par Date' : 'مجموعة حسب التاريخ'}
+              title={txt('Vue par Date', 'View by Date', 'Vista por Data')}
             >
               <IconTimeline size={15} className={viewMode === 'grouped' ? 'text-[#C6A15B]' : ''} />
-              <span className="hidden md:inline">{lang === 'fr' ? 'Par Date' : 'حسب التاريخ'}</span>
+              <span className="hidden md:inline">{txt('Par Date', 'By Date', 'Por Data')}</span>
             </button>
           </div>
         </div>
@@ -381,20 +352,20 @@ export function AppointmentsTab({
                 }`}
               >
                 {st === 'all'
-                  ? (lang === 'fr' ? 'Tous les statuts' : 'كل الحالات')
-                  : STATUS_CONFIG[st][lang]}
+                  ? txt('Tous les statuts', 'All statuses', 'Todos os estados')
+                  : STATUS_CONFIG[st][lang] || STATUS_CONFIG[st].pt || STATUS_CONFIG[st].fr}
               </button>
             ))}
           </div>
 
           {/* Quick Date Filter */}
           <div className="flex items-center gap-1.5 overflow-x-auto font-mono text-xs">
-            <span className="text-[#77736B] text-[11px] font-semibold me-1">📅 {lang === 'fr' ? 'Période:' : 'الفترة:'}</span>
+            <span className="text-[#77736B] text-[11px] font-semibold me-1">📅 {txt('Période:', 'Period:', 'Período:')}</span>
             {[
-              { id: 'all', label: lang === 'fr' ? 'Toutes dates' : 'كل التواريخ' },
-              { id: 'today', label: lang === 'fr' ? "Aujourd'hui" : 'اليوم' },
-              { id: 'tomorrow', label: lang === 'fr' ? 'Demain' : 'غداً' },
-              { id: 'upcoming', label: lang === 'fr' ? 'À venir' : 'القادمة' },
+              { id: 'all', label: txt('Toutes dates', 'All dates', 'Todas as datas') },
+              { id: 'today', label: txt("Aujourd'hui", 'Today', 'Hoje') },
+              { id: 'tomorrow', label: txt('Demain', 'Tomorrow', 'Amanhã') },
+              { id: 'upcoming', label: txt('À venir', 'Upcoming', 'Próximas') },
             ].map(d => (
               <button
                 key={d.id}
@@ -423,13 +394,13 @@ export function AppointmentsTab({
       {loadingAppointments ? (
         <div className="py-20 text-center text-[#77736B] font-mono text-sm flex items-center justify-center gap-3">
           <div className="w-5 h-5 border-2 border-[#C6A15B] border-t-transparent rounded-full animate-spin" />
-          <span>{lang === 'fr' ? 'Chargement des rendez-vous...' : 'جارٍ تحميل المواعيد...'}</span>
+          <span>{txt('Chargement des rendez-vous...', 'Loading appointments...', 'A carregar consultas...')}</span>
         </div>
       ) : displayedAppointments.length === 0 ? (
         <div className="py-20 text-center text-[#77736B] bg-white rounded-3xl border border-[#E9E6DF] shadow-[0_2px_8px_rgba(0,0,0,0.02)] space-y-2">
           <IconListCheck size={44} className="mx-auto text-[#C6A15B] opacity-40" />
-          <p className="font-serif text-base font-bold text-[#202020]">{lang === 'fr' ? 'Aucun rendez-vous trouvé' : 'لا توجد مواعيد'}</p>
-          <p className="font-mono text-xs text-[#77736B]">{lang === 'fr' ? 'Essayez de réinitialiser vos filtres ou d\'effectuer une autre recherche' : 'حاول تغيير الفلاتر أو البحث'}</p>
+          <p className="font-serif text-base font-bold text-[#202020]">{txt('Aucun rendez-vous trouvé', 'No appointments found', 'Nenhuma consulta encontrada')}</p>
+          <p className="font-mono text-xs text-[#77736B]">{txt('Essayez de réinitialiser vos filtres ou d\'effectuer une autre recherche', 'Try resetting your filters or performing another search', 'Tente reiniciar os seus filtros ou efetuar outra pesquisa')}</p>
         </div>
       ) : (
         <>
@@ -445,11 +416,11 @@ export function AppointmentsTab({
                 <table className="w-full text-left font-sans text-xs">
                   <thead className="bg-[#FAFAF8] border-b border-[#E9E6DF] font-mono uppercase text-[10px] text-[#77736B] font-semibold">
                     <tr>
-                      <th className="p-4">{lang === 'fr' ? 'Patient' : 'المريض'}</th>
-                      <th className="p-4">{lang === 'fr' ? 'Soin & Tarif' : 'العلاج والسعر'}</th>
-                      <th className="p-4">{lang === 'fr' ? 'Date & Heure' : 'التاريخ والتوقيت'}</th>
-                      <th className="p-4">{lang === 'fr' ? 'Statut' : 'الحالة'}</th>
-                      <th className="p-4 text-right">{lang === 'fr' ? 'Actions' : 'الإجراءات'}</th>
+                      <th className="p-4">{txt('Patient', 'Patient', 'Doente')}</th>
+                      <th className="p-4">{txt('Soin & Tarif', 'Care & Price', 'Cuidado & Preço')}</th>
+                      <th className="p-4">{txt('Date & Heure', 'Date & Time', 'Data & Hora')}</th>
+                      <th className="p-4">{txt('Statut', 'Status', 'Estado')}</th>
+                      <th className="p-4 text-right">{txt('Actions', 'Actions', 'Ações')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E9E6DF]">
@@ -479,8 +450,8 @@ export function AppointmentsTab({
                             {item.date} • {item.startTime}
                           </td>
                           <td className="p-4">
-                            <span className={`font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${st.bg} ${st.color} ${st.border}`}>
-                              {st[lang]}
+                            <span className={`font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full border ${st.bg} ${st.color} ${st.border}`}>
+                              {st[lang] || st.pt || st.fr}
                             </span>
                           </td>
                           <td className="p-4 text-right">
@@ -497,7 +468,7 @@ export function AppointmentsTab({
                               <button
                                 onClick={() => openPatientNote(item)}
                                 className="p-1.5 rounded-lg bg-[#FAF6EE] text-[#9B793A] hover:bg-[#F4ECE0] transition-colors"
-                                title={lang === 'fr' ? 'Dossier Patient' : 'ملف المريض'}
+                                title={txt('Dossier Patient', 'Patient File', 'Ficha do Doente')}
                               >
                                 <IconNotes size={15} />
                               </button>
@@ -520,10 +491,11 @@ export function AppointmentsTab({
                               {item.status !== 'CANCELLED' && (
                                 <button
                                   onClick={() => setConfirmDialog({
-                                    title: lang === 'fr' ? 'Annuler ce rendez-vous ?' : 'إلغاء هذا الموعد؟',
+                                    title: txt('Annuler ce rendez-vous ?', 'Cancel this appointment?', 'Cancelar esta consulta?'),
                                     onConfirm: () => softDeleteAppointment(item.id)
                                   })}
                                   className="p-1.5 rounded-lg bg-[#A9655F]/10 text-[#A9655F] hover:bg-[#A9655F]/20"
+                                  title={txt('Annuler', 'Cancel', 'Cancelar')}
                                 >
                                   <IconTrash size={15} />
                                 </button>
@@ -555,12 +527,12 @@ export function AppointmentsTab({
                             ? 'bg-[#202020] text-white'
                             : 'bg-[#FAF6EE] text-[#9B793A] border border-[#E8D7B0]'
                         }`}>
-                          {isToday ? (lang === 'fr' ? "Aujourd'hui" : 'اليوم') : isTomorrow ? (lang === 'fr' ? 'Demain' : 'غداً') : date}
+                          {isToday ? txt("Aujourd'hui", 'Today', 'Hoje') : isTomorrow ? txt('Demain', 'Tomorrow', 'Amanhã') : date}
                         </span>
                         <span className="text-[#77736B] font-semibold">{date}</span>
                       </div>
                       <span className="font-mono text-xs text-[#77736B]">
-                        {appts.length} {lang === 'fr' ? 'rendez-vous' : 'موعد'}
+                        {appts.length} {txt('rendez-vous', 'appointments', 'consultas')}
                       </span>
                     </div>
 
@@ -577,12 +549,14 @@ export function AppointmentsTab({
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-3xl border border-[#E9E6DF] shadow-[0_2px_8px_rgba(0,0,0,0.02)] font-mono text-xs">
             <div className="flex items-center gap-3 text-[#77736B]">
               <span>
-                {lang === 'fr'
-                  ? `Affichage ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} sur ${totalItems} rendez-vous`
-                  : `عرض ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} من ${totalItems} موعد`}
+                {txt(
+                  `Affichage ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} sur ${totalItems} rendez-vous`,
+                  `Showing ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} of ${totalItems} appointments`,
+                  `A mostrar ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} de ${totalItems} consultas`
+                )}
               </span>
               <div className="flex items-center gap-1.5 text-[11px]">
-                <span className="hidden md:inline">{lang === 'fr' ? 'Par page:' : 'في الصفحة:'}</span>
+                <span className="hidden md:inline">{txt('Par page:', 'Per page:', 'Por página:')}</span>
                 <select
                   value={itemsPerPage}
                   onChange={e => setItemsPerPage(Number(e.target.value))}
@@ -601,7 +575,7 @@ export function AppointmentsTab({
                   onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
                   className="p-2 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-[#77736B] hover:text-[#202020] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  title={lang === 'fr' ? 'Page précédente' : 'الصفحة السابقة'}
+                  title={txt('Page précédente', 'Previous page', 'Página anterior')}
                 >
                   <IconChevronLeft size={16} />
                 </button>
@@ -641,7 +615,7 @@ export function AppointmentsTab({
                   onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
                   className="p-2 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-[#77736B] hover:text-[#202020] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  title={lang === 'fr' ? 'Page suivante' : 'الصفحة التالية'}
+                  title={txt('Page suivante', 'Next page', 'Página seguinte')}
                 >
                   <IconChevronRight size={16} />
                 </button>
