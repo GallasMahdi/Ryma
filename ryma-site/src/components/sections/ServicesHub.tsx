@@ -1,13 +1,14 @@
-'use client';
+﻿'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES, ServicePole, Service } from '@/data/services';
 import { ServiceCard } from '@/components/ui/ServiceCard';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { IconStethoscope, IconFlame, IconChevronLeft, IconChevronRight, IconSparkles } from '@tabler/icons-react';
+import { IconStethoscope, IconFlame, IconSparkles, IconChevronDown } from '@tabler/icons-react';
 
 const POLES: {
   id: ServicePole;
@@ -21,13 +22,13 @@ const POLES: {
     id: 'kinesitherapie',
     icon: <IconStethoscope size={18} />,
     label: {
-      fr: 'Kinésithérapie Sur Mesure',
+      fr: 'KinÃ©sithÃ©rapie Sur Mesure',
       pt: 'Fisioterapia Especializada',
       en: 'Specialized Physiotherapy',
     },
     desc: {
-      fr: 'Soins thérapeutiques avancés pour la posture, la rééducation active et le soulagement durable.',
-      pt: 'Cuidados terapêuticos avançados para a postura, reabilitação ativa e alívio duradouro.',
+      fr: 'Soins thÃ©rapeutiques avancÃ©s pour la posture, la rÃ©Ã©ducation active et le soulagement durable.',
+      pt: 'Cuidados terapÃªuticos avanÃ§ados para a postura, reabilitaÃ§Ã£o ativa e alÃ­vio duradouro.',
       en: 'Advanced therapeutic care for posture, active rehabilitation, and long-term relief.',
     },
     badge: 'teal',
@@ -42,8 +43,8 @@ const POLES: {
       en: 'High-Tech Slimming Protocols',
     },
     desc: {
-      fr: 'Technologies 100% non-invasives pour sculpter la silhouette, raffermir les tissus et déstocker.',
-      pt: 'Tecnologias 100% não invasivas para esculpir a silhueta, firmar tecidos e eliminar gordura.',
+      fr: 'Technologies 100% non-invasives pour sculpter la silhouette, raffermir les tissus et dÃ©stocker.',
+      pt: 'Tecnologias 100% nÃ£o invasivas para esculpir a silhueta, firmar tecidos e eliminar gordura.',
       en: '100% non-invasive technologies to sculpt the body, firm tissues, and target fat.',
     },
     badge: 'bronze',
@@ -51,81 +52,52 @@ const POLES: {
   },
 ];
 
+/**
+ * Mobile vertical stack â€” replaces the horizontal carousel on small screens.
+ * Cards are shown 2 at a time with a "show more" toggle so the page doesn't
+ * feel overwhelming while still being fully navigable without sideways scrolling.
+ */
+function MobileServiceStack({ services, lang }: { services: Service[]; lang: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const shown = expanded ? services : services.slice(0, 2);
 
-function Carousel({ services }: { services: Service[] }) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [index, setIndex] = useState(0);
+  const showMoreLabel =
+    lang === 'pt' ? `Ver mais ${services.length - 2} tratamento${services.length - 2 > 1 ? 's' : ''}` :
+    lang === 'en' ? `Show ${services.length - 2} more treatment${services.length - 2 > 1 ? 's' : ''}` :
+    `Voir ${services.length - 2} soin${services.length - 2 > 1 ? 's' : ''} de plus`;
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const onScroll = () => {
-      const scrollLeft = el.scrollLeft;
-      const width = el.clientWidth;
-      const newIndex = Math.round(scrollLeft / (width * 0.8));
-      setIndex(Math.max(0, Math.min(services.length - 1, newIndex)));
-    };
-
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, [services.length]);
-
-  const scrollByPage = (dir: number) => {
-    const el = ref.current;
-    if (!el) return;
-    const amount = Math.round(el.clientWidth * 0.85) * dir;
-    el.scrollBy({ left: amount, behavior: 'smooth' });
-  };
+  const showLessLabel =
+    lang === 'pt' ? 'Mostrar menos' :
+    lang === 'en' ? 'Show less' :
+    'Voir moins';
 
   return (
-    <div className="relative group/carousel">
-      <div
-        ref={ref}
-        className="flex gap-4 sm:gap-6 overflow-x-auto px-1 py-3 scroll-smooth touch-pan-x snap-x snap-mandatory -mx-1"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
-        {services.map((service, i) => (
-          <div key={service.slug} className="snap-start shrink-0 w-[88%] sm:w-[62%] md:w-[48%] px-1">
-            <ScrollReveal delay={i * 0.05}>
-              <ServiceCard service={service} />
-            </ScrollReveal>
-          </div>
+    <div className="flex flex-col gap-4">
+      <AnimatePresence initial={false}>
+        {shown.map((service, i) => (
+          <motion.div
+            key={service.slug}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.32, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <ServiceCard service={service} />
+          </motion.div>
         ))}
-      </div>
+      </AnimatePresence>
 
-      <button
-        aria-label="Précédent"
-        onClick={() => scrollByPage(-1)}
-        className="absolute left-1 top-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-md border border-[#C49A3C]/30 text-[#9A7428] rounded-full p-2.5 shadow-[0_4px_20px_rgba(196,154,60,0.2)] hover:bg-[#C49A3C] hover:text-white transition-all duration-300"
-      >
-        <IconChevronLeft size={18} className="rtl-flip" />
-      </button>
-      <button
-        aria-label="Suivant"
-        onClick={() => scrollByPage(1)}
-        className="absolute right-1 top-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-md border border-[#C49A3C]/30 text-[#9A7428] rounded-full p-2.5 shadow-[0_4px_20px_rgba(196,154,60,0.2)] hover:bg-[#C49A3C] hover:text-white transition-all duration-300"
-      >
-        <IconChevronRight size={18} className="rtl-flip" />
-      </button>
-
-      <div className="flex items-center justify-center gap-2 mt-4">
-        {services.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              const el = ref.current;
-              if (!el) return;
-              const amount = Math.round(el.clientWidth * 0.85) * i;
-              el.scrollTo({ left: amount, behavior: 'smooth' });
-            }}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === index ? 'w-6 bg-[#C49A3C]' : 'w-2 bg-[#D4CEBE] hover:bg-[#9A7428]'
-            }`}
-            aria-label={`Aller à ${i + 1}`}
-          />
-        ))}
-      </div>
+      {services.length > 2 && (
+        <button
+          onClick={() => setExpanded(v => !v)}
+          className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl border border-[#C49A3C]/30 bg-white/80 text-[#9A7428] text-sm font-semibold transition-all hover:bg-[#F5E9C8] hover:border-[#C49A3C]/60 active:scale-[0.98]"
+        >
+          <span>{expanded ? showLessLabel : showMoreLabel}</span>
+          <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.25 }}>
+            <IconChevronDown size={16} />
+          </motion.div>
+        </button>
+      )}
     </div>
   );
 }
@@ -155,7 +127,7 @@ export function ServicesHub() {
           <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md border border-[#C49A3C]/30 px-4 py-1.5 rounded-full mb-4 shadow-sm">
             <IconSparkles size={14} className="text-[#C49A3C]" />
             <span className="font-mono text-[11px] tracking-[0.24em] text-[#9A7428] uppercase font-semibold">
-              {lang === 'pt' ? 'Os Nossos Polos de Excelência' : lang === 'en' ? 'Our Centers of Excellence' : 'Nos Pôles d\'Excellence'}
+              {lang === 'pt' ? 'Os Nossos Polos de ExcelÃªncia' : lang === 'en' ? 'Our Centers of Excellence' : 'Nos PÃ´les d\'Excellence'}
             </span>
           </div>
 
@@ -164,10 +136,10 @@ export function ServicesHub() {
           </h2>
           <p className="text-[#6B6058] max-w-2xl mx-auto text-base md:text-lg leading-relaxed font-normal">
             {lang === 'pt'
-              ? '13 tratamentos especializados desenhados à medida para responder a todos os seus objetivos de saúde, reabilitação e remodelação corporal.'
+              ? '13 tratamentos especializados desenhados Ã  medida para responder a todos os seus objetivos de saÃºde, reabilitaÃ§Ã£o e remodelaÃ§Ã£o corporal.'
               : lang === 'en'
               ? '13 specialized treatments tailored to achieve all your goals in health, rehabilitation, and body contouring.'
-              : '13 soins spécialisés conçus sur mesure pour répondre à tous vos objectifs de santé, rééducation et remodelage.'}
+              : '13 soins spÃ©cialisÃ©s conÃ§us sur mesure pour rÃ©pondre Ã  tous vos objectifs de santÃ©, rÃ©Ã©ducation et remodelage.'}
           </p>
         </ScrollReveal>
 
@@ -181,7 +153,7 @@ export function ServicesHub() {
                 : 'text-[#4A4540] hover:text-[#C49A3C]'
             }`}
           >
-            {lang === 'pt' ? 'Todos os Polos' : lang === 'en' ? 'All Centers' : 'Tous les Pôles'}
+            {lang === 'pt' ? 'Todos os Polos' : lang === 'en' ? 'All Centers' : 'Tous les PÃ´les'}
           </button>
           <button
             onClick={() => setActiveTab('kinesitherapie')}
@@ -192,7 +164,7 @@ export function ServicesHub() {
             }`}
           >
             <IconStethoscope size={15} />
-            <span>{lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}</span>
+            <span>{lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'KinÃ©sithÃ©rapie'}</span>
           </button>
           <button
             onClick={() => setActiveTab('minceur')}
@@ -233,7 +205,7 @@ export function ServicesHub() {
                 </p>
               </ScrollReveal>
 
-              {/* Desktop Grid */}
+              {/* Desktop: 3-column grid (unchanged) */}
               <div className="hidden lg:grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {visibleServices.map((service, i) => (
                   <ScrollReveal key={service.slug} delay={i * 0.07}>
@@ -242,14 +214,14 @@ export function ServicesHub() {
                 ))}
               </div>
 
-              {/* Mobile / Tablet Touch Carousel */}
+              {/* Mobile / Tablet: clean vertical stack â€” no horizontal scroll */}
               <div className="lg:hidden">
-                <Carousel services={visibleServices} />
+                <MobileServiceStack services={visibleServices} lang={lang} />
               </div>
 
               <div className="mt-8 text-center">
                 <Button href="/services" variant="ghost" size="sm" className="hover:text-[#9A7428]">
-                  {lang === 'pt' ? 'Ver todos os tratamentos deste polo →' : lang === 'en' ? 'View all treatments in this area →' : 'Voir tous les soins de ce pôle →'}
+                  {lang === 'pt' ? 'Ver todos os tratamentos deste polo â†’' : lang === 'en' ? 'View all treatments in this area â†’' : 'Voir tous les soins de ce pÃ´le â†’'}
                 </Button>
               </div>
             </div>
