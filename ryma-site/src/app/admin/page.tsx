@@ -127,13 +127,16 @@ export default function AdminPage() {
 
   // ── Fetch appointments ─────────────────────────────────────────────────────
   const fetchAppointments = useCallback(async (isSilent = false) => {
-    if (!isSilent) setLoadingAppointments(true);
+    // Only show full blocking spinner on the very first initial mount
+    if (!isSilent && appointments.length === 0) setLoadingAppointments(true);
     setAppointmentsError(null);
     try {
       const data = await apiFetch<{ appointments: Appointment[] }>('/api/admin/appointments');
-      setAppointments(data.appointments);
+      if (Array.isArray(data.appointments)) {
+        setAppointments(data.appointments);
+      }
     } catch (err) {
-      if ((err as Error).message !== 'Session expirée') {
+      if ((err as Error).message !== 'Session expirée' && (err as Error).message !== 'Sessão expirada. A redirecionar...') {
         if (!isSilent)
           setAppointmentsError(
             lang === 'fr'
@@ -144,9 +147,9 @@ export default function AdminPage() {
           );
       }
     } finally {
-      if (!isSilent) setLoadingAppointments(false);
+      setLoadingAppointments(false);
     }
-  }, [lang]);
+  }, [lang, appointments.length]);
 
   // ── Fetch patient notes ────────────────────────────────────────────────────
   const fetchPatientNotes = useCallback(async () => {
