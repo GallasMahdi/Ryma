@@ -127,8 +127,9 @@ export default function AdminPage() {
 
   // ── Fetch appointments ─────────────────────────────────────────────────────
   const fetchAppointments = useCallback(async (isSilent = false) => {
-    // Only show full blocking spinner on the very first initial mount
-    if (!isSilent && appointments.length === 0) setLoadingAppointments(true);
+    if (!isSilent) {
+      setLoadingAppointments(prev => prev || appointments.length === 0);
+    }
     setAppointmentsError(null);
     try {
       const data = await apiFetch<{ appointments: Appointment[] }>('/api/admin/appointments');
@@ -149,7 +150,7 @@ export default function AdminPage() {
     } finally {
       setLoadingAppointments(false);
     }
-  }, [lang, appointments.length]);
+  }, [lang]);
 
   // ── Fetch patient notes ────────────────────────────────────────────────────
   const fetchPatientNotes = useCallback(async () => {
@@ -166,8 +167,8 @@ export default function AdminPage() {
     Promise.all([fetchAppointments(false), fetchPatientNotes(), fetchAdminMetadata()]);
 
     const interval = setInterval(() => {
-      fetchAppointments(true); // Silent background auto-refresh every 15s
-    }, 15000);
+      fetchAppointments(true); // Silent background auto-refresh every 20s
+    }, 20000);
     return () => clearInterval(interval);
   }, [fetchAppointments, fetchPatientNotes, fetchAdminMetadata]);
 
