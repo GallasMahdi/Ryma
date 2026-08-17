@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   if (type === 'patients') {
     const patients = await dbGetAllPatients();
     
-    let csv = 'ID;Nom Patient;Telephone;Email;Prise en charge CNAM;Numero CNAM;Medecin Traitant;Seances Prescrites;Deficit/Effetuées;Pathologies;Date Creation\n';
+    let csv = 'ID;Nome Utente;Telefone;Email;Regime Cobertura;Prestador Seguro;Numero Beneficiario;Medico Assistente;Sessoes Prescritas;Sessoes Concluidas;Patologias;Data Criacao\n';
     
     patients.forEach(p => {
       const completed = p.sessions?.length ?? 0;
@@ -36,8 +36,9 @@ export async function GET(request: NextRequest) {
         sanitizeCsvField(p.patientName),
         sanitizeCsvField(p.phone),
         sanitizeCsvField(p.email ?? ''),
-        sanitizeCsvField(p.cnamStatus ?? 'NON'),
-        sanitizeCsvField(p.cnamNumber ?? ''),
+        sanitizeCsvField(p.coverageType ?? 'PARTICULAR'),
+        sanitizeCsvField(p.coverageProvider ?? ''),
+        sanitizeCsvField(p.coverageNumber ?? ''),
         sanitizeCsvField(p.referringDoctor ?? ''),
         sanitizeCsvField(p.totalPrescribedSessions ?? 10),
         sanitizeCsvField(completed),
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="ryma_patients_${new Date().toISOString().split('T')[0]}.csv"`,
+        'Content-Disposition': `attachment; filename="ryma_utentes_${new Date().toISOString().split('T')[0]}.csv"`,
       },
     });
   }
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
     appointments = appointments.filter(a => a.date <= endDate);
   }
 
-  let csv = 'ID;Date;Heure;Nom Patient;Telephone;Service;Statut;Montant TND;Notes\n';
+  let csv = 'ID;Data;Hora;Nome Utente;Telefone;Tratamento;Regime Cobertura;Prestador;Numero;Estado;Valor EUR;Notas\n';
 
   appointments.forEach(a => {
     const price = getServicePrice(a.service);
@@ -77,6 +78,9 @@ export async function GET(request: NextRequest) {
       sanitizeCsvField(a.patientName),
       sanitizeCsvField(a.phone),
       sanitizeCsvField(a.service),
+      sanitizeCsvField(a.coverageType ?? 'PARTICULAR'),
+      sanitizeCsvField(a.coverageProvider ?? ''),
+      sanitizeCsvField(a.coverageNumber ?? ''),
       sanitizeCsvField(a.status),
       sanitizeCsvField(price),
       sanitizeCsvField(a.notes ?? ''),

@@ -1,4 +1,5 @@
 import { SERVICES } from '@/data/services';
+import { validateAndNormalizePhone } from '@/lib/phone';
 
 // Shared server-side validation utilities.
 // These are the ONLY valid values — they are enforced here, not in frontend code.
@@ -32,11 +33,16 @@ export function validateAppointmentInput(
 
   // Required string fields
   if (!patientName || typeof patientName !== 'string' || patientName.trim().length < 2) {
-    return { ok: false, error: 'Le nom du patient est requis (minimum 2 caractères)' };
+    return { ok: false, error: 'O nome do utente é obrigatório (mínimo 2 caracteres).' };
   }
 
-  if (!phone || typeof phone !== 'string' || phone.trim().length < 8) {
-    return { ok: false, error: 'Un numéro de téléphone valide est requis' };
+  if (!phone || typeof phone !== 'string') {
+    return { ok: false, error: 'O número de telefone é obrigatório.' };
+  }
+
+  const phoneValidation = validateAndNormalizePhone(phone);
+  if (!phoneValidation.isValid) {
+    return { ok: false, error: phoneValidation.error || 'Número de telefone inválido (ex: 912 345 678).' };
   }
 
   // Service must be in the allowed list

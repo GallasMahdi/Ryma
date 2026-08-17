@@ -143,74 +143,76 @@ export function AppointmentsTab({
     const initials = getInitials(item.patientName);
 
     return (
-      <motion.div
+      <div
         key={item.id}
-        layout
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white border border-[#E9E6DF] hover:border-[#C6A15B]/40 p-4 md:p-5 rounded-2xl transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+        className="bg-white border border-[#E2E8F0] p-4 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors hover:border-[#CBD5E1]"
       >
-        <div className="flex items-start gap-4 flex-1">
+        <div className="flex items-start gap-3.5 flex-1 min-w-0">
           {/* Patient Avatar Initials */}
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FAF6EE] to-[#F4ECE0] border border-[#E8D7B0] flex items-center justify-center text-[#9B793A] font-serif font-bold text-sm shrink-0 shadow-xs">
+          <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] text-[#334155] flex items-center justify-center font-semibold text-xs shrink-0 border border-[#E2E8F0]">
             {initials}
           </div>
 
-          <div className="space-y-1.5 flex-1 min-w-0">
+          <div className="space-y-1 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-serif font-bold text-base text-[#202020]">
+              <span className="font-semibold text-sm text-[#0F172A]">
                 {item.patientName}
               </span>
-              <span className={`font-mono text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${st.bg} ${st.color} ${st.border}`}>
+              <span className={`text-[11px] font-medium px-2 py-0.5 rounded border ${st.bg} ${st.color} ${st.border}`}>
                 {st[lang] || st.pt || st.fr}
               </span>
               {(noShowCounts?.[item.phone] ?? 0) >= 2 && (
-                <span className="bg-[#A9655F]/15 border border-[#A9655F]/30 text-[#A9655F] font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                <span className="bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B] text-[10px] font-medium px-2 py-0.5 rounded flex items-center gap-1">
                   <IconAlertCircle size={12} />
-                  <span>{txt(`Client Risqué (${noShowCounts![item.phone]} Annulations)`, `High-Risk Client (${noShowCounts![item.phone]} Cancellations)`, `Cliente de Risco (${noShowCounts![item.phone]} Cancelamentos)`)}</span>
+                  <span>{txt(`Risco (${noShowCounts![item.phone]} cancelamentos)`, `High-Risk (${noShowCounts![item.phone]} cancellations)`, `Risco (${noShowCounts![item.phone]} cancelamentos)`)}</span>
                 </span>
               )}
               {price > 0 && (
-                <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FAF6EE] text-[#9B793A] border border-[#E8D7B0]">
-                  {price} TND
+                <span className="text-[11px] font-semibold text-[#0F172A] px-1.5 py-0.5 rounded bg-[#F8FAFC] border border-[#E2E8F0]">
+                  {price} €
                 </span>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-[#77736B]">
-              <span className="flex items-center gap-1.5 text-[#9B793A] font-mono font-medium">
-                <IconStethoscope size={14} className="text-[#C6A15B]" />
+            <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-[#64748B]">
+              <span className="flex items-center gap-1 text-[#334155] font-medium">
+                <IconStethoscope size={13} className="text-[#64748B]" />
                 {getServiceName(item.service, lang)}
               </span>
-              <span className="flex items-center gap-1.5 font-mono text-[#C6A15B] font-semibold">
-                <IconCalendar size={14} />
-                {item.date} • {item.startTime}
+              <span className="text-[#CBD5E1]">•</span>
+              <span className="flex items-center gap-1 font-medium text-[#0F172A]">
+                <IconCalendar size={13} className="text-[#64748B]" />
+                {item.date} {item.startTime}
               </span>
+              <span className="text-[#CBD5E1]">•</span>
               <a
                 href={`tel:${item.phone}`}
-                className="flex items-center gap-1.5 font-mono text-[#77736B] hover:text-[#202020] transition-colors"
+                className="flex items-center gap-1 hover:text-[#0F172A] transition-colors"
               >
-                <IconPhoneCall size={14} />
+                <IconPhoneCall size={13} />
                 {item.phone}
               </a>
               {item.email && (
-                <span className="flex items-center gap-1.5 font-mono text-[#77736B]">
-                  <IconMail size={14} />
-                  {item.email}
-                </span>
+                <>
+                  <span className="text-[#CBD5E1]">•</span>
+                  <span className="flex items-center gap-1">
+                    <IconMail size={13} />
+                    {item.email}
+                  </span>
+                </>
               )}
             </div>
 
             {item.notes && (
-              <div className="text-xs text-[#77736B] bg-[#FAFAF8] p-2.5 rounded-xl border border-[#E9E6DF] mt-1 max-w-2xl">
-                📝 {item.notes}
+              <div className="text-xs text-[#64748B] bg-[#F8FAFC] p-2 rounded-lg border border-[#E2E8F0] mt-1.5 max-w-xl">
+                {item.notes}
               </div>
             )}
           </div>
         </div>
 
         {/* Status Change & Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0 self-end md:self-center pt-2 md:pt-0 border-t md:border-t-0 border-[#E9E6DF] w-full md:w-auto justify-end">
+        <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-end md:self-center pt-2 md:pt-0 border-t md:border-t-0 border-[#E2E8F0] w-full md:w-auto justify-end">
           {/* WhatsApp Direct Reminder Link */}
           <a
             href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
@@ -222,138 +224,153 @@ export function AppointmentsTab({
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors shadow-xs flex items-center gap-1 font-mono text-xs font-bold"
+            className="p-1.5 px-2 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] hover:bg-[#DCFCE7] transition-colors flex items-center gap-1 text-xs font-medium"
             title={txt('Rappel WhatsApp', 'WhatsApp Reminder', 'Lembrete WhatsApp')}
           >
-            <IconBrandWhatsapp size={16} />
-            <span className="hidden xl:inline">{txt('Rappel', 'Reminder', 'Lembrete')}</span>
+            <IconBrandWhatsapp size={14} />
+            <span className="hidden xl:inline">{txt('WhatsApp', 'WhatsApp', 'WhatsApp')}</span>
           </a>
 
           {/* Patient Dossier Trigger */}
           <button
             onClick={() => openPatientNote(item)}
-            className="p-2 px-3 rounded-xl bg-[#FAF6EE] border border-[#E8D7B0] text-[#9B793A] hover:bg-[#F4ECE0] transition-colors flex items-center gap-1.5 text-xs font-mono font-semibold shadow-xs"
+            className="p-1.5 px-2.5 rounded-lg border border-[#E2E8F0] text-[#334155] hover:bg-[#F8FAFC] transition-colors flex items-center gap-1 text-xs font-medium"
             title={txt('Dossier Patient', 'Patient File', 'Ficha do Doente')}
           >
-            <IconNotes size={16} className="text-[#C6A15B]" />
-            <span className="hidden sm:inline">{txt('Dossier', 'File', 'Ficha')}</span>
+            <IconNotes size={14} className="text-[#64748B]" />
+            <span>{txt('Ficha', 'File', 'Ficha')}</span>
           </button>
 
           {/* Quick Status Modifiers */}
           {item.status !== 'CONFIRMED' && item.status !== 'CANCELLED' && (
             <button
               onClick={() => updateStatus(item.id, 'CONFIRMED')}
-              className="px-3 py-1.5 rounded-xl bg-[#6F8F72]/15 border border-[#6F8F72]/30 text-[#6F8F72] font-mono text-xs font-semibold hover:bg-[#6F8F72]/25 transition-colors"
+              className="px-2.5 py-1.5 rounded-lg bg-[#DCFCE7] text-[#166534] hover:bg-[#BBF7D0] text-xs font-medium transition-colors"
             >
-              ✓ {txt('Confirmer', 'Confirm', 'Confirmar')}
+              ✓ {txt('Confirmar', 'Confirm', 'Confirmar')}
             </button>
           )}
 
           {item.status === 'CONFIRMED' && (
             <button
               onClick={() => updateStatus(item.id, 'COMPLETED')}
-              className="px-3 py-1.5 rounded-xl bg-[#5B82A6]/15 border border-[#5B82A6]/30 text-[#5B82A6] font-mono text-xs font-semibold hover:bg-[#5B82A6]/25 transition-colors"
+              className="px-2.5 py-1.5 rounded-lg bg-[#DBEAFE] text-[#1E40AF] hover:bg-[#BFDBFE] text-xs font-medium transition-colors"
             >
-              ✓ {txt('Terminer', 'Complete', 'Concluir')}
+              ✓ {txt('Concluir', 'Complete', 'Concluir')}
             </button>
           )}
 
-          {item.status !== 'CANCELLED' && (
+          {item.status !== 'CANCELLED' && item.status !== 'COMPLETED' && (
             <button
-              onClick={() => setConfirmDialog({
-                title: txt('Annuler ce rendez-vous ?', 'Cancel this appointment?', 'Cancelar esta consulta?'),
-                onConfirm: () => softDeleteAppointment(item.id)
-              })}
-              className="p-2 rounded-xl bg-[#A9655F]/10 border border-[#A9655F]/20 text-[#A9655F] hover:bg-[#A9655F]/20 transition-colors"
+              onClick={() => updateStatus(item.id, 'CANCELLED')}
+              className="p-1.5 text-[#64748B] hover:text-[#991B1B] hover:bg-[#FEF2F2] rounded-lg transition-colors text-xs"
               title={txt('Annuler', 'Cancel', 'Cancelar')}
             >
-              <IconTrash size={16} />
+              ✕
             </button>
           )}
+
+          <button
+            onClick={() =>
+              setConfirmDialog({
+                title: lang === 'pt' ? `Eliminar registo de ${item.patientName}?` : `Delete appointment for ${item.patientName}?`,
+                onConfirm: () => softDeleteAppointment(item.id),
+              })
+            }
+            className="p-1.5 text-[#94A3B8] hover:text-[#991B1B] hover:bg-[#FEF2F2] rounded-lg transition-colors"
+            title={txt('Supprimer', 'Delete', 'Eliminar')}
+          >
+            <IconTrash size={14} />
+          </button>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
   return (
     <div className="space-y-4 font-sans">
       {/* Control Bar: Search, Status Filter, Date Filter & View Switcher */}
-      <div className="flex flex-col space-y-3 bg-white p-4 rounded-3xl border border-[#E9E6DF] shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+      <div className="flex flex-col space-y-3 bg-white p-3.5 rounded-xl border border-[#E2E8F0]">
         
         {/* Top Row: Search & View Switcher */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <IconSearch size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#77736B]" />
+            <IconSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={txt('Rechercher patient, téléphone, soin...', 'Search patient, phone, care...', 'Pesquisar doente, telefone, cuidado...')}
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] placeholder-[#77736B]/50 rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] transition-all font-sans"
+              placeholder={txt('Rechercher patient, téléphone, soin...', 'Search patient, phone, care...', 'Pesquisar utente, telefone, tratamento...')}
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg pl-9 pr-3 py-1.5 text-xs placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
             />
           </div>
 
           {/* View Mode Switcher */}
-          <div className="flex items-center bg-[#FAFAF8] p-1 rounded-2xl border border-[#E9E6DF] shrink-0 self-end sm:self-auto">
+          <div className="flex items-center gap-1 bg-[#F1F5F9] p-1 rounded-lg self-end sm:self-auto border border-[#E2E8F0]">
             <button
               onClick={() => setViewMode('cards')}
-              className={`p-2 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1.5 ${
                 viewMode === 'cards'
-                  ? 'bg-white text-[#202020] shadow-xs border border-[#E9E6DF]'
-                  : 'text-[#77736B] hover:text-[#202020]'
+                  ? 'bg-white text-[#0F172A] shadow-xs'
+                  : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
               title={txt('Vue Cartes', 'Card View', 'Vista Cartões')}
             >
-              <IconLayoutGrid size={15} className={viewMode === 'cards' ? 'text-[#C6A15B]' : ''} />
+              <IconLayoutGrid size={14} />
               <span className="hidden md:inline">{txt('Cartes', 'Cards', 'Cartões')}</span>
             </button>
 
             <button
               onClick={() => setViewMode('table')}
-              className={`p-2 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1.5 ${
                 viewMode === 'table'
-                  ? 'bg-white text-[#202020] shadow-xs border border-[#E9E6DF]'
-                  : 'text-[#77736B] hover:text-[#202020]'
+                  ? 'bg-white text-[#0F172A] shadow-xs'
+                  : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
               title={txt('Vue Tableau', 'Table View', 'Vista Tabela')}
             >
-              <IconTable size={15} className={viewMode === 'table' ? 'text-[#C6A15B]' : ''} />
+              <IconTable size={14} />
               <span className="hidden md:inline">{txt('Tableau', 'Table', 'Tabela')}</span>
             </button>
 
             <button
               onClick={() => setViewMode('grouped')}
-              className={`p-2 rounded-xl text-xs font-mono font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1.5 ${
                 viewMode === 'grouped'
-                  ? 'bg-white text-[#202020] shadow-xs border border-[#E9E6DF]'
-                  : 'text-[#77736B] hover:text-[#202020]'
+                  ? 'bg-white text-[#0F172A] shadow-xs'
+                  : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
               title={txt('Vue par Date', 'View by Date', 'Vista por Data')}
             >
-              <IconTimeline size={15} className={viewMode === 'grouped' ? 'text-[#C6A15B]' : ''} />
+              <IconTimeline size={14} />
               <span className="hidden md:inline">{txt('Par Date', 'By Date', 'Por Data')}</span>
             </button>
           </div>
         </div>
 
-        {/* Bottom Row: Status Filter Pills & Date Filter Pills */}
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2 border-t border-[#E9E6DF]">
-          
-          {/* Status Filter */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 font-mono text-xs">
-            {(['all', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'] as const).map(st => (
+        {/* Bottom Row: Status Filter Pills */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 pt-2 border-t border-[#E2E8F0]">
+          <div className="flex flex-wrap items-center gap-1">
+            {[
+              { id: 'all' as const, label: txt('Tous', 'All', 'Todos'), count: filteredAppointments.length },
+              { id: 'CONFIRMED' as const, label: txt('Confirmés', 'Confirmed', 'Confirmados'), count: filteredAppointments.filter(a => a.status === 'CONFIRMED').length },
+              { id: 'PENDING' as const, label: txt('En attente', 'Pending', 'Pendentes'), count: filteredAppointments.filter(a => a.status === 'PENDING').length },
+              { id: 'COMPLETED' as const, label: txt('Terminés', 'Completed', 'Concluídos'), count: filteredAppointments.filter(a => a.status === 'COMPLETED').length },
+              { id: 'CANCELLED' as const, label: txt('Annulés', 'Cancelled', 'Cancelados'), count: filteredAppointments.filter(a => a.status === 'CANCELLED').length },
+            ].map(p => (
               <button
-                key={st}
-                onClick={() => setFilter(st)}
-                className={`px-3 py-1.5 rounded-xl transition-all font-semibold whitespace-nowrap ${
-                  filter === st
-                    ? 'bg-gradient-to-r from-[#C6A15B] to-[#9B793A] text-white shadow-xs'
-                    : 'bg-[#FAFAF8] text-[#77736B] hover:text-[#202020] hover:bg-[#F4F2EE]'
+                key={p.id}
+                onClick={() => setFilter(p.id)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                  filter === p.id
+                    ? 'bg-[#0F172A] text-white'
+                    : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
                 }`}
               >
-                {st === 'all'
-                  ? txt('Tous les statuts', 'All statuses', 'Todos os estados')
-                  : STATUS_CONFIG[st][lang] || STATUS_CONFIG[st].pt || STATUS_CONFIG[st].fr}
+                <span>{p.label}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded ${filter === p.id ? 'bg-white/20 text-white' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
+                  {p.count}
+                </span>
               </button>
             ))}
           </div>
@@ -397,85 +414,85 @@ export function AppointmentsTab({
           <span>{txt('Chargement des rendez-vous...', 'Loading appointments...', 'A carregar consultas...')}</span>
         </div>
       ) : displayedAppointments.length === 0 ? (
-        <div className="py-20 text-center text-[#77736B] bg-white rounded-3xl border border-[#E9E6DF] shadow-[0_2px_8px_rgba(0,0,0,0.02)] space-y-2">
-          <IconListCheck size={44} className="mx-auto text-[#C6A15B] opacity-40" />
-          <p className="font-serif text-base font-bold text-[#202020]">{txt('Aucun rendez-vous trouvé', 'No appointments found', 'Nenhuma consulta encontrada')}</p>
-          <p className="font-mono text-xs text-[#77736B]">{txt('Essayez de réinitialiser vos filtres ou d\'effectuer une autre recherche', 'Try resetting your filters or performing another search', 'Tente reiniciar os seus filtros ou efetuar outra pesquisa')}</p>
+        <div className="py-16 text-center text-[#64748B] bg-white rounded-xl border border-[#E2E8F0] space-y-1.5">
+          <IconListCheck size={36} className="mx-auto text-[#94A3B8]" />
+          <p className="text-sm font-semibold text-[#0F172A]">{txt('Nenhum resultado encontrado', 'No appointments found', 'Nenhuma consulta encontrada')}</p>
+          <p className="text-xs text-[#64748B]">{txt('Tente alterar os seus filtros ou termo de pesquisa', 'Try adjusting your filters or search query', 'Tente alterar os seus filtros ou termo de pesquisa')}</p>
         </div>
       ) : (
         <>
           {viewMode === 'cards' ? (
             /* 1. CARDS VIEW */
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2.5">
               {paginatedAppointments.map(renderAppointmentCard)}
             </div>
           ) : viewMode === 'table' ? (
             /* 2. HIGH DENSITY TABLE VIEW */
-            <div className="bg-white rounded-3xl border border-[#E9E6DF] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+            <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left font-sans text-xs">
-                  <thead className="bg-[#FAFAF8] border-b border-[#E9E6DF] font-mono uppercase text-[10px] text-[#77736B] font-semibold">
+                  <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0] uppercase text-[11px] text-[#64748B] font-semibold">
                     <tr>
-                      <th className="p-4">{txt('Patient', 'Patient', 'Doente')}</th>
-                      <th className="p-4">{txt('Soin & Tarif', 'Care & Price', 'Cuidado & Preço')}</th>
-                      <th className="p-4">{txt('Date & Heure', 'Date & Time', 'Data & Hora')}</th>
-                      <th className="p-4">{txt('Statut', 'Status', 'Estado')}</th>
-                      <th className="p-4 text-right">{txt('Actions', 'Actions', 'Ações')}</th>
+                      <th className="py-3 px-4">{txt('Doente', 'Patient', 'Utente')}</th>
+                      <th className="py-3 px-4">{txt('Tratamento', 'Treatment', 'Tratamento')}</th>
+                      <th className="py-3 px-4">{txt('Data & Hora', 'Date & Time', 'Data & Hora')}</th>
+                      <th className="py-3 px-4">{txt('Estado', 'Status', 'Estado')}</th>
+                      <th className="py-3 px-4 text-right">{txt('Ações', 'Actions', 'Ações')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E9E6DF]">
+                  <tbody className="divide-y divide-[#E2E8F0]">
                     {paginatedAppointments.map(item => {
                       const st = STATUS_CONFIG[item.status];
                       const price = getServicePrice(item.service);
                       const initials = getInitials(item.patientName);
 
                       return (
-                        <tr key={item.id} className="hover:bg-[#FAFAF8]/80 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FAF6EE] to-[#F4ECE0] border border-[#E8D7B0] flex items-center justify-center text-[#9B793A] font-serif font-bold text-xs shrink-0">
+                        <tr key={item.id} className="hover:bg-[#F8FAFC] transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-md bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center text-[#334155] font-semibold text-[11px] shrink-0">
                                 {initials}
                               </div>
                               <div>
-                                <div className="font-bold text-[#202020] text-sm">{item.patientName}</div>
-                                <div className="font-mono text-[11px] text-[#77736B]">{item.phone}</div>
+                                <div className="font-semibold text-[#0F172A] text-xs">{item.patientName}</div>
+                                <div className="text-[11px] text-[#64748B]">{item.phone}</div>
                               </div>
                             </div>
                           </td>
-                          <td className="p-4">
-                            <div className="font-semibold text-[#9B793A] font-mono">{getServiceName(item.service, lang)}</div>
-                            <div className="font-mono text-[11px] text-[#77736B]">{price} TND</div>
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-[#0F172A]">{getServiceName(item.service, lang)}</div>
+                            <div className="text-[11px] text-[#64748B]">{price} €</div>
                           </td>
-                          <td className="p-4 font-mono font-medium text-[#C6A15B]">
-                            {item.date} • {item.startTime}
+                          <td className="py-3 px-4 font-medium text-[#0F172A]">
+                            {item.date} {item.startTime}
                           </td>
-                          <td className="p-4">
-                            <span className={`font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full border ${st.bg} ${st.color} ${st.border}`}>
+                          <td className="py-3 px-4">
+                            <span className={`text-[11px] font-medium px-2 py-0.5 rounded border ${st.bg} ${st.color} ${st.border}`}>
                               {st[lang] || st.pt || st.fr}
                             </span>
                           </td>
-                          <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1">
                               <a
                                 href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                className="p-1 rounded text-[#166534] hover:bg-[#DCFCE7] transition-colors"
                                 title="WhatsApp"
                               >
                                 <IconBrandWhatsapp size={15} />
                               </a>
                               <button
                                 onClick={() => openPatientNote(item)}
-                                className="p-1.5 rounded-lg bg-[#FAF6EE] text-[#9B793A] hover:bg-[#F4ECE0] transition-colors"
-                                title={txt('Dossier Patient', 'Patient File', 'Ficha do Doente')}
+                                className="p-1 rounded text-[#334155] hover:bg-[#F1F5F9] transition-colors"
+                                title={txt('Ficha do Doente', 'Patient File', 'Ficha do Utente')}
                               >
                                 <IconNotes size={15} />
                               </button>
                               {item.status !== 'CONFIRMED' && item.status !== 'CANCELLED' && (
                                 <button
                                   onClick={() => updateStatus(item.id, 'CONFIRMED')}
-                                  className="px-2.5 py-1 rounded-lg bg-[#6F8F72]/15 text-[#6F8F72] font-mono text-[11px] font-semibold hover:bg-[#6F8F72]/25"
+                                  className="px-2 py-1 rounded bg-[#DCFCE7] text-[#166534] hover:bg-[#BBF7D0] text-[11px] font-medium transition-colors"
                                 >
                                   ✓
                                 </button>
@@ -483,7 +500,7 @@ export function AppointmentsTab({
                               {item.status === 'CONFIRMED' && (
                                 <button
                                   onClick={() => updateStatus(item.id, 'COMPLETED')}
-                                  className="px-2.5 py-1 rounded-lg bg-[#5B82A6]/15 text-[#5B82A6] font-mono text-[11px] font-semibold hover:bg-[#5B82A6]/25"
+                                  className="px-2 py-1 rounded bg-[#DBEAFE] text-[#1E40AF] hover:bg-[#BFDBFE] text-[11px] font-medium transition-colors"
                                 >
                                   ✓
                                 </button>

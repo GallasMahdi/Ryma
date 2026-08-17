@@ -63,7 +63,7 @@ export default function ServicesPage() {
                 ? 'Técnicas manuais e eletroterapia para tratar a dor, reabilitar lesões, corrigir a postura e acompanhar a recuperação pós-parto. Comparticipação médica elegível com prescrição.'
                 : lang === 'en'
                 ? 'Manual techniques and electrotherapy to manage pain, correct posture, and support trauma or postpartum rehab. Medical insurance & receipts supported.'
-                : 'Techniques manuelles et électrophysiques pour traiter les douleurs, corriger la posture et accompagner la rééducation post-traumatique ou post-partum. Prise en charge CNAM possible sur prescription médicale.'}
+                : 'Techniques manuelles et électrophysiques pour traiter les douleurs, corriger la posture et accompagner la rééducation post-traumatique ou post-partum. Prise en charge mutuelle / assurance possible sur prescription médicale.'}
             </p>
           </ScrollReveal>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

@@ -32,6 +32,23 @@ export const SITE = {
     en: 'Mon – Sat: 08:30 – 19:00 | Sunday Closed',
     fr: 'Lun – Sam : 08h30 – 19h00 | Dimanche fermé',
   } as LocalizedText,
+  // Professional Information
+  professionalName: 'Ryma Ouichka',
+  professionalTitle: {
+    pt: 'Fisioterapeuta Licenciada',
+    en: 'Licensed Physiotherapist',
+    fr: 'Kinésithérapeute Diplômée',
+  } as LocalizedText,
+  professionalLicense: process.env.NEXT_PUBLIC_PROFESSIONAL_LICENSE || '', // e.g., 'C-054321' (Ordem dos Fisioterapeutas)
+  professionalOrganization: {
+    pt: 'Ordem dos Fisioterapeutas',
+    en: 'Portuguese Order of Physiotherapists',
+    fr: 'Ordre des Physiothérapeutes',
+  } as LocalizedText,
+  // Clinic / Business Legal Identifiers
+  clinicNif: process.env.NEXT_PUBLIC_CLINIC_NIF || '', // NIF / Tax ID
+  ersRegistration: process.env.NEXT_PUBLIC_ERS_REGISTRATION || '', // ERS (Entidade Reguladora da Saúde) establishment ID
+  livroReclamacoesUrl: 'https://www.livroreclamacoes.pt/inicio/',
   mapEmbed: 'https://www.google.com/maps/embed?pb=',
   googlePlaceId: '',
   facebook: 'https://facebook.com/rymaouichka',

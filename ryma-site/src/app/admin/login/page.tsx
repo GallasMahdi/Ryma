@@ -201,10 +201,10 @@ export default function AdminLoginPage() {
       {/* Footer */}
       <div className="relative z-10 p-6 text-center text-xs font-mono text-[#77736B]/80">
         {lang === 'fr'
-          ? 'Cabinet Ryma Ouichka — Ezzahra, Tunisie • Accès sécurisé'
+          ? 'Clinique Ryma Ouichka — Lisbonne, Portugal • Accès sécurisé'
           : lang === 'en'
-          ? 'Ryma Ouichka Clinic — Ezzahra, Tunisia • Secure Access'
-          : 'Clínica Ryma Ouichka — Ezzahra, Tunísia • Acesso Seguro'}
+          ? 'Ryma Ouichka Clinic — Lisbon, Portugal • Secure Access'
+          : 'Clínica Ryma Ouichka — Lisboa, Portugal • Acesso Seguro'}
       </div>
     </div>
   );

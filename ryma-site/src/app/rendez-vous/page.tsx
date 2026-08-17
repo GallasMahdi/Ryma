@@ -86,7 +86,14 @@ export default function RendezVousPage() {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
-  const [form, setForm] = useState({ name: '', phone: '', email: '', notes: '' });
+  const [form, setForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    notes: '',
+    coverageType: 'PARTICULAR' as 'PARTICULAR' | 'INSURANCE' | 'ADSE' | 'OTHER',
+    coverageProvider: '',
+  });
   const [loading, setLoading] = useState(false);
 
   // Slots loaded from the real API
@@ -149,6 +156,8 @@ export default function RendezVousPage() {
           phone: form.phone,
           email: form.email || undefined,
           notes: form.notes || undefined,
+          coverageType: form.coverageType,
+          coverageProvider: form.coverageProvider || undefined,
           service: selectedService.slug,
           date: selectedDate,
           startTime: selectedSlot,
@@ -495,6 +504,38 @@ export default function RendezVousPage() {
                       placeholder={lang === 'pt' ? 'seu.email@exemplo.pt' : lang === 'en' ? 'your.email@example.com' : 'votre@email.com'}
                       className={inputClass}
                     />
+                  </div>
+
+                  {/* Coverage Selector */}
+                  <div>
+                    <label className="font-mono text-xs font-semibold text-[#8A8078] uppercase tracking-wide block mb-2">
+                      {lang === 'pt' ? 'Regime / Cobertura de Saúde' : lang === 'en' ? 'Healthcare Coverage' : 'Prise en charge / Couverture'}
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        { id: 'PARTICULAR', label: lang === 'pt' ? 'Particular' : lang === 'en' ? 'Private' : 'Privé', sub: lang === 'pt' ? 'Sem seguro' : lang === 'en' ? 'Self-pay' : 'Sans mutuelle' },
+                        { id: 'INSURANCE', label: lang === 'pt' ? 'Seguro de Saúde' : lang === 'en' ? 'Health Insurance' : 'Assurance / Mutuelle', sub: 'Médis, Multicare...' },
+                        { id: 'ADSE', label: 'ADSE / Subsistema', sub: lang === 'pt' ? 'Regime Livre' : lang === 'en' ? 'Public Subsystem' : 'Secteur public' },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setForm(p => ({ ...p, coverageType: item.id as any }))}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                            form.coverageType === item.id
+                              ? 'border-[#C49A3C] bg-[#FAF6EE] ring-1 ring-[#C49A3C]/50'
+                              : 'border-[#E8E2D8] bg-white hover:border-[#C49A3C]/30'
+                          }`}
+                        >
+                          <div className={`text-xs font-bold ${form.coverageType === item.id ? 'text-[#9A7428]' : 'text-[#1A1412]'}`}>
+                            {item.label}
+                          </div>
+                          <div className="text-[10px] text-[#8A8078] font-mono mt-0.5">
+                            {item.sub}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div>

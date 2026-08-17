@@ -2,17 +2,21 @@ import { SERVICES, getLocalizedText } from '@/data/services';
 import { Lang } from '@/lib/i18n';
 
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
+export type CoverageType = 'PARTICULAR' | 'INSURANCE' | 'ADSE' | 'OTHER';
 
 export interface Appointment {
   id: string;
   patientName: string;
-  email: string | null;
   phone: string;
+  email?: string | null;
   service: string;
   date: string;
   startTime: string;
   status: AppointmentStatus;
-  notes: string | null;
+  notes?: string | null;
+  coverageType?: CoverageType;
+  coverageProvider?: string | null;
+  coverageNumber?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,8 +49,9 @@ export interface PatientRecord {
   email?: string | null;
   gender?: 'M' | 'F' | 'OTHER' | null;
   dob?: string | null;
-  cnamStatus?: 'OUI' | 'NON' | 'EN_COURS' | null;
-  cnamNumber?: string | null;
+  coverageType?: CoverageType | null;
+  coverageProvider?: string | null;
+  coverageNumber?: string | null;
   referringDoctor?: string | null;
   pathologyTags: string;
   medicalHistory?: string | null;
@@ -109,9 +114,9 @@ export function formatSlotDateLabel(dateStr: string, lang: Lang): { title: strin
 }
 
 export const STATUS_CONFIG: Record<AppointmentStatus, { fr: string; pt: string; en: string; color: string; bg: string; border: string }> = {
-  PENDING:   { fr: 'En attente',   pt: 'Pendente',      en: 'Pending',     color: 'text-[#B08A45]', bg: 'bg-[#B08A45]/15', border: 'border-[#B08A45]/30' },
-  CONFIRMED: { fr: 'Confirmé',     pt: 'Confirmado',    en: 'Confirmed',   color: 'text-[#6F8F72]', bg: 'bg-[#6F8F72]/15', border: 'border-[#6F8F72]/30' },
-  CANCELLED: { fr: 'Annulé',       pt: 'Cancelado',     en: 'Cancelled',   color: 'text-[#A9655F]', bg: 'bg-[#A9655F]/15', border: 'border-[#A9655F]/30' },
-  COMPLETED: { fr: 'Terminé',      pt: 'Concluído',     en: 'Completed',   color: 'text-[#5B82A6]', bg: 'bg-[#5B82A6]/15', border: 'border-[#5B82A6]/30' },
-  NO_SHOW:   { fr: 'Non présenté', pt: 'Falta à Consulta', en: 'No-Show',     color: 'text-[#77736B]', bg: 'bg-[#77736B]/15', border: 'border-[#77736B]/30' },
+  PENDING:   { fr: 'En attente',   pt: 'Pendente',      en: 'Pending',     color: 'text-[#854D0E]', bg: 'bg-[#FEF9C3]', border: 'border-[#FEF08A]' },
+  CONFIRMED: { fr: 'Confirmé',     pt: 'Confirmado',    en: 'Confirmed',   color: 'text-[#166534]', bg: 'bg-[#DCFCE7]', border: 'border-[#BBF7D0]' },
+  CANCELLED: { fr: 'Annulé',       pt: 'Cancelado',     en: 'Cancelled',   color: 'text-[#991B1B]', bg: 'bg-[#FEE2E2]', border: 'border-[#FECACA]' },
+  COMPLETED: { fr: 'Terminé',      pt: 'Concluído',     en: 'Completed',   color: 'text-[#1E40AF]', bg: 'bg-[#DBEAFE]', border: 'border-[#BFDBFE]' },
+  NO_SHOW:   { fr: 'Non présenté', pt: 'Falta à Consulta', en: 'No-Show',     color: 'text-[#475569]', bg: 'bg-[#F1F5F9]', border: 'border-[#E2E8F0]' },
 };

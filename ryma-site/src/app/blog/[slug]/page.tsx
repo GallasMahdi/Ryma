@@ -161,7 +161,11 @@ export default function BlogPostPage({ params }: Props) {
                 <div>
                   <div className="font-serif font-bold text-lg text-[#1A1412]">Ryma Ouichka</div>
                   <div className="text-sm text-[#6B6058] mt-0.5">
-                    {lang === 'fr' ? 'Kinésithérapeute & Spécialiste Minceur — Ezzahra, Tunisie' : 'معالجة فيزيائية ومتخصصة تنحيف — الزهراء، تونس'}
+                    {lang === 'pt'
+                      ? 'Fisioterapeuta & Estética Avançada — Lisboa, Portugal'
+                      : lang === 'en'
+                      ? 'Physiotherapist & Advanced Aesthetics Specialist — Lisbon, Portugal'
+                      : 'Physiothérapeute & Soins Avancés — Lisbonne, Portugal'}
                   </div>
                 </div>
               </div>

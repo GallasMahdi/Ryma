@@ -6,9 +6,127 @@ import type { PatientRecord, PatientSession } from '@/types/admin';
 
 // ─── Dual Storage Engine: Dynamic Turso (Cloud) with Local Fallback ───────────
 let _tursoClient: LibSqlClient | null = null;
+let _tursoInitialized = false;
 
 function isTursoEnabled(): boolean {
   return Boolean(process.env.TURSO_DATABASE_URL);
+}
+
+async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
+  if (_tursoInitialized) return;
+  _tursoInitialized = true;
+
+  try {
+    // 1. Ensure tables exist
+    await client.batch([
+      `CREATE TABLE IF NOT EXISTS appointments (
+        id               TEXT PRIMARY KEY,
+        patientName      TEXT NOT NULL,
+        email            TEXT,
+        phone            TEXT NOT NULL,
+        service          TEXT NOT NULL,
+        date             TEXT NOT NULL,
+        startTime        TEXT NOT NULL,
+        status           TEXT NOT NULL DEFAULT 'PENDING'
+                         CHECK (status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')),
+        notes            TEXT,
+        coverageType     TEXT DEFAULT 'PARTICULAR',
+        coverageProvider TEXT,
+        coverageNumber   TEXT,
+        createdAt        TEXT NOT NULL,
+        updatedAt        TEXT NOT NULL,
+        UNIQUE(date, startTime)
+      )`,
+      `CREATE TABLE IF NOT EXISTS blocked_slots (
+        id    TEXT PRIMARY KEY,
+        date  TEXT NOT NULL,
+        time  TEXT NOT NULL,
+        UNIQUE(date, time)
+      )`,
+      `CREATE TABLE IF NOT EXISTS rate_limit_log (
+        ip        TEXT NOT NULL,
+        action    TEXT NOT NULL,
+        timestamp INTEGER NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS patient_notes (
+        phone       TEXT PRIMARY KEY,
+        patientName TEXT NOT NULL,
+        content     TEXT NOT NULL DEFAULT '',
+        tags        TEXT NOT NULL DEFAULT '',
+        updatedAt   TEXT NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS patients (
+        id                      TEXT PRIMARY KEY,
+        patientName             TEXT NOT NULL,
+        phone                   TEXT NOT NULL UNIQUE,
+        email                   TEXT,
+        gender                  TEXT,
+        dob                     TEXT,
+        coverageType            TEXT DEFAULT 'PARTICULAR',
+        coverageProvider        TEXT,
+        coverageNumber          TEXT,
+        referringDoctor         TEXT,
+        pathologyTags           TEXT NOT NULL DEFAULT '',
+        medicalHistory          TEXT NOT NULL DEFAULT '',
+        totalPrescribedSessions INTEGER NOT NULL DEFAULT 10,
+        createdAt               TEXT NOT NULL,
+        updatedAt               TEXT NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS patient_sessions (
+        id           TEXT PRIMARY KEY,
+        patientId    TEXT NOT NULL,
+        date         TEXT NOT NULL,
+        time         TEXT,
+        serviceSlug  TEXT NOT NULL DEFAULT 'kinesitherapie-generale',
+        evaPainScore INTEGER NOT NULL DEFAULT 5,
+        sessionType  TEXT NOT NULL DEFAULT 'MANUAL',
+        notes        TEXT,
+        practitioner TEXT,
+        createdAt    TEXT NOT NULL,
+        FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE CASCADE
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
+      `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
+      `CREATE INDEX IF NOT EXISTS idx_rate_limit ON rate_limit_log(ip, action, timestamp)`,
+      `CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone)`,
+      `CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient ON patient_sessions(patientId)`,
+    ]);
+
+    // 2. Safe non-destructive column migrations on Turso
+    const patientColsRes = await client.execute("PRAGMA table_info(patients)");
+    const patientColNames = patientColsRes.rows.map((r: any) => String(r.name));
+
+    if (!patientColNames.includes('coverageType')) {
+      await client.execute("ALTER TABLE patients ADD COLUMN coverageType TEXT DEFAULT 'PARTICULAR'");
+      if (patientColNames.includes('cnamStatus')) {
+        await client.execute("UPDATE patients SET coverageType = CASE WHEN cnamStatus = 'OUI' THEN 'INSURANCE' WHEN cnamStatus = 'EN_COURS' THEN 'ADSE' ELSE 'PARTICULAR' END");
+      }
+    }
+    if (!patientColNames.includes('coverageProvider')) {
+      await client.execute("ALTER TABLE patients ADD COLUMN coverageProvider TEXT");
+    }
+    if (!patientColNames.includes('coverageNumber')) {
+      await client.execute("ALTER TABLE patients ADD COLUMN coverageNumber TEXT");
+      if (patientColNames.includes('cnamNumber')) {
+        await client.execute("UPDATE patients SET coverageNumber = cnamNumber WHERE cnamNumber IS NOT NULL AND coverageNumber IS NULL");
+      }
+    }
+
+    const apptColsRes = await client.execute("PRAGMA table_info(appointments)");
+    const apptColNames = apptColsRes.rows.map((r: any) => String(r.name));
+
+    if (!apptColNames.includes('coverageType')) {
+      await client.execute("ALTER TABLE appointments ADD COLUMN coverageType TEXT DEFAULT 'PARTICULAR'");
+    }
+    if (!apptColNames.includes('coverageProvider')) {
+      await client.execute("ALTER TABLE appointments ADD COLUMN coverageProvider TEXT");
+    }
+    if (!apptColNames.includes('coverageNumber')) {
+      await client.execute("ALTER TABLE appointments ADD COLUMN coverageNumber TEXT");
+    }
+  } catch (migErr) {
+    console.warn('[Turso Migration Note]:', migErr);
+  }
 }
 
 function getTursoClient(): LibSqlClient {
@@ -109,18 +227,21 @@ export function getDb(): Database.Database {
 function initSchemaSync(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS appointments (
-      id          TEXT PRIMARY KEY,
-      patientName TEXT NOT NULL,
-      email       TEXT,
-      phone       TEXT NOT NULL,
-      service     TEXT NOT NULL,
-      date        TEXT NOT NULL,
-      startTime   TEXT NOT NULL,
-      status      TEXT NOT NULL DEFAULT 'PENDING'
-                  CHECK (status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')),
-      notes       TEXT,
-      createdAt   TEXT NOT NULL,
-      updatedAt   TEXT NOT NULL,
+      id               TEXT PRIMARY KEY,
+      patientName      TEXT NOT NULL,
+      email            TEXT,
+      phone            TEXT NOT NULL,
+      service          TEXT NOT NULL,
+      date             TEXT NOT NULL,
+      startTime        TEXT NOT NULL,
+      status           TEXT NOT NULL DEFAULT 'PENDING'
+                       CHECK (status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')),
+      notes            TEXT,
+      coverageType     TEXT DEFAULT 'PARTICULAR',
+      coverageProvider TEXT,
+      coverageNumber   TEXT,
+      createdAt        TEXT NOT NULL,
+      updatedAt        TEXT NOT NULL,
       UNIQUE(date, startTime)
     );
 
@@ -152,8 +273,9 @@ function initSchemaSync(db: Database.Database): void {
       email                   TEXT,
       gender                  TEXT,
       dob                     TEXT,
-      cnamStatus              TEXT DEFAULT 'NON',
-      cnamNumber              TEXT,
+      coverageType            TEXT DEFAULT 'PARTICULAR',
+      coverageProvider        TEXT,
+      coverageNumber          TEXT,
       referringDoctor         TEXT,
       pathologyTags           TEXT NOT NULL DEFAULT '',
       medicalHistory          TEXT NOT NULL DEFAULT '',
@@ -182,6 +304,42 @@ function initSchemaSync(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone);
     CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient ON patient_sessions(patientId);
   `);
+
+  // Non-destructive migration for existing tables
+  try {
+    const patientCols = db.pragma('table_info(patients)') as { name: string }[];
+    const colNames = patientCols.map(c => c.name);
+
+    if (!colNames.includes('coverageType')) {
+      db.exec("ALTER TABLE patients ADD COLUMN coverageType TEXT DEFAULT 'PARTICULAR'");
+      if (colNames.includes('cnamStatus')) {
+        db.exec("UPDATE patients SET coverageType = CASE WHEN cnamStatus = 'OUI' THEN 'INSURANCE' WHEN cnamStatus = 'EN_COURS' THEN 'ADSE' ELSE 'PARTICULAR' END");
+      }
+    }
+    if (!colNames.includes('coverageProvider')) {
+      db.exec("ALTER TABLE patients ADD COLUMN coverageProvider TEXT");
+    }
+    if (!colNames.includes('coverageNumber')) {
+      db.exec("ALTER TABLE patients ADD COLUMN coverageNumber TEXT");
+      if (colNames.includes('cnamNumber')) {
+        db.exec("UPDATE patients SET coverageNumber = cnamNumber WHERE cnamNumber IS NOT NULL AND coverageNumber IS NULL");
+      }
+    }
+
+    const apptCols = db.pragma('table_info(appointments)') as { name: string }[];
+    const apptColNames = apptCols.map(c => c.name);
+    if (!apptColNames.includes('coverageType')) {
+      db.exec("ALTER TABLE appointments ADD COLUMN coverageType TEXT DEFAULT 'PARTICULAR'");
+    }
+    if (!apptColNames.includes('coverageProvider')) {
+      db.exec("ALTER TABLE appointments ADD COLUMN coverageProvider TEXT");
+    }
+    if (!apptColNames.includes('coverageNumber')) {
+      db.exec("ALTER TABLE appointments ADD COLUMN coverageNumber TEXT");
+    }
+  } catch (err) {
+    console.warn('[DB Migration Warning]:', err);
+  }
 }
 
 // ─── Unified Async Query Abstraction with Automatic Fallback ──────────────────
@@ -189,6 +347,7 @@ async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]
   if (isTursoEnabled()) {
     try {
       const client = getTursoClient();
+      await ensureTursoSchema(client);
       const res = await client.execute({ sql, args });
       return res.rows as unknown as T[];
     } catch (tursoErr) {
@@ -212,6 +371,7 @@ function executeSqliteQuery<T = any>(sql: string, args: any[] = []): T[] {
 }
 
 // ─── Public Export Types ──────────────────────────────────────────────────────
+import { validateAndNormalizePhone } from '@/lib/phone';
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
 
 export interface Appointment {
@@ -224,11 +384,14 @@ export interface Appointment {
   startTime: string;
   status: AppointmentStatus;
   notes: string | null;
+  coverageType: string;
+  coverageProvider: string | null;
+  coverageNumber: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export type CreateAppointmentInput = {
+export interface CreateAppointmentInput {
   patientName: string;
   email?: string;
   phone: string;
@@ -236,7 +399,10 @@ export type CreateAppointmentInput = {
   date: string;
   startTime: string;
   notes?: string;
-};
+  coverageType?: string;
+  coverageProvider?: string;
+  coverageNumber?: string;
+}
 
 export type AddAppointmentResult =
   | { success: true; appointment: Appointment }
@@ -246,6 +412,10 @@ export type AddAppointmentResult =
 export async function dbCreateAppointment(input: CreateAppointmentInput): Promise<AddAppointmentResult> {
   const id = 'apt_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
   const now = new Date().toISOString();
+
+  // Normalize phone number
+  const phoneValidation = validateAndNormalizePhone(input.phone);
+  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.phone.trim();
 
   const blockedRows = await executeQuery('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [
     input.date,
@@ -262,17 +432,20 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
   try {
     await executeQuery(
       `INSERT INTO appointments
-        (id, patientName, email, phone, service, date, startTime, status, notes, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)`,
+        (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, ?)`,
       [
         id,
         input.patientName,
         input.email ?? null,
-        input.phone,
+        normalizedPhone,
         input.service,
         input.date,
         input.startTime,
         input.notes ?? null,
+        input.coverageType ?? 'PARTICULAR',
+        input.coverageProvider ?? null,
+        input.coverageNumber ?? null,
         now,
         now,
       ]
@@ -283,9 +456,12 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
 
     await dbUpsertPatient({
       patientName: input.patientName,
-      phone: input.phone,
+      phone: normalizedPhone,
       email: input.email ?? null,
-      medicalHistory: input.notes ? `Réservation en ligne: ${input.notes}` : '',
+      coverageType: (input.coverageType as any) ?? 'PARTICULAR',
+      coverageProvider: input.coverageProvider ?? null,
+      coverageNumber: input.coverageNumber ?? null,
+      medicalHistory: input.notes ? `Marcação online: ${input.notes}` : '',
     });
 
     return { success: true, appointment };
@@ -330,15 +506,18 @@ export async function dbGetAppointmentById(id: string): Promise<Appointment | nu
 
 export async function dbUpdateAppointment(
   id: string,
-  fields: Partial<Pick<Appointment, 'status' | 'notes' | 'date' | 'startTime'>>
+  fields: Partial<Pick<Appointment, 'status' | 'notes' | 'date' | 'startTime' | 'coverageType' | 'coverageProvider' | 'coverageNumber'>>
 ): Promise<Appointment | null> {
   const updates: string[] = [];
   const params: (string | number)[] = [];
 
-  if (fields.status !== undefined)    { updates.push('status = ?'); params.push(fields.status); }
-  if (fields.notes !== undefined)     { updates.push('notes = ?');  params.push(fields.notes ?? ''); }
-  if (fields.date !== undefined)      { updates.push('date = ?');   params.push(fields.date); }
-  if (fields.startTime !== undefined) { updates.push('startTime = ?'); params.push(fields.startTime); }
+  if (fields.status !== undefined)           { updates.push('status = ?');           params.push(fields.status); }
+  if (fields.notes !== undefined)            { updates.push('notes = ?');            params.push(fields.notes ?? ''); }
+  if (fields.date !== undefined)             { updates.push('date = ?');             params.push(fields.date); }
+  if (fields.startTime !== undefined)        { updates.push('startTime = ?');        params.push(fields.startTime); }
+  if (fields.coverageType !== undefined)     { updates.push('coverageType = ?');     params.push(fields.coverageType); }
+  if (fields.coverageProvider !== undefined) { updates.push('coverageProvider = ?'); params.push(fields.coverageProvider ?? ''); }
+  if (fields.coverageNumber !== undefined)   { updates.push('coverageNumber = ?');   params.push(fields.coverageNumber ?? ''); }
 
   if (updates.length === 0) return dbGetAppointmentById(id);
 
@@ -368,14 +547,14 @@ export async function dbToggleBlockSlot(date: string, time: string): Promise<boo
 }
 
 export async function dbIsSlotAvailable(date: string, time: string): Promise<boolean> {
-  const blocked = await executeQuery('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
-  if (blocked.length > 0) return false;
+  const isBlocked = await executeQuery('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
+  if (isBlocked.length > 0) return false;
 
-  const booked = await executeQuery(
+  const isBooked = await executeQuery(
     "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'",
     [date, time]
   );
-  return booked.length === 0;
+  return isBooked.length === 0;
 }
 
 // ─── Rate Limiting Helpers ────────────────────────────────────────────────────
@@ -513,32 +692,41 @@ export async function dbUpsertPatient(input: {
   email?: string | null;
   gender?: string | null;
   dob?: string | null;
-  cnamStatus?: string | null;
-  cnamNumber?: string | null;
+  coverageType?: string | null;
+  coverageProvider?: string | null;
+  coverageNumber?: string | null;
   referringDoctor?: string | null;
   pathologyTags?: string;
   medicalHistory?: string;
   totalPrescribedSessions?: number;
 }): Promise<PatientRecord> {
   const now = new Date().toISOString();
-  const existing = input.id ? await dbGetPatientById(input.id) : await dbGetPatientByPhone(input.phone);
+  const phoneValidation = validateAndNormalizePhone(input.phone);
+  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.phone.trim();
+
+  const existing = input.id ? await dbGetPatientById(input.id) : await dbGetPatientByPhone(normalizedPhone);
   const id = existing?.id ?? input.id ?? ('pat_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6));
+
+  const covType = input.coverageType ?? (existing as any)?.coverageType ?? 'PARTICULAR';
+  const covProv = input.coverageProvider ?? (existing as any)?.coverageProvider ?? null;
+  const covNum = input.coverageNumber ?? (existing as any)?.coverageNumber ?? null;
 
   if (existing) {
     await executeQuery(
       `UPDATE patients SET
         patientName = ?, phone = ?, email = ?, gender = ?, dob = ?,
-        cnamStatus = ?, cnamNumber = ?, referringDoctor = ?, pathologyTags = ?,
+        coverageType = ?, coverageProvider = ?, coverageNumber = ?, referringDoctor = ?, pathologyTags = ?,
         medicalHistory = ?, totalPrescribedSessions = ?, updatedAt = ?
        WHERE id = ?`,
       [
         input.patientName,
-        input.phone,
+        normalizedPhone,
         input.email ?? null,
         input.gender ?? null,
         input.dob ?? null,
-        input.cnamStatus ?? 'NON',
-        input.cnamNumber ?? null,
+        covType,
+        covProv,
+        covNum,
         input.referringDoctor ?? null,
         input.pathologyTags ?? '',
         input.medicalHistory ?? '',
@@ -550,18 +738,19 @@ export async function dbUpsertPatient(input: {
   } else {
     await executeQuery(
       `INSERT INTO patients (
-        id, patientName, phone, email, gender, dob, cnamStatus, cnamNumber,
+        id, patientName, phone, email, gender, dob, coverageType, coverageProvider, coverageNumber,
         referringDoctor, pathologyTags, medicalHistory, totalPrescribedSessions, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         input.patientName,
-        input.phone,
+        normalizedPhone,
         input.email ?? null,
         input.gender ?? null,
         input.dob ?? null,
-        input.cnamStatus ?? 'NON',
-        input.cnamNumber ?? null,
+        covType,
+        covProv,
+        covNum,
         input.referringDoctor ?? null,
         input.pathologyTags ?? '',
         input.medicalHistory ?? '',

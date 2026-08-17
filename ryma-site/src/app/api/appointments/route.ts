@@ -40,13 +40,16 @@ export async function POST(request: NextRequest) {
   await dbRecordRateLimitAttempt(ip, 'booking');
 
   const result = await dbCreateAppointment({
-    patientName: String(body.patientName).trim().slice(0, 100),
-    email:       body.email ? String(body.email).trim().slice(0, 254) : undefined,
-    phone:       String(body.phone).trim().slice(0, 30),
-    service:     String(body.service).trim(),
-    date:        String(body.date).trim(),
-    startTime:   String(body.startTime).trim(),
-    notes:       body.notes ? String(body.notes).trim().slice(0, 1000) : undefined,
+    patientName:      String(body.patientName).trim().slice(0, 100),
+    email:            body.email ? String(body.email).trim().slice(0, 254) : undefined,
+    phone:            String(body.phone).trim().slice(0, 30),
+    service:          String(body.service).trim(),
+    date:             String(body.date).trim(),
+    startTime:        String(body.startTime).trim(),
+    notes:            body.notes ? String(body.notes).trim().slice(0, 1000) : undefined,
+    coverageType:     body.coverageType ? String(body.coverageType).trim() : 'PARTICULAR',
+    coverageProvider: body.coverageProvider ? String(body.coverageProvider).trim().slice(0, 100) : undefined,
+    coverageNumber:   body.coverageNumber ? String(body.coverageNumber).trim().slice(0, 100) : undefined,
   });
 
   if (!result.success) {

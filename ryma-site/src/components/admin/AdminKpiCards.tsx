@@ -18,32 +18,63 @@ interface AdminKpiCardsProps {
 }
 
 export function AdminKpiCards({ stats, lang }: AdminKpiCardsProps) {
+  const items = [
+    {
+      label: lang === 'pt' ? 'Total Consultas' : lang === 'en' ? 'Total Appts' : 'Total Rendez-vous',
+      value: stats.total,
+      badge: null,
+      valColor: 'text-[#1E293B]',
+    },
+    {
+      label: lang === 'pt' ? 'Confirmados' : lang === 'en' ? 'Confirmed' : 'Confirmés',
+      value: stats.confirmed,
+      badge: stats.total > 0 ? `${Math.round((stats.confirmed / stats.total) * 100)}%` : null,
+      valColor: 'text-[#166534]',
+    },
+    {
+      label: lang === 'pt' ? 'Pendentes' : lang === 'en' ? 'Pending' : 'En attente',
+      value: stats.pending,
+      badge: null,
+      valColor: 'text-[#854D0E]',
+    },
+    {
+      label: lang === 'pt' ? 'Concluídos' : lang === 'en' ? 'Completed' : 'Terminés',
+      value: stats.completed,
+      badge: null,
+      valColor: 'text-[#1E40AF]',
+    },
+    {
+      label: lang === 'pt' ? 'Receita Estimada' : lang === 'en' ? 'Est. Revenue' : 'Revenu Estimé',
+      value: `${stats.revenue} €`,
+      badge: null,
+      valColor: 'text-[#0F172A]',
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
-      <div className="p-4 rounded-2xl bg-white border border-[#E9E6DF] space-y-1 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-        <div className="font-mono text-[10px] uppercase font-semibold text-[#77736B]">{lang === 'pt' ? 'Total' : lang === 'en' ? 'Total' : 'Total'}</div>
-        <div className="text-2xl font-bold font-mono text-[#202020]">{stats.total}</div>
-      </div>
-
-      <div className="p-4 rounded-2xl bg-white border border-[#E9E6DF] space-y-1 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-        <div className="font-mono text-[10px] uppercase font-semibold text-[#6F8F72]">{lang === 'pt' ? 'Confirmados' : lang === 'en' ? 'Confirmed' : 'Confirmés'}</div>
-        <div className="text-2xl font-bold font-mono text-[#6F8F72]">{stats.confirmed}</div>
-      </div>
-
-      <div className="p-4 rounded-2xl bg-white border border-[#E9E6DF] space-y-1 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-        <div className="font-mono text-[10px] uppercase font-semibold text-[#B08A45]">{lang === 'pt' ? 'Pendentes' : lang === 'en' ? 'Pending' : 'En attente'}</div>
-        <div className="text-2xl font-bold font-mono text-[#B08A45]">{stats.pending}</div>
-      </div>
-
-      <div className="p-4 rounded-2xl bg-white border border-[#E9E6DF] space-y-1 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-        <div className="font-mono text-[10px] uppercase font-semibold text-[#5B82A6]">{lang === 'pt' ? 'Concluídos' : lang === 'en' ? 'Completed' : 'Terminés'}</div>
-        <div className="text-2xl font-bold font-mono text-[#5B82A6]">{stats.completed}</div>
-      </div>
-
-      <div className="p-4 rounded-2xl bg-[#FAF6EE] border border-[#C6A15B]/30 space-y-1 col-span-2 lg:col-span-1 shadow-[0_2px_8px_rgba(198,161,91,0.06)]">
-        <div className="font-mono text-[10px] uppercase font-semibold text-[#9B793A]">{lang === 'pt' ? 'Receita Estimada' : lang === 'en' ? 'Est. Revenue' : 'Revenu Estimé'}</div>
-        <div className="text-2xl font-bold font-mono text-[#C6A15B]">{stats.revenue} TND</div>
-      </div>
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+      {items.map((it, idx) => (
+        <div
+          key={it.label}
+          className={`p-4 rounded-xl bg-white border border-[#E2E8F0] flex flex-col justify-between min-h-[86px] ${
+            idx === 4 ? 'col-span-2 lg:col-span-1 bg-[#F8FAFC]' : ''
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-[#64748B]">
+              {it.label}
+            </span>
+            {it.badge && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#DCFCE7] text-[#166534]">
+                {it.badge}
+              </span>
+            )}
+          </div>
+          <div className={`text-2xl font-semibold tracking-tight ${it.valColor}`}>
+            {it.value}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

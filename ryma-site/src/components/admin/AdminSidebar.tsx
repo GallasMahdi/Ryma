@@ -26,94 +26,82 @@ export function AdminSidebar({
   totalAppointments,
   totalNotes,
 }: AdminSidebarProps) {
+  const navItems = [
+    {
+      id: 'appointments' as const,
+      label: lang === 'pt' ? 'Consultas' : lang === 'en' ? 'Appointments' : 'Rendez-vous',
+      icon: IconListCheck,
+      badge: totalAppointments,
+    },
+    {
+      id: 'slots' as const,
+      label: lang === 'pt' ? 'Horários & Agenda' : lang === 'en' ? 'Slots & Schedule' : 'Créneaux & Planning',
+      icon: IconCalendarEvent,
+      badge: null,
+    },
+    {
+      id: 'analytics' as const,
+      label: lang === 'pt' ? 'Estatísticas' : lang === 'en' ? 'Analytics' : 'Statistiques',
+      icon: IconChartBar,
+      badge: null,
+    },
+    {
+      id: 'patients' as const,
+      label: lang === 'pt' ? 'Fichas de Doentes' : lang === 'en' ? 'Patient Records' : 'Dossiers Patients',
+      icon: IconNotes,
+      badge: totalNotes,
+    },
+  ];
+
   return (
-    <aside className="w-64 bg-white border-e border-[#E9E6DF] p-4 hidden md:flex flex-col justify-between shrink-0 shadow-[1px_0_3px_rgba(0,0,0,0.02)] z-10">
-      <div className="space-y-6">
-        <div className="font-mono text-[10px] uppercase text-[#77736B] tracking-widest px-3 font-semibold">
-          {lang === 'fr' ? 'Menu Principal' : lang === 'en' ? 'Main Menu' : 'Menu Principal'}
+    <aside className="w-60 bg-[#FAFAF9] border-e border-[#E2E8F0] p-3 hidden md:flex flex-col justify-between shrink-0 z-10">
+      <div className="space-y-4">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] px-3 pt-2">
+          {lang === 'pt' ? 'Navegação' : lang === 'en' ? 'Navigation' : 'Navigation'}
         </div>
 
-        <nav className="space-y-1.5">
-          <button
-            onClick={() => setActiveTab('appointments')}
-            className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-mono text-xs font-semibold transition-all ${
-              activeTab === 'appointments'
-                ? 'bg-[#FAF6EE] text-[#9B793A] border border-[#C6A15B]/30 shadow-[0_2px_8px_rgba(198,161,91,0.08)]'
-                : 'text-[#77736B] hover:text-[#202020] hover:bg-[#FAFAF8]'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <IconListCheck size={18} className={activeTab === 'appointments' ? 'text-[#C6A15B]' : ''} />
-              <span>{lang === 'fr' ? 'Rendez-vous' : lang === 'en' ? 'Appointments' : 'Consultas'}</span>
-            </div>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
-              activeTab === 'appointments'
-                ? 'bg-[#C6A15B]/20 text-[#9B793A]'
-                : 'bg-[#F4F2EE] text-[#77736B]'
-            }`}>{totalAppointments}</span>
-          </button>
+        <nav className="space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
 
-          <button
-            onClick={() => setActiveTab('slots')}
-            className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-mono text-xs font-semibold transition-all ${
-              activeTab === 'slots'
-                ? 'bg-[#FAF6EE] text-[#9B793A] border border-[#C6A15B]/30 shadow-[0_2px_8px_rgba(198,161,91,0.08)]'
-                : 'text-[#77736B] hover:text-[#202020] hover:bg-[#FAFAF8]'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <IconCalendarEvent size={18} className={activeTab === 'slots' ? 'text-[#C6A15B]' : ''} />
-              <span>{lang === 'fr' ? 'Créneaux & Planning' : lang === 'en' ? 'Slots & Schedule' : 'Horários & Agenda'}</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-mono text-xs font-semibold transition-all ${
-              activeTab === 'analytics'
-                ? 'bg-[#FAF6EE] text-[#9B793A] border border-[#C6A15B]/30 shadow-[0_2px_8px_rgba(198,161,91,0.08)]'
-                : 'text-[#77736B] hover:text-[#202020] hover:bg-[#FAFAF8]'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <IconChartBar size={18} className={activeTab === 'analytics' ? 'text-[#C6A15B]' : ''} />
-              <span>{lang === 'fr' ? 'Statistiques' : lang === 'en' ? 'Analytics' : 'Estatísticas'}</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('patients')}
-            className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-mono text-xs font-semibold transition-all ${
-              activeTab === 'patients'
-                ? 'bg-[#FAF6EE] text-[#9B793A] border border-[#C6A15B]/30 shadow-[0_2px_8px_rgba(198,161,91,0.08)]'
-                : 'text-[#77736B] hover:text-[#202020] hover:bg-[#FAFAF8]'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <IconNotes size={18} className={activeTab === 'patients' ? 'text-[#C6A15B]' : ''} />
-              <span>{lang === 'fr' ? 'Dossiers Patients' : lang === 'en' ? 'Patient Records' : 'Fichas de Doentes'}</span>
-            </div>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
-              activeTab === 'patients'
-                ? 'bg-[#C6A15B]/20 text-[#9B793A]'
-                : 'bg-[#F4F2EE] text-[#77736B]'
-            }`}>{totalNotes}</span>
-          </button>
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ${
+                  isActive
+                    ? 'bg-[#0F172A] text-white'
+                    : 'text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Icon size={17} className={isActive ? 'text-white' : 'text-[#64748B]'} strokeWidth={1.75} />
+                  <span>{item.label}</span>
+                </div>
+                {item.badge !== null && (
+                  <span
+                    className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : 'bg-[#E2E8F0] text-[#475569]'
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </nav>
       </div>
 
-      <div className="p-4 rounded-2xl bg-[#FAFAF8] border border-[#E9E6DF] space-y-2">
-        <div className="flex items-center gap-2 text-xs font-bold text-[#C6A15B]">
-          <IconSparkles size={16} />
-          <span>Cabinet Ryma</span>
+      <div className="p-3 border-t border-[#E2E8F0] text-[11px] text-[#64748B] flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#166534]" />
+          <span>{lang === 'pt' ? 'Sistema Ativo' : lang === 'en' ? 'System Ready' : 'Système Prêt'}</span>
         </div>
-        <p className="text-[11px] text-[#77736B] leading-relaxed font-sans">
-          {lang === 'fr'
-            ? 'Base de données SQLite synchronisée. Accès sécurisé HTTP-Only.'
-            : lang === 'en'
-            ? 'Synchronized database. Secure HTTP-Only access.'
-            : 'Base de dados sincronizada. Acesso seguro HTTP-Only.'}
-        </p>
+        <span className="font-mono text-[10px] text-[#94A3B8]">v2.1</span>
       </div>
     </aside>
   );

@@ -53,6 +53,7 @@ interface PatientNotesTabProps {
   appointments: Appointment[];
   setConfirmDialog: (dlg: { title: string; onConfirm: () => void } | null) => void;
   createDirectPatientNote?: (phone: string, patientName: string, tags?: string, content?: string) => Promise<PatientNote | null>;
+  onActionToast?: (toast: { type: 'success' | 'error' | 'info' | 'loading'; title: string; message?: string }) => void;
 }
 
 const QUICK_PATHOLOGIES = [
@@ -64,7 +65,7 @@ const QUICK_PATHOLOGIES = [
   'Drainage Lymphatique',
   'Prothèse Hanche',
   'Accident de Travail',
-  'Prise en charge CNAM',
+  'Seguro / Regime Livre',
 ];
 
 export function PatientNotesTab({
@@ -83,6 +84,8 @@ export function PatientNotesTab({
   deleteNote,
   appointments,
   setConfirmDialog,
+  createDirectPatientNote,
+  onActionToast,
 }: PatientNotesTabProps) {
   const txt = (frStr: string, enStr: string, ptStr: string) => {
     if (lang === 'fr') return frStr;
@@ -107,8 +110,9 @@ export function PatientNotesTab({
     email: '',
     gender: 'F',
     dob: '',
-    cnamStatus: 'NON',
-    cnamNumber: '',
+    coverageType: 'PARTICULAR' as 'PARTICULAR' | 'INSURANCE' | 'ADSE' | 'OTHER',
+    coverageProvider: '',
+    coverageNumber: '',
     referringDoctor: '',
     pathologyTags: '',
     medicalHistory: '',
@@ -123,8 +127,9 @@ export function PatientNotesTab({
     email: '',
     gender: 'F',
     dob: '',
-    cnamStatus: 'NON',
-    cnamNumber: '',
+    coverageType: 'PARTICULAR' as 'PARTICULAR' | 'INSURANCE' | 'ADSE' | 'OTHER',
+    coverageProvider: '',
+    coverageNumber: '',
     referringDoctor: '',
     pathologyTags: '',
     medicalHistory: '',
@@ -140,8 +145,9 @@ export function PatientNotesTab({
       email: p.email ?? '',
       gender: p.gender ?? 'F',
       dob: p.dob ?? '',
-      cnamStatus: p.cnamStatus ?? 'NON',
-      cnamNumber: p.cnamNumber ?? '',
+      coverageType: p.coverageType ?? 'PARTICULAR',
+      coverageProvider: p.coverageProvider ?? '',
+      coverageNumber: p.coverageNumber ?? '',
       referringDoctor: p.referringDoctor ?? '',
       pathologyTags: p.pathologyTags ?? '',
       medicalHistory: p.medicalHistory ?? '',
@@ -163,8 +169,9 @@ export function PatientNotesTab({
         email: editPatientForm.email,
         gender: editPatientForm.gender,
         dob: editPatientForm.dob,
-        cnamStatus: editPatientForm.cnamStatus,
-        cnamNumber: editPatientForm.cnamNumber,
+        coverageType: editPatientForm.coverageType,
+        coverageProvider: editPatientForm.coverageProvider,
+        coverageNumber: editPatientForm.coverageNumber,
         referringDoctor: editPatientForm.referringDoctor,
         pathologyTags: editPatientForm.pathologyTags,
         medicalHistory: editPatientForm.medicalHistory,
@@ -182,9 +189,31 @@ export function PatientNotesTab({
         }
         if (onRefreshPatients) onRefreshPatients();
         setIsEditPatientModalOpen(false);
+        if (onActionToast) {
+          onActionToast({
+            type: 'success',
+            title: lang === 'pt' ? 'Ficha Atualizada' : lang === 'en' ? 'File Updated' : 'Dossier Mis à Jour',
+            message: editPatientForm.patientName,
+          });
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        if (onActionToast) {
+          onActionToast({
+            type: 'error',
+            title: lang === 'pt' ? 'Erro na Edição' : lang === 'en' ? 'Update Error' : 'Erreur de Modification',
+            message: errData.error || 'Não foi possível guardar as alterações.',
+          });
+        }
       }
-    } catch {
-      /* silent */
+    } catch (err) {
+      if (onActionToast) {
+        onActionToast({
+          type: 'error',
+          title: lang === 'pt' ? 'Erro de Rede' : lang === 'en' ? 'Network Error' : 'Erreur Réseau',
+          message: (err as Error).message,
+        });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -207,8 +236,9 @@ export function PatientNotesTab({
           email: activePatient.email,
           gender: activePatient.gender,
           dob: activePatient.dob,
-          cnamStatus: activePatient.cnamStatus,
-          cnamNumber: activePatient.cnamNumber,
+          coverageType: activePatient.coverageType ?? 'PARTICULAR',
+          coverageProvider: activePatient.coverageProvider,
+          coverageNumber: activePatient.coverageNumber,
           referringDoctor: activePatient.referringDoctor,
           pathologyTags: activePatient.pathologyTags,
           medicalHistory: activePatient.medicalHistory,
@@ -221,9 +251,22 @@ export function PatientNotesTab({
           setSelectedPatientId(data.patient.id);
         }
         if (onRefreshPatients) onRefreshPatients();
+        if (onActionToast) {
+          onActionToast({
+            type: 'success',
+            title: lang === 'pt' ? 'Prescrição Ajustada' : lang === 'en' ? 'Prescription Adjusted' : 'Prescription Ajustée',
+            message: `${newTarget} ${lang === 'pt' ? 'sessões prescritas' : lang === 'en' ? 'prescribed sessions' : 'séances prescrites'}`,
+          });
+        }
       }
-    } catch {
-      /* silent */
+    } catch (err) {
+      if (onActionToast) {
+        onActionToast({
+          type: 'error',
+          title: lang === 'pt' ? 'Erro ao Ajustar' : lang === 'en' ? 'Adjustment Error' : 'Erreur d\'Ajustement',
+          message: (err as Error).message,
+        });
+      }
     }
   };
 
@@ -418,15 +461,37 @@ export function PatientNotesTab({
         const data = await res.json();
         if (onRefreshPatients) onRefreshPatients();
         if (data.patient) handleSelectPatient(data.patient);
+        setIsNewPatientModalOpen(false);
+        if (onActionToast) {
+          onActionToast({
+            type: 'success',
+            title: lang === 'pt' ? 'Ficha de Utente Criada' : lang === 'en' ? 'Patient File Created' : 'Fiche Patient Créée',
+            message: newPatientForm.patientName,
+          });
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        if (onActionToast) {
+          onActionToast({
+            type: 'error',
+            title: lang === 'pt' ? 'Erro ao Criar Ficha' : lang === 'en' ? 'Creation Error' : 'Erreur de Création',
+            message: errData.error || 'Não foi possível criar a ficha do utente.',
+          });
+        }
       }
-    } catch {
-      /* silent */
+    } catch (err) {
+      if (onActionToast) {
+        onActionToast({
+          type: 'error',
+          title: lang === 'pt' ? 'Erro de Rede' : lang === 'en' ? 'Network Error' : 'Erreur Réseau',
+          message: (err as Error).message,
+        });
+      }
     } finally {
       setSubmitting(false);
-      setIsNewPatientModalOpen(false);
       setNewPatientForm({
         patientName: '', phone: '', email: '', gender: 'F', dob: '',
-        cnamStatus: 'NON', cnamNumber: '', referringDoctor: '',
+        coverageType: 'PARTICULAR', coverageProvider: '', coverageNumber: '', referringDoctor: '',
         pathologyTags: '', medicalHistory: '', totalPrescribedSessions: 10,
       });
     }
@@ -452,15 +517,25 @@ export function PatientNotesTab({
             email: activePatient.email,
             gender: activePatient.gender,
             dob: activePatient.dob,
-            cnamStatus: activePatient.cnamStatus,
-            cnamNumber: activePatient.cnamNumber,
+            coverageType: activePatient.coverageType ?? 'PARTICULAR',
+            coverageProvider: activePatient.coverageProvider,
+            coverageNumber: activePatient.coverageNumber,
             referringDoctor: activePatient.referringDoctor,
             pathologyTags: activePatient.pathologyTags,
             medicalHistory: activePatient.medicalHistory,
             totalPrescribedSessions: activePatient.totalPrescribedSessions ?? 10,
           }),
         });
-        if (!upsertRes.ok) return;
+        if (!upsertRes.ok) {
+          if (onActionToast) {
+            onActionToast({
+              type: 'error',
+              title: lang === 'pt' ? 'Erro ao Inicializar Utente' : lang === 'en' ? 'Initialization Error' : 'Erreur Initialisation',
+              message: 'Não foi possível persistir o registo do utente.',
+            });
+          }
+          return;
+        }
         const upsertData = await upsertRes.json();
         patientId = upsertData.patient?.id ?? patientId;
         if (upsertData.patient?.id) {
@@ -477,9 +552,31 @@ export function PatientNotesTab({
       if (res.ok) {
         if (onRefreshPatients) onRefreshPatients();
         setIsAddSessionModalOpen(false);
+        if (onActionToast) {
+          onActionToast({
+            type: 'success',
+            title: lang === 'pt' ? 'Sessão Registada' : lang === 'en' ? 'Session Recorded' : 'Séance Enregistrée',
+            message: `${sessionForm.date} • Dor EVA: ${sessionForm.evaPainScore}/10`,
+          });
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        if (onActionToast) {
+          onActionToast({
+            type: 'error',
+            title: lang === 'pt' ? 'Erro ao Registar Sessão' : lang === 'en' ? 'Session Error' : 'Erreur Enregistrement Séance',
+            message: errData.error || 'Não foi possível registar a sessão.',
+          });
+        }
       }
-    } catch {
-      /* silent */
+    } catch (err) {
+      if (onActionToast) {
+        onActionToast({
+          type: 'error',
+          title: lang === 'pt' ? 'Erro de Rede' : lang === 'en' ? 'Network Error' : 'Erreur Réseau',
+          message: (err as Error).message,
+        });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -522,93 +619,90 @@ export function PatientNotesTab({
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 font-sans">
       {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#E9E6DF] shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-[#E2E8F0]">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-[#9A7428] font-bold uppercase tracking-wider mb-1">
-            <IconStethoscope size={16} />
-            <span>{lang === 'pt' ? 'Processo Clínico & EMR Médico' : lang === 'en' ? 'Patient File & Medical EMR' : 'Dossier Patient & EMR Médical'}</span>
-          </div>
-          <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#202020]">
-            {lang === 'pt' ? 'Gestão de Tratamentos & Histórico' : lang === 'en' ? 'Care Management & Medical History' : 'Gestion des Soins & Historique'}
+          <h2 className="text-base font-semibold text-[#0F172A]">
+            {lang === 'pt' ? 'Processos Clínicos & Fichas de Doentes' : lang === 'en' ? 'Clinical Files & Patient Records' : 'Dossiers Patients & EMR Médical'}
           </h2>
+          <p className="text-xs text-[#64748B] mt-0.5">
+            {lang === 'pt' ? 'Histórico médico, sessões de tratamento e evolução da dor' : lang === 'en' ? 'Medical history, treatment sessions, and pain evolution' : 'Historique médical et suivi des séances'}
+          </p>
         </div>
 
         <button
           onClick={() => setIsNewPatientModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#C6A15B] hover:bg-[#B5904B] text-white text-xs font-mono font-bold shadow-md transition-all shrink-0 cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-medium transition-colors shrink-0"
         >
-          <IconUserPlus size={16} />
-          <span>{lang === 'pt' ? '+ Novo Paciente' : lang === 'en' ? '+ New Patient' : '+ Nouveau Patient'}</span>
+          <IconUserPlus size={15} />
+          <span>{lang === 'pt' ? 'Novo Utente' : lang === 'en' ? 'New Patient' : 'Nouveau Patient'}</span>
         </button>
       </div>
 
       {/* Main Workstation Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Patient Sidebar List (4 cols) */}
-        <div className="lg:col-span-4 bg-white border border-[#E9E6DF] rounded-3xl p-5 shadow-xs flex flex-col h-[750px]">
+        <div className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-3.5 flex flex-col h-[700px]">
           {/* Search Box */}
-          <div className="relative mb-4">
-            <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#77736B]" size={18} />
+          <div className="relative mb-3">
+            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={15} />
             <input
               type="text"
               value={noteSearch}
               onChange={e => setNoteSearch(e.target.value)}
-              placeholder={lang === 'pt' ? 'Pesquisar nome, telefone, patologia...' : lang === 'en' ? 'Search name, phone, condition...' : 'Rechercher nom, téléphone, pathologie...'}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-2xl text-xs font-mono text-[#202020] placeholder-[#77736B] focus:outline-none focus:border-[#C6A15B]"
+              placeholder={lang === 'pt' ? 'Pesquisar utente, telefone...' : lang === 'en' ? 'Search patient, phone...' : 'Rechercher patient...'}
+              className="w-full pl-9 pr-3 py-1.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
             />
           </div>
 
           {/* Patients Counter */}
-          <div className="flex justify-between items-center px-1 mb-3 text-xs font-mono text-[#77736B]">
-            <span>{lang === 'pt' ? 'Processos Registados :' : lang === 'en' ? 'Registered Records :' : 'Dossiers enregistrés :'}</span>
-            <span className="font-bold text-[#C6A15B]">{filteredPatients.length}</span>
+          <div className="flex justify-between items-center px-1 mb-2 text-[11px] text-[#64748B] font-medium">
+            <span>{lang === 'pt' ? 'Fichas Registadas' : lang === 'en' ? 'Registered Records' : 'Dossiers enregistrés'}</span>
+            <span className="font-semibold text-[#0F172A]">{filteredPatients.length}</span>
           </div>
 
           {/* Patients List */}
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
             {filteredPatients.length === 0 ? (
-              <div className="text-center py-12 text-[#77736B] text-xs font-mono">
-                {lang === 'pt' ? 'Nenhum processo encontrado' : lang === 'en' ? 'No records found' : 'Aucun dossier trouvé'}
+              <div className="text-center py-12 text-[#94A3B8] text-xs">
+                {lang === 'pt' ? 'Nenhuma ficha encontrada' : lang === 'en' ? 'No records found' : 'Aucun dossier trouvé'}
               </div>
             ) : (
               filteredPatients.map(p => {
                 const isSelected = activePatient?.phone === p.phone;
-                const totalCompleted = p.sessions?.length ?? 0;
 
                 return (
                   <button
                     key={p.id}
                     onClick={() => handleSelectPatient(p)}
-                    className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${isSelected
-                      ? 'bg-[#F9F6F0] border-[#C6A15B] shadow-xs'
-                      : 'bg-white border-[#E9E6DF] hover:border-[#C6A15B]/50 hover:bg-[#FAFAF8]'
-                      }`}
+                    className={`w-full text-left p-3 rounded-lg border transition-colors flex items-center justify-between group ${
+                      isSelected
+                        ? 'bg-[#F8FAFC] border-[#0F172A]'
+                        : 'bg-white border-[#E2E8F0] hover:bg-[#F8FAFC]'
+                    }`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-serif font-bold text-sm shrink-0 ${isSelected ? 'bg-[#C6A15B] text-white' : 'bg-[#F4F2EE] text-[#202020]'
-                        }`}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-8 h-8 rounded-md flex items-center justify-center font-semibold text-xs shrink-0 border ${
+                        isSelected ? 'bg-[#0F172A] text-white border-[#0F172A]' : 'bg-[#F1F5F9] text-[#334155] border-[#E2E8F0]'
+                      }`}>
                         {p.patientName.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-serif font-bold text-sm text-[#202020] truncate">
+                        <div className="font-semibold text-xs text-[#0F172A] truncate">
                           {p.patientName}
                         </div>
-                        <div className="font-mono text-[11px] text-[#77736B] flex items-center gap-1.5 mt-0.5">
+                        <div className="text-[11px] text-[#64748B] flex items-center gap-1.5 mt-0.5">
                           <span>{p.phone}</span>
-                          {p.cnamStatus === 'OUI' && (
-                            <span className="bg-[#6F8F72]/15 text-[#6F8F72] px-1.5 py-0.2 rounded-full text-[9px] font-bold">{lang === 'pt' ? 'Seguro' : lang === 'en' ? 'Insurance' : 'Mutuelle'}</span>
+                          {p.coverageType && p.coverageType !== 'PARTICULAR' && (
+                            <span className="bg-[#DCFCE7] text-[#166534] px-1.5 py-0.2 rounded text-[10px] font-medium">
+                              {p.coverageType === 'ADSE' ? 'ADSE' : (p.coverageProvider || 'Seguro')}
+                            </span>
                           )}
                         </div>
                       </div>
                     </div>
-
-                    <div className="text-right shrink-0">
-                      <span className="font-mono text-[10px] bg-[#E9E6DF]/60 text-[#202020] px-2 py-1 rounded-full">
-                        {totalCompleted} {lang === 'pt' ? 'sessões' : lang === 'en' ? 'sessions' : 'séances'}
-                      </span>
-                    </div>
+                    <IconChevronRight size={14} className={`shrink-0 ${isSelected ? 'text-[#0F172A]' : 'text-[#CBD5E1]'}`} />
                   </button>
                 );
               })
@@ -617,22 +711,24 @@ export function PatientNotesTab({
         </div>
 
         {/* Clinical Dossier Active View (8 cols) */}
-        <div className="lg:col-span-8 bg-white border border-[#E9E6DF] rounded-3xl p-6 shadow-xs flex flex-col h-[750px] overflow-hidden">
+        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-5 flex flex-col h-[700px] overflow-hidden">
           {activePatient ? (
-            <div className="flex-1 flex flex-col overflow-hidden space-y-6">
+            <div className="flex-1 flex flex-col overflow-hidden space-y-4">
               {/* Active Patient Identity Badge */}
-              <div className="bg-[#FAFAF8] border border-[#E9E6DF] p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-[#C6A15B] text-white font-serif font-bold text-xl flex items-center justify-center shadow-md">
+              <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#0F172A] text-white font-semibold text-sm flex items-center justify-center shrink-0">
                     {activePatient.patientName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-serif text-xl font-bold text-[#202020]">{activePatient.patientName}</h3>
-                      {activePatient.cnamStatus === 'OUI' && (
-                        <span className="bg-[#6F8F72]/15 border border-[#6F8F72]/30 text-[#6F8F72] text-[10px] font-mono font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <IconShieldCheck size={12} />
-                          <span>{lang === 'pt' ? 'Seguro / ADSE' : lang === 'en' ? 'Insurance' : 'Mutuelle'}</span>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-base text-[#0F172A]">{activePatient.patientName}</h3>
+                      {activePatient.coverageType && activePatient.coverageType !== 'PARTICULAR' && (
+                        <span className="bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] text-[10px] font-medium px-2 py-0.5 rounded flex items-center gap-1">
+                          <IconShieldCheck size={11} />
+                          <span>
+                            {activePatient.coverageType === 'ADSE' ? 'ADSE' : (activePatient.coverageProvider || (lang === 'pt' ? 'Seguro' : lang === 'en' ? 'Insurance' : 'Mutuelle'))}
+                          </span>
                         </span>
                       )}
                     </div>
@@ -646,85 +742,85 @@ export function PatientNotesTab({
                 </div>
 
                 {/* Quick Communication & Edit Actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => openEditPatientModal(activePatient)}
-                    className="p-2.5 rounded-xl bg-[#FAFAF8] hover:bg-[#F4F2EE] text-[#202020] font-mono text-xs font-bold transition-all border border-[#E9E6DF] flex items-center gap-1.5 cursor-pointer"
+                    className="px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] text-[#334155] text-xs font-medium transition-colors flex items-center gap-1"
                     title={txt('Modifier le dossier', 'Edit file', 'Editar ficha')}
                   >
-                    <IconPencil size={16} />
-                    <span className="hidden sm:inline">{txt('Modifier', 'Edit', 'Editar')}</span>
+                    <IconPencil size={14} />
+                    <span className="hidden sm:inline">{txt('Editar', 'Edit', 'Editar')}</span>
                   </button>
 
                   <a
                     href={`https://wa.me/${activePatient.phone.replace(/[^0-9]/g, '')}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2.5 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-all border border-[#25D366]/30"
+                    className="p-1.5 rounded-lg bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7] transition-colors border border-[#DCFCE7]"
                     title="WhatsApp"
                   >
-                    <IconBrandWhatsapp size={18} />
+                    <IconBrandWhatsapp size={16} />
                   </a>
                   <a
                     href={`tel:${activePatient.phone}`}
-                    className="p-2.5 rounded-xl bg-[#C6A15B]/10 text-[#C6A15B] hover:bg-[#C6A15B]/20 transition-all border border-[#C6A15B]/30"
+                    className="p-1.5 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] hover:bg-[#F8FAFC] transition-colors"
                     title={txt('Appeler', 'Call', 'Chamar')}
                   >
-                    <IconPhoneCall size={18} />
+                    <IconPhoneCall size={16} />
                   </a>
                   <button
                     onClick={() => handleDeletePatient(activePatient)}
-                    className="p-2.5 rounded-xl bg-[#A9655F]/10 text-[#A9655F] hover:bg-[#A9655F]/20 transition-all border border-[#A9655F]/30 cursor-pointer"
+                    className="p-1.5 rounded-lg border border-[#FEE2E2] bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] transition-colors"
                     title={txt('Supprimer Dossier', 'Delete File', 'Eliminar Ficha')}
                   >
-                    <IconTrash size={18} />
+                    <IconTrash size={16} />
                   </button>
                 </div>
               </div>
 
               {/* Prescription Session Progress Counter */}
-              <div className="bg-[#FAF8F5] border border-[#E8E2D8] p-4 rounded-2xl flex items-center justify-between gap-4 shrink-0">
+              <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 rounded-xl flex items-center justify-between gap-4 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#C6A15B]/15 text-[#C6A15B] flex items-center justify-center">
-                    <IconActivity size={20} />
+                  <div className="w-8 h-8 rounded-lg bg-[#0F172A] text-white flex items-center justify-center shrink-0">
+                    <IconActivity size={16} />
                   </div>
                   <div>
-                    <div className="font-mono text-xs text-[#77736B] uppercase font-bold flex items-center gap-2">
-                      <span>{txt('Ordonnance Kinesi :', 'Kine Prescription:', 'Prescrição Kinesi:')}</span>
+                    <div className="text-[11px] text-[#64748B] uppercase font-semibold flex items-center gap-2">
+                      <span>{txt('Prescrição de Tratamento :', 'Prescription :', 'Prescrição Médica :')}</span>
                       {/* Prescribed Target Adjuster (- / +) */}
-                      <div className="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-[#E8E2D8]">
+                      <div className="inline-flex items-center gap-1 bg-white px-1.5 py-0.2 rounded border border-[#CBD5E1]">
                         <button
                           type="button"
                           onClick={() => updatePrescribedTarget(-1)}
                           title={txt('Diminuer séances prescrites', 'Decrease prescribed sessions', 'Diminuir sessões prescritas')}
-                          className="w-5 h-5 rounded bg-[#FAFAF8] hover:bg-[#E9E6DF] text-[#202020] font-mono font-bold flex items-center justify-center text-xs cursor-pointer"
+                          className="w-4 h-4 rounded text-[#64748B] hover:text-[#0F172A] font-semibold flex items-center justify-center text-xs"
                         >
                           -
                         </button>
-                        <span className="font-mono text-xs font-bold text-[#C6A15B] px-1">
+                        <span className="text-xs font-semibold text-[#0F172A] px-1">
                           {activePatient.totalPrescribedSessions ?? 10}
                         </span>
                         <button
                           type="button"
                           onClick={() => updatePrescribedTarget(1)}
                           title={txt('Augmenter séances prescrites', 'Increase prescribed sessions', 'Aumentar sessões prescritas')}
-                          className="w-5 h-5 rounded bg-[#FAFAF8] hover:bg-[#E9E6DF] text-[#202020] font-mono font-bold flex items-center justify-center text-xs cursor-pointer"
+                          className="w-4 h-4 rounded text-[#64748B] hover:text-[#0F172A] font-semibold flex items-center justify-center text-xs"
                         >
                           +
                         </button>
                       </div>
                     </div>
-                    <div className="font-serif font-bold text-sm text-[#202020]">
-                      {activePatient.sessions?.length ?? 0} / {activePatient.totalPrescribedSessions ?? 10} {txt('séances effectuées', 'sessions completed', 'sessões concluídas')}
+                    <div className="text-xs font-semibold text-[#0F172A] mt-0.5">
+                      {activePatient.sessions?.length ?? 0} de {activePatient.totalPrescribedSessions ?? 10} {txt('séances effectuées', 'sessions completed', 'sessões concluídas')}
                     </div>
                   </div>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="flex-1 max-w-xs mx-4">
-                  <div className="w-full h-2.5 bg-[#E9E6DF] rounded-full overflow-hidden">
+                <div className="flex-1 max-w-xs mx-3 hidden sm:block">
+                  <div className="w-full h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-[#C6A15B] to-[#E8D7B0] rounded-full transition-all duration-500"
+                      className="h-full bg-[#0F172A] rounded-full transition-all duration-300"
                       style={{
                         width: `${Math.min(100, Math.round(((activePatient.sessions?.length ?? 0) / (activePatient.totalPrescribedSessions || 10)) * 100))}%`,
                       }}
@@ -734,93 +830,105 @@ export function PatientNotesTab({
 
                 <button
                   onClick={() => setIsAddSessionModalOpen(true)}
-                  className="px-4 py-2 bg-[#C6A15B] hover:bg-[#B5904B] text-white text-xs font-mono font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  className="px-3 py-1.5 bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1 shrink-0"
                 >
                   <IconPlus size={14} />
-                  <span>{txt('+ Séance', '+ Session', '+ Sessão')}</span>
+                  <span>{txt('+ Sessão', '+ Session', '+ Nova Sessão')}</span>
                 </button>
               </div>
 
               {/* Tab Navigation */}
-              <div className="flex border-b border-[#E9E6DF] gap-4 shrink-0">
+              <div className="flex border-b border-[#E2E8F0] gap-4 shrink-0">
                 <button
                   onClick={() => setActiveDossierTab('overview')}
-                  className={`pb-3 text-xs font-mono font-bold transition-all border-b-2 cursor-pointer ${activeDossierTab === 'overview'
-                    ? 'border-[#C6A15B] text-[#C6A15B]'
-                    : 'border-transparent text-[#77736B] hover:text-[#202020]'
+                  className={`pb-2.5 text-xs font-medium transition-colors border-b-2 ${activeDossierTab === 'overview'
+                    ? 'border-[#0F172A] text-[#0F172A]'
+                    : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
                     }`}
                 >
-                  {txt('📋 Fiche Patient', '📋 Patient File', '📋 Ficha do Doente')}
+                  {txt('Ficha do Utente', 'Patient File', 'Ficha do Utente')}
                 </button>
                 <button
                   onClick={() => setActiveDossierTab('timeline')}
-                  className={`pb-3 text-xs font-mono font-bold transition-all border-b-2 cursor-pointer ${activeDossierTab === 'timeline'
-                    ? 'border-[#C6A15B] text-[#C6A15B]'
-                    : 'border-transparent text-[#77736B] hover:text-[#202020]'
+                  className={`pb-2.5 text-xs font-medium transition-colors border-b-2 ${activeDossierTab === 'timeline'
+                    ? 'border-[#0F172A] text-[#0F172A]'
+                    : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
                     }`}
                 >
-                  {txt('⏱️ Historique & Séances', '⏱️ History & Sessions', '⏱️ Histórico & Sessões')} ({combinedTimeline.length})
+                  {txt('Histórico & Sessões', 'History & Sessions', 'Histórico & Sessões')} ({combinedTimeline.length})
                 </button>
                 <button
                   onClick={() => setActiveDossierTab('eva')}
-                  className={`pb-3 text-xs font-mono font-bold transition-all border-b-2 cursor-pointer ${activeDossierTab === 'eva'
-                    ? 'border-[#C6A15B] text-[#C6A15B]'
-                    : 'border-transparent text-[#77736B] hover:text-[#202020]'
+                  className={`pb-2.5 text-xs font-medium transition-colors border-b-2 ${activeDossierTab === 'eva'
+                    ? 'border-[#0F172A] text-[#0F172A]'
+                    : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
                     }`}
                 >
-                  {txt('📊 Évolution Douleur EVA', '📊 EVA Pain Evolution', '📊 Evolução da Dor EVA')}
+                  {txt('Evolução da Dor (EVA)', 'EVA Pain Evolution', 'Evolução da Dor (EVA)')}
                 </button>
               </div>
 
               {/* Tab Content Areas */}
-              <div className="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
                 {/* TAB 1: OVERVIEW */}
                 {activeDossierTab === 'overview' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Medical Details */}
-                      <div className="bg-[#FAFAF8] p-4 rounded-2xl border border-[#E9E6DF] space-y-2">
-                        <div className="font-mono text-xs font-bold text-[#9A7428] uppercase">
-                          {txt('Informations Médicales', 'Medical Information', 'Informação Médica')}
+                      <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E2E8F0] space-y-1.5">
+                        <div className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                          {txt('Informação Médica', 'Medical Information', 'Informação Médica')}
                         </div>
-                        <div className="text-xs text-[#202020] space-y-1.5 font-mono">
-                          <div><strong>{txt('Médecin traitant :', 'Attending Physician:', 'Médico Assistente:')}</strong> {activePatient.referringDoctor || txt('Non renseigné', 'Not specified', 'Não especificado')}</div>
-                          <div><strong>{txt('Prise en charge CNAM :', 'CNAM Coverage:', 'Cobertura CNAM:')}</strong> {activePatient.cnamStatus || 'NON'} {activePatient.cnamNumber ? `(#${activePatient.cnamNumber})` : ''}</div>
-                          <div><strong>{txt('Prescription :', 'Prescription:', 'Prescrição:')}</strong> {activePatient.totalPrescribedSessions || 10} {txt('séances', 'sessions', 'sessões')}</div>
+                        <div className="text-xs text-[#0F172A] space-y-1">
+                          <div><span className="text-[#64748B]">{txt('Médico Assistente :', 'Attending Physician :', 'Médico Assistente :')}</span> <strong>{activePatient.referringDoctor || txt('Não especificado', 'Not specified', 'Não especificado')}</strong></div>
+                          <div>
+                            <span className="text-[#64748B]">{txt('Regime / Cobertura :', 'Healthcare Coverage :', 'Regime / Cobertura :')}</span>{' '}
+                            <strong>
+                              {activePatient.coverageType === 'ADSE'
+                                ? 'ADSE'
+                                : activePatient.coverageType === 'INSURANCE'
+                                ? `${txt('Seguro', 'Insurance', 'Seguro')}${activePatient.coverageProvider ? ` (${activePatient.coverageProvider})` : ''}`
+                                : activePatient.coverageType === 'OTHER'
+                                ? txt('Outro', 'Other', 'Outro')
+                                : txt('Particular', 'Private', 'Particular')}
+                              {activePatient.coverageNumber ? ` • N.º ${activePatient.coverageNumber}` : ''}
+                            </strong>
+                          </div>
+                          <div><span className="text-[#64748B]">{txt('Prescrição :', 'Prescription :', 'Prescrição :')}</span> <strong>{activePatient.totalPrescribedSessions || 10} {txt('sessões', 'sessions', 'sessões')}</strong></div>
                         </div>
                       </div>
 
                       {/* Pathology Tags */}
-                      <div className="bg-[#FAFAF8] p-4 rounded-2xl border border-[#E9E6DF] space-y-2">
-                        <div className="font-mono text-xs font-bold text-[#9A7428] uppercase">
-                          {txt('Pathologies & Tag', 'Pathologies & Tags', 'Patologias & Tags')}
+                      <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E2E8F0] space-y-1.5">
+                        <div className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                          {txt('Patologias & Diagnóstico', 'Pathologies & Tags', 'Patologias & Diagnóstico')}
                         </div>
                         <div className="flex flex-wrap gap-1.5 pt-1">
                           {activePatient.pathologyTags ? (
                             activePatient.pathologyTags.split(',').map((t, i) => (
-                              <span key={i} className="bg-[#C6A15B]/15 border border-[#C6A15B]/30 text-[#C6A15B] text-[10px] font-mono font-bold px-2.5 py-1 rounded-full">
+                              <span key={i} className="bg-white border border-[#E2E8F0] text-[#0F172A] text-[11px] font-medium px-2 py-0.5 rounded">
                                 {t.trim()}
                               </span>
                             ))
                           ) : (
-                            <span className="text-xs text-[#77736B] font-mono">{txt('Aucun tag', 'No tags', 'Sem tags')}</span>
+                            <span className="text-xs text-[#94A3B8]">{txt('Nenhuma patologia indicada', 'No tags', 'Nenhuma patologia indicada')}</span>
                           )}
                         </div>
                       </div>
                     </div>
 
                     {/* Medical History Notes */}
-                    <div className="bg-[#FAFAF8] p-5 rounded-2xl border border-[#E9E6DF] space-y-2">
+                    <div className="bg-[#F8FAFC] p-4 rounded-xl border border-[#E2E8F0] space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="font-mono text-xs font-bold text-[#9A7428] uppercase">
-                          {txt('Antécédents & Notes Thérapeutiques', 'History & Therapeutic Notes', 'Antecedentes & Notas Terapêuticas')}
+                        <div className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                          {txt('Antecedentes & Notas Clínicas', 'History & Therapeutic Notes', 'Antecedentes & Notas Clínicas')}
                         </div>
                         <button
                           onClick={saveNote}
                           disabled={savingNote}
-                          className="px-3 py-1.5 bg-[#C6A15B] text-white rounded-xl text-xs font-mono font-bold hover:bg-[#B5904B] transition-all cursor-pointer"
+                          className="px-2.5 py-1 bg-[#0F172A] hover:bg-[#1E293B] text-white rounded-lg text-xs font-medium transition-colors"
                         >
-                          {savingNote ? txt('Sauvegarde...', 'Saving...', 'A guardar...') : txt('Enregistrer Note', 'Save Note', 'Guardar Nota')}
+                          {savingNote ? txt('A guardar...', 'Saving...', 'A guardar...') : txt('Guardar Nota', 'Save Note', 'Guardar Nota')}
                         </button>
                       </div>
 
@@ -828,8 +936,8 @@ export function PatientNotesTab({
                         value={noteForm.content}
                         onChange={e => setNoteForm(prev => ({ ...prev, content: e.target.value }))}
                         rows={6}
-                        placeholder={txt('Saisissez les détails cliniques, antécédents et objectifs du patient...', 'Enter clinical details, medical history and patient goals...', 'Introduza os detalhes clínicos, antecedentes e objetivos do doente...')}
-                        className="w-full p-3.5 bg-white border border-[#E9E6DF] rounded-xl text-xs font-mono text-[#202020] placeholder-[#77736B] focus:outline-none focus:border-[#C6A15B]"
+                        placeholder={txt('Introduza os detalhes clínicos, antecedentes e evolução...', 'Enter clinical details, medical history...', 'Introduza os detalhes clínicos, antecedentes e evolução...')}
+                        className="w-full p-3 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                       />
                     </div>
                   </div>
@@ -837,37 +945,37 @@ export function PatientNotesTab({
 
                 {/* TAB 2: TIMELINE */}
                 {activeDossierTab === 'timeline' && (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {combinedTimeline.length === 0 ? (
-                      <div className="text-center py-12 text-[#77736B] text-xs font-mono">
-                        {txt('Aucune séance ou rendez-vous enregistré', 'No sessions or appointments recorded', 'Sem sessões ou consultas registadas')}
+                      <div className="text-center py-12 text-[#94A3B8] text-xs">
+                        {txt('Sem sessões ou consultas registadas', 'No sessions or appointments recorded', 'Sem sessões ou consultas registadas')}
                       </div>
                     ) : (
                       combinedTimeline.map(item => (
                         <div
                           key={item.id}
-                          className="bg-[#FAFAF8] border border-[#E9E6DF] p-4 rounded-2xl flex items-center justify-between gap-4 hover:border-[#C6A15B]/40 transition-all"
+                          className="bg-[#F8FAFC] border border-[#E2E8F0] p-3 rounded-lg flex items-center justify-between gap-3 hover:bg-white transition-colors"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold font-mono ${item.source === 'online'
-                              ? 'bg-[#5B82A6]/15 text-[#5B82A6]'
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-semibold border ${item.source === 'online'
+                              ? 'bg-[#DBEAFE] text-[#1E40AF] border-[#BFDBFE]'
                               : item.source === 'paper'
-                                ? 'bg-[#B08A45]/15 text-[#B08A45]'
-                                : 'bg-[#6F8F72]/15 text-[#6F8F72]'
+                                ? 'bg-[#FEF9C3] text-[#854D0E] border-[#FEF08A]'
+                                : 'bg-[#DCFCE7] text-[#166534] border-[#BBF7D0]'
                               }`}>
-                              {item.source === 'online' ? 'WEB' : item.source === 'paper' ? 'PAP' : 'KINÉ'}
+                              {item.source === 'online' ? 'WEB' : item.source === 'paper' ? 'MAN' : 'SESS'}
                             </div>
 
                             <div>
-                              <div className="font-serif font-bold text-sm text-[#202020]">{item.title}</div>
-                              <div className="font-mono text-[11px] text-[#77736B] flex items-center gap-3 mt-0.5">
-                                <span>📅 {item.date} {item.time ? `à ${item.time}` : ''}</span>
+                              <div className="font-semibold text-xs text-[#0F172A]">{item.title}</div>
+                              <div className="text-[11px] text-[#64748B] flex items-center gap-2 mt-0.5">
+                                <span>{item.date} {item.time ? `• ${item.time}` : ''}</span>
                                 {item.evaPainScore !== undefined && (
-                                  <span className="font-bold text-[#A9655F]">EVA: {item.evaPainScore}/10</span>
+                                  <span className="font-semibold text-[#991B1B]">Dor EVA: {item.evaPainScore}/10</span>
                                 )}
                               </div>
                               {item.notes && (
-                                <div className="text-xs text-[#202020] font-mono mt-1 bg-white p-2 rounded-lg border border-[#E9E6DF]">
+                                <div className="text-xs text-[#334155] mt-1 bg-white p-2 rounded border border-[#E2E8F0]">
                                   {item.notes}
                                 </div>
                               )}
@@ -875,8 +983,8 @@ export function PatientNotesTab({
                           </div>
 
                           {item.price && (
-                            <div className="font-mono font-bold text-xs text-[#C6A15B] shrink-0">
-                              {item.price} TND
+                            <div className="font-semibold text-xs text-[#0F172A] shrink-0">
+                              {item.price} €
                             </div>
                           )}
                         </div>
@@ -887,47 +995,47 @@ export function PatientNotesTab({
 
                 {/* TAB 3: EVA PAIN CHART */}
                 {activeDossierTab === 'eva' && (
-                  <div className="space-y-5 p-4 bg-[#FAFAF8] border border-[#E9E6DF] rounded-2xl">
+                  <div className="space-y-4 p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-serif font-bold text-base text-[#202020]">
-                        {txt('Trajectoire de la Douleur (Échelle EVA 0–10)', 'Pain Trajectory (EVA Scale 0–10)', 'Trajetória da Dor (Escala EVA 0–10)')}
+                      <h4 className="font-semibold text-xs uppercase tracking-wider text-[#0F172A]">
+                        {txt('Trajetória da Dor (Escala EVA 0–10)', 'Pain Trajectory (EVA Scale 0–10)', 'Trajetória da Dor (Escala EVA 0–10)')}
                       </h4>
                       {evaAnalytics && (
-                        <div className="font-mono text-xs font-bold text-[#6F8F72] bg-[#6F8F72]/15 px-3 py-1 rounded-full">
-                          {txt(`Amélioration : -${evaAnalytics.diff} points`, `Improvement: -${evaAnalytics.diff} points`, `Melhoria: -${evaAnalytics.diff} pontos`)}
+                        <div className="text-xs font-semibold text-[#166534] bg-[#DCFCE7] border border-[#BBF7D0] px-2.5 py-0.5 rounded">
+                          {txt(`Melhoria: -${evaAnalytics.diff} pontos`, `Improvement: -${evaAnalytics.diff} points`, `Melhoria: -${evaAnalytics.diff} pontos`)}
                         </div>
                       )}
                     </div>
 
                     {!activePatient.sessions || activePatient.sessions.length === 0 ? (
-                      <div className="text-center py-8 text-[#77736B] text-xs font-mono">
-                        {txt('Aucun score EVA enregistré dans les séances', 'No EVA score recorded in sessions', 'Nenhum valor EVA registado nas sessões')}
+                      <div className="text-center py-8 text-[#94A3B8] text-xs">
+                        {txt('Nenhum registo de dor EVA registado nas sessões', 'No EVA score recorded in sessions', 'Nenhum registo de dor EVA registado nas sessões')}
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         {activePatient.sessions.map((s, idx) => (
                           <div key={s.id} className="space-y-1">
-                            <div className="flex justify-between items-center text-xs font-mono text-[#202020]">
-                              <span>Séance {activePatient.sessions!.length - idx} ({s.date})</span>
+                            <div className="flex justify-between items-center text-xs text-[#0F172A]">
+                              <span className="font-medium">Sessão {activePatient.sessions!.length - idx} ({s.date})</span>
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-[#A9655F]">Douleur: {s.evaPainScore}/10</span>
+                                <span className="font-semibold text-[#991B1B]">Dor EVA: {s.evaPainScore}/10</span>
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteSession(activePatient.id, s.id)}
-                                  className="p-1 rounded-lg text-[#A9655F]/60 hover:text-[#A9655F] hover:bg-[#A9655F]/10 transition-all cursor-pointer"
-                                  title={txt('Supprimer cette séance', 'Delete this session', 'Eliminar esta sessão')}
+                                  className="p-1 rounded text-[#94A3B8] hover:text-[#991B1B] hover:bg-[#FEE2E2] transition-colors"
+                                  title={txt('Eliminar esta sessão', 'Delete this session', 'Eliminar esta sessão')}
                                 >
-                                  <IconTrash size={12} />
+                                  <IconTrash size={13} />
                                 </button>
                               </div>
                             </div>
-                            <div className="w-full h-3 bg-[#E9E6DF] rounded-full overflow-hidden">
+                            <div className="w-full h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all duration-500 ${s.evaPainScore > 7
-                                  ? 'bg-[#A9655F]'
+                                className={`h-full rounded-full transition-all duration-300 ${s.evaPainScore > 7
+                                  ? 'bg-[#EF4444]'
                                   : s.evaPainScore > 4
-                                    ? 'bg-[#C6A15B]'
-                                    : 'bg-[#6F8F72]'
+                                    ? 'bg-[#F59E0B]'
+                                    : 'bg-[#10B981]'
                                   }`}
                                 style={{ width: `${(s.evaPainScore / 10) * 100}%` }}
                               />
@@ -941,9 +1049,9 @@ export function PatientNotesTab({
               </div>
             </div>
           ) : (
-            <div className="text-center py-24 text-[#77736B] text-xs font-mono flex flex-col items-center justify-center h-full">
-              <IconUser size={48} className="mb-3 text-[#E9E6DF]" />
-              <span>{txt('Sélectionnez un patient dans la liste', 'Select a patient from the list', 'Selecione um doente da lista')}</span>
+            <div className="text-center py-24 text-[#94A3B8] text-xs flex flex-col items-center justify-center h-full">
+              <IconUser size={40} className="mb-2 text-[#CBD5E1]" />
+              <span className="font-medium">{txt('Selecione uma ficha de utente na lista ao lado', 'Select a patient from the list', 'Selecione uma ficha de utente na lista ao lado')}</span>
             </div>
           )}
         </div>
@@ -952,108 +1060,144 @@ export function PatientNotesTab({
       {/* MODAL 1: NEW PATIENT */}
       <AnimatePresence>
         {isNewPatientModalOpen && (
-          <div className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[99999] bg-black/30 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E9E6DF] p-6 rounded-3xl max-w-lg w-full space-y-4 shadow-xl"
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="bg-white border border-[#E2E8F0] p-6 rounded-2xl max-w-lg w-full space-y-4 shadow-lg"
             >
-              <div className="flex justify-between items-center border-b border-[#E9E6DF] pb-3">
-                <h3 className="font-serif font-bold text-lg text-[#202020]">
-                  {txt('Créer une Fiche Patient', 'Create Patient File', 'Criar Ficha de Doente')}
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <h3 className="font-semibold text-base text-[#0F172A]">
+                  {txt('Criar Ficha de Utente', 'Create Patient File', 'Criar Ficha de Utente')}
                 </h3>
-                <button onClick={() => setIsNewPatientModalOpen(false)} className="text-[#77736B] hover:text-[#202020]">
-                  <IconX size={20} />
+                <button onClick={() => setIsNewPatientModalOpen(false)} className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-lg hover:bg-[#F1F5F9] transition-colors">
+                  <IconX size={18} />
                 </button>
               </div>
 
-              <form onSubmit={handleCreatePatientSubmit} className="space-y-3">
+              <form onSubmit={handleCreatePatientSubmit} className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Nom & Prénom *</label>
+                  <label className="block font-medium text-[#475569] mb-1">{txt('Nome & Apelido *', 'Full Name *', 'Nome & Apelido *')}</label>
                   <input
                     type="text"
                     required
                     value={newPatientForm.patientName}
                     onChange={e => setNewPatientForm(prev => ({ ...prev, patientName: e.target.value }))}
-                    className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                    className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Téléphone *</label>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('Telefone *', 'Phone *', 'Telefone *')}
+                    </label>
                     <input
                       type="text"
                       required
+                      placeholder="+351 9XX XXX XXX"
                       value={newPatientForm.phone}
                       onChange={e => setNewPatientForm(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Prise en charge CNAM</label>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('Regime / Cobertura', 'Coverage Type', 'Regime / Cobertura')}
+                    </label>
                     <select
-                      value={newPatientForm.cnamStatus}
-                      onChange={e => setNewPatientForm(prev => ({ ...prev, cnamStatus: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      value={newPatientForm.coverageType}
+                      onChange={e => setNewPatientForm(prev => ({ ...prev, coverageType: e.target.value as any }))}
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     >
-                      <option value="NON">NON</option>
-                      <option value="OUI">OUI</option>
-                      <option value="EN_COURS">EN COURS</option>
+                      <option value="PARTICULAR">{txt('Particular (Sem seguro)', 'Private (Self-pay)', 'Particular (Sem seguro)')}</option>
+                      <option value="INSURANCE">{txt('Seguro de Saúde', 'Health Insurance', 'Seguro de Saúde')}</option>
+                      <option value="ADSE">ADSE / Subsistema</option>
+                      <option value="OTHER">{txt('Outro', 'Other', 'Outro')}</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('Seguradora / Entidade', 'Insurance Provider', 'Seguradora / Entidade')}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Médis, Multicare..."
+                      value={newPatientForm.coverageProvider}
+                      onChange={e => setNewPatientForm(prev => ({ ...prev, coverageProvider: e.target.value }))}
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
+                    />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Médecin Traitant</label>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('N.º Beneficiário / Cartão', 'Policy / Card Number', 'N.º Beneficiário / Cartão')}
+                    </label>
                     <input
                       type="text"
-                      placeholder="Dr. Ben Ammar"
-                      value={newPatientForm.referringDoctor}
-                      onChange={e => setNewPatientForm(prev => ({ ...prev, referringDoctor: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      placeholder="123456789"
+                      value={newPatientForm.coverageNumber}
+                      onChange={e => setNewPatientForm(prev => ({ ...prev, coverageNumber: e.target.value }))}
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Séances Prescrites</label>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('Médico Assistente', 'Referring Doctor', 'Médico Assistente')}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Dr. Silva"
+                      value={newPatientForm.referringDoctor}
+                      onChange={e => setNewPatientForm(prev => ({ ...prev, referringDoctor: e.target.value }))}
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('Sessões Prescritas', 'Prescribed Sessions', 'Sessões Prescritas')}
+                    </label>
                     <input
                       type="number"
                       value={newPatientForm.totalPrescribedSessions}
                       onChange={e => setNewPatientForm(prev => ({ ...prev, totalPrescribedSessions: parseInt(e.target.value) || 10 }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Pathologies / Tags</label>
+                  <label className="block font-medium text-[#475569] mb-1">Patologias & Tags Clínicas</label>
                   <input
                     type="text"
-                    placeholder="Lombalgie, Post-Op"
+                    placeholder="Lombalgia, Pós-Operatório, Reabilitação Ombro"
                     value={newPatientForm.pathologyTags}
                     onChange={e => setNewPatientForm(prev => ({ ...prev, pathologyTags: e.target.value }))}
-                    className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                    className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-3">
+                <div className="flex justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
                   <button
                     type="button"
                     onClick={() => setIsNewPatientModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-xs font-mono text-[#77736B]"
+                    className="px-3.5 py-2 rounded-lg border border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9] font-medium transition-colors text-xs"
                   >
-                    Annuler
+                    {txt('Cancelar', 'Cancel', 'Cancelar')}
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-4 py-2 rounded-xl bg-[#C6A15B] text-white text-xs font-mono font-bold shadow-xs hover:bg-[#B5904B]"
+                    className="px-4 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs disabled:opacity-50 transition-colors"
                   >
-                    {submitting ? 'Création...' : 'Créer Dossier'}
+                    {submitting ? txt('A guardar...', 'Saving...', 'A guardar...') : txt('Criar Ficha', 'Create File', 'Criar Ficha')}
                   </button>
                 </div>
               </form>
@@ -1065,56 +1209,56 @@ export function PatientNotesTab({
       {/* MODAL 2: ADD SESSION */}
       <AnimatePresence>
         {isAddSessionModalOpen && activePatient && (
-          <div className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[99999] bg-black/30 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E9E6DF] p-6 rounded-3xl max-w-lg w-full space-y-4 shadow-xl"
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="bg-white border border-[#E2E8F0] p-6 rounded-2xl max-w-lg w-full space-y-4 shadow-lg font-sans"
             >
-              <div className="flex justify-between items-center border-b border-[#E9E6DF] pb-3">
-                <h3 className="font-serif font-bold text-lg text-[#202020]">
-                  {txt(`+ Séance pour ${activePatient.patientName}`, `+ Session for ${activePatient.patientName}`, `+ Sessão para ${activePatient.patientName}`)}
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <h3 className="font-semibold text-base text-[#0F172A]">
+                  {txt(`+ Sessão para ${activePatient.patientName}`, `+ Session for ${activePatient.patientName}`, `+ Sessão para ${activePatient.patientName}`)}
                 </h3>
-                <button onClick={() => setIsAddSessionModalOpen(false)} className="text-[#77736B] hover:text-[#202020]">
-                  <IconX size={20} />
+                <button onClick={() => setIsAddSessionModalOpen(false)} className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-lg hover:bg-[#F1F5F9] transition-colors">
+                  <IconX size={18} />
                 </button>
               </div>
 
-              <form onSubmit={handleAddSessionSubmit} className="space-y-3">
+              <form onSubmit={handleAddSessionSubmit} className="space-y-3 text-xs">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Date Séance *</label>
+                    <label className="block font-medium text-[#475569] mb-1">Data da Sessão *</label>
                     <input
                       type="date"
                       required
                       value={sessionForm.date}
                       onChange={e => setSessionForm(prev => ({ ...prev, date: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Heure</label>
+                    <label className="block font-medium text-[#475569] mb-1">Hora</label>
                     <input
                       type="time"
                       value={sessionForm.time}
                       onChange={e => setSessionForm(prev => ({ ...prev, time: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Soin Effectué</label>
+                  <label className="block font-medium text-[#475569] mb-1">Tratamento Realizado</label>
                   <select
                     value={sessionForm.serviceSlug}
                     onChange={e => setSessionForm(prev => ({ ...prev, serviceSlug: e.target.value }))}
-                    className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                    className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                   >
                     {SERVICES.map(s => (
                       <option key={s.slug} value={s.slug}>
-                        {s.name.fr} ({s.price} TND)
+                        {s.name[lang] || s.name.pt || s.name.fr} ({s.price} €)
                       </option>
                     ))}
                   </select>
@@ -1122,8 +1266,8 @@ export function PatientNotesTab({
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-mono font-bold text-[#77736B]">Niveau de Douleur EVA (0–10)</label>
-                    <span className="font-mono text-xs font-bold text-[#A9655F]">{sessionForm.evaPainScore} / 10</span>
+                    <label className="font-medium text-[#475569]">Nível de Dor EVA (0–10)</label>
+                    <span className="font-semibold text-xs text-[#991B1B]">{sessionForm.evaPainScore} / 10</span>
                   </div>
                   <input
                     type="range"
@@ -1131,35 +1275,35 @@ export function PatientNotesTab({
                     max={10}
                     value={sessionForm.evaPainScore}
                     onChange={e => setSessionForm(prev => ({ ...prev, evaPainScore: parseInt(e.target.value) || 0 }))}
-                    className="w-full accent-[#C6A15B]"
+                    className="w-full accent-[#0F172A]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Notes de Traitement</label>
+                  <label className="block font-medium text-[#475569] mb-1">Observações & Evolução</label>
                   <textarea
                     rows={3}
                     value={sessionForm.notes}
                     onChange={e => setSessionForm(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Observations, exercices réalisés, évolution..."
-                    className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                    placeholder="Exercícios realizados, resposta ao tratamento..."
+                    className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors resize-none"
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-3">
+                <div className="flex justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
                   <button
                     type="button"
                     onClick={() => setIsAddSessionModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-xs font-mono text-[#77736B]"
+                    className="px-3.5 py-2 rounded-lg border border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9] font-medium transition-colors text-xs"
                   >
-                    Annuler
+                    {txt('Cancelar', 'Cancel', 'Cancelar')}
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-4 py-2 rounded-xl bg-[#C6A15B] text-white text-xs font-mono font-bold shadow-xs hover:bg-[#B5904B]"
+                    className="px-4 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs disabled:opacity-50 transition-colors"
                   >
-                    {submitting ? 'Enregistrement...' : 'Enregistrer Séance'}
+                    {submitting ? txt('A registar...', 'Recording...', 'A registar...') : txt('Registar Sessão', 'Record Session', 'Registar Sessão')}
                   </button>
                 </div>
               </form>
@@ -1171,50 +1315,50 @@ export function PatientNotesTab({
       {/* MODAL 3: EDIT PATIENT */}
       <AnimatePresence>
         {isEditPatientModalOpen && (
-          <div className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[99999] bg-black/30 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E9E6DF] p-6 rounded-3xl max-w-lg w-full space-y-4 shadow-xl"
+              exit={{ scale: 0.98, opacity: 0 }}
+              className="bg-white border border-[#E2E8F0] p-6 rounded-2xl max-w-lg w-full space-y-4 shadow-lg font-sans"
             >
-              <div className="flex justify-between items-center border-b border-[#E9E6DF] pb-3">
-                <h3 className="font-serif font-bold text-lg text-[#202020]">
-                  {txt('Modifier le Dossier Patient', 'Edit Patient File', 'Editar Ficha do Doente')}
+              <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <h3 className="font-semibold text-base text-[#0F172A]">
+                  {txt('Editar Ficha de Utente', 'Edit Patient File', 'Editar Ficha de Utente')}
                 </h3>
-                <button onClick={() => setIsEditPatientModalOpen(false)} className="text-[#77736B] hover:text-[#202020]">
-                  <IconX size={20} />
+                <button onClick={() => setIsEditPatientModalOpen(false)} className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-lg hover:bg-[#F1F5F9] transition-colors">
+                  <IconX size={18} />
                 </button>
               </div>
 
-              <form onSubmit={handleEditPatientSubmit} className="space-y-3">
+              <form onSubmit={handleEditPatientSubmit} className="space-y-3 text-xs">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Nom & Prénom *</label>
+                    <label className="block font-medium text-[#475569] mb-1">Nome & Apelido *</label>
                     <input
                       type="text"
                       required
                       value={editPatientForm.patientName}
                       onChange={e => setEditPatientForm(prev => ({ ...prev, patientName: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Téléphone *</label>
+                    <label className="block font-medium text-[#475569] mb-1">Telefone *</label>
                     <input
                       type="text"
                       required
                       value={editPatientForm.phone}
                       onChange={e => setEditPatientForm(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#C6A15B] mb-1">
-                      {txt('Séances Prescrites *', 'Prescribed Sessions *', 'Sessões Prescritas *')}
+                    <label className="block font-medium text-[#0F172A] mb-1">
+                      {txt('Sessões Prescritas *', 'Prescribed Sessions *', 'Sessões Prescritas *')}
                     </label>
                     <input
                       type="number"
@@ -1230,73 +1374,93 @@ export function PatientNotesTab({
                         }
                       }}
                       placeholder="ex: 10"
-                      className="w-full p-2.5 bg-[#FAF8F5] border border-[#C6A15B]/50 rounded-xl text-xs font-mono font-bold text-[#202020]"
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg text-xs font-semibold text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Prise en charge CNAM</label>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('Regime / Cobertura', 'Coverage Type', 'Regime / Cobertura')}
+                    </label>
                     <select
-                      value={editPatientForm.cnamStatus}
-                      onChange={e => setEditPatientForm(prev => ({ ...prev, cnamStatus: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      value={editPatientForm.coverageType}
+                      onChange={e => setEditPatientForm(prev => ({ ...prev, coverageType: e.target.value as any }))}
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     >
-                      <option value="NON">NON</option>
-                      <option value="OUI">OUI</option>
-                      <option value="EN_COURS">EN COURS</option>
+                      <option value="PARTICULAR">{txt('Particular (Sem seguro)', 'Private (Self-pay)', 'Particular (Sem seguro)')}</option>
+                      <option value="INSURANCE">{txt('Seguro de Saúde', 'Health Insurance', 'Seguro de Saúde')}</option>
+                      <option value="ADSE">ADSE / Subsistema</option>
+                      <option value="OTHER">{txt('Outro', 'Other', 'Outro')}</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('Seguradora / Entidade', 'Insurance Provider', 'Seguradora / Entidade')}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Médis, Multicare..."
+                      value={editPatientForm.coverageProvider}
+                      onChange={e => setEditPatientForm(prev => ({ ...prev, coverageProvider: e.target.value }))}
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
+                    />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">N° CNAM (facultatif)</label>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('N.º Beneficiário / Cartão', 'Policy / Card Number', 'N.º Beneficiário / Cartão')}
+                    </label>
                     <input
                       type="text"
                       placeholder="123456789"
-                      value={editPatientForm.cnamNumber}
-                      onChange={e => setEditPatientForm(prev => ({ ...prev, cnamNumber: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      value={editPatientForm.coverageNumber}
+                      onChange={e => setEditPatientForm(prev => ({ ...prev, coverageNumber: e.target.value }))}
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Médecin Traitant</label>
+                    <label className="block font-medium text-[#475569] mb-1">
+                      {txt('Médico Assistente', 'Referring Doctor', 'Médico Assistente')}
+                    </label>
                     <input
                       type="text"
-                      placeholder="Dr. Ben Ammar"
+                      placeholder="Dr. Silva"
                       value={editPatientForm.referringDoctor}
                       onChange={e => setEditPatientForm(prev => ({ ...prev, referringDoctor: e.target.value }))}
-                      className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                      className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold text-[#77736B] mb-1">Pathologies & Tags</label>
+                  <label className="block font-medium text-[#475569] mb-1">Patologias & Tags</label>
                   <input
                     type="text"
-                    placeholder="Lombalgie, Post-Op"
+                    placeholder="Lombalgia, Pós-Operatório"
                     value={editPatientForm.pathologyTags}
                     onChange={e => setEditPatientForm(prev => ({ ...prev, pathologyTags: e.target.value }))}
-                    className="w-full p-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs font-mono"
+                    className="w-full p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-3">
+                <div className="flex justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
                   <button
                     type="button"
                     onClick={() => setIsEditPatientModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-xs font-mono text-[#77736B]"
+                    className="px-3.5 py-2 rounded-lg border border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9] font-medium transition-colors text-xs"
                   >
-                    Annuler
+                    {txt('Cancelar', 'Cancel', 'Cancelar')}
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-4 py-2 rounded-xl bg-[#C6A15B] text-white text-xs font-mono font-bold shadow-xs hover:bg-[#B5904B]"
+                    className="px-4 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs disabled:opacity-50 transition-colors"
                   >
-                    {submitting ? 'Enregistrement...' : 'Mettre à jour Dossier'}
+                    {submitting ? txt('A guardar...', 'Saving...', 'A guardar...') : txt('Atualizar Ficha', 'Update File', 'Atualizar Ficha')}
                   </button>
                 </div>
               </form>

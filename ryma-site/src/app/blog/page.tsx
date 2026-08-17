@@ -21,15 +21,17 @@ export default function BlogPage() {
         <div className="relative mx-auto max-w-3xl px-6 md:px-12">
           <ScrollReveal>
             <Badge variant="gold" className="mb-4">
-              {lang === 'fr' ? 'Blog Santé & Bien-être' : 'مدونة الصحة والعافية'}
+              {lang === 'pt' ? 'Blog de Saúde & Fisioterapia' : lang === 'en' ? 'Health & Wellness Blog' : 'Blog Santé & Bien-être'}
             </Badge>
             <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-4">
-              {lang === 'fr' ? 'Articles & Conseils' : 'مقالات ونصائح'}
+              {lang === 'pt' ? 'Artigos & Conselhos Clínicos' : lang === 'en' ? 'Articles & Clinical Advice' : 'Articles & Conseils'}
             </h1>
             <p className="text-[#6B6058] text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-              {lang === 'fr'
-                ? 'Informations médicales, conseils pratiques et actualités santé par Ryma Ouichka, kinésithérapeute à Ezzahra.'
-                : 'معلومات طبية ونصائح عملية وأخبار صحية من ريما ويشكة.'}
+              {lang === 'pt'
+                ? 'Informações médicas, conselhos práticos e atualidades de saúde pela Dra. Ryma Ouichka em Lisboa.'
+                : lang === 'en'
+                ? 'Clinical insights, wellness guides, and health advice by Dr. Ryma Ouichka in Lisbon.'
+                : 'Informations médicales, conseils pratiques et actualités santé par Ryma Ouichka, physiothérapeute à Lisbonne.'}
             </p>
           </ScrollReveal>
         </div>

@@ -146,17 +146,19 @@ Chez Ryma Ouichka, chaque bilan postural est personnalisé : analyse de votre si
         },
       },
       {
-        q: { fr: 'Est-ce remboursé par la CNAM ?', ar: 'هل تشمله تأمين CNAM؟' },
+        q: { fr: 'Est-ce remboursé par les assurances ou mutuelles ?', pt: 'As sessões são comparticipadas por seguros de saúde?', en: 'Is it covered by health insurance?' },
         a: {
-          fr: 'Oui, sur prescription médicale, les séances de kinésithérapie sont remboursées par la CNAM en Tunisie. Renseignez-vous auprès de votre médecin.',
-          ar: 'نعم، بوصفة طبية، تُغطي CNAM جلسات العلاج الطبيعي في تونس. استشر طبيبك للمزيد من المعلومات.',
+          fr: 'Oui, sur prescription médicale, vous pouvez soumettre les factures acquittées à votre assurance ou mutuelle de santé pour remboursement.',
+          pt: 'Sim. Mediante prescrição médica, emitimos fatura com os dados clínicos necessários para submissão à sua seguradora de saúde ou subsistema (Regime Livre).',
+          en: 'Yes. With a medical prescription, we provide certified clinical receipts that you can submit to your private health insurance for reimbursement.',
         },
       },
       {
-        q: { fr: 'Dois-je apporter une ordonnance médicale ?', ar: 'هل أحتاج إلى وصفة طبية؟' },
+        q: { fr: 'Dois-je apporter une ordonnance médicale ?', pt: 'É obrigatório ter receita médica?', en: 'Do I need a doctor\'s prescription?' },
         a: {
-          fr: "Une ordonnance n'est pas obligatoire pour une consultation, mais elle est nécessaire pour la prise en charge par la CNAM.",
-          ar: 'الوصفة الطبية ليست إلزامية للاستشارة، لكنها ضرورية للتغطية من قِبل CNAM.',
+          fr: "Une ordonnance n'est pas obligatoire pour une consultation privée, mais elle est recommandée pour le remboursement par votre assurance.",
+          pt: 'Uma prescrição médica não é estritamente obrigatória para consultas privadas, mas é necessária caso pretenda obter reembolso junto da sua seguradora.',
+          en: 'A prescription is not strictly required for private self-pay visits, but is necessary if you intend to claim reimbursement from your insurance.',
         },
       },
       {
@@ -275,10 +277,11 @@ La rééducation n'est pas seulement physique : nous abordons aussi la posture, 
         },
       },
       {
-        q: { fr: 'Est-ce couvert par la CNAM ?', ar: 'هل تشمله تأمين CNAM؟' },
+        q: { fr: 'Est-ce couvert par les assurances de santé ?', pt: 'As sessões são comparticipadas por seguros de saúde?', en: 'Is postpartum rehab covered by insurance?' },
         a: {
-          fr: 'Oui, sur prescription médicale de votre gynécologue ou médecin de famille.',
-          ar: 'نعم، بوصفة طبية من طبيب النساء أو الطبيب العائلي.',
+          fr: 'Oui, sur prescription médicale de votre gynécologue ou médecin traitant, vous pouvez soumettre les factures pour remboursement.',
+          pt: 'Sim, mediante prescrição do seu médico ou ginecologista-obstetra, pode solicitar o reembolso junto do seu seguro de saúde no Regime Livre.',
+          en: 'Yes, with a prescription from your doctor or gynecologist, you can submit the clinical invoices to your private health insurance.',
         },
       },
     ],

@@ -50,77 +50,81 @@ export function AddAppointmentModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[99999] bg-black/30 backdrop-blur-xs flex items-center justify-center p-4">
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
+            initial={{ scale: 0.98, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white border border-[#E9E6DF] p-6 md:p-8 rounded-3xl max-w-lg w-full shadow-[0_20px_60px_rgba(0,0,0,0.12)] space-y-5 relative overflow-hidden font-sans"
+            exit={{ scale: 0.98, opacity: 0 }}
+            className="bg-white border border-[#E2E8F0] p-6 rounded-2xl max-w-lg w-full shadow-lg space-y-5 font-sans"
           >
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C6A15B] via-[#E8D7B0] to-[#9B793A]" />
-
-            <div className="flex items-center justify-between">
-              <h3 className="font-serif text-xl font-bold text-[#202020]">
-                {lang === 'pt' ? 'Criar Consulta' : lang === 'en' ? 'Create Appointment' : 'Créer un Rendez-vous'}
+            <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
+              <h3 className="font-semibold text-base text-[#0F172A]">
+                {lang === 'pt' ? 'Marcar Nova Consulta' : lang === 'en' ? 'Create Appointment' : 'Créer un Rendez-vous'}
               </h3>
               <button
                 onClick={onClose}
-                className="p-1 rounded-xl text-[#77736B] hover:text-[#202020] hover:bg-[#FAFAF8] transition-colors"
+                className="p-1 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
               >
-                <IconX size={20} />
+                <IconX size={18} />
               </button>
             </div>
 
             {addingError && (
-              <div className="p-3 bg-[#A9655F]/10 border border-[#A9655F]/30 rounded-xl text-[#A9655F] text-xs font-mono font-semibold">
-                ⚠️ {addingError}
+              <div className="p-3 bg-[#FEF2F2] border border-[#FEE2E2] rounded-lg text-[#991B1B] text-xs font-medium">
+                {addingError}
               </div>
             )}
 
-            <form onSubmit={onSubmit} className="space-y-4 text-xs font-mono">
+            <form onSubmit={onSubmit} className="space-y-3.5 text-xs">
               <div>
-                <label className="text-[#77736B] font-semibold uppercase block mb-1">Nom du Patient *</label>
+                <label className="text-[#475569] font-medium block mb-1">
+                  {lang === 'pt' ? 'Nome do Utente *' : lang === 'en' ? 'Patient Name *' : 'Nom du Patient *'}
+                </label>
                 <input
                   type="text"
                   required
                   value={newForm.patientName}
                   onChange={e => setNewForm(p => ({ ...p, patientName: e.target.value }))}
-                  className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] rounded-xl p-3 focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B]"
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[#77736B] font-semibold uppercase block mb-1">Téléphone *</label>
+                  <label className="text-[#475569] font-medium block mb-1">
+                    {lang === 'pt' ? 'Telefone *' : lang === 'en' ? 'Phone *' : 'Téléphone *'}
+                  </label>
                   <input
                     type="tel"
                     required
                     value={newForm.phone}
                     onChange={e => setNewForm(p => ({ ...p, phone: e.target.value }))}
-                    className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] rounded-xl p-3 focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B]"
+                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-[#77736B] font-semibold uppercase block mb-1">Email</label>
+                  <label className="text-[#475569] font-medium block mb-1">Email</label>
                   <input
                     type="email"
                     value={newForm.email}
                     onChange={e => setNewForm(p => ({ ...p, email: e.target.value }))}
-                    className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] rounded-xl p-3 focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B]"
+                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[#77736B] font-semibold uppercase block mb-1">Soin *</label>
+                <label className="text-[#475569] font-medium block mb-1">
+                  {lang === 'pt' ? 'Tratamento *' : lang === 'en' ? 'Service *' : 'Soin *'}
+                </label>
                 <select
                   value={newForm.service}
                   onChange={e => setNewForm(p => ({ ...p, service: e.target.value }))}
-                  className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] rounded-xl p-3 focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B]"
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                 >
                   {SERVICES.map(s => (
                     <option key={s.slug} value={s.slug}>
-                      {s.name[lang]} ({s.price} TND)
+                      {s.name[lang] || s.name.pt || s.name.fr} ({s.price} €)
                     </option>
                   ))}
                 </select>
@@ -128,21 +132,25 @@ export function AddAppointmentModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[#77736B] font-semibold uppercase block mb-1">Date *</label>
+                  <label className="text-[#475569] font-medium block mb-1">
+                    {lang === 'pt' ? 'Data *' : lang === 'en' ? 'Date *' : 'Date *'}
+                  </label>
                   <input
                     type="date"
                     required
                     value={newForm.date}
                     onChange={e => setNewForm(p => ({ ...p, date: e.target.value }))}
-                    className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] rounded-xl p-3 focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B]"
+                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-[#77736B] font-semibold uppercase block mb-1">Horaire *</label>
+                  <label className="text-[#475569] font-medium block mb-1">
+                    {lang === 'pt' ? 'Horário *' : lang === 'en' ? 'Time Slot *' : 'Horaire *'}
+                  </label>
                   <select
                     value={newForm.startTime}
                     onChange={e => setNewForm(p => ({ ...p, startTime: e.target.value }))}
-                    className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] rounded-xl p-3 focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B]"
+                    className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
                   >
                     {VALID_TIME_SLOTS.map(t => (
                       <option key={t} value={t}>
@@ -154,29 +162,33 @@ export function AddAppointmentModal({
               </div>
 
               <div>
-                <label className="text-[#77736B] font-semibold uppercase block mb-1">Notes</label>
+                <label className="text-[#475569] font-medium block mb-1">
+                  {lang === 'pt' ? 'Notas / Observações' : lang === 'en' ? 'Notes' : 'Notes'}
+                </label>
                 <textarea
                   rows={2}
                   value={newForm.notes}
                   onChange={e => setNewForm(p => ({ ...p, notes: e.target.value }))}
-                  className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] rounded-xl p-3 focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] resize-none"
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] resize-none transition-colors"
                 />
               </div>
 
-              <div className="pt-3 flex justify-end gap-3">
+              <div className="pt-3 flex justify-end gap-2 border-t border-[#E2E8F0]">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2.5 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-[#77736B] hover:text-[#202020] hover:bg-[#F4F2EE] font-mono transition-all"
+                  className="px-3.5 py-2 rounded-lg border border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9] font-medium transition-colors text-xs"
                 >
-                  Annuler
+                  {lang === 'pt' ? 'Cancelar' : lang === 'en' ? 'Cancel' : 'Annuler'}
                 </button>
                 <button
                   type="submit"
                   disabled={addingLoading}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#C6A15B] to-[#9B793A] text-white font-mono font-bold shadow-[0_4px_14px_rgba(198,161,91,0.25)] hover:from-[#9B793A] hover:to-[#C6A15B] disabled:opacity-50 transition-all"
+                  className="px-4 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs disabled:opacity-50 transition-colors"
                 >
-                  {addingLoading ? 'Création...' : 'Créer le rendez-vous'}
+                  {addingLoading
+                    ? (lang === 'pt' ? 'A criar...' : lang === 'en' ? 'Creating...' : 'Création...')
+                    : (lang === 'pt' ? 'Guardar Consulta' : lang === 'en' ? 'Save Appointment' : 'Créer le rendez-vous')}
                 </button>
               </div>
             </form>

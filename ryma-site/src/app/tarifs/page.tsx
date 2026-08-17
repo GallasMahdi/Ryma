@@ -31,8 +31,8 @@ export default function TarifsPage() {
               {lang === 'pt'
                 ? 'Preços por sessão individual ou pacotes promocionais para programas completos. Comparticipação médica e recibos de seguro disponíveis.'
                 : lang === 'en'
-                ? 'Single session rates or cost-effective packages for full programs. Health insurance receipts and CNAM coverage supported.'
-                : 'Tarifs à la séance ou forfaits économiques pour un programme complet. Prise en charge CNAM sur les soins kinésithérapeutiques avec prescription médicale.'}
+                ? 'Single session rates or cost-effective packages for full programs. Health insurance receipts and reimbursement supported.'
+                : 'Tarifs à la séance ou forfaits économiques pour un programme complet. Prise en charge mutuelle / assurance sur les soins kinésithérapeutiques avec prescription médicale.'}
             </p>
           </ScrollReveal>
         </div>

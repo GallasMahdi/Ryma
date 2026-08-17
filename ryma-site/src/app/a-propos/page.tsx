@@ -94,7 +94,7 @@ export default function AboutPage() {
                     {[
                       lang === 'pt' ? '12+ anos de prática' : lang === 'en' ? '12+ years experience' : '12+ ans d\'expérience',
                       lang === 'pt' ? '1200+ pacientes' : lang === 'en' ? '1,200+ patients' : '1200+ patients',
-                      lang === 'pt' ? 'Comparticipação CNAM' : lang === 'en' ? 'CNAM Approved' : 'Prise en charge CNAM',
+                      lang === 'pt' ? 'Seguros & Regime Livre' : lang === 'en' ? 'Insurance Coverage' : 'Mutuelles & Assurances',
                     ].map((tag) => (
                       <span key={tag} className="font-mono text-[11px] bg-[#F5E9C8] border border-[#C49A3C]/40 px-2.5 py-1 rounded-full text-[#9A7428] font-bold">
                         {tag}

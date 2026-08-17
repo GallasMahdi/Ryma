@@ -170,9 +170,16 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-14 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#6A6055]">
-          <span>
-            © {new Date().getFullYear()} {t.common.siteName}. {t.common.allRightsReserved}
-          </span>
+          <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
+            <span>
+              © {new Date().getFullYear()} {t.common.siteName}. {t.common.allRightsReserved}
+            </span>
+            {process.env.NEXT_PUBLIC_PROFESSIONAL_LICENSE && (
+              <span className="text-[#8A8070] font-mono text-[11px] sm:before:content-['•'] sm:before:mx-2">
+                {lang === 'pt' ? 'Cédula Profissional' : lang === 'en' ? 'License' : 'N° d\'Ordre'} : {process.env.NEXT_PUBLIC_PROFESSIONAL_LICENSE}
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/mentions-legales" className="hover:text-[#C49A3C] transition-colors">
               {lang === 'pt' ? 'Aviso Legal' : lang === 'en' ? 'Legal Notice' : 'Mentions légales'}
@@ -183,6 +190,15 @@ export function Footer() {
             <Link href="/conditions-utilisation" className="hover:text-[#C49A3C] transition-colors">
               {lang === 'pt' ? 'Termos de Uso' : lang === 'en' ? 'Terms of Use' : 'Conditions d\'utilisation'}
             </Link>
+            <a
+              href="https://www.livroreclamacoes.pt/inicio/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#C49A3C] transition-colors flex items-center gap-1"
+            >
+              <span>{lang === 'pt' ? 'Livro de Reclamações' : lang === 'en' ? 'Complaints Book' : 'Livre de Réclamations'}</span>
+              <IconArrowUpRight size={11} />
+            </a>
           </div>
         </div>
       </div>

@@ -219,7 +219,7 @@ export default function ServiceDetailPage({ params }: Props) {
                       {t.common.bookAppointment}
                     </Button>
                     <Button
-                      href={`https://wa.me/21698123456?text=${encodeURIComponent(
+                      href={`https://wa.me/351912345678?text=${encodeURIComponent(
                         lang === 'pt'
                           ? `Olá, gostaria de agendar uma sessão de ${service.name.pt || service.name.fr}`
                           : lang === 'en'
@@ -234,10 +234,10 @@ export default function ServiceDetailPage({ params }: Props) {
                     </Button>
                   </div>
 
-                  {/* CNAM note */}
+                  {/* Insurance note */}
                   {service.pole === 'kinesitherapie' && (
                     <p className="mt-4 text-[11px] text-[#8A8078] text-center leading-relaxed bg-[#F5E9C8] rounded-xl px-3 py-2">
-                      ✓ {lang === 'pt' ? 'Possibilidade de comparticipação mediante prescrição médica' : lang === 'en' ? 'Insurance coverage & receipts provided with prescription' : 'Prise en charge CNAM possible sur prescription médicale'}
+                      ✓ {lang === 'pt' ? 'Possibilidade de comparticipação mediante prescrição médica' : lang === 'en' ? 'Insurance coverage & receipts provided with prescription' : 'Prise en charge mutuelle / assurance possible sur prescription médicale'}
                     </p>
                   )}
                 </div>

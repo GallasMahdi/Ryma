@@ -144,63 +144,61 @@ export function SlotsTab({
             toggleSlot(selectedDateForSlots, st.time);
           }
         }}
-        className={`p-4 rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between min-h-[125px] ${
-          !isSunday && !isBooked ? 'cursor-pointer hover:scale-[1.02]' : ''
+        className={`p-3 rounded-xl border transition-colors flex flex-col justify-between min-h-[96px] ${
+          !isSunday && !isBooked ? 'cursor-pointer' : ''
         } ${
           isBlocked
-            ? 'bg-[#FDF3F2] border-[#A9655F]/30 hover:border-[#A9655F]'
+            ? 'bg-[#FEF2F2] border-[#FECACA]'
             : isBooked
-            ? 'bg-[#FAF6EE] border-[#C6A15B]/40 shadow-xs'
+            ? 'bg-[#F8FAFC] border-[#CBD5E1]'
             : isSunday
-            ? 'bg-[#FAFAF8] border-[#E9E6DF] opacity-60 cursor-not-allowed'
-            : 'bg-white border-[#E9E6DF] hover:border-[#C6A15B] hover:bg-[#FAF6EE]/40 shadow-xs'
+            ? 'bg-[#F8FAFC] border-[#E2E8F0] opacity-50 cursor-not-allowed'
+            : 'bg-white border-[#E2E8F0] hover:border-[#94A3B8]'
         }`}
       >
         {/* Top bar: Time & Status Badge */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-mono text-base font-bold text-[#202020] tracking-wide">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-sm font-semibold text-[#0F172A]">
             {st.time}
           </span>
-          <span className={`font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+          <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
             isBlocked
-              ? 'bg-[#A9655F]/15 text-[#A9655F] border-[#A9655F]/30'
+              ? 'bg-[#FEE2E2] text-[#991B1B] border-[#FECACA]'
               : isBooked
-              ? 'bg-[#C6A15B]/20 text-[#9B793A] border-[#C6A15B]/30'
+              ? 'bg-[#E2E8F0] text-[#334155] border-[#CBD5E1]'
               : isSunday
-              ? 'bg-[#77736B]/10 text-[#77736B] border-[#77736B]/20'
-              : 'bg-[#6F8F72]/15 text-[#6F8F72] border-[#6F8F72]/30'
+              ? 'bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]'
+              : 'bg-[#DCFCE7] text-[#166534] border-[#BBF7D0]'
           }`}>
             {isBlocked
-              ? (lang === 'pt' ? '🚫 Bloqueado' : lang === 'en' ? '🚫 Blocked' : '🚫 Bloqué')
+              ? (lang === 'pt' ? 'Bloqueado' : lang === 'en' ? 'Blocked' : 'Bloqué')
               : isBooked
-              ? (lang === 'pt' ? '🔒 Reservado' : lang === 'en' ? '🔒 Booked' : '🔒 Réservé')
+              ? (lang === 'pt' ? 'Ocupado' : lang === 'en' ? 'Booked' : 'Réservé')
               : isSunday
               ? (lang === 'pt' ? 'Encerrado' : lang === 'en' ? 'Closed' : 'Fermé')
-              : (lang === 'pt' ? '✓ Livre' : lang === 'en' ? '✓ Available' : '✓ Libre')}
+              : (lang === 'pt' ? 'Disponível' : lang === 'en' ? 'Available' : 'Libre')}
           </span>
         </div>
 
         {/* Patient info if booked */}
         {isBooked ? (
-          <div className="text-xs space-y-1 bg-white/90 p-2.5 rounded-xl border border-[#E8D7B0] mb-2 shadow-xs">
-            <div className="font-bold text-[#202020] truncate flex items-center gap-1.5">
-              <IconUser size={13} className="text-[#C6A15B] shrink-0" />
-              <span className="truncate">{bookedAppt?.patientName ?? (lang === 'pt' ? 'Paciente registado' : lang === 'en' ? 'Registered patient' : 'Patient enregistré')}</span>
+          <div className="text-xs bg-white p-2 rounded border border-[#E2E8F0] mb-2 space-y-0.5">
+            <div className="font-medium text-[#0F172A] truncate">
+              {bookedAppt?.patientName ?? (lang === 'pt' ? 'Utente registado' : lang === 'en' ? 'Patient booked' : 'Patient')}
             </div>
             {bookedAppt && (
-              <div className="text-[11px] text-[#9B793A] truncate font-mono font-medium flex items-center gap-1">
-                <IconStethoscope size={12} className="shrink-0" />
-                <span className="truncate">{getServiceName(bookedAppt.service, lang)}</span>
+              <div className="text-[11px] text-[#64748B] truncate">
+                {getServiceName(bookedAppt.service, lang)}
               </div>
             )}
           </div>
         ) : (
-          <div className="text-[11px] text-[#77736B] font-mono mb-2">
+          <div className="text-[11px] text-[#64748B] mb-2">
             {isBlocked
-              ? (lang === 'pt' ? 'Horário bloqueado' : lang === 'en' ? 'Blocked slot' : 'Créneau bloqué')
+              ? (lang === 'pt' ? 'Indisponível' : lang === 'en' ? 'Unavailable' : 'Indisponible')
               : isSunday
-              ? (lang === 'pt' ? 'Encerramento semanal' : lang === 'en' ? 'Weekly closure' : 'Fermeture hebdomadaire')
-              : (lang === 'pt' ? 'Clique para bloquear' : lang === 'en' ? 'Click to block' : 'Cliquez pour bloquer')}
+              ? (lang === 'pt' ? 'Encerramento' : lang === 'en' ? 'Closed' : 'Fermé')
+              : (lang === 'pt' ? 'Livre para marcação' : lang === 'en' ? 'Open for booking' : 'Libre')}
           </div>
         )}
 
@@ -215,19 +213,19 @@ export function SlotsTab({
               }
             }}
             disabled={isBooked || batchProcessing}
-            className={`w-full py-1.5 px-3 rounded-xl font-mono text-[11px] font-semibold transition-all mt-auto flex items-center justify-center gap-1.5 ${
+            className={`w-full py-1 px-2.5 rounded text-[11px] font-medium transition-colors mt-auto ${
               isBooked
-                ? 'opacity-40 cursor-not-allowed bg-black/5 text-[#77736B]'
+                ? 'opacity-40 cursor-not-allowed bg-transparent text-[#94A3B8]'
                 : isBlocked
-                ? 'bg-[#A9655F]/15 hover:bg-[#A9655F]/25 text-[#A9655F] border border-[#A9655F]/30'
-                : 'bg-[#6F8F72]/15 hover:bg-[#6F8F72]/25 text-[#6F8F72] border border-[#6F8F72]/30'
+                ? 'bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FECACA]'
+                : 'bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0]'
             }`}
           >
             {isBlocked
               ? (lang === 'pt' ? 'Desbloquear' : lang === 'en' ? 'Unblock' : 'Débloquer')
               : isBooked
-              ? (lang === 'pt' ? 'Reservado' : lang === 'en' ? 'Booked' : 'Créneau réservé')
-              : (lang === 'pt' ? 'Bloquear horário' : lang === 'en' ? 'Block slot' : 'Bloquer ce créneau')}
+              ? (lang === 'pt' ? 'Ocupado' : lang === 'en' ? 'Booked' : 'Réservé')
+              : (lang === 'pt' ? 'Bloquear' : lang === 'en' ? 'Block' : 'Bloquer')}
           </button>
         )}
       </motion.div>
@@ -235,19 +233,19 @@ export function SlotsTab({
   };
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="bg-white p-5 md:p-6 rounded-3xl border border-[#E9E6DF] space-y-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+    <div className="space-y-4 font-sans">
+      <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] space-y-5">
 
         {/* Header & Date Controls */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-[#E9E6DF]">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-[#E2E8F0]">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h3 className="font-serif text-xl font-bold text-[#202020]">
-                {lang === 'pt' ? 'Agenda e Horários' : lang === 'en' ? 'Schedule & Slots' : 'Planning & Créneaux Horaires'}
+            <div className="flex items-center gap-2.5 mb-1">
+              <h3 className="text-base font-semibold text-[#0F172A]">
+                {lang === 'pt' ? 'Gestão de Horários & Agenda' : lang === 'en' ? 'Schedule & Slot Management' : 'Planning & Créneaux Horaires'}
               </h3>
               {slotDateMeta.isSunday && (
-                <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-[#A9655F]/10 border border-[#A9655F]/30 text-[#A9655F] font-semibold">
-                  {lang === 'pt' ? 'Clínica Encerrada (Domingo)' : lang === 'en' ? 'Clinic Closed (Sunday)' : 'Cabinet Fermé (Dimanche)'}
+                <span className="text-xs px-2 py-0.5 rounded bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B] font-medium">
+                  {lang === 'pt' ? 'Domingo Encerrado' : lang === 'en' ? 'Closed (Sunday)' : 'Fermé (Dimanche)'}
                 </span>
               )}
             </div>
@@ -256,23 +254,22 @@ export function SlotsTab({
             </p>
           </div>
 
-          {/* Navigation Toolbar */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center bg-[#FAFAF8] p-1 rounded-2xl border border-[#E9E6DF]">
+            <div className="flex items-center bg-[#F1F5F9] p-0.5 rounded-lg border border-[#E2E8F0]">
               <button
                 onClick={() => setSelectedDateForSlots(prev => shiftDateString(prev, -1))}
-                className="p-2 rounded-xl text-[#77736B] hover:text-[#202020] hover:bg-[#F4F2EE] transition-all"
+                className="p-1.5 rounded text-[#64748B] hover:text-[#0F172A] transition-colors"
                 title={lang === 'pt' ? 'Dia anterior' : lang === 'en' ? 'Previous day' : 'Jour précédent'}
               >
-                <IconChevronLeft size={18} />
+                <IconChevronLeft size={16} />
               </button>
 
               <button
                 onClick={() => setSelectedDateForSlots(todayStr)}
-                className={`px-3 py-1.5 rounded-xl font-mono text-xs font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                   selectedDateForSlots === todayStr
-                    ? 'bg-[#C6A15B] text-white shadow-xs'
-                    : 'text-[#77736B] hover:text-[#202020] hover:bg-[#F4F2EE]'
+                    ? 'bg-white text-[#0F172A] shadow-xs'
+                    : 'text-[#64748B] hover:text-[#0F172A]'
                 }`}
               >
                 {lang === 'pt' ? 'Hoje' : lang === 'en' ? 'Today' : "Aujourd'hui"}
@@ -280,10 +277,10 @@ export function SlotsTab({
 
               <button
                 onClick={() => setSelectedDateForSlots(prev => shiftDateString(prev, 1))}
-                className="p-2 rounded-xl text-[#77736B] hover:text-[#202020] hover:bg-[#F4F2EE] transition-all"
+                className="p-1.5 rounded text-[#64748B] hover:text-[#0F172A] transition-colors"
                 title={lang === 'pt' ? 'Dia seguinte' : lang === 'en' ? 'Next day' : 'Jour suivant'}
               >
-                <IconChevronRight size={18} />
+                <IconChevronRight size={16} />
               </button>
             </div>
 
@@ -293,16 +290,16 @@ export function SlotsTab({
                 type="date"
                 value={selectedDateForSlots}
                 onChange={e => setSelectedDateForSlots(e.target.value)}
-                className="bg-[#FAFAF8] border border-[#E9E6DF] text-[#202020] px-3.5 py-2 rounded-2xl font-mono text-xs focus:outline-none focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B] font-semibold"
+                className="bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] px-3 py-1.5 rounded-lg text-xs font-medium focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
               />
             </div>
           </div>
         </div>
 
-        {/* 7-Day Quick Date Strip / Carousel */}
-        <div className="space-y-2">
-          <div className="font-mono text-[10px] uppercase text-[#77736B] tracking-wider font-semibold">
-            {lang === 'pt' ? 'Acesso Rápido (Próximos 7 Dias)' : lang === 'en' ? 'Quick Access (Next 7 Days)' : 'Accès Rapide (7 Prochains Jours)'}
+        {/* 7-Day Quick Date Strip */}
+        <div className="space-y-1.5">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
+            {lang === 'pt' ? 'Próximos 7 Dias' : lang === 'en' ? 'Next 7 Days' : '7 Prochains Jours'}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
             {next7Days.map(dateStr => {
@@ -312,97 +309,65 @@ export function SlotsTab({
                 <button
                   key={dateStr}
                   onClick={() => setSelectedDateForSlots(dateStr)}
-                  className={`p-3 rounded-2xl border text-center transition-all duration-200 flex flex-col items-center justify-center gap-1 ${
+                  className={`p-2.5 rounded-xl border text-center transition-colors flex flex-col items-center justify-center gap-0.5 ${
                     isSelected
-                      ? 'bg-gradient-to-b from-[#C6A15B] to-[#9B793A] border-[#C6A15B] text-white shadow-[0_4px_16px_rgba(198,161,91,0.25)] scale-[1.02]'
+                      ? 'bg-[#0F172A] border-[#0F172A] text-white'
                       : meta.isSunday
-                      ? 'bg-[#FAFAF8] border-[#A9655F]/20 text-[#A9655F]/70 hover:bg-[#FDF3F2]'
-                      : 'bg-white border-[#E9E6DF] text-[#77736B] hover:text-[#202020] hover:border-[#C6A15B]/50 hover:bg-[#FAF6EE]'
+                      ? 'bg-[#F8FAFC] border-[#E2E8F0] text-[#94A3B8]'
+                      : 'bg-white border-[#E2E8F0] text-[#475569] hover:bg-[#F8FAFC] hover:border-[#CBD5E1]'
                   }`}
                 >
-                  <span className="font-mono text-[11px] uppercase font-bold tracking-wider opacity-90">
+                  <span className="text-[11px] uppercase font-semibold">
                     {meta.title}
                   </span>
-                  <span className="font-mono text-xs font-semibold">
-                    {meta.subtitle.split(' ')[0]} {meta.subtitle.split(' ')[1]}
+                  <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-[#64748B]'}`}>
+                    {meta.subtitle}
                   </span>
-                  {isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping mt-0.5" />
-                  )}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Slot Density, Status Stats & Occupancy Gauge */}
-        <div className="space-y-3 pt-2">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 rounded-2xl bg-[#FAFAF8] border border-[#E9E6DF] flex items-center justify-between">
-              <div>
-                <div className="font-mono text-[10px] uppercase font-semibold text-[#77736B]">{lang === 'pt' ? 'Total Horários' : lang === 'en' ? 'Total Slots' : 'Créneaux Total'}</div>
-                <div className="font-mono text-lg font-bold text-[#202020]">{slotStats.total}</div>
-              </div>
-              <IconClock size={20} className="text-[#77736B]" />
+        {/* Slot Density, Status Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
+            <div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-[#64748B]">{lang === 'pt' ? 'Total' : lang === 'en' ? 'Total' : 'Total'}</div>
+              <div className="text-xl font-semibold text-[#0F172A]">{slotStats.total}</div>
             </div>
-
-            <div className="p-3.5 rounded-2xl bg-[#6F8F72]/10 border border-[#6F8F72]/30 flex items-center justify-between">
-              <div>
-                <div className="font-mono text-[10px] uppercase font-semibold text-[#6F8F72]">{lang === 'pt' ? 'Livres' : lang === 'en' ? 'Available' : 'Libres'}</div>
-                <div className="font-mono text-lg font-bold text-[#6F8F72]">{slotStats.available}</div>
-              </div>
-              <IconCheck size={20} className="text-[#6F8F72]" />
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-[#FAF6EE] border border-[#C6A15B]/30 flex items-center justify-between">
-              <div>
-                <div className="font-mono text-[10px] uppercase font-semibold text-[#9B793A]">{lang === 'pt' ? 'Reservados' : lang === 'en' ? 'Booked' : 'Réservés'}</div>
-                <div className="font-mono text-lg font-bold text-[#9B793A]">{slotStats.booked}</div>
-              </div>
-              <IconLock size={20} className="text-[#9B793A]" />
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-[#FDF3F2] border border-[#A9655F]/30 flex items-center justify-between">
-              <div>
-                <div className="font-mono text-[10px] uppercase font-semibold text-[#A9655F]">{lang === 'pt' ? 'Bloqueados' : lang === 'en' ? 'Blocked' : 'Bloqués'}</div>
-                <div className="font-mono text-lg font-bold text-[#A9655F]">{slotStats.blocked}</div>
-              </div>
-              <IconBan size={20} className="text-[#A9655F]" />
-            </div>
+            <IconClock size={18} className="text-[#94A3B8]" />
           </div>
 
-          {/* Daily Occupancy Rate Bar */}
-          {!slotDateMeta.isSunday && (
-            <div className="p-3.5 rounded-2xl bg-[#FAFAF8] border border-[#E9E6DF] space-y-2">
-              <div className="flex items-center justify-between font-mono text-xs">
-                <span className="font-semibold text-[#202020] flex items-center gap-1.5">
-                  <span>📊 {lang === 'pt' ? 'Taxa de Ocupação do Dia' : lang === 'en' ? 'Daily Occupancy Rate' : 'Occupabilité de la journée'}</span>
-                  <span className="text-[#9B793A] font-bold">({occupancyRate}%)</span>
-                </span>
-                <span className="text-[#77736B] text-[11px]">
-                  {slotStats.booked} / {slotList.filter(s => s.reason !== 'sunday').length} {lang === 'pt' ? 'horários ocupados' : lang === 'en' ? 'slots filled' : 'créneaux occupés'}
-                </span>
-              </div>
-              <div className="w-full bg-[#E9E6DF] rounded-full h-2 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${occupancyRate}%` }}
-                  transition={{ duration: 0.6, ease: 'easeOut' }}
-                  className="h-full rounded-full bg-gradient-to-r from-[#C6A15B] to-[#9B793A]"
-                />
-              </div>
+          <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
+            <div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-[#166534]">{lang === 'pt' ? 'Livres' : lang === 'en' ? 'Available' : 'Libres'}</div>
+              <div className="text-xl font-semibold text-[#166534]">{slotStats.available}</div>
             </div>
-          )}
+            <IconCheck size={18} className="text-[#166534]" />
+          </div>
+
+          <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
+            <div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-[#334155]">{lang === 'pt' ? 'Reservados' : lang === 'en' ? 'Booked' : 'Réservés'}</div>
+              <div className="text-xl font-semibold text-[#334155]">{slotStats.booked}</div>
+            </div>
+            <IconLock size={18} className="text-[#64748B]" />
+          </div>
+
+          <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
+            <div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-[#991B1B]">{lang === 'pt' ? 'Bloqueados' : lang === 'en' ? 'Blocked' : 'Bloqués'}</div>
+              <div className="text-xl font-semibold text-[#991B1B]">{slotStats.blocked}</div>
+            </div>
+            <IconBan size={18} className="text-[#991B1B]" />
+          </div>
         </div>
 
         {/* Quick Batch Actions & Filter Bar */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2 pb-1 border-t border-[#E9E6DF]">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2 pb-1 border-t border-[#E2E8F0]">
           {/* Quick Filter Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto font-mono text-xs">
-            <span className="text-[#77736B] me-1 flex items-center gap-1 font-semibold text-[11px]">
-              <IconFilter size={14} />
-              <span>{lang === 'pt' ? 'Filtro:' : lang === 'en' ? 'Filter:' : 'Filtre:'}</span>
-            </span>
+          <div className="flex items-center gap-1 overflow-x-auto text-xs">
             {[
               { id: 'all', label: lang === 'pt' ? `Todos (${slotList.length})` : lang === 'en' ? `All (${slotList.length})` : `Tous (${slotList.length})` },
               { id: 'available', label: lang === 'pt' ? `Livres (${slotStats.available})` : lang === 'en' ? `Available (${slotStats.available})` : `Libres (${slotStats.available})` },
@@ -412,10 +377,10 @@ export function SlotsTab({
               <button
                 key={tab.id}
                 onClick={() => setSlotFilter(tab.id as typeof slotFilter)}
-                className={`px-3 py-1.5 rounded-xl transition-all font-semibold whitespace-nowrap ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                   slotFilter === tab.id
-                    ? 'bg-[#C6A15B] text-white shadow-xs'
-                    : 'bg-[#FAFAF8] text-[#77736B] hover:text-[#202020] hover:bg-[#F4F2EE]'
+                    ? 'bg-[#0F172A] text-white'
+                    : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
                 }`}
               >
                 {tab.label}
@@ -425,101 +390,79 @@ export function SlotsTab({
 
           {/* Batch Actions Buttons */}
           {!slotDateMeta.isSunday && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
                 onClick={() => handleBatchAction('block_morning')}
                 disabled={batchProcessing || loadingSlots}
-                className="px-3 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E8D7B0] text-[#9B793A] hover:bg-[#F4ECE0] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 disabled:opacity-50"
-                title={lang === 'pt' ? 'Bloquear todos os horários livres da manhã' : lang === 'en' ? 'Block all available morning slots' : 'Bloquer tous les créneaux libres du matin'}
+                className="px-2.5 py-1 rounded-lg border border-[#E2E8F0] text-[#334155] hover:bg-[#F8FAFC] text-xs font-medium transition-colors disabled:opacity-50"
               >
-                <IconSun size={14} className="text-[#C6A15B]" />
-                <span>{lang === 'pt' ? 'Bloquear Manhã' : lang === 'en' ? 'Block Morning' : 'Bloquer Matin'}</span>
+                {lang === 'pt' ? 'Bloquear Manhã' : lang === 'en' ? 'Block Morning' : 'Bloquer Matin'}
               </button>
 
               <button
                 onClick={() => handleBatchAction('block_afternoon')}
                 disabled={batchProcessing || loadingSlots}
-                className="px-3 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E8D7B0] text-[#9B793A] hover:bg-[#F4ECE0] font-mono text-xs font-semibold transition-all flex items-center gap-1.5 disabled:opacity-50"
-                title={lang === 'pt' ? 'Bloquear todos os horários livres da tarde' : lang === 'en' ? 'Block all available afternoon slots' : 'Bloquer tous les créneaux libres de l\'après-midi'}
+                className="px-2.5 py-1 rounded-lg border border-[#E2E8F0] text-[#334155] hover:bg-[#F8FAFC] text-xs font-medium transition-colors disabled:opacity-50"
               >
-                <IconSunset size={14} className="text-[#C6A15B]" />
-                <span>{lang === 'pt' ? 'Bloquear Tarde' : lang === 'en' ? 'Block Afternoon' : 'Bloquer Après-midi'}</span>
+                {lang === 'pt' ? 'Bloquear Tarde' : lang === 'en' ? 'Block Afternoon' : 'Bloquer Après-midi'}
               </button>
 
               <button
                 onClick={() => handleBatchAction('block_all')}
                 disabled={batchProcessing || loadingSlots}
-                className="px-3 py-1.5 rounded-xl bg-[#FDF3F2] border border-[#A9655F]/30 text-[#A9655F] hover:bg-[#A9655F]/20 font-mono text-xs font-semibold transition-all flex items-center gap-1.5 disabled:opacity-50"
-                title={lang === 'pt' ? 'Bloquear dia inteiro' : lang === 'en' ? 'Block whole day' : 'Bloquer toute la journée (congé/formation)'}
+                className="px-2.5 py-1 rounded-lg bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FECACA] text-xs font-medium transition-colors disabled:opacity-50"
               >
-                <IconLock size={14} />
-                <span>{lang === 'pt' ? 'Bloquear Tudo' : lang === 'en' ? 'Block All' : 'Tout bloquer'}</span>
+                {lang === 'pt' ? 'Bloquear Dia' : lang === 'en' ? 'Block Day' : 'Bloquer Jour'}
               </button>
 
               <button
                 onClick={() => handleBatchAction('unblock_all')}
                 disabled={batchProcessing || loadingSlots}
-                className="px-3 py-1.5 rounded-xl bg-[#6F8F72]/15 border border-[#6F8F72]/30 text-[#6F8F72] hover:bg-[#6F8F72]/25 font-mono text-xs font-semibold transition-all flex items-center gap-1.5 disabled:opacity-50"
-                title={lang === 'pt' ? 'Desbloquear todos os horários' : lang === 'en' ? 'Unblock all slots' : 'Débloquer tous les créneaux bloqués'}
+                className="px-2.5 py-1 rounded-lg bg-[#DCFCE7] text-[#166534] hover:bg-[#BBF7D0] text-xs font-medium transition-colors disabled:opacity-50"
               >
-                <IconBolt size={14} />
-                <span>{lang === 'pt' ? 'Desbloquear Tudo' : lang === 'en' ? 'Unblock All' : 'Tout débloquer'}</span>
+                {lang === 'pt' ? 'Desbloquear Tudo' : lang === 'en' ? 'Unblock All' : 'Tout Débloquer'}
               </button>
             </div>
           )}
         </div>
 
         {/* Shift Division Display: Morning & Afternoon */}
-        <div className="space-y-6 pt-2">
+        <div className="space-y-5 pt-1">
           {loadingSlots && slotList.length === 0 ? (
-            <div className="py-16 text-center text-[#77736B] font-mono text-xs flex items-center justify-center gap-3">
-              <div className="w-5 h-5 border-2 border-[#C6A15B] border-t-transparent rounded-full animate-spin" />
+            <div className="py-16 text-center text-[#64748B] text-xs flex items-center justify-center gap-2.5">
+              <div className="w-4 h-4 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
               <span>{lang === 'pt' ? 'A carregar horários...' : lang === 'en' ? 'Loading schedule...' : 'Chargement du planning...'}</span>
             </div>
           ) : (
             <>
-              {/* 🌅 Session du Matin */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-[#E9E6DF]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-xl bg-[#FAF6EE] border border-[#E8D7B0] flex items-center justify-center text-[#C6A15B]">
-                      <IconSun size={16} />
-                    </div>
-                    <div>
-                      <h4 className="font-serif text-sm font-bold text-[#202020]">
-                        {lang === 'pt' ? 'Sessão da Manhã (08:00 – 12:30)' : lang === 'en' ? 'Morning Session (08:00 – 12:30)' : 'Session du Matin (08:00 – 12:30)'}
-                      </h4>
-                    </div>
-                  </div>
-                  <span className="font-mono text-xs text-[#77736B] font-medium">
-                    {morningSlots.filter(s => s.available && s.reason !== 'blocked').length} {lang === 'pt' ? 'livres' : lang === 'en' ? 'available' : 'libres'} • {morningSlots.filter(s => !s.available && s.reason === 'booked').length} {lang === 'pt' ? 'reservados' : lang === 'en' ? 'booked' : 'réservés'}
+              {/* Morning Session */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between pb-1.5 border-b border-[#E2E8F0]">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
+                    {lang === 'pt' ? 'Manhã (08:00 – 12:30)' : lang === 'en' ? 'Morning (08:00 – 12:30)' : 'Matin (08:00 – 12:30)'}
+                  </h4>
+                  <span className="text-[11px] text-[#64748B]">
+                    {morningSlots.filter(s => s.available && s.reason !== 'blocked').length} livres • {morningSlots.filter(s => !s.available && s.reason === 'booked').length} ocupados
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
                   {morningSlots.filter(filterSlotItem).map(renderSlotCard)}
                 </div>
               </div>
 
-              {/* ☀️ Session de l'Après-midi */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between pb-2 border-b border-[#E9E6DF]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-xl bg-[#FAF6EE] border border-[#E8D7B0] flex items-center justify-center text-[#C6A15B]">
-                      <IconSunset size={16} />
-                    </div>
-                    <div>
-                      <h4 className="font-serif text-sm font-bold text-[#202020]">
-                        {lang === 'pt' ? 'Sessão da Tarde (14:00 – 18:30)' : lang === 'en' ? 'Afternoon Session (14:00 – 18:30)' : "Session de l'Après-midi (14:00 – 18:30)"}
-                      </h4>
-                    </div>
-                  </div>
-                  <span className="font-mono text-xs text-[#77736B] font-medium">
-                    {afternoonSlots.filter(s => s.available && s.reason !== 'blocked').length} {lang === 'pt' ? 'livres' : lang === 'en' ? 'available' : 'libres'} • {afternoonSlots.filter(s => !s.available && s.reason === 'booked').length} {lang === 'pt' ? 'reservados' : lang === 'en' ? 'booked' : 'réservés'}
+              {/* Afternoon Session */}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between pb-1.5 border-b border-[#E2E8F0]">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
+                    {lang === 'pt' ? 'Tarde (14:00 – 18:30)' : lang === 'en' ? 'Afternoon (14:00 – 18:30)' : 'Après-midi (14:00 – 18:30)'}
+                  </h4>
+                  <span className="text-[11px] text-[#64748B]">
+                    {afternoonSlots.filter(s => s.available && s.reason !== 'blocked').length} livres • {afternoonSlots.filter(s => !s.available && s.reason === 'booked').length} ocupados
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
                   {afternoonSlots.filter(filterSlotItem).map(renderSlotCard)}
                 </div>
               </div>

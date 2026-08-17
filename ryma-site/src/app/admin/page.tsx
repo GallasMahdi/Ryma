@@ -25,16 +25,17 @@ import { SlotsTab } from '@/components/admin/SlotsTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { PatientNotesTab } from '@/components/admin/PatientNotesTab';
 import { AddAppointmentModal } from '@/components/admin/AddAppointmentModal';
+import { LuxuryToastContainer, LuxuryProgressBar, LuxuryToast } from '@/components/admin/LuxuryFeedback';
 
 async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...opts, credentials: 'same-origin' });
   if (res.status === 401) {
     window.location.href = '/admin/login';
-    throw new Error('Session expirée');
+    throw new Error('Sessão expirada. A redirecionar...');
   }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error ?? `HTTP ${res.status}`);
+    throw new Error(data.error || data.message || `Erro HTTP ${res.status}`);
   }
   return res.json() as T;
 }
@@ -48,6 +49,28 @@ export default function AdminPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
+  const [isGlobalBusy, setIsGlobalBusy] = useState(false);
+
+  // Luxury Toasts Queue
+  const [toasts, setToasts] = useState<LuxuryToast[]>([]);
+
+  const addToast = useCallback((toast: Omit<LuxuryToast, 'id'>) => {
+    const id = 'toast_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+    const newToast: LuxuryToast = { id, ...toast };
+    setToasts(prev => [newToast, ...prev.slice(0, 4)]);
+
+    const duration = toast.duration ?? (toast.type === 'error' ? 5000 : 3500);
+    if (toast.type !== 'loading') {
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+      }, duration);
+    }
+    return id;
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
 
   const [filter, setFilter] = useState<AppointmentStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,8 +120,6 @@ export default function AdminPage() {
   const [addingError, setAddingError] = useState<string | null>(null);
   const [addingLoading, setAddingLoading] = useState(false);
 
-  // Action feedback toasts
-  const [actionMsg, setActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
     onConfirm: () => void;
@@ -169,11 +190,6 @@ export default function AdminPage() {
         credentials: 'same-origin',
       });
 
-      if (res.status === 401) {
-        window.location.href = '/admin/login';
-        return;
-      }
-
       if (res.ok) {
         const data = await res.json();
         const slotsData = data.slots ?? [];
@@ -197,16 +213,17 @@ export default function AdminPage() {
     }
   }, [selectedDateForSlots, activeTab, fetchSlots]);
 
-  // ── Action helpers ─────────────────────────────────────────────────────────
-  const showMsg = (type: 'success' | 'error', text: string) => {
-    setActionMsg({ type, text });
-    setTimeout(() => setActionMsg(null), 3500);
+  const handleLogout = async () => {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    router.replace('/admin/login');
   };
 
+  // ── Action helpers ─────────────────────────────────────────────────────────
   const updateStatus = async (id: string, status: AppointmentStatus) => {
     // 0ms Optimistic UI update: update local state instantly
     const prevList = appointments;
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status, updatedAt: new Date().toISOString() } : a));
+    setIsGlobalBusy(true);
 
     try {
       await apiFetch(`/api/admin/appointments/${id}`, {
@@ -215,118 +232,175 @@ export default function AdminPage() {
         body: JSON.stringify({ status }),
       });
       slotCacheRef.current = {};
-      showMsg(
-        'success',
-        lang === 'fr'
-          ? 'Statut mis à jour'
-          : lang === 'en'
-          ? 'Status updated'
-          : 'Estado atualizado'
-      );
+      addToast({
+        type: 'success',
+        title: lang === 'pt' ? 'Estado Atualizado' : lang === 'en' ? 'Status Updated' : 'Statut Mis à Jour',
+        message: lang === 'pt' ? `A consulta foi marcada como ${status}.` : lang === 'en' ? `Appointment marked as ${status}.` : `Rendez-vous marqué comme ${status}.`,
+      });
     } catch (err) {
       setAppointments(prevList);
-      showMsg('error', (err as Error).message);
+      addToast({
+        type: 'error',
+        title: lang === 'pt' ? 'Erro na Atualização' : lang === 'en' ? 'Update Error' : 'Erreur de Mise à Jour',
+        message: (err as Error).message,
+      });
+    } finally {
+      setIsGlobalBusy(false);
     }
   };
 
-  const softDeleteAppointment = async (id: string) => {
-    // 0ms Optimistic UI update: cancel appointment instantly in UI
-    const prevList = appointments;
-    setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'CANCELLED' } : a));
-
-    try {
-      await apiFetch(`/api/admin/appointments/${id}`, { method: 'DELETE' });
-      slotCacheRef.current = {};
-      showMsg(
-        'success',
-        lang === 'fr'
-          ? 'Rendez-vous annulé'
-          : lang === 'en'
-          ? 'Appointment cancelled'
-          : 'Consulta cancelada'
-      );
-    } catch (err) {
-      setAppointments(prevList);
-      showMsg('error', (err as Error).message);
-    }
-  };
-
-  const toggleSlot = async (date: string, time: string) => {
-    // 0ms Optimistic UI update: instantly update state without waiting for network
-    setSlotList(prev =>
-      prev.map(s => {
-        if (s.time !== time) return s;
-        const isBlocked = s.reason === 'blocked';
-        return isBlocked
-          ? { ...s, available: true, reason: null }
-          : { ...s, available: false, reason: 'blocked' };
-      })
-    );
+  const toggleSlot = async (time: string) => {
+    // 0ms Optimistic toggle: flip the available boolean instantly
+    const prevList = slotList;
+    setSlotList(prev => prev.map(s => s.time === time ? { ...s, available: !s.available } : s));
+    setIsGlobalBusy(true);
 
     try {
       await apiFetch('/api/admin/slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, time }),
+        body: JSON.stringify({ date: selectedDateForSlots, time }),
       });
-      delete slotCacheRef.current[date];
-      showMsg(
-        'success',
-        lang === 'fr'
-          ? 'Créneau mis à jour'
-          : lang === 'en'
-          ? 'Slot updated'
-          : 'Horário atualizado'
-      );
+      delete slotCacheRef.current[selectedDateForSlots];
+      addToast({
+        type: 'success',
+        title: lang === 'pt' ? 'Horário Atualizado' : lang === 'en' ? 'Slot Updated' : 'Créneau Modifié',
+        message: `${selectedDateForSlots} às ${time}`,
+      });
     } catch (err) {
-      // Revert state on network/validation error
-      fetchSlots(date, true);
-      showMsg('error', (err as Error).message);
+      setSlotList(prevList);
+      addToast({
+        type: 'error',
+        title: lang === 'pt' ? 'Erro ao Alterar Horário' : lang === 'en' ? 'Slot Error' : 'Erreur Créneau',
+        message: (err as Error).message,
+      });
+    } finally {
+      setIsGlobalBusy(false);
+    }
+  };
+
+  const softDeleteAppointment = async (id: string) => {
+    // 0ms Optimistic removal
+    const prevList = appointments;
+    setAppointments(prev => prev.filter(a => a.id !== id));
+    setIsGlobalBusy(true);
+
+    try {
+      await apiFetch(`/api/admin/appointments/${id}`, { method: 'DELETE' });
+      slotCacheRef.current = {};
+      addToast({
+        type: 'success',
+        title: lang === 'pt' ? 'Consulta Eliminada' : lang === 'en' ? 'Appointment Deleted' : 'Rendez-vous Supprimé',
+        message: lang === 'pt' ? 'O registo foi removido com sucesso.' : lang === 'en' ? 'Record deleted successfully.' : 'Enregistrement supprimé.',
+      });
+    } catch (err) {
+      setAppointments(prevList);
+      addToast({
+        type: 'error',
+        title: lang === 'pt' ? 'Erro ao Eliminar' : lang === 'en' ? 'Delete Error' : 'Erreur de Suppression',
+        message: (err as Error).message,
+      });
+    } finally {
+      setIsGlobalBusy(false);
     }
   };
 
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddingLoading(true);
+    setIsGlobalBusy(true);
     setAddingError(null);
+
     try {
       const data = await apiFetch<{ appointment: Appointment }>('/api/admin/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newForm),
       });
+
       setAppointments(prev => [data.appointment, ...prev]);
+      slotCacheRef.current = {};
       setIsAddModalOpen(false);
       setNewForm({
-        patientName: '', phone: '', email: '',
+        patientName: '',
+        phone: '',
+        email: '',
         service: SERVICES[0]?.slug ?? '',
         date: new Date().toISOString().split('T')[0],
-        startTime: '09:00', notes: '',
+        startTime: '09:00',
+        notes: '',
       });
-      slotCacheRef.current = {};
-      showMsg(
-        'success',
-        lang === 'fr'
-          ? 'Rendez-vous créé'
-          : lang === 'en'
-          ? 'Appointment created'
-          : 'Consulta criada'
-      );
+      addToast({
+        type: 'success',
+        title: lang === 'pt' ? 'Consulta Criada' : lang === 'en' ? 'Appointment Created' : 'Rendez-vous Créé',
+        message: `${data.appointment.patientName} — ${data.appointment.date} ${data.appointment.startTime}`,
+      });
     } catch (err) {
-      setAddingError((err as Error).message);
+      const msg = (err as Error).message;
+      setAddingError(msg);
+      addToast({
+        type: 'error',
+        title: lang === 'pt' ? 'Erro ao Criar Consulta' : lang === 'en' ? 'Creation Error' : 'Erreur de Création',
+        message: msg,
+      });
     } finally {
       setAddingLoading(false);
+      setIsGlobalBusy(false);
     }
   };
 
-  const handleLogout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    router.replace('/admin/login');
+  const openPatientNote = (appt: Appointment) => {
+    const existing = patientNotes.find(n => n.phone === appt.phone);
+    if (existing) {
+      setSelectedNote(existing);
+      setNoteForm({ content: existing.content, tags: existing.tags });
+    } else {
+      setSelectedNote({
+        phone: appt.phone,
+        patientName: appt.patientName,
+        content: '',
+        tags: '',
+        updatedAt: new Date().toISOString(),
+      });
+      setNoteForm({ content: '', tags: '' });
+    }
+    setActiveTab('patients');
+  };
+
+  const createDirectPatientNote = async (phone: string, patientName: string, tags = '', content = ''): Promise<PatientNote | null> => {
+    setIsGlobalBusy(true);
+    try {
+      const data = await apiFetch<{ note: PatientNote }>('/api/admin/patients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, patientName, tags, content }),
+      });
+      setPatientNotes(prev => {
+        const filtered = prev.filter(n => n.phone !== phone);
+        return [data.note, ...filtered];
+      });
+      addToast({
+        type: 'success',
+        title: lang === 'pt' ? 'Ficha Criada' : lang === 'en' ? 'File Created' : 'Dossier Créé',
+        message: patientName,
+      });
+      return data.note;
+    } catch (err) {
+      addToast({
+        type: 'error',
+        title: lang === 'pt' ? 'Erro ao Criar Ficha' : lang === 'en' ? 'Creation Error' : 'Erreur Création Fiche',
+        message: (err as Error).message,
+      });
+      return null;
+    } finally {
+      setIsGlobalBusy(false);
+    }
   };
 
   const saveNote = async () => {
     if (!selectedNote) return;
     setSavingNote(true);
+    setIsGlobalBusy(true);
     try {
       const data = await apiFetch<{ note: PatientNote }>('/api/admin/patients', {
         method: 'POST',
@@ -338,76 +412,52 @@ export default function AdminPage() {
           tags: noteForm.tags,
         }),
       });
-      setPatientNotes(prev => prev.map(n => n.phone === data.note.phone ? data.note : n));
+      setPatientNotes(prev => {
+        const filtered = prev.filter(n => n.phone !== selectedNote.phone);
+        return [data.note, ...filtered];
+      });
       setSelectedNote(data.note);
-      showMsg(
-        'success',
-        lang === 'fr'
-          ? 'Note sauvegardée'
-          : lang === 'en'
-          ? 'Note saved'
-          : 'Nota guardada'
-      );
+      addToast({
+        type: 'success',
+        title: lang === 'pt' ? 'Ficha Guardada' : lang === 'en' ? 'File Saved' : 'Dossier Enregistré',
+        message: selectedNote.patientName,
+      });
     } catch (err) {
-      showMsg('error', (err as Error).message);
+      addToast({
+        type: 'error',
+        title: lang === 'pt' ? 'Erro ao Guardar Ficha' : lang === 'en' ? 'Save Error' : 'Erreur d\'Enregistrement',
+        message: (err as Error).message,
+      });
     } finally {
       setSavingNote(false);
+      setIsGlobalBusy(false);
     }
   };
 
   const deleteNote = async (phone: string) => {
+    setIsGlobalBusy(true);
     try {
       await apiFetch(`/api/admin/patients?phone=${encodeURIComponent(phone)}`, { method: 'DELETE' });
       setPatientNotes(prev => prev.filter(n => n.phone !== phone));
+      setPatientsList(prev => prev.filter(p => p.phone !== phone));
       if (selectedNote?.phone === phone) setSelectedNote(null);
-      showMsg(
-        'success',
-        lang === 'fr'
-          ? 'Note supprimée'
-          : lang === 'en'
-          ? 'Note deleted'
-          : 'Nota eliminada'
-      );
-    } catch (err) {
-      showMsg('error', (err as Error).message);
-    }
-  };
-
-  const createDirectPatientNote = async (phone: string, patientName: string, tags = '', content = '') => {
-    try {
-      const data = await apiFetch<{ note: PatientNote }>('/api/admin/patients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, patientName, content, tags }),
+      addToast({
+        type: 'success',
+        title: lang === 'pt' ? 'Ficha Eliminada' : lang === 'en' ? 'File Deleted' : 'Dossier Supprimé',
+        message: lang === 'pt' ? 'O processo clínico foi removido.' : lang === 'en' ? 'Patient file deleted.' : 'Dossier patient supprimé.',
       });
-      setPatientNotes(prev => [data.note, ...prev.filter(n => n.phone !== phone)]);
-      setSelectedNote(data.note);
-      setNoteForm({ content: data.note.content, tags: data.note.tags });
-      showMsg(
-        'success',
-        lang === 'fr'
-          ? 'Dossier patient créé'
-          : lang === 'en'
-          ? 'Patient file created'
-          : 'Ficha de doente criada'
-      );
-      return data.note;
     } catch (err) {
-      showMsg('error', (err as Error).message);
-      return null;
+      addToast({
+        type: 'error',
+        title: lang === 'pt' ? 'Erro ao Eliminar' : lang === 'en' ? 'Delete Error' : 'Erreur de Suppression',
+        message: (err as Error).message,
+      });
+    } finally {
+      setIsGlobalBusy(false);
     }
   };
 
-  const openPatientNote = async (appt: Appointment) => {
-    setActiveTab('patients');
-    const existing = patientNotes.find(n => n.phone === appt.phone);
-    if (existing) {
-      setSelectedNote(existing);
-      setNoteForm({ content: existing.content, tags: existing.tags });
-    } else {
-      await createDirectPatientNote(appt.phone, appt.patientName);
-    }
-  };
+
 
   // ── Computed ───────────────────────────────────────────────────────────────
   const filteredAppointments = useMemo(() => {
@@ -476,28 +526,13 @@ export default function AdminPage() {
 
   return (
     <div className="fixed inset-0 z-[9999] bg-[#FAFAF8] text-[#202020] flex flex-col overflow-hidden font-sans">
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {actionMsg && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, x: 20 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`fixed top-4 right-4 z-[999999] px-5 py-3 rounded-2xl font-mono text-sm font-semibold shadow-xl border ${
-              actionMsg.type === 'success'
-                ? 'bg-white border-[#C6A15B]/40 text-[#202020] shadow-[0_10px_30px_rgba(198,161,91,0.15)]'
-                : 'bg-white border-[#A9655F]/40 text-[#A9655F] shadow-[0_10px_30px_rgba(169,101,95,0.15)]'
-            }`}
-          >
-            {actionMsg.type === 'success' ? (
-              <span className="text-[#C6A15B] me-1.5 font-bold">✓</span>
-            ) : (
-              <span className="text-[#A9655F] me-1.5 font-bold">⚠</span>
-            )}
-            {actionMsg.text}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Global Luxury Gold Activity Progress Bar */}
+      <LuxuryProgressBar isLoading={isGlobalBusy || loadingAppointments || loadingSlots} />
+
+      {/* Luxury Real-time Toast Notifications */}
+      <LuxuryToastContainer toasts={toasts} onDismiss={dismissToast} />
+
+
 
       {/* Confirmation Dialog */}
       <AnimatePresence>
@@ -540,8 +575,8 @@ export default function AdminPage() {
       <AdminHeader
         lang={lang}
         toggleLang={toggleLang}
-        loadingAppointments={loadingAppointments}
-        onRefresh={fetchAppointments}
+        loadingAppointments={loadingAppointments || isGlobalBusy}
+        onRefresh={() => fetchAppointments(false)}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onLogout={handleLogout}
       />
@@ -621,6 +656,7 @@ export default function AdminPage() {
               appointments={appointments}
               setConfirmDialog={setConfirmDialog}
               createDirectPatientNote={createDirectPatientNote}
+              onActionToast={addToast}
             />
           )}
         </main>
