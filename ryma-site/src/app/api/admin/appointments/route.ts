@@ -20,7 +20,13 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search') ?? undefined;
 
   const appointments = await dbGetAppointments({ status, date, search });
-  return NextResponse.json({ appointments }, { status: 200 });
+  return NextResponse.json(
+    { appointments },
+    {
+      status: 200,
+      headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
+    }
+  );
 }
 
 // ─── POST /api/admin/appointments ───────────────────────────────────────────

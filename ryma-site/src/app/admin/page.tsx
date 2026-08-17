@@ -28,7 +28,7 @@ import { AddAppointmentModal } from '@/components/admin/AddAppointmentModal';
 import { LuxuryToastContainer, LuxuryProgressBar, LuxuryToast } from '@/components/admin/LuxuryFeedback';
 
 async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
-  const res = await fetch(url, { ...opts, credentials: 'same-origin' });
+  const res = await fetch(url, { ...opts, credentials: 'same-origin', cache: 'no-store' });
   if (res.status === 401) {
     window.location.href = '/admin/login';
     throw new Error('Sessão expirada. A redirecionar...');

@@ -7,6 +7,9 @@ import {
   dbDeletePatientRecord,
 } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET /api/admin/patients — list all structured patients & legacy notes
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
@@ -14,7 +17,13 @@ export async function GET(request: NextRequest) {
 
   const patients = await dbGetAllPatients();
   const notes = await dbGetAllPatientNotes();
-  return NextResponse.json({ patients, notes });
+  return NextResponse.json(
+    { patients, notes },
+    {
+      status: 200,
+      headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
+    }
+  );
 }
 
 // POST /api/admin/patients — upsert a structured patient record

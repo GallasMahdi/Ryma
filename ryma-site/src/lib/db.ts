@@ -14,7 +14,6 @@ function isTursoEnabled(): boolean {
 
 async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
   if (_tursoInitialized) return;
-  _tursoInitialized = true;
 
   try {
     // 1. Ensure tables exist
@@ -124,8 +123,47 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
     if (!apptColNames.includes('coverageNumber')) {
       await client.execute("ALTER TABLE appointments ADD COLUMN coverageNumber TEXT");
     }
+
+    _tursoInitialized = true;
+    await syncTursoToLocalSqlite(client);
   } catch (migErr) {
     console.warn('[Turso Migration Note]:', migErr);
+  }
+}
+
+async function syncTursoToLocalSqlite(client: LibSqlClient): Promise<void> {
+  try {
+    const tursoAppts = await client.execute('SELECT * FROM appointments');
+    const localDb = getDb();
+    const countRes = localDb.prepare('SELECT COUNT(*) as cnt FROM appointments').get() as { cnt: number };
+
+    if (tursoAppts.rows.length > 0 && countRes.cnt < tursoAppts.rows.length) {
+      const insertStmt = localDb.prepare(`
+        INSERT OR REPLACE INTO appointments
+        (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const row of tursoAppts.rows as any[]) {
+        insertStmt.run(
+          String(row.id),
+          String(row.patientName),
+          row.email ? String(row.email) : null,
+          String(row.phone),
+          String(row.service),
+          String(row.date),
+          String(row.startTime),
+          String(row.status),
+          row.notes ? String(row.notes) : null,
+          row.coverageType ? String(row.coverageType) : 'PARTICULAR',
+          row.coverageProvider ? String(row.coverageProvider) : null,
+          row.coverageNumber ? String(row.coverageNumber) : null,
+          String(row.createdAt),
+          String(row.updatedAt)
+        );
+      }
+    }
+  } catch (syncErr) {
+    console.warn('[Turso Initial Sync Warning]:', syncErr);
   }
 }
 
@@ -342,18 +380,46 @@ function initSchemaSync(db: Database.Database): void {
   }
 }
 
-// ─── Unified Async Query Abstraction with Automatic Fallback ──────────────────
+// ─── Unified Async Query Abstraction with Automatic Fallback & Dual-Write ─────
 async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]> {
+  const trimmed = sql.trim().toUpperCase();
+  const isWrite = trimmed.startsWith('INSERT') || trimmed.startsWith('UPDATE') || trimmed.startsWith('DELETE');
+
   if (isTursoEnabled()) {
-    try {
-      const client = getTursoClient();
-      await ensureTursoSchema(client);
-      const res = await client.execute({ sql, args });
-      return res.rows as unknown as T[];
-    } catch (tursoErr) {
-      console.error('[Turso Error - Falling back to local SQLite]:', tursoErr);
-      return executeSqliteQuery<T>(sql, args);
+    let rows: T[] | null = null;
+    let tursoSucceeded = false;
+
+    // Retry up to 2 times to handle transient HTTP socket/keep-alive disconnects
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const client = getTursoClient();
+        await ensureTursoSchema(client);
+        const res = await client.execute({ sql, args });
+        rows = res.rows as unknown as T[];
+        tursoSucceeded = true;
+        break;
+      } catch (tursoErr) {
+        console.warn(`[Turso Query Attempt ${attempt} Warning]:`, (tursoErr as Error).message);
+        _tursoClient = null; // Reset client instance to force fresh HTTP socket
+        if (attempt === 2) {
+          console.error('[Turso Max Retries Exceeded - Falling back to local SQLite]:', tursoErr);
+        }
+      }
     }
+
+    // Dual-write: Always mirror write operations (INSERT, UPDATE, DELETE) to local SQLite
+    if (isWrite) {
+      try {
+        executeSqliteQuery<T>(sql, args);
+      } catch (sqliteErr) {
+        console.warn('[Local SQLite Dual-Write Warning]:', sqliteErr);
+      }
+    }
+
+    if (tursoSucceeded && rows !== null) {
+      return rows;
+    }
+    return executeSqliteQuery<T>(sql, args);
   } else {
     return executeSqliteQuery<T>(sql, args);
   }
