@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES, Service } from '@/data/services';
@@ -8,13 +8,145 @@ import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { IconCheck, IconArrowLeft, IconArrowRight, IconClock, IconBrandWhatsapp } from '@tabler/icons-react';
+import {
+  IconCheck, IconArrowLeft, IconArrowRight, IconClock, IconBrandWhatsapp,
+  IconAlertCircle, IconX, IconUser, IconPhone, IconMail, IconLoader2,
+  IconCalendarX, IconWifi,
+} from '@tabler/icons-react';
 
 interface SlotInfo {
   time: string;
   available: boolean;
   reason: 'booked' | 'blocked' | 'sunday' | null;
   appointmentId: string | null;
+}
+
+// ── Enterprise Booking Toast System ────────────────────────────────────────────
+type BookingToastType = 'error' | 'success' | 'info' | 'loading';
+
+interface BookingToast {
+  id: string;
+  type: BookingToastType;
+  title: string;
+  message?: string;
+  field?: string; // which input field caused this error
+  duration?: number;
+}
+
+function BookingToastBanner({
+  toasts,
+  onDismiss,
+}: {
+  toasts: BookingToast[];
+  onDismiss: (id: string) => void;
+}) {
+  return (
+    <div className="fixed top-6 right-4 sm:right-6 z-[999999] flex flex-col gap-2.5 w-[calc(100vw-2rem)] sm:w-[380px] pointer-events-none">
+      <AnimatePresence mode="popLayout">
+        {toasts.map((toast) => (
+          <motion.div
+            key={toast.id}
+            layout
+            initial={{ opacity: 0, y: -28, x: 16, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 24, scale: 0.94 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="pointer-events-auto relative overflow-hidden rounded-2xl bg-white/98 backdrop-blur-2xl border shadow-[0_20px_50px_rgba(0,0,0,0.12)] flex items-start gap-3.5 p-4"
+            style={{
+              borderColor:
+                toast.type === 'error' ? 'rgba(169,101,95,0.25)' :
+                toast.type === 'success' ? 'rgba(111,143,114,0.25)' :
+                toast.type === 'loading' ? 'rgba(196,154,60,0.25)' :
+                'rgba(232,226,216,1)',
+            }}
+          >
+            {/* Animated gradient accent bar */}
+            <div
+              className="absolute top-0 left-0 right-0 h-[2.5px]"
+              style={{
+                background:
+                  toast.type === 'error'
+                    ? 'linear-gradient(90deg, #A9655F, #E8A0A0, #A9655F)'
+                    : toast.type === 'success'
+                    ? 'linear-gradient(90deg, #6F8F72, #C6A15B, #6F8F72)'
+                    : toast.type === 'loading'
+                    ? 'linear-gradient(90deg, #C6A15B, #E8D7B0, #C6A15B)'
+                    : 'linear-gradient(90deg, #9B793A, #C6A15B)',
+              }}
+            />
+
+            {/* Countdown progress bar (shrinks over toast duration) */}
+            {toast.type !== 'loading' && (
+              <motion.div
+                className="absolute bottom-0 left-0 h-[2px] origin-left"
+                style={{
+                  background:
+                    toast.type === 'error' ? 'rgba(169,101,95,0.4)' :
+                    toast.type === 'success' ? 'rgba(111,143,114,0.4)' :
+                    'rgba(196,154,60,0.4)',
+                }}
+                initial={{ scaleX: 1 }}
+                animate={{ scaleX: 0 }}
+                transition={{
+                  duration: (toast.duration ?? (toast.type === 'error' ? 5000 : 3500)) / 1000,
+                  ease: 'linear',
+                }}
+              />
+            )}
+
+            {/* Icon bubble */}
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border"
+              style={{
+                background:
+                  toast.type === 'error' ? 'rgba(169,101,95,0.12)' :
+                  toast.type === 'success' ? 'rgba(111,143,114,0.12)' :
+                  toast.type === 'loading' ? 'rgba(196,154,60,0.12)' :
+                  'rgba(155,121,58,0.12)',
+                color:
+                  toast.type === 'error' ? '#A9655F' :
+                  toast.type === 'success' ? '#6F8F72' :
+                  toast.type === 'loading' ? '#C49A3C' :
+                  '#9B793A',
+                borderColor:
+                  toast.type === 'error' ? 'rgba(169,101,95,0.25)' :
+                  toast.type === 'success' ? 'rgba(111,143,114,0.25)' :
+                  toast.type === 'loading' ? 'rgba(196,154,60,0.25)' :
+                  'rgba(155,121,58,0.25)',
+              }}
+            >
+              {toast.type === 'error' && <IconAlertCircle size={18} strokeWidth={2.5} />}
+              {toast.type === 'success' && <IconCheck size={18} strokeWidth={2.5} />}
+              {toast.type === 'loading' && <IconLoader2 size={18} className="animate-spin" strokeWidth={2.5} />}
+              {toast.type === 'info' && <IconAlertCircle size={18} strokeWidth={2.5} />}
+            </div>
+
+            {/* Text content */}
+            <div className="flex-1 min-w-0 pt-0.5">
+              <div className="font-serif font-bold text-sm text-[#1A1412] leading-tight">
+                {toast.title}
+              </div>
+              {toast.message && (
+                <div className="font-mono text-[11px] text-[#6B6058] mt-1 leading-relaxed">
+                  {toast.message}
+                </div>
+              )}
+            </div>
+
+            {/* Dismiss */}
+            {toast.type !== 'loading' && (
+              <button
+                onClick={() => onDismiss(toast.id)}
+                className="shrink-0 p-1 rounded-lg text-[#8A8078] hover:text-[#1A1412] hover:bg-[#F5EFE6] transition-colors"
+              >
+                <IconX size={14} />
+              </button>
+            )}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 // ── helpers ────────────────────────────────────────────────
@@ -96,6 +228,40 @@ export default function RendezVousPage() {
   });
   const [loading, setLoading] = useState(false);
 
+  // ── Enterprise Toast System ─────────────────────────────────────────────────
+  const [toasts, setToasts] = useState<BookingToast[]>([]);
+  const toastTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const showToast = useCallback((toast: Omit<BookingToast, 'id'>) => {
+    const id = 'bt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    setToasts(prev => [{ id, ...toast }, ...prev.slice(0, 3)]);
+    if (toast.type !== 'loading') {
+      const ms = toast.duration ?? (toast.type === 'error' ? 5000 : 3500);
+      toastTimers.current[id] = setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+        delete toastTimers.current[id];
+      }, ms);
+    }
+    return id;
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+    if (toastTimers.current[id]) {
+      clearTimeout(toastTimers.current[id]);
+      delete toastTimers.current[id];
+    }
+  }, []);
+
+  // Track which fields have errors for red-ring highlighting
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+
+  const markFieldError = useCallback((field: string) => {
+    setFieldErrors(prev => ({ ...prev, [field]: true }));
+    // Auto-clear highlight after 3 s so it doesn't stay red forever
+    setTimeout(() => setFieldErrors(prev => ({ ...prev, [field]: false })), 3000);
+  }, []);
+
   // Slots loaded from the real API
   const [availableSlots, setAvailableSlots] = useState<SlotInfo[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -126,6 +292,16 @@ export default function RendezVousPage() {
     }
   }, [selectedDate, fetchSlots]);
 
+  // Ref to the booking wizard section — used to scroll into view on step changes
+  const bookingRef = useRef<HTMLElement>(null);
+
+  // Scroll the booking wizard into view on every step transition
+  useEffect(() => {
+    if (!bookingRef.current) return;
+    const top = bookingRef.current.getBoundingClientRect().top + window.scrollY - 90; // 90px offset for fixed nav
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [step]);
+
   const [slotError, setSlotError] = useState<string | null>(null);
 
   // Generate calendar data
@@ -144,17 +320,106 @@ export default function RendezVousPage() {
 
   const handleSubmit = async () => {
     if (!selectedService || !selectedDate || !selectedSlot) return;
+
+    // ── Client-side field validation with per-field toast ──────────────────────
+    const nameTrimmed = form.name.trim();
+    const phoneTrimmed = form.phone.trim();
+    const emailTrimmed = form.email.trim();
+
+    if (!nameTrimmed || nameTrimmed.length < 2) {
+      markFieldError('name');
+      showToast({
+        type: 'error',
+        title:
+          lang === 'pt' ? 'Nome obrigatório' :
+          lang === 'en' ? 'Name required' :
+          'Nom requis',
+        message:
+          lang === 'pt' ? 'Por favor, introduza o seu nome completo (mínimo 2 caracteres).' :
+          lang === 'en' ? 'Please enter your full name (at least 2 characters).' :
+          'Veuillez saisir votre nom complet (2 caractères minimum).',
+        field: 'name',
+      });
+      return;
+    }
+
+    if (!phoneTrimmed) {
+      markFieldError('phone');
+      showToast({
+        type: 'error',
+        title:
+          lang === 'pt' ? 'Telefone obrigatório' :
+          lang === 'en' ? 'Phone required' :
+          'Téléphone requis',
+        message:
+          lang === 'pt' ? 'Introduza o seu número de telefone para confirmar a marcação.' :
+          lang === 'en' ? 'Enter your phone number to confirm your booking.' :
+          'Veuillez entrer votre numéro de téléphone pour confirmer le rendez-vous.',
+        field: 'phone',
+      });
+      return;
+    }
+
+    // Basic phone format sanity check (must have at least 7 digits)
+    const digitsOnly = phoneTrimmed.replace(/\D/g, '');
+    if (digitsOnly.length < 7) {
+      markFieldError('phone');
+      showToast({
+        type: 'error',
+        title:
+          lang === 'pt' ? 'Telefone inválido' :
+          lang === 'en' ? 'Invalid phone number' :
+          'Numéro invalide',
+        message:
+          lang === 'pt' ? 'O número de telefone parece inválido. Exemplo: +351 912 345 678' :
+          lang === 'en' ? 'The phone number looks invalid. Example: +351 912 345 678' :
+          'Le numéro de téléphone semble invalide. Exemple: +351 912 345 678',
+        field: 'phone',
+      });
+      return;
+    }
+
+    // Email format check (if filled)
+    if (emailTrimmed) {
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed);
+      if (!emailOk) {
+        markFieldError('email');
+        showToast({
+          type: 'error',
+          title:
+            lang === 'pt' ? 'Email inválido' :
+            lang === 'en' ? 'Invalid email' :
+            'Email invalide',
+          message:
+            lang === 'pt' ? 'O formato do email não é válido. Exemplo: nome@exemplo.pt' :
+            lang === 'en' ? 'Invalid email format. Example: name@example.com' :
+            'Format email invalide. Exemple: nom@exemple.fr',
+          field: 'email',
+        });
+        return;
+      }
+    }
+
     setLoading(true);
     setSlotError(null);
+
+    // Loading toast
+    const loadingToastId = showToast({
+      type: 'loading',
+      title:
+        lang === 'pt' ? 'A confirmar a sua marcação…' :
+        lang === 'en' ? 'Confirming your booking…' :
+        'Confirmation en cours…',
+    });
 
     try {
       const res = await fetch('/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          patientName: form.name,
-          phone: form.phone,
-          email: form.email || undefined,
+          patientName: nameTrimmed,
+          phone: phoneTrimmed,
+          email: emailTrimmed || undefined,
           notes: form.notes || undefined,
           coverageType: form.coverageType,
           coverageProvider: form.coverageProvider || undefined,
@@ -166,37 +431,104 @@ export default function RendezVousPage() {
 
       const data = await res.json().catch(() => ({}));
 
+      // Dismiss loading toast
+      dismissToast(loadingToastId);
+
       if (!res.ok) {
         if (data.error === 'slot_taken' || data.error === 'slot_blocked') {
-          setSlotError(
-            lang === 'pt'
-              ? 'Este horário acabou de ser reservado por outro cliente. Por favor, escolha outro horário.'
-              : lang === 'en'
-              ? 'This slot was just booked by someone else. Please select another time.'
-              : "Ce créneau vient tout juste d'être réservé par une autre personne. Veuillez sélectionner un autre horaire."
-          );
+          setSlotError(null);
+          showToast({
+            type: 'error',
+            title:
+              lang === 'pt' ? 'Horário já reservado' :
+              lang === 'en' ? 'Slot no longer available' :
+              'Créneau non disponible',
+            message:
+              lang === 'pt' ? 'Este horário acabou de ser reservado. Iremos mostrar os horários disponíveis.' :
+              lang === 'en' ? 'This slot was just taken. We will show you the available slots.' :
+              'Ce créneau vient d\u2019être réservé. Nous affichons les créneaux disponibles.',
+            duration: 5000,
+          });
           setSelectedSlot(null);
-          // Refresh slots to get latest availability
           await fetchSlots(selectedDate);
           setStep(3);
+        } else if (res.status === 429) {
+          showToast({
+            type: 'error',
+            title:
+              lang === 'pt' ? 'Demasiadas tentativas' :
+              lang === 'en' ? 'Too many attempts' :
+              'Trop de tentatives',
+            message:
+              lang === 'pt' ? 'Aguarde um momento antes de tentar novamente.' :
+              lang === 'en' ? 'Please wait a moment before trying again.' :
+              'Veuillez patienter avant de réessayer.',
+            duration: 6000,
+          });
         } else {
-          setSlotError(data.error ?? (lang === 'pt' ? 'Erro no agendamento. Tente novamente.' : lang === 'en' ? 'Booking error. Please try again.' : 'Erreur de réservation. Réessayez.'));
+          showToast({
+            type: 'error',
+            title:
+              lang === 'pt' ? 'Erro no agendamento' :
+              lang === 'en' ? 'Booking error' :
+              'Erreur de réservation',
+            message: data.error ?? (
+              lang === 'pt' ? 'Ocorreu um erro. Por favor tente novamente.' :
+              lang === 'en' ? 'An error occurred. Please try again.' :
+              'Une erreur est survenue. Veuillez réessayer.'
+            ),
+            duration: 5000,
+          });
         }
         return;
       }
 
+      // Success toast
+      showToast({
+        type: 'success',
+        title:
+          lang === 'pt' ? 'Marcação confirmada! 🎉' :
+          lang === 'en' ? 'Booking confirmed! 🎉' :
+          'Rendez-vous confirmé ! 🎉',
+        message:
+          lang === 'pt' ? `${selectedService.name.pt ?? selectedService.name.fr} — ${selectedDate} às ${selectedSlot}` :
+          lang === 'en' ? `${selectedService.name.en ?? selectedService.name.fr} — ${selectedDate} at ${selectedSlot}` :
+          `${selectedService.name.fr} — ${selectedDate} à ${selectedSlot}`,
+        duration: 6000,
+      });
+
       setStep(5);
     } catch {
-      setSlotError(lang === 'pt' ? 'Erro de rede. Tente novamente.' : lang === 'en' ? 'Network error. Please try again.' : 'Erreur réseau. Réessayez.');
+      dismissToast(loadingToastId);
+      showToast({
+        type: 'error',
+        title:
+          lang === 'pt' ? 'Erro de ligação' :
+          lang === 'en' ? 'Connection error' :
+          'Erreur de connexion',
+        message:
+          lang === 'pt' ? 'Verifique a sua ligação à internet e tente novamente.' :
+          lang === 'en' ? 'Check your internet connection and try again.' :
+          'Vérifiez votre connexion Internet et réessayez.',
+        duration: 5000,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClass = "w-full bg-white border border-[#D4CEBE] text-[#1A1412] placeholder-[#8A8078] rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C]/40 transition-colors shadow-sm";
+  const inputClass = "w-full bg-white border text-[#1A1412] placeholder-[#8A8078] rounded-xl px-4 py-3.5 text-sm focus:outline-none transition-all shadow-sm";
+  const inputCls = (field: string) =>
+    `${inputClass} ${
+      fieldErrors[field]
+        ? 'border-[#A9655F] ring-2 ring-[#A9655F]/30 focus:border-[#A9655F] focus:ring-[#A9655F]/30'
+        : 'border-[#D4CEBE] focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C]/40'
+    }`;
 
   return (
     <>
+      {/* ── Enterprise Toast Banner ────────────────────────────────────────── */}
+      <BookingToastBanner toasts={toasts} onDismiss={dismissToast} />
       {/* ── Hero ─────────────────────────────────────── */}
       <section className="pt-28 pb-8 text-center bg-gradient-to-b from-[#FDF9F2] to-[#FAFAF8]">
         <div className="mx-auto max-w-2xl px-6">
@@ -210,8 +542,8 @@ export default function RendezVousPage() {
         </div>
       </section>
 
-      {/* ── Booking Wizard ───────────────────────────── */}
-      <section className="py-8 pb-24 bg-[#FAFAF8] min-h-[60vh]">
+      {/* ── Booking Wizard ────────────────────────────────────────── */}
+      <section ref={bookingRef} className="py-8 pb-24 bg-[#FAFAF8] min-h-[60vh]">
         <div className="mx-auto max-w-3xl px-6 md:px-12">
           <StepIndicator step={step} lang={lang} />
 
@@ -469,11 +801,10 @@ export default function RendezVousPage() {
                       <input
                         id="booking-name"
                         type="text"
-                        required
                         value={form.name}
-                        onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                        onChange={e => { setForm(p => ({ ...p, name: e.target.value })); if (fieldErrors.name) setFieldErrors(p => ({ ...p, name: false })); }}
                         placeholder={lang === 'pt' ? 'O seu nome completo' : lang === 'en' ? 'Your full name' : 'Votre nom complet'}
-                        className={inputClass}
+                        className={inputCls('name')}
                       />
                     </div>
                     <div>
@@ -483,11 +814,10 @@ export default function RendezVousPage() {
                       <input
                         id="booking-phone"
                         type="tel"
-                        required
                         value={form.phone}
-                        onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                        onChange={e => { setForm(p => ({ ...p, phone: e.target.value })); if (fieldErrors.phone) setFieldErrors(p => ({ ...p, phone: false })); }}
                         placeholder="+351 9XX XXX XXX"
-                        className={inputClass}
+                        className={inputCls('phone')}
                       />
                     </div>
                   </div>
@@ -500,9 +830,9 @@ export default function RendezVousPage() {
                       id="booking-email"
                       type="email"
                       value={form.email}
-                      onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                      onChange={e => { setForm(p => ({ ...p, email: e.target.value })); if (fieldErrors.email) setFieldErrors(p => ({ ...p, email: false })); }}
                       placeholder={lang === 'pt' ? 'seu.email@exemplo.pt' : lang === 'en' ? 'your.email@example.com' : 'votre@email.com'}
-                      className={inputClass}
+                      className={inputCls('email')}
                     />
                   </div>
 

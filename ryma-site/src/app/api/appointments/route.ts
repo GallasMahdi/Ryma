@@ -2,21 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbCreateAppointment, dbCheckRateLimit, dbRecordRateLimitAttempt } from '@/lib/db';
 import { validateAppointmentInput, getClientIp } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 /**
  * POST /api/appointments
  * Public endpoint — creates a patient-facing appointment request.
  *
  * Protected by:
- *  - IP rate limiting (5 bookings per IP per hour)
+ *  - Per-phone rate limiting (3 bookings per phone number per hour)
+ *  - IP rate limiting (20 bookings per IP per hour — generous to handle Vercel shared IPs)
  *  - Server-side input validation
  *  - DB-level UNIQUE(date, startTime) constraint for atomic double-booking prevention
  */
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
 
-  // Rate limit: 5 bookings per IP per hour
-  const allowed = await dbCheckRateLimit(ip, 'booking', 5, 60 * 60);
-  if (!allowed) {
+  // IP-level rate limit: raised to 20/hour to avoid false 429s from Vercel shared reverse-proxy IPs.
+  // A real patient rarely books more than 1-2 appointments per hour, so the per-phone
+  // check below is the actual meaningful guard against abuse.
+  const ipAllowed = await dbCheckRateLimit(ip, 'booking_ip', 20, 60 * 60);
+  if (!ipAllowed) {
     return NextResponse.json(
       { error: 'Trop de demandes. Veuillez réessayer plus tard.' },
       { status: 429 }
@@ -36,8 +42,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: validation.error }, { status: 422 });
   }
 
-  // Record attempt for rate limiting
-  await dbRecordRateLimitAttempt(ip, 'booking');
+  // Per-phone rate limit: 3 bookings per phone number per hour.
+  // This is the real abuse prevention that is independent of shared IPs.
+  const phone = String(body.phone ?? '').trim();
+  const phoneAllowed = await dbCheckRateLimit(`phone:${phone}`, 'booking_phone', 3, 60 * 60);
+  if (!phoneAllowed) {
+    return NextResponse.json(
+      { error: 'Vous avez déjà effectué plusieurs réservations. Veuillez patienter avant d\'en faire une nouvelle.' },
+      { status: 429 }
+    );
+  }
+
+  // Record both rate limit counters
+  await dbRecordRateLimitAttempt(ip, 'booking_ip');
+  await dbRecordRateLimitAttempt(`phone:${phone}`, 'booking_phone');
 
   const result = await dbCreateAppointment({
     patientName:      String(body.patientName).trim().slice(0, 100),

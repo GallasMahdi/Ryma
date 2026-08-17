@@ -179,6 +179,31 @@ function getTursoClient(): LibSqlClient {
   return _tursoClient;
 }
 
+/**
+ * Executes a query ONLY against Turso, with a single retry on socket failure.
+ * NEVER falls back to local SQLite. Used for critical booking conflict checks
+ * and INSERTs that must be authoritative. Falls back only if Turso is not
+ * configured (local dev without Turso credentials).
+ */
+async function executeTursoDirectly<T = any>(sql: string, args: any[] = []): Promise<T[]> {
+  if (!isTursoEnabled()) {
+    return executeSqliteQuery<T>(sql, args);
+  }
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const client = getTursoClient();
+      await ensureTursoSchema(client);
+      const res = await client.execute({ sql, args });
+      return res.rows as unknown as T[];
+    } catch (err) {
+      _tursoClient = null;
+      if (attempt === 2) throw err;
+    }
+  }
+  throw new Error('Turso unreachable after 2 attempts');
+}
+
 // ─── Local SQLite Fallback Engine ─────────────────────────────────────────────
 function resolveDbPath(): string {
   const isProd = process.env.NODE_ENV === 'production';
@@ -483,20 +508,24 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
   const phoneValidation = validateAndNormalizePhone(input.phone);
   const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.phone.trim();
 
-  const blockedRows = await executeQuery('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [
+  // Use executeTursoDirectly for ALL booking-critical reads/writes.
+  // This guarantees we always query the authoritative Turso database and never
+  // a stale or empty local SQLite (which would cause false 'slot_taken' errors
+  // in Vercel serverless where local SQLite is ephemeral and empty).
+  const blockedRows = await executeTursoDirectly('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [
     input.date,
     input.startTime,
   ]);
   if (blockedRows.length > 0) return { success: false, error: 'slot_blocked' };
 
-  const conflictRows = await executeQuery(
+  const conflictRows = await executeTursoDirectly(
     "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'",
     [input.date, input.startTime]
   );
   if (conflictRows.length > 0) return { success: false, error: 'slot_taken' };
 
   try {
-    await executeQuery(
+    await executeTursoDirectly(
       `INSERT INTO appointments
         (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, ?)`,
@@ -517,7 +546,17 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
       ]
     );
 
-    const rows = await executeQuery<Appointment>('SELECT * FROM appointments WHERE id = ?', [id]);
+    // Mirror the new appointment to local SQLite for consistency (best-effort)
+    try {
+      executeSqliteQuery(
+        `INSERT OR REPLACE INTO appointments
+          (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, ?)`,
+        [id, input.patientName, input.email ?? null, normalizedPhone, input.service, input.date, input.startTime, input.notes ?? null, input.coverageType ?? 'PARTICULAR', input.coverageProvider ?? null, input.coverageNumber ?? null, now, now]
+      );
+    } catch { /* silent — local SQLite is only a mirror */ }
+
+    const rows = await executeTursoDirectly<Appointment>('SELECT * FROM appointments WHERE id = ?', [id]);
     const appointment = rows[0];
 
     await dbUpsertPatient({
