@@ -442,7 +442,7 @@ export function SlotsTab({
                     {lang === 'pt' ? 'Manhã (08:00 – 12:30)' : lang === 'en' ? 'Morning (08:00 – 12:30)' : 'Matin (08:00 – 12:30)'}
                   </h4>
                   <span className="text-[11px] text-[#64748B]">
-                    {morningSlots.filter(s => s.available && s.reason !== 'blocked').length} livres • {morningSlots.filter(s => !s.available && s.reason === 'booked').length} ocupados
+                    {morningSlots.filter(s => s.available && s.reason !== 'blocked').length} {lang === 'pt' ? 'livres' : lang === 'en' ? 'available' : 'libres'} • {morningSlots.filter(s => !s.available && s.reason === 'booked').length} {lang === 'pt' ? 'ocupados' : lang === 'en' ? 'booked' : 'réservés'}
                   </span>
                 </div>
 
@@ -458,7 +458,7 @@ export function SlotsTab({
                     {lang === 'pt' ? 'Tarde (14:00 – 18:30)' : lang === 'en' ? 'Afternoon (14:00 – 18:30)' : 'Après-midi (14:00 – 18:30)'}
                   </h4>
                   <span className="text-[11px] text-[#64748B]">
-                    {afternoonSlots.filter(s => s.available && s.reason !== 'blocked').length} livres • {afternoonSlots.filter(s => !s.available && s.reason === 'booked').length} ocupados
+                    {afternoonSlots.filter(s => s.available && s.reason !== 'blocked').length} {lang === 'pt' ? 'livres' : lang === 'en' ? 'available' : 'libres'} • {afternoonSlots.filter(s => !s.available && s.reason === 'booked').length} {lang === 'pt' ? 'ocupados' : lang === 'en' ? 'booked' : 'réservés'}
                   </span>
                 </div>
 

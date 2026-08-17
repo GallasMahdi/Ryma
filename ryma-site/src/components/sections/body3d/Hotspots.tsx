@@ -73,7 +73,7 @@ const ZoneHitbox = memo(function ZoneHitbox({
         <meshBasicMaterial
           transparent
           opacity={isHovered ? 0.12 : isActive ? 0.05 : 0}
-          color={theme === 'cyber' ? '#38BDF8' : '#2563EB'}
+          color={theme === 'cyber' ? '#E8C97A' : '#C49A3C'}
           depthWrite={false}
         />
       </mesh>

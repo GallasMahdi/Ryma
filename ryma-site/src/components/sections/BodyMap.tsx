@@ -56,16 +56,18 @@ interface MapPoint {
   spec?: { comfort: number; speed: number; precision: number };
 }
 
-/* ── Design tokens ── */
-const NAVY   = '#0F172A';
-const SLATE  = '#475569';
-const BLUE   = '#2563EB';
-const EMERALD = '#059669';
-const BORDER = '#E2E8F0';
-const SURFACE = '#F8FAFC';
-const WHITE  = '#FFFFFF';
+/* ── Design tokens (Ultra Luxury Champagne Gold & Obsidian Slate) ── */
+const NAVY    = '#1A1412';
+const SLATE   = '#6B6058';
+const GOLD    = '#C49A3C';
+const GOLD_LIGHT = '#F5E9C8';
+const GOLD_ACCENT = '#9A7428';
+const EMERALD = '#15803D';
+const BORDER  = '#E8E2D8';
+const SURFACE = '#FDFBF7';
+const WHITE   = '#FFFFFF';
 
-/* Zone system — uniform medical blue accent on all zones */
+/* Zone system — uniform medical gold accent on all zones */
 const ZONE_ICONS: Record<BodyZone, React.ReactNode> = {
   all:   <IconBodyScan size={13} />,
   torso: <IconLungs size={13} />,
@@ -137,7 +139,7 @@ function Chip({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+      className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] focus-visible:ring-offset-1"
       style={
         active
           ? {
@@ -153,7 +155,7 @@ function Chip({
       }
     >
       {icon && (
-        <span style={{ color: active ? WHITE : BLUE }} aria-hidden="true">
+        <span style={{ color: active ? WHITE : GOLD }} aria-hidden="true">
           {icon}
         </span>
       )}
@@ -162,8 +164,8 @@ function Chip({
         <span
           className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold"
           style={{
-            background: active ? 'rgba(255,255,255,0.2)' : '#EFF6FF',
-            color: active ? WHITE : BLUE,
+            background: active ? 'rgba(255,255,255,0.2)' : GOLD_LIGHT,
+            color: active ? WHITE : GOLD_ACCENT,
           }}
         >
           {count}
@@ -200,7 +202,7 @@ function LuxuryZoneSegment({
 }) {
   return (
     <div
-      className="w-full max-w-3xl mx-auto p-1.5 rounded-2xl bg-white border border-slate-200 shadow-lg shadow-slate-900/5 backdrop-blur-xl flex items-center justify-between gap-1 overflow-x-auto"
+      className="w-full max-w-3xl mx-auto p-1.5 rounded-2xl bg-white/95 border border-[#C49A3C]/30 shadow-[0_8px_30px_rgba(196,154,60,0.1)] backdrop-blur-xl flex items-center justify-between gap-1 overflow-x-auto"
       style={{ scrollbarWidth: 'none' }}
       role="group"
       aria-label="Zones anatomiques"
@@ -212,26 +214,26 @@ function LuxuryZoneSegment({
             key={z}
             type="button"
             onClick={() => onZoneChange(z)}
-            className={`relative flex-1 min-w-[120px] py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-              isSelected ? 'text-white' : 'text-slate-600 hover:text-slate-900'
+            className={`relative flex-1 min-w-[120px] py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
+              isSelected ? 'text-white' : 'text-[#6B6058] hover:text-[#1A1412]'
             }`}
           >
             {isSelected && (
               <motion.div
                 layoutId="activeZonePill"
-                className="absolute inset-0 rounded-xl bg-slate-900 shadow-md"
+                className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#1A1412] to-[#2B2320] shadow-md border border-[#C49A3C]/40"
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
             <span className="relative z-10 flex items-center gap-1.5">
-              <span className={isSelected ? 'text-blue-400' : 'text-blue-600'}>
+              <span className={isSelected ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}>
                 {ZONE_ICONS[z]}
               </span>
               <span>{ZONE_LABELS[z][lang]}</span>
               {zoneCounts[z] > 0 && (
                 <span
                   className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-blue-600'
+                    isSelected ? 'bg-white/20 text-[#F5E9C8]' : 'bg-[#FAF6EE] text-[#9A7428] border border-[#C49A3C]/20'
                   }`}
                 >
                   {zoneCounts[z]}
@@ -267,13 +269,13 @@ function GoalFilterBar({
             key={g.id}
             type="button"
             onClick={() => onGoalChange(g.id)}
-            className={`px-3.5 py-2 rounded-full text-xs font-medium flex items-center gap-1.5 border transition-all duration-200 ${
+            className={`px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 border transition-all duration-200 ${
               isSel
-                ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/20'
-                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] border-[#9A7428] text-white shadow-md shadow-[#C49A3C]/20'
+                : 'bg-white border-[#E8E2D8] text-[#6B6058] hover:border-[#C49A3C]/50 hover:bg-[#FDFBF7] hover:text-[#1A1412]'
             }`}
           >
-            <span className={isSel ? 'text-white' : 'text-blue-600'}>{g.icon}</span>
+            <span className={isSel ? 'text-white' : 'text-[#C49A3C]'}>{g.icon}</span>
             <span>{g.label[lang] || g.label.pt || g.label.fr}</span>
           </button>
         );
@@ -297,23 +299,20 @@ function StatCell({
 }) {
   return (
     <div
-      className="flex flex-col gap-1 py-4 px-4 rounded-xl"
-      style={{ background: SURFACE, border: `1px solid ${BORDER}` }}
+      className="flex flex-col gap-1 py-3.5 px-3.5 rounded-2xl bg-[#FDFBF7] border border-[#E8E2D8] shadow-2xs"
     >
       <span
-        className="text-[10px] font-semibold uppercase tracking-wider"
-        style={{ color: SLATE }}
+        className="text-[10px] font-semibold uppercase tracking-wider text-[#8A8078]"
       >
         {label}
       </span>
       <span
-        className="text-xl font-bold font-mono leading-tight"
-        style={{ color: NAVY }}
+        className="text-lg font-bold font-mono leading-tight text-[#1A1412]"
       >
         {value}
       </span>
       {sub && (
-        <span className="text-[11px]" style={{ color: SLATE }}>
+        <span className="text-[10px] text-[#8A8078]">
           {sub}
         </span>
       )}
@@ -338,11 +337,10 @@ function Accordion({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between py-3 text-sm font-medium text-left focus-visible:outline-none"
-        style={{ color: SLATE }}
+        className="w-full flex items-center justify-between py-3 text-sm font-semibold text-left focus-visible:outline-none text-[#6B6058] hover:text-[#1A1412] transition-colors"
       >
         <span>{label}</span>
-        <span style={{ color: SLATE }}>
+        <span className="text-[#9A7428]">
           {open ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
         </span>
       </button>
@@ -400,17 +398,12 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
       role="region"
       aria-live="polite"
       aria-labelledby={`${panelId}-name`}
-      className="flex flex-col overflow-hidden rounded-2xl max-h-full"
-      style={{
-        background: WHITE,
-        border: `1px solid ${BORDER}`,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)',
-      }}
+      className="flex flex-col overflow-hidden rounded-3xl max-h-full bg-white border border-[#E8E2D8] shadow-[0_12px_40px_rgba(196,154,60,0.12)]"
     >
-      {/* Medical blue accent line */}
-      <div style={{ height: 3, background: BLUE, flexShrink: 0 }} />
+      {/* Luxury gold champagne accent gradient line */}
+      <div className="h-1 bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#9A7428] shrink-0" />
 
-      {/* Scrollable body — flex-1 works once parent has a constrained height */}
+      {/* Scrollable body */}
       <div className="overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
         <div className="p-6 pb-0">
 
@@ -418,34 +411,27 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
           <div className="flex items-start justify-between gap-3 mb-5">
             <div className="flex-1 min-w-0">
               {/* Badges row */}
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <div className="flex items-center gap-2 mb-2.5 flex-wrap">
                 <span
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
-                  style={{
-                    background: isKine ? '#EFF6FF' : '#FDF4FF',
-                    color: isKine ? '#1D4ED8' : '#7E22CE',
-                    border: `1px solid ${isKine ? '#BFDBFE' : '#E9D5FF'}`,
-                  }}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${
+                    isKine
+                      ? 'bg-[#F5E9C8] text-[#9A7428] border border-[#C49A3C]/30'
+                      : 'bg-[#FDFAF4] text-[#C49A3C] border border-[#C49A3C]/30'
+                  }`}
                 >
                   {poleBadgeLabel}
                 </span>
                 <span
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium"
-                  style={{
-                    background: SURFACE,
-                    color: SLATE,
-                    border: `1px solid ${BORDER}`,
-                  }}
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold bg-[#FDFBF7] text-[#6B6058] border border-[#E8E2D8]"
                 >
-                  <IconMapPin size={9} aria-hidden="true" />
+                  <IconMapPin size={10} className="text-[#C49A3C]" aria-hidden="true" />
                   {getLocalizedText(point.label, lang)}
                 </span>
               </div>
 
               <h3
                 id={`${panelId}-name`}
-                className="font-serif text-xl font-bold leading-snug"
-                style={{ color: NAVY }}
+                className="font-serif text-2xl font-bold leading-tight text-[#1A1412]"
               >
                 {getLocalizedText(service.name, lang)}
               </h3>
@@ -456,8 +442,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
               type="button"
               onClick={onClose}
               aria-label={lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer'}
-              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              style={{ color: SLATE, background: SURFACE, border: `1px solid ${BORDER}` }}
+              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-[#FAF6EE] border border-[#E8E2D8] text-[#6B6058] hover:text-[#1A1412] hover:bg-[#F5E9C8] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C]"
             >
               <IconX size={15} />
             </button>
@@ -466,23 +451,23 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
           {/* Key metrics */}
           <div className="grid grid-cols-3 gap-2.5 mb-5">
             <StatCell
-              label={lang === 'pt' ? 'Por sessão' : lang === 'en' ? 'Per Session' : 'Par séance'}
-              value={<>{service.price} <span className="text-sm font-normal">{t.common.currency}</span></>}
+              label={lang === 'pt' ? 'Valor' : lang === 'en' ? 'Rate' : 'Tarif'}
+              value={<span className="text-[#C49A3C]">{service.price} <span className="text-sm font-medium text-[#8A8078]">{t.common.currency}</span></span>}
             />
             <StatCell
               label={lang === 'pt' ? 'Duração' : lang === 'en' ? 'Duration' : 'Durée'}
-              value={service.duration}
-              sub={<span className="flex items-center gap-1"><IconClock size={10} />{lang === 'pt' ? 'por sessão' : lang === 'en' ? 'per session' : 'par session'}</span>}
+              value={<span className="text-[#1A1412]">{service.duration}</span>}
+              sub={<span className="flex items-center gap-1 text-[#8A8078]"><IconClock size={10} className="text-[#C49A3C]" />{lang === 'pt' ? 'por sessão' : lang === 'en' ? 'per session' : 'par session'}</span>}
             />
             <StatCell
               label={lang === 'pt' ? 'Seguro / ADSE' : lang === 'en' ? 'Insurance' : 'Mutuelle / Assur.'}
               value={
                 isKine ? (
-                  <span className="text-sm font-semibold" style={{ color: EMERALD }}>
+                  <span className="text-xs font-bold text-[#15803D]">
                     {lang === 'pt' ? 'Elegível p/ Recibo' : lang === 'en' ? 'Receipt Provided' : 'Reçu délivré'}
                   </span>
                 ) : (
-                  <span className="text-sm font-medium" style={{ color: SLATE }}>
+                  <span className="text-xs font-semibold text-[#8A8078]">
                     {lang === 'pt' ? 'Regime Privado' : lang === 'en' ? 'Private Care' : 'Soin Privé'}
                   </span>
                 )
@@ -492,28 +477,25 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
 
           {/* Short description */}
           <p
-            className="text-sm leading-relaxed mb-5"
-            style={{ color: SLATE }}
+            className="text-sm leading-relaxed mb-5 text-[#6B6058]"
           >
             {getLocalizedText(service.shortDesc, lang)}
           </p>
 
           {/* Indications — clean checklist */}
           {getLocalizedList(service.indications, lang).length > 0 && (
-            <div className="mb-5">
+            <div className="mb-5 bg-[#FDFBF7] p-4 rounded-2xl border border-[#E8E2D8]">
               <h4
-                className="text-xs font-semibold uppercase tracking-wider mb-3"
-                style={{ color: NAVY }}
+                className="text-xs font-bold uppercase tracking-widest mb-3 text-[#9A7428]"
               >
                 {t.servicePage.indicationsTitle}
               </h4>
               <ul className="space-y-2">
                 {getLocalizedList(service.indications, lang).map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm" style={{ color: SLATE }}>
+                  <li key={i} className="flex items-start gap-2.5 text-xs text-[#332D28]">
                     <IconCheck
                       size={14}
-                      className="mt-0.5 shrink-0"
-                      style={{ color: EMERALD }}
+                      className="mt-0.5 shrink-0 text-[#C49A3C]"
                     />
                     <span>{item}</span>
                   </li>
@@ -524,23 +506,21 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
 
           {/* Protocol steps */}
           {getLocalizedList(service.sessionFlow, lang).length > 0 && (
-            <div className="mb-5">
+            <div className="mb-5 bg-white p-4 rounded-2xl border border-[#E8E2D8]">
               <h4
-                className="text-xs font-semibold uppercase tracking-wider mb-3"
-                style={{ color: NAVY }}
+                className="text-xs font-bold uppercase tracking-widest mb-3 text-[#1A1412]"
               >
                 {t.servicePage.sessionTitle}
               </h4>
-              <ol className="space-y-2">
+              <ol className="space-y-2.5">
                 {getLocalizedList(service.sessionFlow, lang).map((step, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span
-                      className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
-                      style={{ background: '#EFF6FF', color: BLUE }}
+                      className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5 bg-[#F5E9C8] text-[#9A7428]"
                     >
                       {i + 1}
                     </span>
-                    <span className="text-sm leading-relaxed" style={{ color: SLATE }}>
+                    <span className="text-xs leading-relaxed text-[#4A4540]">
                       {step}
                     </span>
                   </li>
@@ -555,13 +535,12 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
               <Accordion
                 label={`${t.servicePage.contraindicationsTitle} (${getLocalizedList(service.contraindications, lang).length})`}
               >
-                <ul className="space-y-2">
+                <ul className="space-y-2 pt-1">
                   {getLocalizedList(service.contraindications, lang).map((item, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm" style={{ color: SLATE }}>
+                    <li key={i} className="flex items-start gap-2.5 text-xs text-[#6B6058]">
                       <IconBan
                         size={13}
-                        className="mt-0.5 shrink-0"
-                        style={{ color: '#EF4444' }}
+                        className="mt-0.5 shrink-0 text-[#A9655F]"
                       />
                       <span>{item}</span>
                     </li>
@@ -572,19 +551,15 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
           )}
         </div>
 
-        {/* CTA — always at bottom of card, not sticky (avoids sticky-in-scroll issues) */}
+        {/* CTA */}
         <div
-          className="p-5"
-          style={{
-            background: WHITE,
-            borderTop: `1px solid ${BORDER}`,
-          }}
+          className="p-5 bg-white border-t border-[#E8E2D8]"
         >
           <div className="flex flex-col sm:flex-row gap-2.5">
             <Button
               href="/rendez-vous"
               variant="primary"
-              className="flex-1 justify-center py-3"
+              className="flex-1 justify-center py-3 shadow-[0_4px_20px_rgba(196,154,60,0.25)]"
             >
               <IconCalendarPlus size={15} className="me-2" aria-hidden="true" />
               {t.bodyMap.bookThisService}
@@ -592,7 +567,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
             <Button
               href={`/services/${service.slug}`}
               variant="outline"
-              className="flex-1 justify-center py-3"
+              className="flex-1 justify-center py-3 bg-white border-[#C49A3C]/30 text-[#1A1412] hover:border-[#C49A3C]"
             >
               {t.bodyMap.dedicatedPage}
               <IconArrowRight size={13} className="ms-2 rtl-flip" aria-hidden="true" />
@@ -963,8 +938,7 @@ function ViewToggle({
 }) {
   return (
     <div
-      className="inline-flex items-center p-0.5 rounded-full border"
-      style={{ background: WHITE, borderColor: BORDER }}
+      className="inline-flex items-center p-1 rounded-full border border-[#E8E2D8] bg-white shadow-2xs"
       role="group"
       aria-label={lang === 'pt' ? 'Vista do Corpo' : lang === 'en' ? 'Body View' : 'Vue du corps'}
     >
@@ -974,12 +948,11 @@ function ViewToggle({
           type="button"
           aria-pressed={view === v}
           onClick={() => onViewChange(v)}
-          className="px-5 py-2 rounded-full text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-          style={
+          className={`px-5 py-2 rounded-full text-xs font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
             view === v
-              ? { background: NAVY, color: WHITE }
-              : { background: 'transparent', color: SLATE }
-          }
+              ? 'bg-[#1A1412] text-white shadow-xs'
+              : 'bg-transparent text-[#6B6058] hover:text-[#1A1412]'
+          }`}
         >
           {v === 'front' ? t.bodyMap.toggleViewFront : t.bodyMap.toggleViewBack}
         </button>
@@ -1108,7 +1081,7 @@ export function BodyMap() {
   return (
     <section
       id="body-map"
-      className="relative py-20 md:py-28 overflow-hidden bg-[#FAFAF9]"
+      className="relative py-20 md:py-28 overflow-hidden bg-gradient-to-b from-[#FDFBF7] via-[#FAF7F0] to-[#FDFBF7]"
     >
       <div className="mx-auto max-w-7xl px-5 md:px-10">
 
@@ -1118,27 +1091,27 @@ export function BodyMap() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease: [0, 0, 0.2, 1] }}
-          className="mb-8 text-center"
+          className="mb-10 text-center"
         >
           {/* Eyebrow */}
-          <div className="inline-flex items-center gap-2 mb-3">
+          <div className="inline-flex items-center gap-2 mb-3.5 px-3.5 py-1.5 rounded-full bg-white border border-[#C49A3C]/30 shadow-2xs">
             <div
-              className="w-1.5 h-1.5 rounded-full bg-blue-600"
+              className="w-1.5 h-1.5 rounded-full bg-[#C49A3C] animate-pulse"
             />
             <span
-              className="text-[11px] font-semibold uppercase tracking-widest text-blue-600"
+              className="text-[11px] font-bold uppercase tracking-widest text-[#9A7428]"
             >
               {lang === 'pt' ? 'Diagnóstico Interativo de Cuidados' : lang === 'en' ? 'Interactive Care Assessment' : 'Diagnostic & Carte des soins'}
             </span>
           </div>
 
           <h2
-            className="font-serif text-4xl sm:text-5xl font-bold leading-tight mb-3 text-slate-900"
+            className="font-serif text-4xl sm:text-5xl font-bold leading-tight mb-3.5 text-[#1A1412]"
           >
             {t.bodyMap.title}
           </h2>
           <p
-            className="text-base max-w-md mx-auto leading-relaxed text-slate-600"
+            className="text-base max-w-lg mx-auto leading-relaxed text-[#6B6058]"
           >
             {t.bodyMap.subtitle}
           </p>
@@ -1155,7 +1128,6 @@ export function BodyMap() {
           {/* Top Bar: Front/Back Toggle & Instant Search Input */}
           <div className="w-full flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              {/* Front/Back View */}
               <ViewToggle
                 view={view}
                 lang={lang}
@@ -1166,19 +1138,19 @@ export function BodyMap() {
 
             {/* Instant Search Bar */}
             <div className="relative min-w-[240px] max-w-xs flex-1">
-              <IconSearch size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <IconSearch size={15} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-[#9A7428]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={lang === 'pt' ? 'Pesquisar tratamento, sintoma...' : lang === 'en' ? 'Search treatment, symptom...' : 'Rechercher un soin, symptôme...'}
-                className="w-full ps-9 pe-8 py-2 text-xs rounded-full border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                className="w-full ps-9 pe-8 py-2.5 text-xs rounded-full border border-[#E8E2D8] bg-white text-[#1A1412] placeholder:text-[#9A9088] focus:outline-none focus:border-[#C49A3C] focus:ring-2 focus:ring-[#C49A3C]/20 transition-all shadow-2xs"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[#8A8078] hover:text-[#1A1412]"
                 >
                   <IconX size={13} />
                 </button>
@@ -1203,23 +1175,25 @@ export function BodyMap() {
 
           {/* Active Filter Summary Bar */}
           {hasActiveFilters && (
-            <div className="w-full flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-200/60">
+            <div className="w-full flex items-center justify-between text-xs text-[#6B6058] pt-2 border-t border-[#E8E2D8]">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-[#1A1412]">
                   {currentPoints.length} {lang === 'pt' ? 'cuidados encontrados' : lang === 'en' ? 'treatments found' : 'soins trouvés'}
                 </span>
                 {selectedZone !== 'all' && (
-                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
-                    Zone: {getLocalizedText(ZONE_LABELS[selectedZone], lang)}
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#FDFAF4] border border-[#C49A3C]/30 text-[#9A7428] font-semibold">
+                    {lang === 'pt' ? 'Zona: ' : lang === 'en' ? 'Zone: ' : 'Zone : '}
+                    {getLocalizedText(ZONE_LABELS[selectedZone], lang)}
                   </span>
                 )}
                 {selectedGoal !== 'all' && (
-                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
-                    Objectif: {getLocalizedText(MEDICAL_GOALS.find((g) => g.id === selectedGoal)!.label, lang)}
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#FDFAF4] border border-[#C49A3C]/30 text-[#9A7428] font-semibold">
+                    {lang === 'pt' ? 'Objetivo: ' : lang === 'en' ? 'Goal: ' : 'Objectif : '}
+                    {getLocalizedText(MEDICAL_GOALS.find((g) => g.id === selectedGoal)!.label, lang)}
                   </span>
                 )}
                 {searchQuery && (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#FAF6EE] border border-[#E8E2D8] text-[#1A1412] font-semibold">
                     « {searchQuery} »
                   </span>
                 )}
@@ -1227,7 +1201,7 @@ export function BodyMap() {
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="text-blue-600 hover:text-blue-800 font-semibold underline underline-offset-2 flex items-center gap-1"
+                className="text-[#9A7428] hover:text-[#C49A3C] font-bold underline underline-offset-2 flex items-center gap-1 transition-colors"
               >
                 <IconX size={12} />
                 <span>{lang === 'pt' ? 'Repor' : lang === 'en' ? 'Reset' : 'Réinitialiser'}</span>
@@ -1249,7 +1223,7 @@ export function BodyMap() {
           >
             {/* Canvas card container */}
             <div
-              className="relative overflow-hidden rounded-2xl p-3 sm:p-4 bg-white border border-slate-200 shadow-lg"
+              className="relative overflow-hidden rounded-3xl p-3 sm:p-4 bg-white border border-[#E8E2D8] shadow-[0_12px_36px_rgba(196,154,60,0.08)]"
             >
               <AnatomicalSVGViewer
                 view={view}
@@ -1264,11 +1238,10 @@ export function BodyMap() {
 
               {/* View side badge */}
               <div
-                className="absolute bottom-6 start-6 flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider backdrop-blur-md bg-white/90 text-slate-900 border border-slate-200"
+                className="absolute bottom-6 start-6 flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md bg-white/95 text-[#1A1412] border border-[#E8E2D8] shadow-2xs"
               >
                 <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: BLUE }}
+                  className="w-1.5 h-1.5 rounded-full bg-[#C49A3C]"
                 />
                 {view === 'front'
                   ? lang === 'pt' ? 'Anterior' : lang === 'en' ? 'Front' : 'Antérieur'
@@ -1277,7 +1250,7 @@ export function BodyMap() {
 
               {/* Keyboard navigation hint */}
               <div
-                className="absolute bottom-6 end-6 text-[9px] tracking-wider hidden sm:block text-slate-400"
+                className="absolute bottom-6 end-6 text-[9px] font-mono tracking-wider hidden sm:block text-[#A89F91]"
               >
                 {lang === 'pt' ? '← → navegar' : lang === 'en' ? '← → navigate' : '← → naviguer'}
               </div>
@@ -1285,9 +1258,9 @@ export function BodyMap() {
 
             {/* Responsive Touch Gesture Hint */}
             <p
-              className="text-center mt-3 text-[11px] font-medium tracking-wide flex items-center justify-center gap-1.5 text-slate-500"
+              className="text-center mt-3 text-[11px] font-medium tracking-wide flex items-center justify-center gap-1.5 text-[#8A8078]"
             >
-              <IconBodyScan size={14} />
+              <IconBodyScan size={14} className="text-[#C49A3C]" />
               <span>{lang === 'pt' ? 'Clique numa zona do corpo para ver os cuidados associados' : lang === 'en' ? 'Click a body part to view associated treatments' : 'Cliquez sur une partie du corps pour afficher les soins'}</span>
             </p>
           </motion.div>

@@ -26,11 +26,11 @@ export const ZONE_VOLUMES: Record<Exclude<BodyZone, 'all'>, { position: [number,
  * Per-zone accent palette shared with the 3D hotspot beacons.
  */
 export const ZONE_COLORS: Record<BodyZone, { primary: string; glow: string; cyber: string }> = {
-  all:   { primary: '#2563EB', glow: '#60A5FA', cyber: '#38BDF8' },
-  torso: { primary: '#2563EB', glow: '#60A5FA', cyber: '#38BDF8' },
-  legs:  { primary: '#059669', glow: '#34D399', cyber: '#34D399' },
-  arms:  { primary: '#7C3AED', glow: '#A78BFA', cyber: '#F472B6' },
-  back:  { primary: '#D97706', glow: '#FBBF24', cyber: '#FBBF24' },
+  all:   { primary: '#C49A3C', glow: '#E8C97A', cyber: '#F5E9C8' },
+  torso: { primary: '#C49A3C', glow: '#E8C97A', cyber: '#F5E9C8' },
+  legs:  { primary: '#9A7428', glow: '#C49A3C', cyber: '#E8C97A' },
+  arms:  { primary: '#85611A', glow: '#C49A3C', cyber: '#F5E9C8' },
+  back:  { primary: '#D4AF37', glow: '#F3E5AB', cyber: '#FAF0E6' },
 };
 
 /**

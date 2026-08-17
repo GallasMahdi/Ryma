@@ -47,23 +47,23 @@ export function validateAppointmentInput(
 
   // Service must be in the allowed list
   if (!service || typeof service !== 'string' || !VALID_SERVICES.includes(service.trim())) {
-    return { ok: false, error: 'Soin non reconnu' };
+    return { ok: false, error: 'Tratamento / cuidado não reconhecido.' };
   }
 
   // Date format
   if (!date || typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return { ok: false, error: 'Format de date invalide' };
+    return { ok: false, error: 'Formato de data inválido (AAAA-MM-DD).' };
   }
 
   // Date must not be in the past
   const todayStr = new Date().toISOString().split('T')[0];
   if (date < todayStr) {
-    return { ok: false, error: 'La date ne peut pas être dans le passé' };
+    return { ok: false, error: 'A data da consulta não pode ser no passado.' };
   }
 
   // Time must be in the allowed slots
   if (!startTime || !VALID_TIME_SLOTS.includes(startTime as typeof VALID_TIME_SLOTS[number])) {
-    return { ok: false, error: 'Créneau horaire invalide' };
+    return { ok: false, error: 'Horário selecionado inválido.' };
   }
 
   // If date is today, slot must not be in the past
@@ -71,7 +71,7 @@ export function validateAppointmentInput(
     const now = new Date();
     const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     if (String(startTime) <= currentHHMM) {
-      return { ok: false, error: 'Ce créneau horaire est déjà passé pour aujourd\'hui' };
+      return { ok: false, error: 'Este horário já passou para o dia de hoje.' };
     }
   }
 
@@ -79,13 +79,13 @@ export function validateAppointmentInput(
   if (body.email && typeof body.email === 'string' && body.email.trim().length > 0) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(body.email.trim())) {
-      return { ok: false, error: 'Adresse email invalide' };
+      return { ok: false, error: 'Endereço de email inválido.' };
     }
   }
 
   // Notes length limit (prevent oversized input)
   if (body.notes && typeof body.notes === 'string' && body.notes.length > 1000) {
-    return { ok: false, error: 'Les notes ne peuvent pas dépasser 1000 caractères' };
+    return { ok: false, error: 'As notas clínicas não podem exceder 1000 caracteres.' };
   }
 
   return { ok: true };

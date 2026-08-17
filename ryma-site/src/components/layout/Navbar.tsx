@@ -246,14 +246,14 @@ export function Navbar() {
                                   >
                                     <div>
                                       <div className="text-[13px] font-semibold text-[#1A1412] group-hover:text-[#9A7428] transition-colors">
-                                        {s.name[lang]}
+                                        {getLocalizedText(s.name, lang)}
                                       </div>
                                       <div className="text-[11px] text-[#6B6058] line-clamp-1">
-                                        {s.shortDesc[lang]}
+                                        {getLocalizedText(s.shortDesc, lang)}
                                       </div>
                                     </div>
                                     <span className="font-mono text-xs font-bold text-[#C49A3C] ml-2 shrink-0">
-                                      {s.price} DT
+                                      {s.price} {t.common.currency}
                                     </span>
                                   </Link>
                                 ))}

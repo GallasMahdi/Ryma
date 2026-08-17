@@ -7,13 +7,15 @@ import type { BodyGender, BodyZone, HotspotPoint, ViewSide } from './zone';
 import type { Lang } from '@/lib/i18n';
 
 /* ------------------------------------------------------------------ */
-/*  Design Tokens                                                       */
+/*  Design Tokens (Ultra Luxury & Warm Gold Aesthetics)                 */
 /* ------------------------------------------------------------------ */
 
-const NAVY = '#0F172A';
-const SLATE = '#64748B';
-const BLUE = '#2563EB';
-const BORDER = '#E2E8F0';
+const OBSIDIAN = '#1A1412';
+const GOLD = '#C49A3C';
+const GOLD_LIGHT = '#F5E9C8';
+const GOLD_ACCENT = '#9A7428';
+const SLATE = '#6B6058';
+const BORDER = '#E8E2D8';
 const WHITE = '#FFFFFF';
 
 /* ------------------------------------------------------------------ */
@@ -50,10 +52,10 @@ function FrontMaleAnatomySVG({
   const getZoneStyle = (z: BodyZone) => {
     const active = selectedZone === z || hoveredZone === z;
     return {
-      fill: active ? 'rgba(37, 99, 235, 0.16)' : 'rgba(241, 245, 249, 0.75)',
-      stroke: active ? BLUE : '#CBD5E1',
-      strokeWidth: active ? 2.0 : 1.2,
-      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      fill: active ? 'rgba(196, 154, 60, 0.16)' : 'rgba(250, 248, 244, 0.85)',
+      stroke: active ? GOLD : '#D4CEBE',
+      strokeWidth: active ? 2.0 : 1.1,
+      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       cursor: 'pointer',
     };
   };
@@ -138,10 +140,10 @@ function FrontFemaleAnatomySVG({
   const getZoneStyle = (z: BodyZone) => {
     const active = selectedZone === z || hoveredZone === z;
     return {
-      fill: active ? 'rgba(37, 99, 235, 0.16)' : 'rgba(241, 245, 249, 0.75)',
-      stroke: active ? BLUE : '#CBD5E1',
-      strokeWidth: active ? 2.0 : 1.2,
-      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      fill: active ? 'rgba(196, 154, 60, 0.16)' : 'rgba(250, 248, 244, 0.85)',
+      stroke: active ? GOLD : '#D4CEBE',
+      strokeWidth: active ? 2.0 : 1.1,
+      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       cursor: 'pointer',
     };
   };
@@ -176,8 +178,8 @@ function FrontFemaleAnatomySVG({
         onClick={() => onZoneClick('torso')}
       >
         <path d="M 78 60 L 122 60 C 126 74, 124 94, 120 118 C 118 134, 116 150, 112 165 L 88 165 C 84 150, 82 134, 80 118 C 76 94, 74 74, 78 60 Z" />
-        <path d="M 80 84 Q 100 90 120 84" fill="none" stroke="#CBD5E1" strokeWidth="0.75" />
-        <path d="M 100 62 L 100 155" fill="none" stroke="#CBD5E1" strokeWidth="0.75" strokeDasharray="2 2" />
+        <path d="M 80 84 Q 100 90 120 84" fill="none" stroke="#D4CEBE" strokeWidth="0.75" />
+        <path d="M 100 62 L 100 155" fill="none" stroke="#D4CEBE" strokeWidth="0.75" strokeDasharray="2 2" />
       </g>
 
       {/* Legs */}
@@ -212,10 +214,10 @@ function BackAnatomySVG({
   const getZoneStyle = (z: BodyZone) => {
     const active = selectedZone === z || hoveredZone === z;
     return {
-      fill: active ? 'rgba(37, 99, 235, 0.16)' : 'rgba(241, 245, 249, 0.75)',
-      stroke: active ? BLUE : '#CBD5E1',
-      strokeWidth: active ? 2.0 : 1.2,
-      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      fill: active ? 'rgba(196, 154, 60, 0.16)' : 'rgba(250, 248, 244, 0.85)',
+      stroke: active ? GOLD : '#D4CEBE',
+      strokeWidth: active ? 2.0 : 1.1,
+      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       cursor: 'pointer',
     };
   };
@@ -251,9 +253,9 @@ function BackAnatomySVG({
       >
         <path d="M 75 58 L 125 58 C 129 74, 126 94, 121 118 C 118 134, 115 148, 110 160 L 90 160 C 85 148, 82 134, 79 118 C 74 94, 71 74, 75 58 Z" />
         {/* Spine Line */}
-        <path d="M 100 58 L 100 160" stroke={BLUE} strokeWidth="1.5" strokeDasharray="3 2" fill="none" />
+        <path d="M 100 58 L 100 160" stroke={GOLD} strokeWidth="1.5" strokeDasharray="3 2" fill="none" />
         {/* Shoulder Blades */}
-        <path d="M 80 72 L 94 88 M 120 72 L 106 88" fill="none" stroke="#CBD5E1" strokeWidth="0.8" />
+        <path d="M 80 72 L 94 88 M 120 72 L 106 88" fill="none" stroke="#D4CEBE" strokeWidth="0.8" />
       </g>
 
       {/* Glutes & Posterior Legs */}
@@ -297,14 +299,14 @@ export function AnatomicalSVGViewer({
 
   return (
     <div
-      className="relative w-full aspect-[5/6] overflow-hidden rounded-2xl select-none flex flex-col items-center justify-center p-4 bg-[#FAFAF9] border border-slate-200 shadow-inner transition-all"
+      className="relative w-full aspect-[5/6] overflow-hidden rounded-2xl select-none flex flex-col items-center justify-center p-4 bg-gradient-to-b from-[#FDFBF7] to-[#F7F4EC] border border-[#E8E2D8] shadow-[inset_0_2px_12px_rgba(196,154,60,0.04)] transition-all"
     >
       {/* ── Background Precision Medical Grid Pattern ── */}
-      <div className="absolute inset-0 pointer-events-none opacity-40">
+      <div className="absolute inset-0 pointer-events-none opacity-35">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="medGrid" width="24" height="24" patternUnits="userSpaceOnUse">
-              <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#CBD5E1" strokeWidth="0.5" />
+              <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#E8E2D8" strokeWidth="0.5" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#medGrid)" />
@@ -312,7 +314,7 @@ export function AnatomicalSVGViewer({
       </div>
 
       {/* ── Medical Height Scale Ruler ── */}
-      <div className="absolute start-3 top-6 bottom-6 flex flex-col justify-between text-[9px] font-mono text-slate-400 pointer-events-none select-none">
+      <div className="absolute start-3 top-6 bottom-6 flex flex-col justify-between text-[9px] font-mono text-[#A89F91] pointer-events-none select-none">
         <span>175 cm</span>
         <span>140 cm</span>
         <span>100 cm</span>
@@ -330,7 +332,7 @@ export function AnatomicalSVGViewer({
       >
         <svg
           viewBox="0 0 200 340"
-          className="w-full h-full drop-shadow-sm"
+          className="w-full h-full drop-shadow-xs"
           style={{ overflow: 'visible' }}
         >
           {view === 'front' ? (
@@ -352,8 +354,8 @@ export function AnatomicalSVGViewer({
       </motion.div>
 
       {/* ── Active Zone HUD Badge ── */}
-      <div className="absolute bottom-3 end-3 flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 border border-slate-200 text-[10px] font-mono font-medium text-slate-800 shadow-sm backdrop-blur-md">
-        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+      <div className="absolute bottom-3 end-3 flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 border border-[#C49A3C]/30 text-[10px] font-mono font-bold text-[#1A1412] shadow-xs backdrop-blur-md">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3C] animate-pulse" />
         <span>
           {currentActiveZone === 'all'
             ? lang === 'pt' ? 'Corpo Inteiro' : lang === 'en' ? 'Full Body' : 'Tout le corps'

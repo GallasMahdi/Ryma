@@ -54,7 +54,7 @@ export function BlogPreview() {
 
                     {/* Category Badge */}
                     <span className="absolute start-3 top-3 font-mono text-[10px] font-bold text-blue-700 tracking-wider uppercase backdrop-blur-md bg-white/95 px-3 py-1 rounded-full border border-blue-200/80 shadow-sm">
-                      {post.category}
+                      {post.category === 'Minceur' ? (lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming' : 'Minceur') : post.category === 'Kinésithérapie' ? (lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie') : (lang === 'pt' ? 'Conselhos' : lang === 'en' ? 'Advice' : 'Conseils')}
                     </span>
 
                     {/* Reading Time Badge */}
@@ -66,7 +66,9 @@ export function BlogPreview() {
 
                   <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      <Badge variant="gold">{post.category}</Badge>
+                      <Badge variant="gold">
+                        {post.category === 'Minceur' ? (lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming' : 'Minceur') : post.category === 'Kinésithérapie' ? (lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie') : (lang === 'pt' ? 'Conselhos' : lang === 'en' ? 'Advice' : 'Conseils')}
+                      </Badge>
                       <span className="flex items-center gap-1 font-mono text-xs text-[#8A8078]">
                         <IconClock size={12} className="text-[#C49A3C]" />
                         {post.readingTime} {t.blog.readTime}

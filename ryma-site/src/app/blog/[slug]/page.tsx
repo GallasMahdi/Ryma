@@ -92,12 +92,12 @@ export default function BlogPostPage({ params }: Props) {
               className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-[#9A7428] hover:text-[#C49A3C] transition-colors mb-8 bg-[#F5E9C8] border border-[#C49A3C]/30 px-4 py-2 rounded-full"
             >
               <IconArrowLeft size={14} className="rtl-flip" />
-              <span>{lang === 'fr' ? 'Retour au Blog' : 'العودة للمدونة'}</span>
+              <span>{t.blog.backToBlog}</span>
             </Link>
 
             <div className="flex flex-wrap items-center gap-3 mb-5">
               <span className="font-mono text-xs font-bold text-[#9A7428] tracking-widest uppercase bg-white/90 px-3.5 py-1 rounded-full border border-[#C49A3C]/30 shadow-xs">
-                {post.category}
+                {post.category === 'Minceur' ? (lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming' : 'Minceur') : post.category === 'Kinésithérapie' ? (lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie') : (lang === 'pt' ? 'Conselhos' : lang === 'en' ? 'Advice' : 'Conseils')}
               </span>
               <span className="flex items-center gap-1.5 font-mono text-xs text-[#7A6E65] bg-white/70 px-3 py-1 rounded-full border border-[#E8E2D8]">
                 <IconClock size={13} className="text-[#9A7428]" />
@@ -120,37 +120,79 @@ export default function BlogPostPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Main Article Content & Sidebar */}
-      <section className="py-8 pb-24">
-        <div className="mx-auto max-w-6xl px-6 md:px-12">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Main Article */}
+      {/* Main Content */}
+      <section className="py-12 pb-24 bg-[#FAFAF8]">
+        <div className="mx-auto max-w-5xl px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12">
+            {/* Article */}
             <article className="lg:col-span-2">
-              {/* Featured High-Definition Cover Photo Banner */}
-              <div className="aspect-[16/9] w-full relative overflow-hidden rounded-2xl mb-10 border border-[#E8E2D8] shadow-lg bg-slate-900">
-                <Image
-                  src={post.coverImage}
-                  alt={post.title[lang] || post.title.pt || post.title.en || post.title.fr}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 66vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent" />
-              </div>
+              <div className="bg-white border border-[#E8E2D8] rounded-2xl p-7 md:p-10 shadow-xs">
+                {/* Cover Image */}
+                <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-8 border border-[#E8E2D8] bg-slate-900">
+                  <Image
+                    src={post.coverImage}
+                    alt={post.title[lang] || post.title.pt || post.title.en || post.title.fr}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 66vw"
+                    className="object-cover"
+                  />
+                </div>
 
-              {/* Rendered Text */}
-              <div className="prose prose-stone max-w-none">
-                {renderContent(post.content[lang] || post.content.pt || post.content.en || post.content.fr)}
-              </div>
+                {/* Article Content */}
+                <div className="prose prose-stone max-w-none text-[#3A322D] leading-relaxed text-base space-y-4">
+                  {(post.content[lang] || post.content.pt || post.content.en || post.content.fr)
+                    .split('\n\n')
+                    .map((paragraph, i) => {
+                      if (paragraph.startsWith('## ')) {
+                        return (
+                          <h2 key={i} className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412] mt-8 mb-3 pt-4 border-t border-[#E8E2D8]">
+                            {paragraph.replace('## ', '')}
+                          </h2>
+                        );
+                      }
+                      if (paragraph.startsWith('### ')) {
+                        return (
+                          <h3 key={i} className="font-serif text-xl font-bold text-[#1A1412] mt-6 mb-2">
+                            {paragraph.replace('### ', '')}
+                          </h3>
+                        );
+                      }
+                      if (paragraph.startsWith('- ')) {
+                        return (
+                          <ul key={i} className="list-disc list-inside space-y-1.5 my-3 text-[#4A4038]">
+                            {paragraph.split('\n').map((item, j) => (
+                              <li key={j}>{item.replace('- ', '')}</li>
+                            ))}
+                          </ul>
+                        );
+                      }
+                      if (/^\d+\. /.test(paragraph)) {
+                        return (
+                          <ol key={i} className="list-decimal list-inside space-y-1.5 my-3 text-[#4A4038]">
+                            {paragraph.split('\n').map((item, j) => (
+                              <li key={j}>{item.replace(/^\d+\. /, '')}</li>
+                            ))}
+                          </ol>
+                        );
+                      }
+                      return (
+                        <p key={i} className="leading-relaxed text-[#4A4038]">
+                          {paragraph}
+                        </p>
+                      );
+                    })}
+                </div>
 
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mt-12 pt-8 border-t border-[#E8E2D8]">
-                {post.tags.map((tag) => (
-                  <span key={tag} className="font-mono text-xs bg-[#F5E9C8] text-[#85611A] border border-[#C49A3C]/30 px-3 py-1 rounded-full font-semibold">
-                    #{tag}
-                  </span>
-                ))}
+                {/* Tags */}
+                <div className="flex flex-wrap items-center gap-2 pt-8 mt-8 border-t border-[#E8E2D8]">
+                  <span className="font-mono text-xs text-[#8A8078] me-1">{lang === 'pt' ? 'Etiquetas:' : lang === 'en' ? 'Tags:' : 'Tags :'}</span>
+                  {post.tags.map((tag) => (
+                    <span key={tag} className="font-mono text-xs bg-[#FAF6EE] border border-[#E8E2D8] text-[#7A6E65] px-2.5 py-0.5 rounded-full">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               {/* Author Card */}
@@ -177,13 +219,13 @@ export default function BlogPostPage({ params }: Props) {
               {relatedService && (
                 <div className="bg-white border border-[#C49A3C]/40 rounded-2xl p-6 shadow-md relative overflow-hidden">
                   <div className="font-mono text-xs text-[#9A7428] uppercase font-bold tracking-wider mb-2">
-                    — {lang === 'fr' ? 'Soin recommandé' : 'العلاج الموصى به'} —
+                    — {lang === 'pt' ? 'Tratamento Recomendado' : lang === 'en' ? 'Recommended Treatment' : 'Soin Recommandé'} —
                   </div>
                   <h3 className="font-serif text-xl font-bold text-[#1A1412] mb-3">
-                    {relatedService.name[lang]}
+                    {relatedService.name[lang] || relatedService.name.pt || relatedService.name.en || relatedService.name.fr}
                   </h3>
                   <p className="text-sm text-[#6B6058] mb-5 leading-relaxed">
-                    {relatedService.shortDesc[lang]}
+                    {relatedService.shortDesc[lang] || relatedService.shortDesc.pt || relatedService.shortDesc.en || relatedService.shortDesc.fr}
                   </p>
                   <div className="font-mono text-2xl font-bold text-[#9A7428] mb-5">
                     {relatedService.price} {t.common.currency}
