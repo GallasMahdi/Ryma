@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconSearch,
@@ -21,6 +21,9 @@ import {
   IconClock,
   IconChevronLeft,
   IconChevronRight,
+  IconCalendarWeek,
+  IconX,
+  IconCheck,
 } from '@tabler/icons-react';
 import {
   Appointment,
@@ -31,6 +34,409 @@ import {
 } from '@/types/admin';
 
 import { Lang } from '@/lib/i18n';
+
+// ─── Week Calendar View ────────────────────────────────────────────────────────
+
+const WEEK_HOUR_SLOTS = [
+  '08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00',
+  '14:00','14:30','15:00','15:30','16:00','16:30','17:00',
+];
+
+const STATUS_DOT: Record<AppointmentStatus, string> = {
+  PENDING:   'bg-[#F59E0B]',
+  CONFIRMED: 'bg-[#22C55E]',
+  CANCELLED: 'bg-[#EF4444]',
+  COMPLETED: 'bg-[#3B82F6]',
+  NO_SHOW:   'bg-[#94A3B8]',
+};
+
+const STATUS_CHIP: Record<AppointmentStatus, string> = {
+  PENDING:   'bg-[#FEF9C3] text-[#854D0E] border-[#FDE68A]',
+  CONFIRMED: 'bg-[#DCFCE7] text-[#166534] border-[#BBF7D0]',
+  CANCELLED: 'bg-[#FEE2E2] text-[#991B1B] border-[#FECACA] opacity-60',
+  COMPLETED: 'bg-[#DBEAFE] text-[#1E40AF] border-[#BFDBFE]',
+  NO_SHOW:   'bg-[#F1F5F9] text-[#475569] border-[#E2E8F0] opacity-60',
+};
+
+function getWeekStart(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  // Monday = 0 offset
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function addDays(date: Date, n: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+function toDateStr(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
+
+interface WeekCalendarViewProps {
+  appointments: Appointment[];
+  lang: Lang;
+  updateStatus: (id: string, status: AppointmentStatus) => void;
+  softDeleteAppointment: (id: string) => void;
+  openPatientNote: (appt: Appointment) => void;
+  setConfirmDialog: (dlg: { title: string; onConfirm: () => void } | null) => void;
+}
+
+function WeekCalendarView({
+  appointments,
+  lang,
+  updateStatus,
+  softDeleteAppointment,
+  openPatientNote,
+  setConfirmDialog,
+}: WeekCalendarViewProps) {
+  const txt = (fr: string, en: string, pt: string) =>
+    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const [weekStart, setWeekStart] = useState<Date>(() => getWeekStart(new Date()));
+  const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Close popover on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setSelectedAppt(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const weekDays = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
+    [weekStart]
+  );
+
+  // Group appointments by date string
+  const apptByDate = useMemo(() => {
+    const map: Record<string, Appointment[]> = {};
+    appointments.forEach(a => {
+      if (!map[a.date]) map[a.date] = [];
+      map[a.date].push(a);
+    });
+    // Sort each day by startTime
+    Object.values(map).forEach(arr => arr.sort((a, b) => a.startTime.localeCompare(b.startTime)));
+    return map;
+  }, [appointments]);
+
+  const maxPerDay = useMemo(() => {
+    const counts = weekDays.map(d => (apptByDate[toDateStr(d)] ?? []).length);
+    return Math.max(...counts, 1);
+  }, [weekDays, apptByDate]);
+
+  const weekLabel = useMemo(() => {
+    const locale = lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
+    const s = weekDays[0].toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    const e = weekDays[6].toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+    return `${s} – ${e}`;
+  }, [weekDays, lang]);
+
+  const dayShort = (d: Date) => {
+    const locale = lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
+    return d.toLocaleDateString(locale, { weekday: 'short' });
+  };
+
+  const dayNum = (d: Date) => d.getDate();
+  const isSunday = (d: Date) => d.getDay() === 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Week Navigation Header */}
+      <div className="flex items-center justify-between bg-white border border-[#E9E6DF] rounded-2xl px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
+        <button
+          onClick={() => setWeekStart(d => addDays(d, -7))}
+          className="p-2 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-[#77736B] hover:text-[#202020] hover:border-[#C6A15B] transition-all"
+        >
+          <IconChevronLeft size={16} />
+        </button>
+
+        <div className="text-center">
+          <div className="font-serif font-bold text-[#1A1412] text-base">{weekLabel}</div>
+          <div className="font-mono text-[11px] text-[#77736B] mt-0.5">
+            {txt('Semaine', 'Week', 'Semana')} · {appointments.filter(a => weekDays.some(d => toDateStr(d) === a.date)).length}{' '}
+            {txt('rendez-vous', 'appointments', 'consultas')}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setWeekStart(getWeekStart(new Date()))}
+            className="px-3 py-1.5 rounded-xl bg-[#FAF6EE] border border-[#E8D7B0] text-[#9B793A] text-xs font-mono font-bold hover:bg-[#F5E9C8] transition-all"
+          >
+            {txt("Auj.", 'Today', 'Hoje')}
+          </button>
+          <button
+            onClick={() => setWeekStart(d => addDays(d, 7))}
+            className="p-2 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-[#77736B] hover:text-[#202020] hover:border-[#C6A15B] transition-all"
+          >
+            <IconChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="bg-white border border-[#E9E6DF] rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+        {/* Day Headers */}
+        <div className="grid grid-cols-7 border-b border-[#E9E6DF]">
+          {weekDays.map((day, i) => {
+            const ds = toDateStr(day);
+            const isToday = ds === todayStr;
+            const sunday = isSunday(day);
+            const count = (apptByDate[ds] ?? []).length;
+            const occupancy = count / WEEK_HOUR_SLOTS.length; // max = full day
+
+            return (
+              <div
+                key={i}
+                className={`p-2.5 text-center border-r last:border-r-0 border-[#E9E6DF] ${
+                  sunday ? 'bg-[#FAFAF8]' : isToday ? 'bg-[#FAF6EE]' : ''
+                }`}
+              >
+                <div className={`font-mono text-[10px] uppercase tracking-widest mb-1 ${
+                  sunday ? 'text-[#94A3B8]' : isToday ? 'text-[#9A7428]' : 'text-[#77736B]'
+                }`}>
+                  {dayShort(day)}
+                </div>
+                <div className={`font-serif text-lg font-bold leading-tight ${
+                  isToday
+                    ? 'w-8 h-8 rounded-full bg-[#C6A15B] text-white flex items-center justify-center mx-auto shadow-md'
+                    : sunday
+                    ? 'text-[#CBD5E1]'
+                    : 'text-[#1A1412]'
+                }`}>
+                  {dayNum(day)}
+                </div>
+                {/* Occupancy heat bar */}
+                <div className="mt-2 h-1 rounded-full bg-[#E9E6DF] overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(occupancy * 100 * 1.5, 100)}%`,
+                      background:
+                        occupancy > 0.6 ? '#EF4444' :
+                        occupancy > 0.3 ? '#F59E0B' :
+                        occupancy > 0   ? '#22C55E' : 'transparent',
+                    }}
+                  />
+                </div>
+                {count > 0 && (
+                  <div className="font-mono text-[9px] text-[#77736B] mt-0.5">
+                    {count} {count === 1 ? txt('rdv', 'appt', 'cons.') : txt('rdvs', 'appts', 'cons.')}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Appointment Chips per Day */}
+        <div className="grid grid-cols-7 divide-x divide-[#E9E6DF] min-h-[320px]">
+          {weekDays.map((day, i) => {
+            const ds = toDateStr(day);
+            const dayAppts = apptByDate[ds] ?? [];
+            const sunday = isSunday(day);
+
+            return (
+              <div
+                key={i}
+                className={`p-1.5 flex flex-col gap-1 ${
+                  sunday ? 'bg-[#FAFAF8]' : ''
+                }`}
+              >
+                {sunday ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <span className="text-[10px] text-[#CBD5E1] font-mono rotate-90 whitespace-nowrap">
+                      {txt('Fermé', 'Closed', 'Fechado')}
+                    </span>
+                  </div>
+                ) : dayAppts.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <span className="text-[10px] text-[#E2E8F0] font-mono">—</span>
+                  </div>
+                ) : (
+                  dayAppts.map(appt => (
+                    <button
+                      key={appt.id}
+                      onClick={() => setSelectedAppt(appt)}
+                      className={`w-full text-left px-1.5 py-1 rounded-lg border text-[10px] leading-tight transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] ${
+                        STATUS_CHIP[appt.status]
+                      } ${selectedAppt?.id === appt.id ? 'ring-2 ring-[#C6A15B] ring-offset-1' : ''}`}
+                    >
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[appt.status]}`} />
+                        <span className="font-bold font-mono">{appt.startTime}</span>
+                      </div>
+                      <div className="font-semibold truncate leading-tight" style={{ fontSize: '9.5px' }}>
+                        {appt.patientName.split(' ')[0]}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Appointment Detail Popover */}
+      <AnimatePresence>
+        {selectedAppt && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            ref={popoverRef}
+            className="relative bg-white border border-[#E9E6DF] rounded-2xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden"
+          >
+            {/* Gold accent bar */}
+            <div
+              className="absolute top-0 left-0 right-0 h-[3px]"
+              style={{
+                background: `linear-gradient(90deg, #C6A15B, #E8D7B0, #C6A15B)`,
+              }}
+            />
+
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] border border-[#E9E6DF] flex items-center justify-center font-bold text-[#334155] text-sm shrink-0">
+                  {getInitials(selectedAppt.patientName)}
+                </div>
+                <div>
+                  <div className="font-serif font-bold text-[#1A1412] text-base leading-tight">
+                    {selectedAppt.patientName}
+                  </div>
+                  <div className="font-mono text-xs text-[#77736B]">
+                    {selectedAppt.date} · {selectedAppt.startTime}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedAppt(null)}
+                className="p-1.5 rounded-lg text-[#77736B] hover:text-[#1A1412] hover:bg-[#F4F2EE] transition-colors shrink-0"
+              >
+                <IconX size={15} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4 text-xs">
+              <div className="bg-[#FAFAF8] rounded-xl p-3 border border-[#E9E6DF]">
+                <div className="font-mono text-[10px] text-[#77736B] uppercase tracking-wide mb-1">
+                  {txt('Traitement', 'Treatment', 'Tratamento')}
+                </div>
+                <div className="font-semibold text-[#1A1412]">{getServiceName(selectedAppt.service, lang)}</div>
+              </div>
+              <div className="bg-[#FAFAF8] rounded-xl p-3 border border-[#E9E6DF]">
+                <div className="font-mono text-[10px] text-[#77736B] uppercase tracking-wide mb-1">
+                  {txt('Statut', 'Status', 'Estado')}
+                </div>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                  STATUS_CONFIG[selectedAppt.status].bg
+                } ${
+                  STATUS_CONFIG[selectedAppt.status].color
+                } ${
+                  STATUS_CONFIG[selectedAppt.status].border
+                }`}>
+                  {STATUS_CONFIG[selectedAppt.status][lang] || STATUS_CONFIG[selectedAppt.status].pt}
+                </span>
+              </div>
+              <div className="bg-[#FAFAF8] rounded-xl p-3 border border-[#E9E6DF]">
+                <div className="font-mono text-[10px] text-[#77736B] uppercase tracking-wide mb-1">
+                  {txt('Téléphone', 'Phone', 'Telefone')}
+                </div>
+                <a href={`tel:${selectedAppt.phone}`} className="font-semibold text-[#1A1412] hover:text-[#9A7428]">
+                  {selectedAppt.phone}
+                </a>
+              </div>
+              <div className="bg-[#FAFAF8] rounded-xl p-3 border border-[#E9E6DF]">
+                <div className="font-mono text-[10px] text-[#77736B] uppercase tracking-wide mb-1">
+                  {txt('Tarif', 'Fee', 'Honorário')}
+                </div>
+                <div className="font-bold text-[#C49A3C] font-mono">{getServicePrice(selectedAppt.service)} €</div>
+              </div>
+            </div>
+
+            {selectedAppt.notes && (
+              <div className="bg-[#F8FAFC] rounded-xl p-3 border border-[#E2E8F0] text-xs text-[#64748B] mb-4">
+                {selectedAppt.notes}
+              </div>
+            )}
+
+            {/* Quick Actions */}
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`https://wa.me/${selectedAppt.phone.replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] text-xs font-medium hover:bg-[#DCFCE7] transition-colors"
+              >
+                <IconBrandWhatsapp size={13} />
+                WhatsApp
+              </a>
+
+              <button
+                onClick={() => { openPatientNote(selectedAppt); setSelectedAppt(null); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-[#334155] text-xs font-medium hover:bg-[#E2E8F0] transition-colors"
+              >
+                <IconNotes size={13} />
+                {txt('Dossier', 'File', 'Ficha')}
+              </button>
+
+              {selectedAppt.status !== 'CONFIRMED' && selectedAppt.status !== 'CANCELLED' && (
+                <button
+                  onClick={() => { updateStatus(selectedAppt.id, 'CONFIRMED'); setSelectedAppt(null); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] text-xs font-medium hover:bg-[#BBF7D0] transition-colors"
+                >
+                  <IconCheck size={13} />
+                  {txt('Confirmer', 'Confirm', 'Confirmar')}
+                </button>
+              )}
+
+              {selectedAppt.status === 'CONFIRMED' && (
+                <button
+                  onClick={() => { updateStatus(selectedAppt.id, 'COMPLETED'); setSelectedAppt(null); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#DBEAFE] border border-[#BFDBFE] text-[#1E40AF] text-xs font-medium hover:bg-[#BFDBFE] transition-colors"
+                >
+                  <IconCheck size={13} />
+                  {txt('Terminer', 'Complete', 'Concluir')}
+                </button>
+              )}
+
+              {selectedAppt.status !== 'CANCELLED' && (
+                <button
+                  onClick={() => {
+                    setConfirmDialog({
+                      title: txt('Annuler ce rendez-vous ?', 'Cancel this appointment?', 'Cancelar esta consulta?'),
+                      onConfirm: () => { softDeleteAppointment(selectedAppt.id); setSelectedAppt(null); },
+                    });
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-xs font-medium hover:bg-[#FECACA] transition-colors"
+                >
+                  <IconX size={13} />
+                  {txt('Annuler', 'Cancel', 'Cancelar')}
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── AppointmentsTab ───────────────────────────────────────────────────────────
 
 interface AppointmentsTabProps {
   lang: Lang;
@@ -78,7 +484,7 @@ export function AppointmentsTab({
     return ptStr;
   };
 
-  const [viewMode, setViewMode] = useState<'cards' | 'table' | 'grouped'>('cards');
+  const [viewMode, setViewMode] = useState<'cards' | 'table' | 'grouped' | 'week'>('week');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'upcoming'>('all');
 
   // Pagination state
@@ -310,6 +716,19 @@ export function AppointmentsTab({
           {/* View Mode Switcher */}
           <div className="flex items-center gap-1 bg-[#F1F5F9] p-1 rounded-lg self-end sm:self-auto border border-[#E2E8F0]">
             <button
+              onClick={() => setViewMode('week')}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                viewMode === 'week'
+                  ? 'bg-white text-[#0F172A] shadow-xs'
+                  : 'text-[#64748B] hover:text-[#0F172A]'
+              }`}
+              title={txt('Vue Semaine', 'Week View', 'Vista Semanal')}
+            >
+              <IconCalendarWeek size={14} />
+              <span className="hidden md:inline">{txt('Semaine', 'Week', 'Semana')}</span>
+            </button>
+
+            <button
               onClick={() => setViewMode('cards')}
               className={`px-2.5 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1.5 ${
                 viewMode === 'cards'
@@ -423,7 +842,17 @@ export function AppointmentsTab({
         </div>
       ) : (
         <>
-          {viewMode === 'cards' ? (
+          {viewMode === 'week' ? (
+            /* 0. WEEK CALENDAR VIEW */
+            <WeekCalendarView
+              appointments={displayedAppointments}
+              lang={lang}
+              updateStatus={updateStatus}
+              softDeleteAppointment={softDeleteAppointment}
+              openPatientNote={openPatientNote}
+              setConfirmDialog={setConfirmDialog}
+            />
+          ) : viewMode === 'cards' ? (
             /* 1. CARDS VIEW */
             <div className="grid grid-cols-1 gap-2.5">
               {paginatedAppointments.map(renderAppointmentCard)}
