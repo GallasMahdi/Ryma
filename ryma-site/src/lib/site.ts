@@ -1,30 +1,42 @@
 export interface LocalizedText {
   fr: string;
-  ar: string;
+  pt?: string;
+  en?: string;
+  ar?: string;
 }
 
 export const SITE = {
   name: 'Ryma Ouichka',
   nameAr: 'ريما ويشكة',
-  tagline: { fr: 'Kinésithérapeute & Spécialiste en Amincissement', ar: 'أخصائية علاج طبيعي وتنحيف' } as LocalizedText,
-  city: { fr: 'Ezzahra, Tunisie', ar: 'الزهراء، تونس' } as LocalizedText,
-  phone: '+216 71 800 123',
-  whatsapp: '21698123456',
-  whatsappDisplay: '+216 98 123 456',
-  email: 'contact@ryma-ouichka.tn',
+  tagline: {
+    pt: 'Clínica de Fisioterapia & Estética Avançada',
+    en: 'Physiotherapy & Advanced Aesthetics Clinic',
+    fr: 'Clinique de Kinésithérapie & Soins Avancés',
+  } as LocalizedText,
+  city: {
+    pt: 'Lisboa, Portugal',
+    en: 'Lisbon, Portugal',
+    fr: 'Lisbonne, Portugal',
+  } as LocalizedText,
+  phone: '+351 912 345 678',
+  whatsapp: '351912345678',
+  whatsappDisplay: '+351 912 345 678',
+  email: 'contacto@ryma-ouichka.pt',
   address: {
-    fr: 'Av. Habib Bourguiba, Ezzahra 2034, Tunisie',
-    ar: 'شارع الحبيب بورقيبة، الزهراء 2034، تونس',
+    pt: 'Avenida da Liberdade 120, 1250-146 Lisboa, Portugal',
+    en: 'Avenida da Liberdade 120, 1250-146 Lisbon, Portugal',
+    fr: 'Avenida da Liberdade 120, 1250-146 Lisbonne, Portugal',
   } as LocalizedText,
   hours: {
-    fr: 'Lun – Sam : 08h30 – 18h30 | Dimanche fermé',
-    ar: 'الإثنين – السبت: 08:30 – 18:30 | الأحد مغلق',
+    pt: 'Seg – Sáb : 08h30 – 19h00 | Domingo Encerrado',
+    en: 'Mon – Sat: 08:30 – 19:00 | Sunday Closed',
+    fr: 'Lun – Sam : 08h30 – 19h00 | Dimanche fermé',
   } as LocalizedText,
   mapEmbed: 'https://www.google.com/maps/embed?pb=',
   googlePlaceId: '',
   facebook: 'https://facebook.com/rymaouichka',
   instagram: 'https://instagram.com/ryma.ouichka',
-  bookingApiUrl: '', // à renseigner plus tard (intégration serveur)
+  bookingApiUrl: '',
   analytics: {
     gaMeasurementId: process.env.NEXT_PUBLIC_GA_ID ?? '',
     metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID ?? '',
@@ -33,36 +45,76 @@ export const SITE = {
 };
 
 export const STATS = {
-  patients: { fr: '1 200+', ar: '+1 200' },
-  years: { fr: '8+', ar: '+8' },
+  patients: { pt: '1 200+', en: '1,200+', fr: '1 200+' },
+  years: { pt: '8+', en: '8+', fr: '8+' },
   poles: '3',
   satisfaction: '99%',
 };
 
 export const CERTIFICATIONS: { title: LocalizedText; issuer: LocalizedText; year: string }[] = [
   {
-    title: { fr: 'Diplôme de Kinésithérapie (État Tunisien)', ar: 'شهادة العلاج الطبيعي (الدولة التونسية)' },
-    issuer: { fr: 'Institut Supérieur des Sciences de la Santé', ar: 'المعهد العالي لعلوم الصحة' },
+    title: {
+      pt: 'Licenciatura em Fisioterapia',
+      en: 'Bachelor of Science in Physiotherapy',
+      fr: 'Diplôme d\'État en Kinésithérapie / Physiothérapie',
+    },
+    issuer: {
+      pt: 'Escola Superior de Saúde / Ensino Universitário de Saúde',
+      en: 'School of Health Sciences / University Health Faculty',
+      fr: 'Institut Supérieur des Sciences de la Santé',
+    },
     year: '2015',
   },
   {
-    title: { fr: 'Certification Rééducation Posturale Globale (RPG)', ar: 'شهادة إعادة التأهيل الوضعي الشامل' },
-    issuer: { fr: 'Formation RPG International', ar: 'التكوين الدولي لإعادة التأهيل الوضعي' },
+    title: {
+      pt: 'Certificação em Reeducação Postural Global (RPG)',
+      en: 'Global Postural Reeducation (GPR) Certification',
+      fr: 'Certification Rééducation Posturale Globale (RPG)',
+    },
+    issuer: {
+      pt: 'Formação RPG Internacional',
+      en: 'GPR International Institute',
+      fr: 'Formation RPG International',
+    },
     year: '2017',
   },
   {
-    title: { fr: 'Diplôme Universitaire Périnéologie & Rééducation Post-Partum', ar: 'دبلوم جامعي في طب العجان وإعادة التأهيل بعد الولادة' },
-    issuer: { fr: 'Université de Tunis El Manar', ar: 'جامعة تونس المنار' },
+    title: {
+      pt: 'Especialização em Fisioterapia da Mulher & Pavimento Pélvico',
+      en: 'Specialization in Women\'s Health & Pelvic Floor Rehabilitation',
+      fr: 'Spécialisation Périnéologie & Rééducation Post-Partum',
+    },
+    issuer: {
+      pt: 'Pós-Graduação Universitária em Saúde da Mulher',
+      en: 'University Postgraduate in Women\'s Health',
+      fr: 'Formation Universitaire en Santé de la Femme',
+    },
     year: '2019',
   },
   {
-    title: { fr: 'Techniques de Drainage Lymphatique Manuel (méthode Vodder)', ar: 'تقنيات الصرف اللمفاوي اليدوي (طريقة فودر)' },
-    issuer: { fr: 'Centre de Formation Vodder', ar: 'مركز تكوين فودر' },
+    title: {
+      pt: 'Técnicas Avançadas de Drenagem Linfática Manual (Método Vodder)',
+      en: 'Advanced Manual Lymphatic Drainage (Vodder Method)',
+      fr: 'Techniques de Drainage Lymphatique Manuel (Méthode Vodder)',
+    },
+    issuer: {
+      pt: 'Centro de Certificação Vodder',
+      en: 'Vodder Certification Center',
+      fr: 'Centre de Formation Vodder',
+    },
     year: '2020',
   },
   {
-    title: { fr: 'Spécialisation en Médecine Esthétique Non-Invasive (cavitation, RF, cryo)', ar: 'تخصص في الطب التجميلي غير الجراحي' },
-    issuer: { fr: 'Formation Européenne d\'Appareillage Esthétique', ar: 'تكوين أوروبي في أجهزة التجميل' },
+    title: {
+      pt: 'Especialização em Fisioterapia Dermato-Funcional & Tecnologias Não Invasivas',
+      en: 'Specialization in Dermatofunctional Physiotherapy & Non-Invasive Technologies',
+      fr: 'Spécialisation en Soins Dermato-Fonctionnels & Appareillage',
+    },
+    issuer: {
+      pt: 'Academia Europeia de Tecnologias Clínicas',
+      en: 'European Clinical Technologies Academy',
+      fr: 'Formation Européenne d\'Appareillage Esthétique',
+    },
     year: '2022',
   },
 ];
@@ -70,22 +122,42 @@ export const CERTIFICATIONS: { title: LocalizedText; issuer: LocalizedText; year
 export const MILESTONES: { year: string; text: LocalizedText }[] = [
   {
     year: '2015',
-    text: { fr: 'Obtention du diplôme de kinésithérapie et premiers mois au CHU de Tunis.', ar: 'الحصول على شهادة العلاج الطبيعي وأول أشهر العمل في المستشفى الجامعي.' },
+    text: {
+      pt: 'Conclusão da Licenciatura em Fisioterapia e início de prática clínica hospitalar.',
+      en: 'Completion of Physiotherapy degree and start of hospital clinical practice.',
+      fr: 'Obtention du diplôme de kinésithérapie et début de pratique clinique hospitalière.',
+    },
   },
   {
     year: '2017',
-    text: { fr: 'Formation RPG et ouverture du premier cabinet à Ezzahra.', ar: 'تكوين في إعادة التأهيل الوضعي وافتتاح أول عيادة في الزهراء.' },
+    text: {
+      pt: 'Especialização em RPG e abertura do espaço clínico de reabilitação postural.',
+      en: 'Specialization in GPR and opening of dedicated postural clinic.',
+      fr: 'Formation RPG et ouverture du cabinet de rééducation.',
+    },
   },
   {
     year: '2019',
-    text: { fr: 'Développement du pôle rééducation post-partum et périnéale.', ar: 'تطوير قطاع إعادة التأهيل بعد الولادة وطب العجان.' },
+    text: {
+      pt: 'Criação do polo de saúde da mulher, reabilitação pélvica e cuidados pós-parto.',
+      en: 'Establishment of women\'s health, pelvic floor, and postpartum care division.',
+      fr: 'Développement du pôle santé de la femme et rééducation périnéale.',
+    },
   },
   {
     year: '2022',
-    text: { fr: 'Lancement du pôle technologies minceur non-invasives.', ar: 'إطلاق قطاع تقنيات التنحيف غير الجراحية.' },
+    text: {
+      pt: 'Integração de protocolos avançados de estética dermato-funcional não invasiva.',
+      en: 'Integration of advanced non-invasive dermatofunctional body contouring protocols.',
+      fr: 'Lancement du pôle technologies minceur non-invasives.',
+    },
   },
   {
-    year: '2025',
-    text: { fr: 'Plus de 1 200 patientes et patients accompagnés.', ar: 'أكثر من 1,200 مريض ومريضة تمت مواكبتهم.' },
+    year: '2026',
+    text: {
+      pt: 'Mais de 1 200 utentes acompanhados com taxas de satisfação de 99%.',
+      en: 'Over 1,200 patients cared for with a 99% satisfaction rate.',
+      fr: 'Plus de 1 200 patientes et patients accompagnés avec 99% de satisfaction.',
+    },
   },
 ];

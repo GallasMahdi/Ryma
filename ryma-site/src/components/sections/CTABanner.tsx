@@ -10,7 +10,7 @@ export function CTABanner() {
   const { lang, t } = useLanguage();
 
   const trustItems = [
-    { text: lang === 'pt' ? 'Possibilidade de comparticipação CNAM' : lang === 'en' ? 'CNAM insurance coverage available' : 'Prise en charge CNAM possible' },
+    { text: lang === 'pt' ? 'Faturas-recibo para reembolso de seguros e ADSE' : lang === 'en' ? 'Receipts for health insurance reimbursement' : 'Factures-reçus pour mutuelles et assurances' },
     { text: lang === 'pt' ? 'Sem compromisso' : lang === 'en' ? 'No commitment required' : 'Sans engagement' },
     { text: lang === 'pt' ? 'Lembrete automático 24h antes' : lang === 'en' ? 'Automatic 24h SMS reminder' : 'Rappel automatique 24h avant' },
   ];

@@ -36,30 +36,31 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ryma Ouichka — Kinésithérapie & Soins Minceur à Ezzahra',
+    default: 'Ryma Ouichka — Clínica de Fisioterapia & Estética Avançada em Lisboa',
     template: '%s | Ryma Ouichka',
   },
   description:
-    'Cabinet de kinésithérapie et de soins minceur à Ezzahra, Tunisie. Rééducation posturale, post-partum, cavitation, radiofréquence, cryolipolyse. Prise de rendez-vous en ligne.',
+    'Clínica de fisioterapia e tratamentos estéticos avançados em Lisboa, Portugal. Reeducação postural (RPG), recuperação pós-parto, drenagem linfática, cavitação, radiofrequência e criolipólise. Marcação online de consultas.',
   keywords: [
-    'kinésithérapie Ezzahra',
-    'kiné Tunisie',
-    'rééducation post-partum',
-    'cavitation Tunisie',
-    'minceur Ezzahra',
-    'radiofréquence',
-    'cryolipolyse',
+    'fisioterapia Lisboa',
+    'fisioterapeuta Lisboa',
+    'reabilitação pós-parto Lisboa',
+    'drenagem linfática manual Lisboa',
+    'cavitação Lisboa',
+    'radiofrequência Lisboa',
+    'criolipólise Lisboa',
     'Ryma Ouichka',
+    'clínica fisioterapia Portugal',
   ],
   authors: [{ name: 'Ryma Ouichka' }],
   creator: 'Ryma Ouichka',
   openGraph: {
     type: 'website',
-    locale: 'fr_TN',
-    siteName: 'Ryma Ouichka — Kinésithérapie & Minceur',
-    title: 'Ryma Ouichka — Kinésithérapie & Soins Minceur à Ezzahra',
+    locale: 'pt_PT',
+    siteName: 'Ryma Ouichka — Fisioterapia & Estética Avançada',
+    title: 'Ryma Ouichka — Clínica de Fisioterapia & Estética Avançada em Lisboa',
     description:
-      'Cabinet spécialisé à Ezzahra, Tunisie. Kinésithérapie thérapeutique, rééducation post-partum, soins minceur non-invasifs (cavitation, RF, cryolipolyse).',
+      'Clínica especializada em Lisboa, Portugal. Fisioterapia médica, reabilitação do pavimento pélvico, tratamentos corporais não invasivos.',
   },
   robots: {
     index: true,
@@ -70,41 +71,41 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" dir="ltr" className={`${fraunces.variable} ${inter.variable} ${ibmPlexMono.variable}`}>
+    <html lang="pt-PT" dir="ltr" className={`${fraunces.variable} ${inter.variable} ${ibmPlexMono.variable}`}>
       <head>
-        {/* Schema.org LocalBusiness */}
+        {/* Schema.org LocalBusiness / MedicalBusiness */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
-              '@type': ['LocalBusiness', 'MedicalBusiness'],
-              name: 'Ryma Ouichka — Kinésithérapie & Minceur',
-              description: 'Cabinet de kinésithérapie et soins minceur à Ezzahra, Tunisie.',
-              url: 'https://ryma-ouichka.tn',
-              telephone: '+21671800123',
-              email: 'contact@ryma-ouichka.tn',
+              '@type': ['LocalBusiness', 'MedicalBusiness', 'PhysicalTherapy'],
+              name: 'Ryma Ouichka — Clínica de Fisioterapia & Estética Avançada',
+              description: 'Clínica de fisioterapia e estética médica avançada em Lisboa, Portugal.',
+              url: 'https://ryma-ouichka.pt',
+              telephone: '+351912345678',
+              email: 'contacto@ryma-ouichka.pt',
               address: {
                 '@type': 'PostalAddress',
-                streetAddress: 'Av. Habib Bourguiba',
-                addressLocality: 'Ezzahra',
-                postalCode: '2034',
-                addressCountry: 'TN',
+                streetAddress: 'Avenida da Liberdade 120',
+                addressLocality: 'Lisboa',
+                postalCode: '1250-146',
+                addressCountry: 'PT',
               },
               geo: {
                 '@type': 'GeoCoordinates',
-                latitude: 36.7611,
-                longitude: 10.2786,
+                latitude: 38.7196,
+                longitude: -9.1449,
               },
               openingHoursSpecification: [
                 {
                   '@type': 'OpeningHoursSpecification',
                   dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
                   opens: '08:30',
-                  closes: '18:30',
+                  closes: '19:00',
                 },
               ],
-              priceRange: '$$',
+              priceRange: '€€',
             }),
           }}
         />

@@ -45,14 +45,16 @@ export function Hero() {
               key={img.src}
               initial={{ opacity: 0 }}
               animate={{ opacity: isActive ? 0.9 : 0, scale: isActive ? 1 : 1.04 }}
-              transition={{ opacity: { duration: 1.4, ease: 'easeInOut' }, scale: { duration: 4, ease: 'linear' } }}
+              transition={{ opacity: { duration: 1.2, ease: 'easeInOut' }, scale: { duration: 4, ease: 'linear' } }}
               className="absolute inset-0"
+              style={{ willChange: 'opacity, transform' }}
             >
               <Image
                 src={img.src}
                 alt={img.alt}
                 fill
                 priority={index === 0}
+                quality={85}
                 sizes="100vw"
                 className="object-cover object-center"
               />

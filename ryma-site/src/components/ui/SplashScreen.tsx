@@ -329,7 +329,7 @@ export function SplashScreen() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 2.3, duration: 0.8 }}
               >
-                Ezzahra — Tunisie
+                Lisboa — Portugal
               </motion.p>
 
               {/* Progress line */}

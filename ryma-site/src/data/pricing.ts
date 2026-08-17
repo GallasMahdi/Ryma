@@ -164,9 +164,9 @@ export const PRICING_PACKAGES: PricingPackage[] = [
       en: 'Physiotherapy Pain & Posture Care',
     },
     badge: {
-      fr: 'Prise en charge CNAM possible',
-      pt: 'Comparticipação Disponível',
-      en: 'Insurance Coverage Available',
+      fr: 'Reçu Mutuelle / Assurance',
+      pt: 'Recibos p/ Seguro de Saúde',
+      en: 'Health Insurance Receipts',
     },
     description: {
       fr: 'Programme thérapeutique pour douleurs chroniques, sciatique et mal de dos.',

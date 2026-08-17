@@ -91,7 +91,7 @@ export function Navbar() {
             <span className="h-3 w-px bg-[#C49A3C]/30" />
             <span className="flex items-center gap-1.5 text-[#E8C97A] font-medium tracking-wide">
               <IconSparkles size={13} className="text-[#C49A3C]" />
-              {lang === 'pt' ? 'Comparticipação CNAM' : lang === 'en' ? 'CNAM Coverage' : 'Prise en charge CNAM'}
+              {lang === 'pt' ? 'Recibos p/ Seguros de Saúde' : lang === 'en' ? 'Health Insurance Receipts' : 'Reçus pour Mutuelles / Assurances'}
             </span>
           </div>
         </div>

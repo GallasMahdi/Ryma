@@ -42,7 +42,8 @@ export function ScrollReveal({
       style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'none' : directionMap[direction],
-        transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s`,
+        willChange: isVisible ? 'auto' : 'opacity, transform',
+        transition: `opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s`,
       }}
     >
       {children}

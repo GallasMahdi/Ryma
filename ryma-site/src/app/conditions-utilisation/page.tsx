@@ -7,8 +7,7 @@ import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { IconFileCheck, IconCalendarEvent, IconAlertCircle, IconArrowLeft } from '@tabler/icons-react';
 
 export default function ConditionsUtilisationPage() {
-  const { lang } = useLanguage();
-  const isFr = lang === 'fr';
+  const { lang, t } = useLanguage();
 
   return (
     <div className="bg-[#FAFAF8] min-h-screen text-[#1A1412] pt-28 pb-24">
@@ -19,7 +18,7 @@ export default function ConditionsUtilisationPage() {
             className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-[#9A7428] hover:text-[#C49A3C] transition-colors mb-8 bg-[#F5E9C8] border border-[#C49A3C]/30 px-4 py-2 rounded-full"
           >
             <IconArrowLeft size={14} className="rtl-flip" />
-            <span>{isFr ? 'Retour à l\'accueil' : 'العودة للرئيسية'}</span>
+            <span>{t.common.backToHome}</span>
           </Link>
 
           <div className="flex items-center gap-3 mb-4">
@@ -27,17 +26,19 @@ export default function ConditionsUtilisationPage() {
               <IconFileCheck size={24} />
             </div>
             <span className="font-mono text-xs font-bold text-[#9A7428] tracking-widest uppercase">
-              {isFr ? 'Conditions de Service' : 'شروط الخدمة والاستخدام'}
+              {lang === 'pt' ? 'Termos e Condições de Serviço' : lang === 'en' ? 'Terms of Service' : 'Conditions de Service'}
             </span>
           </div>
 
           <h1 className="font-serif text-3xl md:text-5xl font-bold text-[#1A1412] mb-6">
-            {isFr ? 'Conditions Générales d\'Utilisation' : 'شروط الاستخدام العامة'}
+            {lang === 'pt' ? 'Termos e Condições Gerais' : lang === 'en' ? 'Terms & Conditions' : 'Conditions Générales d\'Utilisation'}
           </h1>
           <p className="text-[#6B6058] text-lg mb-10 leading-relaxed border-b border-[#E8E2D8] pb-6">
-            {isFr
-              ? 'Bienvenue sur le site du Cabinet Ryma Ouichka. L\'utilisation de ce site et des services de réservation en ligne implique l\'acceptation pleine et entière des présentes conditions.'
-              : 'مرحباً بكم في موقع عيادة ريما ويشكة. تقتضي استخدام هذا الموقع وخدمات الحجز عبر الإنترنت القبول الكامل لهذه الشروط.'}
+            {lang === 'pt'
+              ? 'Bem-vindo ao website oficial da Clínica Ryma Ouichka. A utilização deste website e dos serviços de agendamento online rege-se pelos presentes termos e condições.'
+              : lang === 'en'
+              ? 'Welcome to the official website of Ryma Ouichka Clinic. The use of this website and its online booking services is subject to these Terms & Conditions.'
+              : 'Bienvenue sur le site de la Clinique Ryma Ouichka. L\'utilisation de ce site et des services de réservation en ligne implique l\'acceptation pleine et entière des présentes conditions.'}
           </p>
         </ScrollReveal>
 
@@ -46,17 +47,21 @@ export default function ConditionsUtilisationPage() {
           <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-xs">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-2">
               <IconCalendarEvent className="text-[#9A7428]" size={20} />
-              {isFr ? '1. Prise de rendez-vous & Engagements' : '1. حجز المواعيد والالتزامات'}
+              {lang === 'pt' ? '1. Agendamento de Consultas & Compromissos' : lang === 'en' ? '1. Appointment Booking & Commitments' : '1. Prise de rendez-vous & Engagements'}
             </h2>
             <p className="text-sm md:text-base mb-3">
-              {isFr
-                ? 'Le service de réservation en ligne permet aux patients de sélectionner un soin et un créneau horaire disponible. La confirmation finale du rendez-vous est adressée au patient via SMS / WhatsApp ou téléphone.'
-                : 'تتيح خدمة الحجز عبر الإنترنت للمرضى اختيار العلاج والموعد المتاح. يتم إرسال التأكيد النهائي للموعد عبر الرسائل القصيرة/واتساب أو الهاتف.'}
+              {lang === 'pt'
+                ? 'O serviço de marcação online permite aos utentes selecionar um tratamento e um horário de atendimento disponível. A confirmação do agendamento é enviada por mensagem (SMS/WhatsApp) ou contacto telefónico.'
+                : lang === 'en'
+                ? 'The online booking service allows patients to select a treatment and an available time slot. Booking confirmation is sent via SMS, WhatsApp, or phone call.'
+                : 'Le service de réservation en ligne permet aux patients de sélectionner un soin et un créneau horaire disponible.'}
             </p>
             <p className="text-sm md:text-base text-[#6B6058]">
-              {isFr
-                ? 'Tout rendez-vous réservé engage le patient à se présenter à l\'heure convenue au cabinet situé à Ezzahra, Tunisie.'
-                : 'يلتزم المريض بالذود والحضور في الوقت المحدد بالعيادة في الزهراء، تونس.'}
+              {lang === 'pt'
+                ? 'A marcação de uma consulta compromete o utente a comparecer à hora agendada nas instalações da clínica em Lisboa, Portugal.'
+                : lang === 'en'
+                ? 'Booking an appointment commits the patient to arrive at the scheduled time at the clinic facilities in Lisbon, Portugal.'
+                : 'Tout rendez-vous réservé engage le patient à se présenter à l\'heure convenue à la clinique à Lisbonne.'}
             </p>
           </div>
 
@@ -64,34 +69,42 @@ export default function ConditionsUtilisationPage() {
           <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-xs">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-2">
               <IconAlertCircle className="text-[#9A7428]" size={20} />
-              {isFr ? '2. Politique d\'annulation et de report' : '2. سياسة الإلغاء والتأجيل'}
+              {lang === 'pt' ? '2. Política de Desmarcação e Reagendamento' : lang === 'en' ? '2. Cancellation & Rescheduling Policy' : '2. Politique d\'annulation et de report'}
             </h2>
             <p className="text-sm md:text-base mb-3">
-              {isFr
-                ? 'Afin d\'assurer un service fluide à l\'ensemble de nos patients, nous demandons un préavis d\'au moins 24 heures en cas d\'annulation ou de report d\'un rendez-vous.'
-                : 'لضمان خدمة سلسة لجميع مرضانا، يرجى تقديم إشعار مسبق قبل 24 ساعة على الأقل في حالة إلغاء أو تأجيل الموعد.'}
+              {lang === 'pt'
+                ? 'Para garantir a disponibilidade e a qualidade de atendimento a todos os utentes, solicitamos um aviso prévio de pelo menos 24 horas em caso de desmarcação ou necessidade de reagendamento de uma sessão.'
+                : lang === 'en'
+                ? 'To ensure availability and service quality for all patients, we request at least 24 hours prior notice for cancellations or rescheduling.'
+                : 'Afin d\'assurer un service fluide à l\'ensemble de nos patients, nous demandons un préavis d\'au moins 24 heures en cas d\'annulation.'}
             </p>
             <p className="text-sm md:text-base text-[#6B6058]">
-              {isFr
-                ? 'L\'annulation peut être effectuée en appelant directement le cabinet au +216 71 800 123 ou par message WhatsApp.'
-                : 'يمكن إجراء الإلغاء عبر الاتصال المباشر بالعيادة على 71800123 216+ أو عبر رسالة واتساب.'}
+              {lang === 'pt'
+                ? 'A desmarcação pode ser efetuada contactando a clínica através do telefone (+351 912 345 678) ou por mensagem de WhatsApp.'
+                : lang === 'en'
+                ? 'Cancellations can be made by contacting the clinic at (+351 912 345 678) or via WhatsApp.'
+                : 'L\'annulation peut être effectuée en appelant la clinique au (+351 912 345 678) ou par message WhatsApp.'}
             </p>
           </div>
 
           {/* 3. Tarification & Règlement */}
           <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-xs">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4">
-              {isFr ? '3. Tarifs et prise en charge' : '3. الأسعار والتغطية'}
+              {lang === 'pt' ? '3. Preços e Faturação' : lang === 'en' ? '3. Pricing & Invoicing' : '3. Tarifs et facturation'}
             </h2>
             <p className="text-sm md:text-base mb-3">
-              {isFr
-                ? 'Tous les tarifs affichés sur le site sont exprimés en Dinars Tunisiens (TND) et sont applicables au cabinet.'
-                : 'جميع الأسعار المعروضة على الموقع مبيّنة بالدينار التونسي (TND) ومطبقة في العيادة.'}
+              {lang === 'pt'
+                ? 'Todos os preços apresentados no website estão expressos em Euros (€) com todas as taxas incluídas quando aplicável. O pagamento é realizado diretamente na clínica no final da sessão (Multibanco, MB WAY ou numerário).'
+                : lang === 'en'
+                ? 'All prices shown on the website are in Euros (€). Payment is completed directly at the clinic at the end of each session.'
+                : 'Tous les tarifs affichés sur le site sont exprimés en Euros (€). Le règlement s\'effectue directement à la clinique.'}
             </p>
             <p className="text-sm md:text-base text-[#6B6058]">
-              {isFr
-                ? 'Les actes de kinésithérapie prescrits font l\'objet d\'une prise en charge selon la réglementation de la CNAM (Caisse Nationale d\'Assurance Maladie).'
-                : 'تخضع أعمال العلاج الطبيعي الموصوفة للتغطية وفقاً لأنظمة الصندوق الوطني للضمان الصحي (CNAM).'}
+              {lang === 'pt'
+                ? 'São emitidas faturas-recibo com número de cédula profissional para efeitos de dedução em IRS e pedido de reembolso junto de seguradoras de saúde ou subsistemas (ADSE, Médis, Multicare, etc.).'
+                : lang === 'en'
+                ? 'Certified medical invoices with professional license numbers are provided for tax deduction and health insurance reimbursement.'
+                : 'Des factures-reçus certifiées sont délivrées pour vos demandes de remboursement auprès de vos mutuelles ou assurances.'}
             </p>
           </div>
         </ScrollReveal>

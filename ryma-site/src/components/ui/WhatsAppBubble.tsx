@@ -6,7 +6,7 @@ import { IconX, IconBrandWhatsapp, IconArrowLeft, IconChevronRight } from '@tabl
 import { useLanguage } from '@/lib/i18n';
 import { usePathname } from 'next/navigation';
 
-const WA_NUMBER = '21698123456';
+const WA_NUMBER = '351912345678';
 
 interface FAQ {
   q: string;
@@ -23,18 +23,18 @@ const FAQS: Record<'fr' | 'pt' | 'en', FAQ[]> = {
     },
     {
       q: 'Quels sont vos tarifs ?',
-      a: 'Nos soins débutent à partir de 45 DT. Des forfaits avantageux sont disponibles. Consultez la page Tarifs pour plus de détails.',
+      a: 'Nos soins débutent à partir de 45 €. Des forfaits avantageux sont disponibles. Consultez la page Tarifs pour plus de détails.',
       waText: 'Bonjour, je souhaiterais des informations sur vos tarifs.',
     },
     {
-      q: 'Acceptez-vous la prise en charge CNAM ?',
-      a: 'Oui ! Les soins de kinésithérapie prescrits par un médecin sont pris en charge par la CNAM. Apportez votre ordonnance et carte CNAM.',
-      waText: 'Bonjour, j\'ai une question concernant la prise en charge CNAM.',
+      q: 'Délivrez-vous des reçus pour les mutuelles / assurances ?',
+      a: 'Oui ! Nous délivrons des factures-reçus certifiées avec numéro d\'ordre professionnel pour le remboursement par vos assurances santé et mutuelles.',
+      waText: 'Bonjour, j\'ai une question concernant les reçus pour mon assurance santé.',
     },
     {
-      q: 'Où se situe le cabinet ?',
-      a: 'Le cabinet est situé Avenue Habib Bourguiba à Ezzahra, Ben Arous, Tunisie. Facilement accessible avec stationnement à proximité.',
-      waText: 'Bonjour, comment me rendre au cabinet ?',
+      q: 'Où se situe la clinique ?',
+      a: 'La clinique est située Avenida da Liberdade à Lisbonne, Portugal. Facilement accessible avec stationnement et transports à proximité.',
+      waText: 'Bonjour, comment me rendre à la clinique ?',
     },
     {
       q: 'Quels soins proposez-vous ?',
@@ -50,18 +50,18 @@ const FAQS: Record<'fr' | 'pt' | 'en', FAQ[]> = {
     },
     {
       q: 'Quais são os valores dos tratamentos?',
-      a: 'Os nossos tratamentos começam a partir dos valores indicados na tabela. Dispomos de pacotes com descontos especiais.',
+      a: 'Os nossos tratamentos começam a partir de 45 €. Dispomos de pacotes com descontos especiais na página de Preços.',
       waText: 'Olá, gostaria de obter informações sobre os valores dos tratamentos.',
     },
     {
-      q: 'Têm acordo ou comparticipação de seguro?',
-      a: 'Sim, passamos recibos médicos e relatórios de fisioterapia para reembolso de seguros e comparticipações.',
-      waText: 'Olá, gostaria de saber informações sobre comparticipações e recibos.',
+      q: 'Passam recibos para seguros de saúde e ADSE?',
+      a: 'Sim! Emitimos fatura-recibo com número de cédula profissional da Ordem dos Fisioterapeutas para efeitos de reembolso junto do seu seguro de saúde ou subsistema (ADSE, Médis, Multicare, AdvanceCare, etc.).',
+      waText: 'Olá, gostaria de saber informações sobre recibos para o meu seguro de saúde.',
     },
     {
       q: 'Onde fica localizada a clínica?',
-      a: 'A clínica está situada na localização central com estacionamento facilitado. Consulte o mapa na página de contacto.',
-      waText: 'Olá, gostaria de saber como chegar à clínica.',
+      a: 'A clínica está situada na Avenida da Liberdade em Lisboa, com fácil acesso por transportes públicos e estacionamento próximo.',
+      waText: 'Olá, gostaria de saber a localização exata da clínica.',
     },
     {
       q: 'Quais os tratamentos disponíveis?',

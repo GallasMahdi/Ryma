@@ -157,7 +157,7 @@ export default function TarifsPage() {
         </div>
       </section>
 
-      {/* ── CNAM Note ────────────────────────────────── */}
+      {/* ── Insurance & Receipts Note ────────────────────────────────── */}
       <section className="py-12 pb-24 bg-[#FAFAF8]">
         <div className="mx-auto max-w-3xl px-6 md:px-12">
           <ScrollReveal>
@@ -166,14 +166,14 @@ export default function TarifsPage() {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#C49A3C] to-[#E8C97A]"></div>
               
               <span className="font-mono text-xs font-bold tracking-widest text-[#9A7428] uppercase block mb-4">
-                ℹ️ {lang === 'pt' ? 'Comparticipação & Seguros de Saúde' : lang === 'en' ? 'Insurance Coverage & CNAM' : 'Prise en charge CNAM'}
+                ℹ️ {lang === 'pt' ? 'Seguros de Saúde & Comparticipações' : lang === 'en' ? 'Health Insurance & Reimbursement' : 'Mutuelles & Assurances Santé'}
               </span>
               <p className="text-[#6B6058] text-[15px] leading-relaxed max-w-2xl mx-auto">
                 {lang === 'pt'
-                  ? 'As sessões de fisioterapia prescritas por um médico são elegíveis para comparticipação e reembolso através de recibos de seguro de saúde ou convenção CNAM. Apresente a sua prescrição médica na primeira consulta.'
+                  ? 'Emitimos faturas-recibo com o número de cédula profissional da Ordem dos Fisioterapeutas para que possa solicitar o reembolso junto do seu seguro de saúde ou subsistema (ADSE, Médis, Multicare, AdvanceCare, etc.). Recomenda-se a apresentação de prescrição médica caso o seu plano de saúde a exija.'
                   : lang === 'en'
-                  ? 'Physiotherapy sessions prescribed by a medical doctor are eligible for health insurance reimbursement and CNAM coverage. Please bring your medical prescription to your first visit.'
-                  : 'Les séances de kinésithérapie réalisées sur prescription médicale peuvent être remboursées par la CNAM (Caisse Nationale d\'Assurance Maladie en Tunisie). Apportez votre ordonnance médicale lors de votre première séance.'}
+                  ? 'We provide certified medical receipts with professional registration number so you can request reimbursement from your health insurance or healthcare plan (ADSE, Médis, Multicare, AdvanceCare, etc.). Please bring your medical prescription if required by your insurance provider.'
+                  : 'Nous délivrons des factures-reçus certifiées avec numéro d\'ordre professionnel pour vous permettre de demander le remboursement auprès de votre mutuelle ou assurance santé.'}
               </p>
             </div>
           </ScrollReveal>

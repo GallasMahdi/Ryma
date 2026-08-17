@@ -65,6 +65,20 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* GPU composite hints for fluid 60/120fps animations & scrolling */
+.gpu-layer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Content visibility optimization for offscreen sections */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
 }
 
 /* ======================== TYPOGRAPHY ======================== */

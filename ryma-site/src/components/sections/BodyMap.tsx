@@ -475,15 +475,15 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
               sub={<span className="flex items-center gap-1"><IconClock size={10} />{lang === 'pt' ? 'por sessão' : lang === 'en' ? 'per session' : 'par session'}</span>}
             />
             <StatCell
-              label="CNAM"
+              label={lang === 'pt' ? 'Seguro / ADSE' : lang === 'en' ? 'Insurance' : 'Mutuelle / Assur.'}
               value={
                 isKine ? (
                   <span className="text-sm font-semibold" style={{ color: EMERALD }}>
-                    {lang === 'pt' ? 'Com Comparticipação' : lang === 'en' ? 'Covered' : 'Couvert'}
+                    {lang === 'pt' ? 'Elegível p/ Recibo' : lang === 'en' ? 'Receipt Provided' : 'Reçu délivré'}
                   </span>
                 ) : (
                   <span className="text-sm font-medium" style={{ color: SLATE }}>
-                    {lang === 'pt' ? 'Sem Comparticipação' : lang === 'en' ? 'Private' : 'Hors CNAM'}
+                    {lang === 'pt' ? 'Regime Privado' : lang === 'en' ? 'Private Care' : 'Soin Privé'}
                   </span>
                 )
               }

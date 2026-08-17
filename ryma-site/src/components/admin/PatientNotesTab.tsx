@@ -598,7 +598,7 @@ export function PatientNotesTab({
                         <div className="font-mono text-[11px] text-[#77736B] flex items-center gap-1.5 mt-0.5">
                           <span>{p.phone}</span>
                           {p.cnamStatus === 'OUI' && (
-                            <span className="bg-[#6F8F72]/15 text-[#6F8F72] px-1.5 py-0.2 rounded-full text-[9px] font-bold">CNAM</span>
+                            <span className="bg-[#6F8F72]/15 text-[#6F8F72] px-1.5 py-0.2 rounded-full text-[9px] font-bold">{lang === 'pt' ? 'Seguro' : lang === 'en' ? 'Insurance' : 'Mutuelle'}</span>
                           )}
                         </div>
                       </div>
@@ -632,7 +632,7 @@ export function PatientNotesTab({
                       {activePatient.cnamStatus === 'OUI' && (
                         <span className="bg-[#6F8F72]/15 border border-[#6F8F72]/30 text-[#6F8F72] text-[10px] font-mono font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                           <IconShieldCheck size={12} />
-                          <span>CNAM</span>
+                          <span>{lang === 'pt' ? 'Seguro / ADSE' : lang === 'en' ? 'Insurance' : 'Mutuelle'}</span>
                         </span>
                       )}
                     </div>
