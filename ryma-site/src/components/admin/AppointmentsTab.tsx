@@ -40,6 +40,7 @@ interface AppointmentsTabProps {
   setFilter: (st: AppointmentStatus | 'all') => void;
   appointmentsError: string | null;
   loadingAppointments: boolean;
+  appointments: Appointment[];
   filteredAppointments: Appointment[];
   updateStatus: (id: string, status: AppointmentStatus) => void;
   setConfirmDialog: (dlg: { title: string; onConfirm: () => void } | null) => void;
@@ -63,6 +64,7 @@ export function AppointmentsTab({
   setFilter,
   appointmentsError,
   loadingAppointments,
+  appointments,
   filteredAppointments,
   updateStatus,
   setConfirmDialog,
@@ -352,11 +354,11 @@ export function AppointmentsTab({
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 pt-2 border-t border-[#E2E8F0]">
           <div className="flex flex-wrap items-center gap-1">
             {[
-              { id: 'all' as const, label: txt('Tous', 'All', 'Todos'), count: filteredAppointments.length },
-              { id: 'CONFIRMED' as const, label: txt('Confirmés', 'Confirmed', 'Confirmados'), count: filteredAppointments.filter(a => a.status === 'CONFIRMED').length },
-              { id: 'PENDING' as const, label: txt('En attente', 'Pending', 'Pendentes'), count: filteredAppointments.filter(a => a.status === 'PENDING').length },
-              { id: 'COMPLETED' as const, label: txt('Terminés', 'Completed', 'Concluídos'), count: filteredAppointments.filter(a => a.status === 'COMPLETED').length },
-              { id: 'CANCELLED' as const, label: txt('Annulés', 'Cancelled', 'Cancelados'), count: filteredAppointments.filter(a => a.status === 'CANCELLED').length },
+              { id: 'all' as const, label: txt('Tous', 'All', 'Todos'), count: appointments.length },
+              { id: 'CONFIRMED' as const, label: txt('Confirmés', 'Confirmed', 'Confirmados'), count: appointments.filter(a => a.status === 'CONFIRMED').length },
+              { id: 'PENDING' as const, label: txt('En attente', 'Pending', 'Pendentes'), count: appointments.filter(a => a.status === 'PENDING').length },
+              { id: 'COMPLETED' as const, label: txt('Terminés', 'Completed', 'Concluídos'), count: appointments.filter(a => a.status === 'COMPLETED').length },
+              { id: 'CANCELLED' as const, label: txt('Annulés', 'Cancelled', 'Cancelados'), count: appointments.filter(a => a.status === 'CANCELLED').length },
             ].map(p => (
               <button
                 key={p.id}

@@ -603,6 +603,7 @@ export default function AdminPage() {
               setFilter={setFilter}
               appointmentsError={appointmentsError}
               loadingAppointments={loadingAppointments}
+              appointments={appointments}
               filteredAppointments={filteredAppointments}
               updateStatus={updateStatus}
               setConfirmDialog={setConfirmDialog}
