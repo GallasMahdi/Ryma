@@ -943,7 +943,10 @@ export function PatientNotesTab({
                   </div>
                 )}
 
-                {/* TAB 2: TIMELI                    {combinedTimeline.length === 0 ? (
+                {/* TAB 2: TIMELINE */}
+                {activeDossierTab === 'timeline' && (
+                  <div className="space-y-3">
+                    {combinedTimeline.length === 0 ? (
                       <div className="text-center py-12 text-[#94A3B8] text-xs">
                         {txt('Aucune séance ou consultation enregistrée', 'No sessions or appointments recorded', 'Sem sessões ou consultas registadas')}
                       </div>
