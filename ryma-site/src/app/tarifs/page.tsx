@@ -1,184 +1,451 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES } from '@/data/services';
+import { SERVICES, ServicePole } from '@/data/services';
 import { PRICING_PACKAGES } from '@/data/pricing';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { IconCheck, IconStar } from '@tabler/icons-react';
+import { playSoftClick } from '@/lib/sound';
+import {
+  IconCheck,
+  IconStar,
+  IconClock,
+  IconShieldCheck,
+  IconSparkles,
+  IconStethoscope,
+  IconFlame,
+  IconArrowRight,
+  IconReceipt2,
+  IconSearch,
+  IconCalendarEvent,
+} from '@tabler/icons-react';
 
 export default function TarifsPage() {
   const { lang, t } = useLanguage();
+  const [activeCategory, setActiveCategory] = useState<'all' | 'packages' | 'single'>('all');
+  const [activePole, setActivePole] = useState<'all' | 'kinesitherapie' | 'minceur'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter individual services
+  const filteredServices = SERVICES.filter((s) => {
+    const matchesPole = activePole === 'all' || s.pole === activePole;
+    const name = (s.name[lang] || s.name.pt || s.name.en || s.name.fr || '').toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch = !query || name.includes(query);
+    return matchesPole && matchesSearch;
+  });
+
+  const kineServices = filteredServices.filter((s) => s.pole === 'kinesitherapie');
+  const minceurServices = filteredServices.filter((s) => s.pole === 'minceur');
 
   return (
-    <>
-      {/* ── Hero ─────────────────────────────────────── */}
-      <section className="relative pt-28 pb-14 overflow-hidden text-center bg-gradient-to-b from-[#FDF9F2] to-[#FAFAF8]">
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(245,233,200,0.5) 0%, transparent 70%)' }} />
-        <div className="relative mx-auto max-w-3xl px-6 md:px-12">
+    <div className="bg-[#FAFAF8] min-h-screen text-[#1A1412] select-none">
+      
+      {/* ── Minimalist Luxury Hero ─────────────────────────────────── */}
+      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-16 overflow-hidden text-center bg-gradient-to-b from-[#FDF9F2] via-[#FAF6EE] to-[#FAFAF8]">
+        {/* Ambient Gold Halo */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 75% 50% at 50% 0%, rgba(245,233,200,0.55) 0%, transparent 70%)',
+          }}
+        />
+
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 md:px-12">
           <ScrollReveal>
-            <Badge variant="gold" className="mb-4">
-              {lang === 'pt' ? 'Preços & Pacotes' : lang === 'en' ? 'Pricing & Packages' : 'Tarifs & Forfaits'}
-            </Badge>
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-4">
-              {lang === 'pt' ? 'Os Nossos Valores' : lang === 'en' ? 'Our Rates' : 'Nos Tarifs'}
-            </h1>
-            <p className="text-[#6B6058] text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-              {lang === 'pt'
-                ? 'Preços por sessão individual ou pacotes promocionais para programas completos. Comparticipação médica e recibos de seguro disponíveis.'
-                : lang === 'en'
-                ? 'Single session rates or cost-effective packages for full programs. Health insurance receipts and reimbursement supported.'
-                : 'Tarifs à la séance ou forfaits économiques pour un programme complet. Prise en charge mutuelle / assurance sur les soins kinésithérapeutiques avec prescription médicale.'}
-            </p>
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* ── Packages ─────────────────────────────────── */}
-      <section className="py-12 bg-[#FAFAF8]">
-        <div className="mx-auto max-w-7xl px-6 md:px-12">
-          <ScrollReveal className="mb-10 text-center md:text-start">
-            <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-semibold">
-              {lang === 'pt' ? '— Os Nossos Pacotes Recomendados —' : lang === 'en' ? '— Our Recommended Packages —' : '— Nos Forfaits Recommandés —'}
-            </span>
-          </ScrollReveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {PRICING_PACKAGES.map((pkg, i) => (
-              <ScrollReveal key={pkg.id} delay={i * 0.08}>
-                <div className={`relative h-full flex flex-col bg-white p-6 md:p-8 rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(196,154,60,0.14)] ${pkg.popular ? 'border-2 border-[#C49A3C]' : 'border border-[#E8E2D8] hover:border-[#C49A3C]/50'}`}>
-                  {pkg.popular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#9A7428] text-[#1A1412] text-[11px] font-bold font-mono px-4 py-1.5 rounded-full flex items-center gap-1 shadow-sm">
-                      <IconStar size={12} fill="currentColor" className="text-[#1A1412]" />
-                      {pkg.badge?.[lang] || pkg.badge?.pt || pkg.badge?.fr}
-                    </div>
-                  )}
-                  {!pkg.popular && pkg.badge && (
-                    <Badge variant="gold" className="mb-4 self-start">{pkg.badge[lang] || pkg.badge?.pt || pkg.badge?.fr}</Badge>
-                  )}
-
-                  <h3 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-3 mt-2">
-                    {pkg.name[lang] || pkg.name?.pt || pkg.name?.fr}
-                  </h3>
-                  <p className="text-sm text-[#6B6058] mb-6 leading-relaxed">
-                    {pkg.description[lang] || pkg.description?.pt || pkg.description?.fr}
-                  </p>
-
-                  <div className="flex items-end gap-2 mb-2">
-                    <span className="font-mono text-4xl font-bold text-[#C49A3C]">{pkg.price}</span>
-                    <span className="font-mono text-sm font-medium text-[#8A8078] mb-1">{t.common.currency}</span>
-                  </div>
-                  {pkg.originalPrice && (
-                    <span className="font-mono text-sm font-medium text-[#8A8078] line-through mb-1 block">
-                      {pkg.originalPrice} {t.common.currency}
-                    </span>
-                  )}
-                  <span className="font-mono text-xs font-semibold text-[#9A7428] bg-[#F5E9C8] px-2.5 py-1 rounded-full inline-block mb-6">
-                    {pkg.sessions} {lang === 'pt' ? 'sessões incluídas' : lang === 'en' ? 'sessions included' : 'séances incluses'}
-                  </span>
-
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {(pkg.features[lang] || pkg.features.pt || pkg.features.fr).map((feat, fi) => (
-                      <li key={fi} className="flex items-start gap-2.5 text-sm text-[#332D28]">
-                        <IconCheck size={16} className="text-[#C49A3C] mt-0.5 shrink-0" />
-                        <span className="leading-snug">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    href="/rendez-vous"
-                    variant={pkg.popular ? 'primary' : 'outline'}
-                    className="w-full justify-center py-3"
-                  >
-                    {t.common.bookAppointment}
-                  </Button>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Individual Prices Table ────────────────────── */}
-      <section className="py-16 bg-[#FAFAF8]">
-        <div className="mx-auto max-w-4xl px-6 md:px-12">
-          <ScrollReveal className="mb-10 text-center">
-            <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-semibold">
-              {lang === 'pt' ? '— Preços por Sessão Individual —' : lang === 'en' ? '— Single Session Rates —' : '— Tarifs à la séance —'}
-            </span>
-          </ScrollReveal>
-
-          {/* Kiné */}
-          <ScrollReveal className="mb-6">
-            <h3 className="font-serif text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-3">
-              <span className="w-8 h-px bg-[#C49A3C]/30 inline-block"></span>
-              {lang === 'pt' ? 'Fisioterapêutica' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
-            </h3>
-          </ScrollReveal>
-          <div className="space-y-3 mb-12">
-            {SERVICES.filter((s) => s.pole === 'kinesitherapie').map((service, i) => (
-              <ScrollReveal key={service.slug} delay={i * 0.04}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#E8E2D8] px-6 py-4.5 rounded-xl hover:border-[#C49A3C]/50 hover:shadow-sm transition-all duration-200 gap-3">
-                  <div>
-                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang] || service.name.pt || service.name.en || service.name.fr}</span>
-                    <span className="font-mono text-xs font-medium text-[#8A8078] ms-3 bg-[#FAF6EE] px-2 py-0.5 rounded-md">{service.duration}</span>
-                  </div>
-                  <span className="font-mono text-lg font-bold text-[#C49A3C]">{service.price} {t.common.currency}</span>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-
-          {/* Minceur */}
-          <ScrollReveal className="mb-6">
-            <h3 className="font-serif text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-3">
-              <span className="w-8 h-px bg-[#C49A3C]/30 inline-block"></span>
-              {lang === 'pt' ? 'Estética Corporal & Minceur' : lang === 'en' ? 'Slimming & Body Contouring' : 'Soins Minceur'}
-            </h3>
-          </ScrollReveal>
-          <div className="space-y-3">
-            {SERVICES.filter((s) => s.pole === 'minceur').map((service, i) => (
-              <ScrollReveal key={service.slug} delay={i * 0.04}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#E8E2D8] px-6 py-4.5 rounded-xl hover:border-[#C49A3C]/50 hover:shadow-sm transition-all duration-200 gap-3">
-                  <div>
-                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang] || service.name.pt || service.name.en || service.name.fr}</span>
-                    <span className="font-mono text-xs font-medium text-[#8A8078] ms-3 bg-[#FAF6EE] px-2 py-0.5 rounded-md">{service.duration}</span>
-                  </div>
-                  <span className="font-mono text-lg font-bold text-[#C49A3C]">{service.price} {t.common.currency}</span>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Insurance & Receipts Note ────────────────────────────────── */}
-      <section className="py-12 pb-24 bg-[#FAFAF8]">
-        <div className="mx-auto max-w-3xl px-6 md:px-12">
-          <ScrollReveal>
-            <div className="bg-white border border-[#C49A3C]/30 rounded-2xl p-8 text-center shadow-sm relative overflow-hidden">
-              {/* Decorative accent */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#C49A3C] to-[#E8C97A]"></div>
-              
-              <span className="font-mono text-xs font-bold tracking-widest text-[#9A7428] uppercase block mb-4">
-                ℹ️ {lang === 'pt' ? 'Seguros de Saúde & Comparticipações' : lang === 'en' ? 'Health Insurance & Reimbursement' : 'Mutuelles & Assurances Santé'}
-              </span>
-              <p className="text-[#6B6058] text-[15px] leading-relaxed max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md border border-[#C49A3C]/35 px-4 py-1.5 rounded-full mb-4 sm:mb-5 shadow-xs">
+              <IconSparkles size={14} className="text-[#C49A3C]" />
+              <span className="font-mono text-[11px] tracking-[0.24em] text-[#9A7428] uppercase font-bold">
                 {lang === 'pt'
-                  ? 'Emitimos faturas-recibo com o número de cédula profissional da Ordem dos Fisioterapeutas para que possa solicitar o reembolso junto do seu seguro de saúde ou subsistema (ADSE, Médis, Multicare, AdvanceCare, etc.). Recomenda-se a apresentação de prescrição médica caso o seu plano de saúde a exija.'
+                  ? 'Transparência & Excelência Clínica'
                   : lang === 'en'
-                  ? 'We provide certified medical receipts with professional registration number so you can request reimbursement from your health insurance or healthcare plan (ADSE, Médis, Multicare, AdvanceCare, etc.). Please bring your medical prescription if required by your insurance provider.'
-                  : 'Nous délivrons des factures-reçus certifiées avec numéro d\'ordre professionnel pour vous permettre de demander le remboursement auprès de votre mutuelle ou assurance santé.'}
-              </p>
+                  ? 'Transparent & Certified Pricing'
+                  : 'Tarifs & Protocoles Certifiés'}
+              </span>
+            </div>
+
+            <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-[#1A1412] mb-3 sm:mb-4 tracking-tight">
+              {lang === 'pt'
+                ? 'Tabela de Valores & Protocolos'
+                : lang === 'en'
+                ? 'Rates & Clinical Programs'
+                : 'Nos Tarifs & Forfaits'}
+            </h1>
+
+            <p className="text-[#6B6058] text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
+              {lang === 'pt'
+                ? 'Valores claros por sessão individual ou programas estruturados com descontos exclusivos. Emitimos recibos com cédula profissional para comparticipação pelo seu seguro de saúde.'
+                : lang === 'en'
+                ? 'Transparent pricing per individual session or complete clinical packages. Certified medical receipts provided for insurance reimbursements.'
+                : 'Tarifs à la séance ou forfaits avantageux avec suivi personnalisé. Factures certifiées délivrées pour vos remboursements mutuelle et assurance santé.'}
+            </p>
+
+            {/* Quick Filter View Switcher */}
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 p-1.5 bg-white/80 backdrop-blur-xl rounded-full border border-[#C49A3C]/30 max-w-sm sm:max-w-md mx-auto mt-8 sm:mt-10 shadow-xs">
+              <button
+                onClick={() => { setActiveCategory('all'); playSoftClick(); }}
+                className={`flex-1 py-2 px-3 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  activeCategory === 'all'
+                    ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                    : 'text-[#554C42] hover:text-[#9A7428]'
+                }`}
+              >
+                {lang === 'pt' ? 'Tudo' : lang === 'en' ? 'All' : 'Tout'}
+              </button>
+              <button
+                onClick={() => { setActiveCategory('packages'); playSoftClick(); }}
+                className={`flex-1 py-2 px-3 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  activeCategory === 'packages'
+                    ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                    : 'text-[#554C42] hover:text-[#9A7428]'
+                }`}
+              >
+                {lang === 'pt' ? 'Pacotes' : lang === 'en' ? 'Packages' : 'Forfaits'}
+              </button>
+              <button
+                onClick={() => { setActiveCategory('single'); playSoftClick(); }}
+                className={`flex-1 py-2 px-3 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  activeCategory === 'single'
+                    ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                    : 'text-[#554C42] hover:text-[#9A7428]'
+                }`}
+              >
+                {lang === 'pt' ? 'Sessões' : lang === 'en' ? 'Single' : 'Séances'}
+              </button>
             </div>
           </ScrollReveal>
         </div>
       </section>
-    </>
+
+      {/* ── Featured Packages Section ─────────────────────────────────── */}
+      {(activeCategory === 'all' || activeCategory === 'packages') && (
+        <section className="py-12 sm:py-16 bg-[#FAFAF8]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-12">
+            
+            <ScrollReveal className="text-center md:text-left mb-8 sm:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div>
+                <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-bold block mb-1">
+                  — {lang === 'pt' ? 'Programas Estruturados' : lang === 'en' ? 'Clinical Packages' : 'Programmes Complets'} —
+                </span>
+                <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-[#1A1412]">
+                  {lang === 'pt' ? 'Pacotes de Tratamento Recomendados' : lang === 'en' ? 'Recommended Treatment Packages' : 'Forfaits Recommandés'}
+                </h2>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6F8F72] bg-[#EBF5EE] border border-[#6F8F72]/30 px-3.5 py-1.5 rounded-full self-center md:self-auto">
+                <IconShieldCheck size={15} />
+                <span>{lang === 'pt' ? 'Economize até 30% em protocolos' : lang === 'en' ? 'Save up to 30% on full programs' : 'Économisez jusqu\'à 30%'}</span>
+              </div>
+            </ScrollReveal>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 sm:gap-6">
+              {PRICING_PACKAGES.map((pkg, i) => (
+                <ScrollReveal key={pkg.id} delay={i * 0.06}>
+                  <div
+                    className={`relative h-full flex flex-col justify-between rounded-3xl p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1.5 ${
+                      pkg.popular
+                        ? 'bg-white border-2 border-[#C49A3C] shadow-[0_12px_40px_rgba(196,154,60,0.18)]'
+                        : 'bg-white/90 border border-[#E8E2D8] hover:border-[#C49A3C]/50 shadow-sm hover:shadow-md'
+                    }`}
+                  >
+                    {/* Popular Pill */}
+                    {pkg.popular && (
+                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#9A7428] text-[#1A1412] text-[10px] sm:text-[11px] font-bold font-mono px-4 py-1 rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap">
+                        <IconStar size={12} fill="currentColor" className="text-[#1A1412]" />
+                        <span>{pkg.badge?.[lang] || pkg.badge?.pt || pkg.badge?.fr}</span>
+                      </div>
+                    )}
+
+                    <div>
+                      {!pkg.popular && pkg.badge && (
+                        <span className="inline-block font-mono text-[10px] font-bold tracking-wider uppercase text-[#8A6A24] bg-[#FAF5EA] border border-[#C49A3C]/25 px-2.5 py-0.5 rounded-full mb-3">
+                          {pkg.badge[lang] || pkg.badge?.pt || pkg.badge?.fr}
+                        </span>
+                      )}
+
+                      <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412] mb-2 leading-snug">
+                        {pkg.name[lang] || pkg.name?.pt || pkg.name?.fr}
+                      </h3>
+
+                      <p className="text-xs sm:text-sm text-[#6B6058] mb-5 leading-relaxed font-normal">
+                        {pkg.description[lang] || pkg.description?.pt || pkg.description?.fr}
+                      </p>
+
+                      {/* Price Block */}
+                      <div className="mb-5 pb-5 border-b border-[#E8E2D8]">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-mono text-3xl sm:text-4xl font-bold text-[#C49A3C]">
+                            {pkg.price}
+                          </span>
+                          <span className="font-mono text-sm font-bold text-[#8A8078]">
+                            {t.common.currency}
+                          </span>
+                          {pkg.originalPrice && (
+                            <span className="font-mono text-xs text-[#A49C90] line-through ms-2">
+                              {pkg.originalPrice} {t.common.currency}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-[11px] font-mono font-bold text-[#9A7428] bg-[#F5E9C8] px-2 py-0.5 rounded-md">
+                            {pkg.sessions} {lang === 'pt' ? 'sessões incluídas' : lang === 'en' ? 'sessions included' : 'séances incluses'}
+                          </span>
+                          <span className="text-[10px] text-[#8A8078] font-mono">
+                            ≈ {Math.round(pkg.price / pkg.sessions)} {t.common.currency} / {lang === 'pt' ? 'sessão' : lang === 'en' ? 'session' : 'séance'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Included Treatments Checklist */}
+                      <ul className="space-y-2.5 mb-6 text-xs sm:text-sm text-[#4A4540]">
+                        {(pkg.features[lang] || pkg.features.pt || pkg.features.fr).map((feat, fi) => (
+                          <li key={fi} className="flex items-start gap-2">
+                            <IconCheck size={15} className="text-[#9A7428] mt-0.5 shrink-0" />
+                            <span className="leading-snug">{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <Link
+                      href="/rendez-vous"
+                      onClick={playSoftClick}
+                      className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${
+                        pkg.popular
+                          ? 'bg-[#C49A3C] hover:bg-[#E8C97A] text-[#1A1412] shadow-[0_4px_16px_rgba(196,154,60,0.3)]'
+                          : 'bg-[#FAF8F5] hover:bg-[#F3EFE6] text-[#1A1412] border border-[#E8E2D8]'
+                      }`}
+                    >
+                      <IconCalendarEvent size={16} />
+                      <span>{t.common.bookAppointment}</span>
+                    </Link>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Single Treatment Session Rates ─────────────────────────── */}
+      {(activeCategory === 'all' || activeCategory === 'single') && (
+        <section className="py-12 sm:py-16 bg-[#FDFBF7] border-t border-[#E8E2D8]/80">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 md:px-12">
+            
+            <ScrollReveal className="text-center mb-8 sm:mb-12">
+              <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-bold block mb-1">
+                — {lang === 'pt' ? 'Valores por Sessão Avulsa' : lang === 'en' ? 'Single Session Pricing' : 'Tarifs à la séance'} —
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-[#1A1412] mb-3">
+                {lang === 'pt' ? 'Catálogo Individual de Tratamentos' : lang === 'en' ? 'Individual Treatment Catalog' : 'Catalogue des Soins Individuels'}
+              </h2>
+              <p className="text-xs sm:text-sm text-[#6B6058] max-w-xl mx-auto">
+                {lang === 'pt'
+                  ? 'Consulte os valores individuais para cada cuidado clínico ou estético com duração standard.'
+                  : lang === 'en'
+                  ? 'Explore standard session duration and prices across each specialized clinical therapy.'
+                  : 'Consultez les tarifs par séance pour chacun de nos soins spécialisés.'}
+              </p>
+
+              {/* Pole Switcher & Search Bar */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6 max-w-lg mx-auto">
+                <div className="inline-flex p-1 bg-white border border-[#C49A3C]/30 rounded-full shadow-xs w-full sm:w-auto">
+                  <button
+                    onClick={() => { setActivePole('all'); playSoftClick(); }}
+                    className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                      activePole === 'all' ? 'bg-[#C49A3C] text-white shadow-xs' : 'text-[#6B6058] hover:text-[#1A1412]'
+                    }`}
+                  >
+                    {lang === 'pt' ? 'Todos (13)' : lang === 'en' ? 'All (13)' : 'Tous (13)'}
+                  </button>
+                  <button
+                    onClick={() => { setActivePole('kinesitherapie'); playSoftClick(); }}
+                    className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                      activePole === 'kinesitherapie' ? 'bg-[#C49A3C] text-white shadow-xs' : 'text-[#6B6058] hover:text-[#1A1412]'
+                    }`}
+                  >
+                    {lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
+                  </button>
+                  <button
+                    onClick={() => { setActivePole('minceur'); playSoftClick(); }}
+                    className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                      activePole === 'minceur' ? 'bg-[#C49A3C] text-white shadow-xs' : 'text-[#6B6058] hover:text-[#1A1412]'
+                    }`}
+                  >
+                    {lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming' : 'Minceur'}
+                  </button>
+                </div>
+
+                <div className="relative w-full sm:w-48">
+                  <IconSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A8078]" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={lang === 'pt' ? 'Procurar...' : lang === 'en' ? 'Search...' : 'Recherche...'}
+                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E8E2D8] rounded-full text-xs text-[#1A1412] focus:outline-none focus:border-[#C49A3C] transition-colors"
+                  />
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* ── Fisioterapia Category Table ── */}
+            {(activePole === 'all' || activePole === 'kinesitherapie') && kineServices.length > 0 && (
+              <div className="mb-10">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-7 h-7 rounded-lg bg-[#C49A3C]/15 text-[#9A7428] flex items-center justify-center">
+                    <IconStethoscope size={16} />
+                  </div>
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412]">
+                    {lang === 'pt' ? 'Polo de Fisioterapia & Reeducação' : lang === 'en' ? 'Physiotherapy & Rehabilitation' : 'Pôle Kinésithérapie'}
+                  </h3>
+                </div>
+
+                <div className="space-y-2.5">
+                  {kineServices.map((service, i) => (
+                    <ScrollReveal key={service.slug} delay={i * 0.03}>
+                      <div className="group flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#E8E2D8] hover:border-[#C49A3C]/60 px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl transition-all duration-200 gap-3 shadow-xs hover:shadow-sm">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3C] shrink-0" />
+                          <div className="min-w-0">
+                            <span className="font-semibold text-[#1A1412] text-sm sm:text-base group-hover:text-[#9A7428] transition-colors block truncate">
+                              {service.name[lang] || service.name.pt || service.name.en || service.name.fr}
+                            </span>
+                            <span className="text-[11px] text-[#8A8078] line-clamp-1">
+                              {service.shortDesc[lang] || service.shortDesc.pt || service.shortDesc.en || service.shortDesc.fr}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E8E2D8]/60">
+                          <div className="flex items-center gap-1 text-xs font-mono text-[#8A8078] bg-[#FAF8F5] px-2.5 py-1 rounded-lg border border-[#E8E2D8]/60">
+                            <IconClock size={13} className="text-[#C49A3C]" />
+                            <span>{service.duration}</span>
+                          </div>
+
+                          <div className="font-mono text-lg font-bold text-[#C49A3C]">
+                            {service.price} {t.common.currency}
+                          </div>
+
+                          <Link
+                            href="/rendez-vous"
+                            onClick={playSoftClick}
+                            className="hidden sm:inline-flex items-center justify-center p-2 rounded-xl text-[#9A7428] bg-[#FAF5EA] hover:bg-[#C49A3C] hover:text-white transition-all shadow-xs"
+                            aria-label={`Agendar ${service.name.pt}`}
+                          >
+                            <IconArrowRight size={15} />
+                          </Link>
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── Minceur Category Table ── */}
+            {(activePole === 'all' || activePole === 'minceur') && minceurServices.length > 0 && (
+              <div className="mb-10">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-7 h-7 rounded-lg bg-[#E8C97A]/20 text-[#C49A3C] flex items-center justify-center">
+                    <IconFlame size={16} />
+                  </div>
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412]">
+                    {lang === 'pt' ? 'Polo de Estética Corporal & Emagrecimento' : lang === 'en' ? 'Body Contouring & Slimming Care' : 'Pôle Soins Minceur High-Tech'}
+                  </h3>
+                </div>
+
+                <div className="space-y-2.5">
+                  {minceurServices.map((service, i) => (
+                    <ScrollReveal key={service.slug} delay={i * 0.03}>
+                      <div className="group flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#E8E2D8] hover:border-[#C49A3C]/60 px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl transition-all duration-200 gap-3 shadow-xs hover:shadow-sm">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#9A7428] shrink-0" />
+                          <div className="min-w-0">
+                            <span className="font-semibold text-[#1A1412] text-sm sm:text-base group-hover:text-[#9A7428] transition-colors block truncate">
+                              {service.name[lang] || service.name.pt || service.name.en || service.name.fr}
+                            </span>
+                            <span className="text-[11px] text-[#8A8078] line-clamp-1">
+                              {service.shortDesc[lang] || service.shortDesc.pt || service.shortDesc.en || service.shortDesc.fr}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E8E2D8]/60">
+                          <div className="flex items-center gap-1 text-xs font-mono text-[#8A8078] bg-[#FAF8F5] px-2.5 py-1 rounded-lg border border-[#E8E2D8]/60">
+                            <IconClock size={13} className="text-[#C49A3C]" />
+                            <span>{service.duration}</span>
+                          </div>
+
+                          <div className="font-mono text-lg font-bold text-[#C49A3C]">
+                            {service.price} {t.common.currency}
+                          </div>
+
+                          <Link
+                            href="/rendez-vous"
+                            onClick={playSoftClick}
+                            className="hidden sm:inline-flex items-center justify-center p-2 rounded-xl text-[#9A7428] bg-[#FAF5EA] hover:bg-[#C49A3C] hover:text-white transition-all shadow-xs"
+                            aria-label={`Agendar ${service.name.pt}`}
+                          >
+                            <IconArrowRight size={15} />
+                          </Link>
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── Insurance & Reimbursement Card ────────────────────────────── */}
+      <section className="py-12 pb-24 bg-[#FAFAF8]">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 md:px-12">
+          <ScrollReveal>
+            <div className="relative overflow-hidden rounded-3xl border border-[#C49A3C]/35 bg-white/95 backdrop-blur-xl p-6 sm:p-8 text-center shadow-[0_8px_32px_rgba(196,154,60,0.08)]">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#E8C97A]" />
+              
+              <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#C49A3C]/30 text-[#8A6A24] flex items-center justify-center mx-auto mb-4 shadow-xs">
+                <IconReceipt2 size={24} />
+              </div>
+
+              <span className="font-mono text-xs font-bold tracking-widest text-[#9A7428] uppercase block mb-2">
+                {lang === 'pt' ? 'Seguros de Saúde & Comparticipações' : lang === 'en' ? 'Health Insurance & Coverage' : 'Mutuelles & Assurances Santé'}
+              </span>
+
+              <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1A1412] mb-3">
+                {lang === 'pt'
+                  ? 'Faturas Certificadas para Efeitos de Reembolso'
+                  : lang === 'en'
+                  ? 'Certified Invoices for Complete Reimbursement'
+                  : 'Factures Conformes pour vos Remboursements'}
+              </h3>
+
+              <p className="text-xs sm:text-sm text-[#554C42] leading-relaxed max-w-2xl mx-auto mb-6">
+                {lang === 'pt'
+                  ? 'Emitimos faturas-recibo com número de cédula profissional da Ordem dos Fisioterapeutas para que possa solicitar o reembolso junto do seu seguro de saúde ou subsistema (ADSE, Médis, Multicare, AdvanceCare, SAMS, etc.).'
+                  : lang === 'en'
+                  ? 'We provide certified medical invoices with registered professional license number, enabling fast reimbursement with all major health insurance providers (ADSE, Médis, Multicare, AdvanceCare, etc.).'
+                  : 'Nous délivrons des factures conformes avec numéro d\'ordre pour permettre un remboursement rapide auprès de vos assurances santé et mutuelles.'}
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono font-semibold text-[#8A6A24]">
+                <span className="bg-[#FAF8F5] border border-[#C49A3C]/20 px-3 py-1 rounded-full">ADSE</span>
+                <span className="bg-[#FAF8F5] border border-[#C49A3C]/20 px-3 py-1 rounded-full">Médis</span>
+                <span className="bg-[#FAF8F5] border border-[#C49A3C]/20 px-3 py-1 rounded-full">Multicare</span>
+                <span className="bg-[#FAF8F5] border border-[#C49A3C]/20 px-3 py-1 rounded-full">AdvanceCare</span>
+                <span className="bg-[#FAF8F5] border border-[#C49A3C]/20 px-3 py-1 rounded-full">SAMS</span>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+    </div>
   );
 }

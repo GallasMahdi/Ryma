@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Service } from '@/data/services';
+import { Service, getLocalizedText, getLocalizedList } from '@/data/services';
 import { useLanguage } from '@/lib/i18n';
-import { Badge } from './Badge';
+import { playSoftClick } from '@/lib/sound';
 import {
   IconArrowRight,
   IconClock,
@@ -17,15 +17,16 @@ import {
   IconRipple,
   IconShieldCheck,
   IconHeartbeat,
+  IconCalendarEvent,
+  IconCheck,
 } from '@tabler/icons-react';
-
-import { getLocalizedText } from '@/data/services';
 
 interface ServiceCardProps {
   service: Service;
+  featured?: boolean;
 }
 
-function getServiceIcon(iconKey: string, size = 20) {
+function getServiceIcon(iconKey: string, size = 18) {
   switch (iconKey) {
     case 'spine':
       return <IconActivity size={size} />;
@@ -48,78 +49,96 @@ function getServiceIcon(iconKey: string, size = 20) {
   }
 }
 
-export function ServiceCard({ service }: ServiceCardProps) {
+export function ServiceCard({ service, featured = false }: ServiceCardProps) {
   const { lang, t } = useLanguage();
 
-  const poleBadges = {
-    kinesitherapie: { label: { fr: 'Kinésithérapie', pt: 'Fisioterapia', en: 'Physiotherapy' }, variant: 'teal' as const },
-    minceur:        { label: { fr: 'Minceur High-Tech', pt: 'Emagrecimento High-Tech', en: 'High-Tech Slimming' }, variant: 'bronze' as const },
-    bilan:          { label: { fr: 'Bilan Expert', pt: 'Avaliação Especializada', en: 'Expert Assessment' }, variant: 'rose' as const },
-  };
-
-  const pole = poleBadges[service.pole];
+  const isKine = service.pole === 'kinesitherapie';
+  const indications = getLocalizedList(service.indications, lang).slice(0, 2);
 
   return (
-    <Link href={`/services/${service.slug}`} className="block h-full group">
-      <div className="relative h-full flex flex-col justify-between overflow-hidden rounded-[28px] border border-[#C49A3C]/25 bg-white/95 p-6 md:p-7 shadow-[0_12px_36px_rgba(196,154,60,0.07)] transition-all duration-400 ease-out hover:-translate-y-2 hover:border-[#C49A3C]/70 hover:shadow-[0_24px_55px_rgba(196,154,60,0.22)] active:scale-[0.99] cursor-pointer">
-        
-        {/* Top Gold Shimmer Border Accent */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#C49A3C] to-transparent opacity-40 transition-opacity duration-300 group-hover:opacity-100" />
-        
-        {/* Background Subtle Gradient Glow on Hover */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FAF6EE]/50 via-transparent to-[#F8F4EA]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-        <div className="relative z-10">
-          {/* Top Row: Icon Badge + Category Badge + Duration */}
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              {/* Luxury Gold Icon Aura Box */}
-              <div className="grid place-items-center h-11 w-11 rounded-2xl bg-gradient-to-br from-[#F5E9C8] via-[#FAF3E0] to-[#E8C97A]/40 text-[#9A7428] shadow-[0_4px_16px_rgba(196,154,60,0.18)] border border-[#C49A3C]/30 group-hover:scale-110 group-hover:bg-[#C49A3C] group-hover:text-white transition-all duration-300">
-                {getServiceIcon(service.icon)}
-              </div>
-              <Badge variant={pole.variant} className="text-[11px] px-3 py-1 font-semibold">
-                {getLocalizedText(pole.label, lang)}
-              </Badge>
+    <div className="h-full flex flex-col justify-between rounded-3xl bg-white border border-[#E8E2D8] hover:border-[#C49A3C]/60 p-6 sm:p-7 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_40px_rgba(196,154,60,0.14)] hover:-translate-y-1.5 transition-all duration-300 group select-none">
+      
+      <div>
+        {/* Top Header: Pole Badge + Duration & Price Chip */}
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors shadow-xs ${
+                isKine
+                  ? 'bg-[#FAF5EA] text-[#8A6A24] border border-[#C49A3C]/30 group-hover:bg-[#C49A3C] group-hover:text-white'
+                  : 'bg-[#FAF6F0] text-[#C49A3C] border border-[#C49A3C]/30 group-hover:bg-[#9A7428] group-hover:text-white'
+              }`}
+            >
+              {getServiceIcon(service.icon, 18)}
             </div>
 
-            {/* Duration Tag */}
-            <div className="flex items-center gap-1.5 text-xs text-[#8A8078] font-mono bg-[#F4F0E8]/90 px-3 py-1.5 rounded-full border border-[#C49A3C]/15 shadow-inner">
-              <IconClock size={13} className="text-[#C49A3C]" />
+            <span className="font-mono text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#FAF8F5] border border-[#E8E2D8] text-[#7A7065]">
+              {isKine
+                ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
+                : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-[11px] font-mono text-[#8A8078] bg-[#FAF8F5] px-2.5 py-1 rounded-full border border-[#E8E2D8]">
+              <IconClock size={12} className="text-[#C49A3C]" />
               <span>{service.duration}</span>
             </div>
+            <span className="font-mono text-sm font-bold text-[#C49A3C]">
+              {service.price} {t.common.currency}
+            </span>
           </div>
+        </div>
 
-          {/* Title */}
-          <h3 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors mb-3 leading-snug">
+        {/* Treatment Title */}
+        <Link
+          href={`/services/${service.slug}`}
+          onClick={playSoftClick}
+          className="block group-hover:text-[#9A7428] transition-colors"
+        >
+          <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412] mb-2 leading-snug">
             {getLocalizedText(service.name, lang)}
           </h3>
+        </Link>
 
-          {/* Description */}
-          <p className="text-xs md:text-sm text-[#6B6058] leading-relaxed line-clamp-3 mb-6 font-normal">
-            {getLocalizedText(service.shortDesc, lang)}
-          </p>
-        </div>
+        {/* Short Description */}
+        <p className="text-xs sm:text-sm text-[#6B6058] leading-relaxed line-clamp-2 mb-4 font-normal">
+          {getLocalizedText(service.shortDesc, lang)}
+        </p>
 
-
-        {/* Footer: Price + Luxury Interactive Button Pill */}
-        <div className="relative z-10 pt-4 border-t border-[#C49A3C]/15 flex items-center justify-between mt-auto">
-          <div>
-            <div className="text-[10px] uppercase font-mono text-[#8A8078] tracking-widest font-medium">
-              {lang === 'pt' ? 'A partir de' : lang === 'en' ? 'Starting at' : 'À partir de'}
-            </div>
-            <div className="font-serif text-xl font-bold text-[#C49A3C]">
-              {service.price} <span className="font-mono text-xs font-semibold text-[#8A8078]">{t.common.currency}</span>
-            </div>
-          </div>
-
-          {/* High-End Action Pill Button */}
-          <div className="inline-flex items-center gap-2 text-xs font-bold text-white bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#9A7428] px-4 py-2 rounded-full shadow-[0_4px_16px_rgba(196,154,60,0.25)] group-hover:shadow-[0_6px_22px_rgba(196,154,60,0.4)] group-hover:scale-105 transition-all duration-300">
-            <span>{t.common.learnMore}</span>
-            <IconArrowRight size={14} className="rtl-flip group-hover:translate-x-1 transition-transform" />
-          </div>
-        </div>
+        {/* Indication Micro-Bullet Points */}
+        {indications.length > 0 && (
+          <ul className="space-y-1.5 mb-6 text-xs text-[#554C42]">
+            {indications.map((ind, idx) => (
+              <li key={idx} className="flex items-center gap-1.5 text-[11px] sm:text-xs">
+                <IconCheck size={13} className="text-[#9A7428] shrink-0" />
+                <span className="truncate">{ind}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-    </Link>
+
+      {/* Action Footer */}
+      <div className="flex items-center justify-between pt-4 border-t border-[#E8E2D8] gap-2 mt-auto">
+        <Link
+          href={`/services/${service.slug}`}
+          onClick={playSoftClick}
+          className="inline-flex items-center gap-1 text-xs font-bold text-[#7A7065] hover:text-[#C49A3C] transition-colors py-1 group/btn"
+        >
+          <span>{lang === 'pt' ? 'Ver Detalhes' : lang === 'en' ? 'Learn More' : 'En savoir plus'}</span>
+          <IconArrowRight size={13} className="group-hover/btn:translate-x-1 transition-transform" />
+        </Link>
+
+        <Link
+          href="/rendez-vous"
+          onClick={playSoftClick}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-[#1A1412] text-xs font-bold transition-all shadow-xs border border-[#C49A3C]/30"
+        >
+          <IconCalendarEvent size={13} />
+          <span>{lang === 'pt' ? 'Agendar' : lang === 'en' ? 'Book' : 'Réserver'}</span>
+        </Link>
+      </div>
+    </div>
   );
 }
-

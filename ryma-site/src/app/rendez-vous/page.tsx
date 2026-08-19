@@ -11,8 +11,34 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import {
   IconCheck, IconArrowLeft, IconArrowRight, IconClock, IconBrandWhatsapp,
   IconAlertCircle, IconX, IconUser, IconPhone, IconMail, IconLoader2,
-  IconCalendarX, IconWifi,
+  IconCalendarX, IconWifi, IconSearch, IconSparkles, IconStethoscope,
+  IconFlame, IconActivity, IconHeartbeat, IconDroplet, IconBolt,
+  IconRipple, IconShieldCheck,
 } from '@tabler/icons-react';
+import { playSoftClick } from '@/lib/sound';
+
+function getBookingServiceIcon(iconKey: string, size = 18) {
+  switch (iconKey) {
+    case 'spine':
+      return <IconActivity size={size} />;
+    case 'pelvis':
+      return <IconHeartbeat size={size} />;
+    case 'hands':
+      return <IconStethoscope size={size} />;
+    case 'lymph':
+      return <IconDroplet size={size} />;
+    case 'electric':
+      return <IconBolt size={size} />;
+    case 'wave':
+      return <IconRipple size={size} />;
+    case 'bubble':
+      return <IconSparkles size={size} />;
+    case 'radio':
+      return <IconFlame size={size} />;
+    default:
+      return <IconShieldCheck size={size} />;
+  }
+}
 
 interface SlotInfo {
   time: string;
@@ -214,6 +240,8 @@ export default function RendezVousPage() {
 
   const [step, setStep] = useState<BookingStep>(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [step1Pole, setStep1Pole] = useState<'all' | 'kinesitherapie' | 'minceur'>('all');
+  const [step1Search, setStep1Search] = useState('');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
@@ -227,6 +255,16 @@ export default function RendezVousPage() {
     coverageProvider: '',
   });
   const [loading, setLoading] = useState(false);
+
+  const filteredStep1Services = SERVICES.filter((s) => {
+    const matchesPole = step1Pole === 'all' || s.pole === step1Pole;
+    if (!matchesPole) return false;
+    const query = step1Search.toLowerCase().trim();
+    if (!query) return true;
+    const name = (s.name[lang] || s.name.pt || s.name.en || s.name.fr || '').toLowerCase();
+    const desc = (s.shortDesc[lang] || s.shortDesc.pt || s.shortDesc.en || s.shortDesc.fr || '').toLowerCase();
+    return name.includes(query) || desc.includes(query);
+  });
 
   // ── Enterprise Toast System ─────────────────────────────────────────────────
   const [toasts, setToasts] = useState<BookingToast[]>([]);
@@ -564,40 +602,175 @@ export default function RendezVousPage() {
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.35, ease: [0.16,1,0.3,1] }}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="max-w-4xl mx-auto"
               >
-                <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412] mb-6 text-center">{t.booking.step1Title}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {SERVICES.map(service => (
-                    <button
-                      key={service.slug}
-                      id={`service-${service.slug}`}
-                      onClick={() => { setSelectedService(service); setStep(2); }}
-                      className={`text-start p-5 bg-white border rounded-2xl transition-all duration-200 group hover:border-[#C49A3C]/60 hover:shadow-sm ${
-                        selectedService?.slug === service.slug 
-                          ? 'border-[#C49A3C] ring-1 ring-[#C49A3C] shadow-[0_4px_16px_rgba(196,154,60,0.08)] bg-[#FDFAF4]' 
-                          : 'border-[#E8E2D8]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className={`font-mono text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                          service.pole === 'kinesitherapie' ? 'bg-[#F5E9C8] text-[#9A7428]' : 'bg-[#FDFAF4] text-[#C49A3C] border border-[#C49A3C]/20'
-                        }`}>
-                          {service.pole === 'kinesitherapie' ? (lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physio' : 'Kiné') : (lang === 'pt' ? 'Estética' : lang === 'en' ? 'Slimming' : 'Minceur')}
-                        </span>
-                        <span className="font-mono text-[15px] font-bold text-[#C49A3C]">{service.price} {t.common.currency}</span>
-                      </div>
-                      <div className="font-semibold text-[#1A1412] group-hover:text-[#9A7428] transition-colors text-base mb-2 leading-tight">
-                        {service.name[lang] || service.name.pt || service.name.en || service.name.fr}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-[#8A8078]">
-                        <IconClock size={14} className="text-[#C49A3C]" />
-                        {service.duration}
-                      </div>
-                    </button>
-                  ))}
+                <div className="text-center mb-8">
+                  <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-bold block mb-1">
+                    — {lang === 'pt' ? 'Etapa 1 de 4' : lang === 'en' ? 'Step 1 of 4' : 'Étape 1 sur 4'} —
+                  </span>
+                  <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-[#1A1412] mb-3">
+                    {t.booking.step1Title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#6B6058] max-w-lg mx-auto">
+                    {lang === 'pt'
+                      ? 'Selecione o cuidado ou protocolo pretendido. Emitimos faturas com cédula profissional para efeitos de seguro.'
+                      : lang === 'en'
+                      ? 'Select your desired treatment or assessment. Medical invoices issued for insurance reimbursement.'
+                      : 'Sélectionnez votre soin ou bilan initial. Factures conformes délivrées pour vos mutuelles.'}
+                  </p>
+
+                  {/* Pole Filter & Search Toolbar */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+                    <div className="inline-flex p-1 bg-white border border-[#C49A3C]/30 rounded-full shadow-xs w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => { setStep1Pole('all'); playSoftClick(); }}
+                        className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                          step1Pole === 'all'
+                            ? 'bg-[#C49A3C] text-white shadow-xs'
+                            : 'text-[#6B6058] hover:text-[#1A1412]'
+                        }`}
+                      >
+                        {lang === 'pt' ? 'Todos (13)' : lang === 'en' ? 'All (13)' : 'Tous (13)'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setStep1Pole('kinesitherapie'); playSoftClick(); }}
+                        className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                          step1Pole === 'kinesitherapie'
+                            ? 'bg-[#C49A3C] text-white shadow-xs'
+                            : 'text-[#6B6058] hover:text-[#1A1412]'
+                        }`}
+                      >
+                        {lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setStep1Pole('minceur'); playSoftClick(); }}
+                        className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                          step1Pole === 'minceur'
+                            ? 'bg-[#C49A3C] text-white shadow-xs'
+                            : 'text-[#6B6058] hover:text-[#1A1412]'
+                        }`}
+                      >
+                        {lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
+                      </button>
+                    </div>
+
+                    <div className="relative w-full sm:w-52">
+                      <IconSearch size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8078]" />
+                      <input
+                        type="text"
+                        value={step1Search}
+                        onChange={(e) => setStep1Search(e.target.value)}
+                        placeholder={lang === 'pt' ? 'Pesquisar tratamento...' : lang === 'en' ? 'Search treatment...' : 'Rechercher un soin...'}
+                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#E8E2D8] rounded-full text-xs text-[#1A1412] focus:outline-none focus:border-[#C49A3C] transition-colors shadow-xs"
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {filteredStep1Services.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                    {filteredStep1Services.map(service => {
+                      const isSelected = selectedService?.slug === service.slug;
+                      const isKine = service.pole === 'kinesitherapie';
+                      const serviceName = service.name[lang] || service.name.pt || service.name.en || service.name.fr;
+                      const serviceDesc = service.shortDesc[lang] || service.shortDesc.pt || service.shortDesc.en || service.shortDesc.fr;
+
+                      return (
+                        <button
+                          key={service.slug}
+                          id={`service-${service.slug}`}
+                          type="button"
+                          onClick={() => {
+                            playSoftClick();
+                            setSelectedService(service);
+                            setStep(2);
+                          }}
+                          className={`relative text-start p-4 sm:p-5 rounded-2xl transition-all duration-300 group border cursor-pointer ${
+                            isSelected
+                              ? 'border-[#C49A3C] bg-gradient-to-br from-[#FFFDF9] to-[#FAF5EA] ring-2 ring-[#C49A3C]/50 shadow-[0_8px_25px_rgba(196,154,60,0.18)] scale-[1.01]'
+                              : 'border-[#E8E2D8] bg-white hover:border-[#C49A3C]/60 hover:shadow-md hover:-translate-y-0.5'
+                          }`}
+                        >
+                          {/* Top bar: Icon + Category Badge + Price */}
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
+                                  isKine
+                                    ? 'bg-[#FAF5EA] text-[#8A6A24] border border-[#C49A3C]/30 group-hover:bg-[#C49A3C] group-hover:text-white'
+                                    : 'bg-[#FAF6F0] text-[#C49A3C] border border-[#C49A3C]/30 group-hover:bg-[#9A7428] group-hover:text-white'
+                                }`}
+                              >
+                                {getBookingServiceIcon(service.icon, 18)}
+                              </div>
+
+                              <span className="font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-[#FAF8F5] border border-[#E8E2D8] text-[#7A7065]">
+                                {isKine
+                                  ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
+                                  : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1 text-[11px] font-mono text-[#8A8078] bg-[#FAF8F5] px-2 py-0.5 rounded-md border border-[#E8E2D8]/70">
+                                <IconClock size={12} className="text-[#C49A3C]" />
+                                <span>{service.duration}</span>
+                              </div>
+                              <span className="font-mono text-base font-bold text-[#C49A3C]">
+                                {service.price} {t.common.currency}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Title */}
+                          <div className="font-serif font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors text-base sm:text-lg mb-1 leading-snug">
+                            {serviceName}
+                          </div>
+
+                          {/* Short Description */}
+                          <p className="text-xs text-[#6B6058] line-clamp-2 leading-relaxed font-normal mb-3">
+                            {serviceDesc}
+                          </p>
+
+                          {/* Bottom Selection Hint */}
+                          <div className="flex items-center justify-between pt-2.5 border-t border-[#E8E2D8]/70 text-[11px] font-semibold text-[#8A6A24]">
+                            <span className="flex items-center gap-1">
+                              <IconSparkles size={13} className="text-[#C49A3C]" />
+                              {isKine
+                                ? (lang === 'pt' ? 'Comparticipado ADSE / Seguros' : lang === 'en' ? 'Insurance receipts provided' : 'Facture conforme mutuelle')
+                                : (lang === 'pt' ? 'Tecnologia 100% Não Invasiva' : lang === 'en' ? '100% Non-invasive protocol' : '100% Non-invasif')}
+                            </span>
+
+                            <span className="inline-flex items-center gap-1 text-xs text-[#C49A3C] font-bold group-hover:translate-x-1 transition-transform">
+                              <span>{lang === 'pt' ? 'Escolher' : lang === 'en' ? 'Select' : 'Choisir'}</span>
+                              <IconArrowRight size={13} />
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-white border border-[#E8E2D8] rounded-2xl p-6 shadow-xs max-w-sm mx-auto">
+                    <p className="text-xs text-[#8A8078] mb-2">
+                      {lang === 'pt' ? 'Nenhum tratamento encontrado.' : lang === 'en' ? 'No treatments found.' : 'Aucun soin trouvé.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setStep1Search(''); setStep1Pole('all'); }}
+                      className="text-xs font-bold text-[#C49A3C] hover:underline"
+                    >
+                      {lang === 'pt' ? 'Limpar pesquisa' : lang === 'en' ? 'Clear search' : 'Réinitialiser'}
+                    </button>
+                  </div>
+                )}
               </motion.div>
             )}
 

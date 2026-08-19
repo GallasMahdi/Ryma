@@ -2,322 +2,439 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconX, IconBrandWhatsapp, IconArrowLeft, IconChevronRight } from '@tabler/icons-react';
+import {
+  IconX,
+  IconBrandWhatsapp,
+  IconArrowLeft,
+  IconChevronRight,
+  IconSend,
+  IconShieldCheck,
+  IconClock,
+  IconSparkles,
+  IconCalendarEvent,
+  IconStethoscope,
+  IconFlame,
+  IconReceipt2,
+  IconChecks,
+} from '@tabler/icons-react';
 import { useLanguage } from '@/lib/i18n';
 import { usePathname } from 'next/navigation';
+import { playSoftClick, playNotificationChime } from '@/lib/sound';
 
 const WA_NUMBER = '351912345678';
 
-interface FAQ {
-  q: string;
-  a: string;
-  waText: string;
+interface QuickAction {
+  id: string;
+  icon: React.ReactNode;
+  title: { pt: string; en: string; fr: string };
+  desc: { pt: string; en: string; fr: string };
+  answer: { pt: string; en: string; fr: string };
+  waText: { pt: string; en: string; fr: string };
 }
 
-const FAQS: Record<'fr' | 'pt' | 'en', FAQ[]> = {
-  fr: [
-    {
-      q: 'Comment prendre rendez-vous ?',
-      a: 'Vous pouvez réserver directement via la page Rendez-vous, ou nous contacter sur WhatsApp ou par téléphone. Nous répondons en moins d\'une heure.',
-      waText: 'Bonjour, je souhaite réserver un rendez-vous.',
+const QUICK_ACTIONS: QuickAction[] = [
+  {
+    id: 'booking',
+    icon: <IconCalendarEvent size={16} className="text-[#C49A3C]" />,
+    title: {
+      pt: 'Agendar Consulta',
+      en: 'Book an Appointment',
+      fr: 'Prendre Rendez-vous',
     },
-    {
-      q: 'Quels sont vos tarifs ?',
-      a: 'Nos soins débutent à partir de 45 €. Des forfaits avantageux sont disponibles. Consultez la page Tarifs pour plus de détails.',
-      waText: 'Bonjour, je souhaiterais des informations sur vos tarifs.',
+    desc: {
+      pt: 'Marcação rápida e disponibilidade',
+      en: 'Fast scheduling & real-time slots',
+      fr: 'Réservation rapide & créneaux',
     },
-    {
-      q: 'Délivrez-vous des reçus pour les mutuelles / assurances ?',
-      a: 'Oui ! Nous délivrons des factures-reçus certifiées avec numéro d\'ordre professionnel pour le remboursement par vos assurances santé et mutuelles.',
-      waText: 'Bonjour, j\'ai une question concernant les reçus pour mon assurance santé.',
+    answer: {
+      pt: 'Com certeza! Pode escolher o horário diretamente na nossa página de agendamento online ou confirmar agora por WhatsApp com a nossa equipa.',
+      en: 'Certainly! You can select your preferred time slot on our online booking wizard or confirm instantly via WhatsApp with our team.',
+      fr: 'Avec plaisir ! Vous pouvez réserver votre créneau directement en ligne ou finaliser maintenant avec notre équipe sur WhatsApp.',
     },
-    {
-      q: 'Où se situe la clinique ?',
-      a: 'La clinique est située Avenida da Liberdade à Lisbonne, Portugal. Facilement accessible avec stationnement et transports à proximité.',
-      waText: 'Bonjour, comment me rendre à la clinique ?',
+    waText: {
+      pt: 'Olá! Gostaria de verificar a disponibilidade para agendar uma consulta na Digital Clínica.',
+      en: 'Hello! I would like to check availability to schedule an appointment at Digital Clinic.',
+      fr: 'Bonjour ! Je souhaite vérifier les disponibilités pour un rendez-vous à la Digital Clínica.',
     },
-    {
-      q: 'Quels soins proposez-vous ?',
-      a: 'Nous proposons la kinésithérapie, la rééducation post-partum, la cavitation, la radiofréquence, la cryolipolyse, le drainage lymphatique et bien plus.',
-      waText: 'Bonjour, je voudrais en savoir plus sur vos soins.',
+  },
+  {
+    id: 'physio',
+    icon: <IconStethoscope size={16} className="text-[#9A7428]" />,
+    title: {
+      pt: 'Fisioterapia & RPG',
+      en: 'Physiotherapy & GPR',
+      fr: 'Kinésithérapie & RPG',
     },
-  ],
-  pt: [
-    {
-      q: 'Como posso agendar uma consulta?',
-      a: 'Pode agendar diretamente na página de Agendamento, ou contactar-nos via WhatsApp ou telefone. Respondemos habitualmente em menos de 1 hora.',
-      waText: 'Olá, gostaria de agendar uma consulta.',
+    desc: {
+      pt: 'Coluna, dores, postura e pós-parto',
+      en: 'Spine, posture, pain & pelvic rehab',
+      fr: 'Dos, posture, rééducation post-partum',
     },
-    {
-      q: 'Quais são os valores dos tratamentos?',
-      a: 'Os nossos tratamentos começam a partir de 45 €. Dispomos de pacotes com descontos especiais na página de Preços.',
-      waText: 'Olá, gostaria de obter informações sobre os valores dos tratamentos.',
+    answer: {
+      pt: 'Dispomos de protocolos especializados de Reeducação Postural Global (RPG), reabilitação perineal e tratamento de lesões musculoesqueléticas.',
+      en: 'We offer specialized Global Postural Reeducation (GPR), postpartum pelvic floor therapy, and targeted musculoskeletal rehab.',
+      fr: 'Nous proposons la Rééducation Posturale Globale (RPG), la rééducation périnéale post-partum et le traitement des douleurs musculo-squelettiques.',
     },
-    {
-      q: 'Passam recibos para seguros de saúde e ADSE?',
-      a: 'Sim! Emitimos fatura-recibo com número de cédula profissional da Ordem dos Fisioterapeutas para efeitos de reembolso junto do seu seguro de saúde ou subsistema (ADSE, Médis, Multicare, AdvanceCare, etc.).',
-      waText: 'Olá, gostaria de saber informações sobre recibos para o meu seguro de saúde.',
+    waText: {
+      pt: 'Olá! Tenho interesse numa consulta de Fisioterapia / Reeducação Postural (RPG).',
+      en: 'Hello! I am interested in a Physiotherapy / GPR consultation.',
+      fr: 'Bonjour ! Je suis intéressé(e) par une séance de Kinésithérapie / RPG.',
     },
-    {
-      q: 'Onde fica localizada a clínica?',
-      a: 'A clínica está situada na Avenida da Liberdade em Lisboa, com fácil acesso por transportes públicos e estacionamento próximo.',
-      waText: 'Olá, gostaria de saber a localização exata da clínica.',
+  },
+  {
+    id: 'slimming',
+    icon: <IconFlame size={16} className="text-[#C49A3C]" />,
+    title: {
+      pt: 'Protocolos de Emagrecimento',
+      en: 'Body Sculpting Protocols',
+      fr: 'Protocoles Minceur',
     },
-    {
-      q: 'Quais os tratamentos disponíveis?',
-      a: 'Oferecemos Fisioterapia, Reabilitação Pós-Parto, Drenagem Linfática, Criolipólise, Cavitação Ultrassónica, Radiofrequência e muito mais.',
-      waText: 'Olá, gostaria de saber mais sobre os tratamentos disponíveis.',
+    desc: {
+      pt: 'Criolipólise, cavitação e RF',
+      en: 'Cryolipolysis, cavitation & RF',
+      fr: 'Cryolipolyse, cavitation & RF',
     },
-  ],
-  en: [
-    {
-      q: 'How can I book an appointment?',
-      a: 'You can book directly on our Appointment page, or send us a message on WhatsApp or phone. We usually reply in under an hour.',
-      waText: 'Hello, I would like to book an appointment.',
+    answer: {
+      pt: 'Utilizamos tecnologias médicas de vanguarda 100% não invasivas para destruição de gordura localizada, firmeza cutânea e eliminação de celulite.',
+      en: 'We provide certified 100% non-invasive technologies for localized fat reduction, collagen tightening, and deep cellulite remodeling.',
+      fr: 'Nous utilisons des technologies médicales certifiées 100% non invasives pour le déstockage graisseux et le raffermissement cutané.',
     },
-    {
-      q: 'What are your treatment rates?',
-      a: 'Treatments start from our base rates with package discounts available. Check our Pricing page for full details.',
-      waText: 'Hello, I would like information regarding pricing.',
+    waText: {
+      pt: 'Olá! Gostaria de informações sobre os tratamentos de Criolipólise e remodelação corporal.',
+      en: 'Hello! I would like details about Cryolipolysis and body sculpting treatments.',
+      fr: 'Bonjour ! J\'aimerais des informations sur la Cryolipolyse et les soins minceur.',
     },
-    {
-      q: 'Do you provide insurance receipts?',
-      a: 'Yes! Certified medical receipts and physiotherapy reports are provided for health insurance reimbursements.',
-      waText: 'Hello, I have a question about insurance coverage and receipts.',
+  },
+  {
+    id: 'insurance',
+    icon: <IconReceipt2 size={16} className="text-[#6F8F72]" />,
+    title: {
+      pt: 'Seguros de Saúde & Recibos',
+      en: 'Health Insurance & Receipts',
+      fr: 'Mutuelles & Remboursements',
     },
-    {
-      q: 'Where is the clinic located?',
-      a: 'The clinic is conveniently located with nearby parking. You can find directions on our Contact page map.',
-      waText: 'Hello, how do I get to the clinic?',
+    desc: {
+      pt: 'Faturas-recibo para ADSE, Médis, etc.',
+      en: 'Official medical invoices provided',
+      fr: 'Factures conformes pour mutuelles',
     },
-    {
-      q: 'What treatments do you offer?',
-      a: 'We offer Physiotherapy, Postpartum Rehab, Lymphatic Drainage, Cryolipolysis, Ultrasound Cavitation, Radiofrequency, and more.',
-      waText: 'Hello, I would like to learn more about your treatments.',
+    answer: {
+      pt: 'Sim! Emitimos fatura-recibo com número de cédula profissional da Ordem dos Fisioterapeutas para efeitos de reembolso no seu seguro ou subsistema.',
+      en: 'Yes! We issue certified medical receipts with professional registration number for complete health insurance reimbursements.',
+      fr: 'Oui ! Nous délivrons des factures officielles avec numéro d\'ordre pour le remboursement auprès de votre mutuelle ou assurance.',
     },
-  ],
-};
+    waText: {
+      pt: 'Olá! Gostaria de confirmar como funcionam os recibos para reembolso de seguro de saúde.',
+      en: 'Hello! I would like to clarify how insurance reimbursement receipts are processed.',
+      fr: 'Bonjour ! J\'aimerais savoir comment fonctionnent les reçus pour le remboursement de mon assurance.',
+    },
+  },
+];
 
 export function WhatsAppBubble() {
   const { lang } = useLanguage();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [activeFaq, setActiveFaq] = useState<FAQ | null>(null);
-  const chatRef = useRef<HTMLDivElement>(null);
+  const [selectedAction, setSelectedAction] = useState<QuickAction | null>(null);
+  const [customMsg, setCustomMsg] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ sender: 'bot' | 'user'; text: string; time: string }[]>([]);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const activeLangKey = lang === 'pt' ? 'pt' : lang === 'en' ? 'en' : 'fr';
-  const faqs = FAQS[activeLangKey];
-
-  const close = useCallback(() => {
-    setOpen(false);
-    setActiveFaq(null);
-  }, []);
-
+  // Auto-reveal widget shortly after load
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), 2000);
+    const timer = setTimeout(() => setVisible(true), 1200);
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (chatRef.current && !chatRef.current.contains(e.target as Node)) {
-        // Leave open unless clicked outside
-      }
-    };
-    if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
+  const close = useCallback(() => {
+    setOpen(false);
+    setSelectedAction(null);
+    setIsTyping(false);
+  }, []);
 
+  // Close on route change
   useEffect(() => {
     close();
   }, [pathname, close]);
 
-  if (!visible) return null;
+  // Handle ESC key to dismiss
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) close();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, close]);
 
-  const openWhatsApp = (text: string) => {
+  // Reset/populate initial welcome message
+  useEffect(() => {
+    if (open) {
+      playNotificationChime();
+      const initialWelcome =
+        lang === 'pt'
+          ? '👋 Olá! Bem-vindo(a) à Digital Clínica. Como podemos ajudar o seu bem-estar hoje?'
+          : lang === 'en'
+          ? '👋 Hello! Welcome to Digital Clinic. How may our clinical concierge assist you today?'
+          : '👋 Bonjour ! Bienvenue à la Digital Clínica. Comment pouvons-nous vous aider aujourd\'hui ?';
+
+      setChatMessages([
+        {
+          sender: 'bot',
+          text: initialWelcome,
+          time: new Date().toLocaleTimeString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        },
+      ]);
+    }
+  }, [open, lang]);
+
+  // Scroll to bottom when messages update
+  useEffect(() => {
+    if (chatBottomRef.current) {
+      chatBottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages, isTyping]);
+
+  const openWhatsAppDirect = (text: string) => {
+    playSoftClick();
     const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const handleActionClick = (action: QuickAction) => {
+    playSoftClick();
+    setSelectedAction(action);
+    const userMsg = action.title[lang] || action.title.pt;
+    const now = new Date().toLocaleTimeString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    setChatMessages((prev) => [...prev, { sender: 'user', text: userMsg, time: now }]);
+    setIsTyping(true);
+
+    setTimeout(() => {
+      setIsTyping(false);
+      const botAnswer = action.answer[lang] || action.answer.pt;
+      setChatMessages((prev) => [...prev, { sender: 'bot', text: botAnswer, time: now }]);
+      playSoftClick();
+    }, 450);
+  };
+
+  const handleCustomSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customMsg.trim()) return;
+    openWhatsAppDirect(customMsg.trim());
+    setCustomMsg('');
+  };
+
+  if (!visible) return null;
+
   return (
-    <div className="fixed bottom-6 end-6 z-50 flex flex-col items-end">
+    <div ref={containerRef} className="fixed bottom-4 end-4 sm:bottom-6 sm:end-6 z-50 flex flex-col items-end pointer-events-auto">
       <AnimatePresence>
         {open && (
           <motion.div
-            ref={chatRef}
-            initial={{ opacity: 0, y: 20, scale: 0.92 }}
+            initial={{ opacity: 0, y: 24, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.92 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-            className="mb-4 w-[340px] sm:w-[380px] bg-white rounded-3xl shadow-[0_12px_48px_rgba(0,0,0,0.22)] border border-[#E8E2D8] overflow-hidden flex flex-col max-h-[520px]"
+            exit={{ opacity: 0, y: 20, scale: 0.94 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 380 }}
+            className="mb-3.5 w-[calc(100vw-32px)] sm:w-[380px] max-w-[390px] bg-white rounded-3xl shadow-[0_16px_50px_rgba(26,20,18,0.22)] border border-[#C49A3C]/30 overflow-hidden flex flex-col max-h-[560px]"
           >
-            {/* Header */}
-            <div className="bg-[#075E54] p-4 flex items-center justify-between shrink-0 shadow-md">
+            {/* ── Top Header ── */}
+            <div className="bg-gradient-to-r from-[#075E54] via-[#0E7A6D] to-[#128C7E] p-4 flex items-center justify-between text-white shadow-md shrink-0">
               <div className="flex items-center gap-3">
-                {activeFaq && (
+                {selectedAction && (
                   <button
-                    onClick={() => setActiveFaq(null)}
-                    className="text-white/70 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10 me-1"
-                    aria-label={lang === 'pt' ? 'Voltar' : lang === 'en' ? 'Back' : 'Retour'}
+                    onClick={() => { setSelectedAction(null); playSoftClick(); }}
+                    className="text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                    aria-label="Voltar"
                   >
-                    <IconArrowLeft size={16} />
+                    <IconArrowLeft size={17} />
                   </button>
                 )}
-                <div className="w-9 h-9 rounded-full bg-[#128C7E] flex items-center justify-center shrink-0">
-                  <span className="font-bold text-white text-base leading-none">D</span>
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F5E9C8] to-[#E8C97A] flex items-center justify-center font-bold text-[#8A6A24] text-base shadow-sm">
+                    D
+                  </div>
+                  <span className="absolute bottom-0 end-0 h-3 w-3 rounded-full bg-[#25D366] border-2 border-[#075E54]" />
                 </div>
                 <div>
-                  <p className="text-white font-semibold text-sm leading-none">Digital Clínica</p>
-                  <p className="text-green-200 text-[11px] mt-0.5 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-[#25D366] rounded-full inline-block animate-pulse" />
-                    {lang === 'pt' ? 'Online · Responde rápido' : lang === 'en' ? 'Online · Fast reply' : 'En ligne · Répond vite'}
-                  </p>
+                  <div className="flex items-center gap-1.5 leading-none">
+                    <span className="font-semibold text-sm text-white">Digital Clínica</span>
+                    <IconShieldCheck size={14} className="text-[#A7E8BD]" />
+                  </div>
+                  <div className="flex items-center gap-1 text-[11px] text-[#A7E8BD] mt-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#25D366] animate-pulse" />
+                    <span>{lang === 'pt' ? 'Atendimento Online • Lisboa' : lang === 'en' ? 'Live Concierge • Lisbon' : 'En ligne • Lisbonne'}</span>
+                  </div>
                 </div>
               </div>
+
               <button
-                onClick={close}
-                className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
-                aria-label={lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer'}
+                onClick={() => { close(); playSoftClick(); }}
+                className="text-white/70 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
+                aria-label="Close"
               >
-                <IconX size={16} />
+                <IconX size={18} />
               </button>
             </div>
 
-            {/* Chat Body */}
-            <div
-              className="flex-1 overflow-y-auto bg-[#ECE5DD] px-3 py-4 space-y-3"
-            >
-              {/* Greeting Bubble */}
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-end gap-1.5"
-              >
-                <div className="w-6 h-6 rounded-full bg-[#128C7E] flex items-center justify-center shrink-0 mb-0.5">
-                  <span className="text-white text-[9px] font-bold">R</span>
-                </div>
-                <div className="bg-white rounded-2xl rounded-bl-sm px-3.5 py-2.5 max-w-[85%] shadow-sm">
-                  <p className="text-[#1A1412] text-sm leading-relaxed">
-                    {lang === 'pt'
-                      ? '👋 Olá! Sou a Dra. Ryma. Como posso ajudar hoje?'
-                      : lang === 'en'
-                      ? '👋 Hello! I am Dr. Ryma. How can I help you today?'
-                      : "👋 Bonjour ! Je suis Ryma. Comment puis-je vous aider aujourd'hui ?"}
-                  </p>
-                  <span className="text-[10px] text-[#6B6058] block text-end mt-1">
-                    {new Date().toLocaleTimeString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-              </motion.div>
-
-              {/* User Question Bubble */}
-              <AnimatePresence>
-                {activeFaq && (
-                  <motion.div
-                    key="user-q"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex justify-end"
+            {/* ── Chat Messages Body ── */}
+            <div className="flex-1 overflow-y-auto bg-[#ECE5DD]/70 p-3.5 space-y-3 min-h-[190px] max-h-[260px]">
+              {chatMessages.map((msg, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start items-end gap-1.5'}`}
+                >
+                  {msg.sender === 'bot' && (
+                    <div className="w-6 h-6 rounded-full bg-[#128C7E] flex items-center justify-center text-[10px] font-bold text-white shrink-0 mb-0.5">
+                      D
+                    </div>
+                  )}
+                  <div
+                    className={`px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed max-w-[85%] shadow-xs ${
+                      msg.sender === 'user'
+                        ? 'bg-[#DCF8C6] text-[#1A1412] rounded-br-xs'
+                        : 'bg-white text-[#1A1412] rounded-bl-xs'
+                    }`}
                   >
-                    <div className="bg-[#DCF8C6] rounded-2xl rounded-br-sm px-3.5 py-2.5 max-w-[80%] shadow-sm">
-                      <p className="text-[#1A1412] text-sm leading-relaxed">{activeFaq.q}</p>
+                    <p>{msg.text}</p>
+                    <div className="flex items-center justify-end gap-1 mt-1 text-[9px] text-[#8A8078]">
+                      <span>{msg.time}</span>
+                      {msg.sender === 'user' && <IconChecks size={13} className="text-[#34B7F1]" />}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </div>
+                </motion.div>
+              ))}
 
-              {/* Answer Bubble */}
-              <AnimatePresence>
-                {activeFaq && (
-                  <motion.div
-                    key="answer"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex items-end gap-1.5"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-[#128C7E] flex items-center justify-center shrink-0 mb-0.5">
-                      <span className="text-white text-[9px] font-bold">R</span>
-                    </div>
-                    <div className="max-w-[85%] space-y-2">
-                      <div className="bg-white rounded-2xl rounded-bl-sm px-3.5 py-2.5 shadow-sm">
-                        <p className="text-[#1A1412] text-sm leading-relaxed">{activeFaq.a}</p>
-                      </div>
-                      {/* WhatsApp CTA */}
-                      <motion.button
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3 }}
-                        onClick={() => openWhatsApp(activeFaq.waText)}
-                        className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5C] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-md"
-                      >
-                        <IconBrandWhatsapp size={16} />
-                        {lang === 'pt' ? 'Continuar no WhatsApp' : lang === 'en' ? 'Continue on WhatsApp' : 'Continuer sur WhatsApp'}
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Typing indicator */}
+              {isTyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-1.5"
+                >
+                  <div className="w-6 h-6 rounded-full bg-[#128C7E] flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                    D
+                  </div>
+                  <div className="bg-white px-3 py-2 rounded-2xl rounded-bl-xs shadow-xs flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#8A8078] animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#8A8078] animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#8A8078] animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </motion.div>
+              )}
+
+              <div ref={chatBottomRef} />
             </div>
 
-            {/* FAQ List / Back Button */}
-            <div className="bg-white border-t border-[#E8E2D8] px-3 py-3 shrink-0">
-              {!activeFaq ? (
-                <>
-                  <p className="text-[#6B6058] text-[11px] font-mono font-semibold uppercase tracking-wide mb-2 ps-1">
-                    {lang === 'pt' ? 'Perguntas Frequentes' : lang === 'en' ? 'Frequently Asked Questions' : 'Questions fréquentes'}
+            {/* ── Interactive Action Panel ── */}
+            <div className="bg-white border-t border-[#E8E2D8] p-3 shrink-0">
+              {selectedAction ? (
+                /* Selected Action WhatsApp CTA */
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-2"
+                >
+                  <button
+                    onClick={() => openWhatsAppDirect(selectedAction.waText[lang] || selectedAction.waText.pt)}
+                    className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5C] active:scale-[0.99] text-white text-xs sm:text-sm font-bold py-2.5 px-4 rounded-xl transition-all shadow-md"
+                  >
+                    <IconBrandWhatsapp size={18} />
+                    <span>{lang === 'pt' ? 'Continuar no WhatsApp Oficial' : lang === 'en' ? 'Continue on WhatsApp' : 'Continuer sur WhatsApp'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setSelectedAction(null); playSoftClick(); }}
+                    className="w-full text-center text-xs font-semibold text-[#8A8078] hover:text-[#1A1412] py-1"
+                  >
+                    ← {lang === 'pt' ? 'Ver outros tópicos' : lang === 'en' ? 'Choose another topic' : 'Autres sujets'}
+                  </button>
+                </motion.div>
+              ) : (
+                /* Quick Action Shortcuts */
+                <div>
+                  <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#9A7428] mb-2 px-1">
+                    {lang === 'pt' ? 'Ações Rápidas & FAQ' : lang === 'en' ? 'Quick Actions & FAQ' : 'Actions Rapides'}
                   </p>
-                  <div className="space-y-1.5">
-                    {faqs.map((faq, i) => (
-                      <motion.button
-                        key={i}
-                        initial={{ opacity: 0, x: -6 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.04 }}
-                        onClick={() => setActiveFaq(faq)}
-                        className="w-full flex items-center justify-between text-start text-sm text-[#1A1412] bg-[#F5F5F5] hover:bg-[#E8F9EE] hover:text-[#128C7E] border border-transparent hover:border-[#25D366]/30 px-3 py-2 rounded-xl transition-all duration-150 group"
+                  <div className="grid grid-cols-1 gap-1.5 max-h-[140px] overflow-y-auto pe-0.5">
+                    {QUICK_ACTIONS.map((action) => (
+                      <button
+                        key={action.id}
+                        onClick={() => handleActionClick(action)}
+                        className="w-full flex items-center justify-between text-left p-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#E8E2D8]/60 hover:border-[#C49A3C]/40 transition-all duration-150 group"
                       >
-                        <span className="leading-snug">{faq.q}</span>
-                        <IconChevronRight
-                          size={14}
-                          className="text-[#9A9A9A] group-hover:text-[#25D366] shrink-0 ms-2"
-                        />
-                      </motion.button>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="grid place-items-center h-7 w-7 rounded-lg bg-white shadow-xs shrink-0">
+                            {action.icon}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-[#1A1412] truncate group-hover:text-[#9A7428]">
+                              {action.title[lang] || action.title.pt}
+                            </div>
+                            <div className="text-[10px] text-[#8A8078] truncate">
+                              {action.desc[lang] || action.desc.pt}
+                            </div>
+                          </div>
+                        </div>
+                        <IconChevronRight size={14} className="text-[#A49C94] group-hover:text-[#9A7428] shrink-0 ms-2" />
+                      </button>
                     ))}
                   </div>
-                </>
-              ) : (
-                <button
-                  onClick={() => setActiveFaq(null)}
-                  className="w-full text-center text-sm text-[#128C7E] font-semibold py-1.5 hover:underline"
-                >
-                  ← {lang === 'pt' ? 'Ver todas as perguntas' : lang === 'en' ? 'View all questions' : 'Voir toutes les questions'}
-                </button>
+                </div>
               )}
+
+              {/* ── Custom Message Input Bar ── */}
+              <form onSubmit={handleCustomSend} className="mt-2.5 flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={customMsg}
+                  onChange={(e) => setCustomMsg(e.target.value)}
+                  placeholder={
+                    lang === 'pt'
+                      ? 'Escreva a sua mensagem...'
+                      : lang === 'en'
+                      ? 'Type your question...'
+                      : 'Écrivez votre message...'
+                  }
+                  className="flex-1 bg-[#F5F5F5] border border-[#E8E2D8] rounded-xl px-3 py-2 text-xs text-[#1A1412] focus:outline-none focus:border-[#25D366] transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={!customMsg.trim()}
+                  className="grid place-items-center h-8 w-8 rounded-xl bg-[#25D366] hover:bg-[#20BD5C] disabled:opacity-40 disabled:hover:bg-[#25D366] text-white transition-all shrink-0"
+                  aria-label="Send to WhatsApp"
+                >
+                  <IconSend size={14} />
+                </button>
+              </form>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Floating Button ── */}
+      {/* ── Main Floating Button with Micro-Pulse ── */}
       <motion.button
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 22, delay: 0.15 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 22, delay: 0.1 }}
         whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.94 }}
+        whileTap={{ scale: 0.92 }}
         onClick={() => {
           setOpen((v) => !v);
-          setActiveFaq(null);
+          playSoftClick();
         }}
-        className="relative w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20BD5C] text-white shadow-[0_4px_24px_rgba(37,211,102,0.5)] hover:shadow-[0_6px_32px_rgba(37,211,102,0.65)] transition-all duration-200 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
-        aria-label="WhatsApp"
+        className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-[#128C7E] to-[#25D366] hover:from-[#0E7A6D] hover:to-[#20BD5C] text-white shadow-[0_6px_28px_rgba(37,211,102,0.45)] hover:shadow-[0_8px_36px_rgba(37,211,102,0.6)] transition-all duration-200 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
+        aria-label="WhatsApp Concierge"
         aria-expanded={open}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -327,7 +444,7 @@ export function WhatsAppBubble() {
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: 90, opacity: 0 }}
-              transition={{ duration: 0.18 }}
+              transition={{ duration: 0.15 }}
             >
               <IconX size={24} strokeWidth={2.5} />
             </motion.span>
@@ -337,14 +454,14 @@ export function WhatsAppBubble() {
               initial={{ rotate: 90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: -90, opacity: 0 }}
-              transition={{ duration: 0.18 }}
+              transition={{ duration: 0.15 }}
             >
               <IconBrandWhatsapp size={28} strokeWidth={2} />
             </motion.span>
           )}
         </AnimatePresence>
 
-        {/* Pulsing ring when closed */}
+        {/* Live Pulse Ring when closed */}
         {!open && (
           <span className="absolute inset-0 rounded-full animate-ping bg-[#25D366] opacity-30 pointer-events-none" />
         )}

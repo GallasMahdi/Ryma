@@ -1,241 +1,188 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES, ServicePole, Service } from '@/data/services';
+import { SERVICES, ServicePole } from '@/data/services';
 import { ServiceCard } from '@/components/ui/ServiceCard';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { IconStethoscope, IconFlame, IconSparkles, IconChevronDown } from '@tabler/icons-react';
-
-const POLES: {
-  id: ServicePole;
-  icon: React.ReactNode;
-  label: { fr: string; pt: string; en: string };
-  desc: { fr: string; pt: string; en: string };
-  badge: 'teal' | 'bronze' | 'rose';
-  accentColor: string;
-}[] = [
-  {
-    id: 'kinesitherapie',
-    icon: <IconStethoscope size={18} />,
-    label: {
-      fr: 'KinÃ©sithÃ©rapie Sur Mesure',
-      pt: 'Fisioterapia Especializada',
-      en: 'Specialized Physiotherapy',
-    },
-    desc: {
-      fr: 'Soins thÃ©rapeutiques avancÃ©s pour la posture, la rÃ©Ã©ducation active et le soulagement durable.',
-      pt: 'Cuidados terapÃªuticos avanÃ§ados para a postura, reabilitaÃ§Ã£o ativa e alÃ­vio duradouro.',
-      en: 'Advanced therapeutic care for posture, active rehabilitation, and long-term relief.',
-    },
-    badge: 'teal',
-    accentColor: '#C49A3C',
-  },
-  {
-    id: 'minceur',
-    icon: <IconFlame size={18} />,
-    label: {
-      fr: 'Protocoles Minceur High-Tech',
-      pt: 'Protocolos de Emagrecimento High-Tech',
-      en: 'High-Tech Slimming Protocols',
-    },
-    desc: {
-      fr: 'Technologies 100% non-invasives pour sculpter la silhouette, raffermir les tissus et dÃ©stocker.',
-      pt: 'Tecnologias 100% nÃ£o invasivas para esculpir a silhueta, firmar tecidos e eliminar gordura.',
-      en: '100% non-invasive technologies to sculpt the body, firm tissues, and target fat.',
-    },
-    badge: 'bronze',
-    accentColor: '#9A7428',
-  },
-];
-
-/**
- * Mobile vertical stack â€” replaces the horizontal carousel on small screens.
- * Cards are shown 2 at a time with a "show more" toggle so the page doesn't
- * feel overwhelming while still being fully navigable without sideways scrolling.
- */
-function MobileServiceStack({ services, lang }: { services: Service[]; lang: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const shown = expanded ? services : services.slice(0, 2);
-
-  const showMoreLabel =
-    lang === 'pt' ? `Ver mais ${services.length - 2} tratamento${services.length - 2 > 1 ? 's' : ''}` :
-    lang === 'en' ? `Show ${services.length - 2} more treatment${services.length - 2 > 1 ? 's' : ''}` :
-    `Voir ${services.length - 2} soin${services.length - 2 > 1 ? 's' : ''} de plus`;
-
-  const showLessLabel =
-    lang === 'pt' ? 'Mostrar menos' :
-    lang === 'en' ? 'Show less' :
-    'Voir moins';
-
-  return (
-    <div className="flex flex-col gap-4">
-      <AnimatePresence initial={false}>
-        {shown.map((service, i) => (
-          <motion.div
-            key={service.slug}
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.32, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <ServiceCard service={service} />
-          </motion.div>
-        ))}
-      </AnimatePresence>
-
-      {services.length > 2 && (
-        <button
-          onClick={() => setExpanded(v => !v)}
-          className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl border border-[#C49A3C]/30 bg-white/80 text-[#9A7428] text-sm font-semibold transition-all hover:bg-[#F5E9C8] hover:border-[#C49A3C]/60 active:scale-[0.98]"
-        >
-          <span>{expanded ? showLessLabel : showMoreLabel}</span>
-          <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.25 }}>
-            <IconChevronDown size={16} />
-          </motion.div>
-        </button>
-      )}
-    </div>
-  );
-}
+import { playSoftClick } from '@/lib/sound';
+import {
+  IconStethoscope,
+  IconFlame,
+  IconSparkles,
+  IconArrowRight,
+  IconShieldCheck,
+  IconCalendarEvent,
+  IconFilter,
+} from '@tabler/icons-react';
 
 export function ServicesHub() {
   const { lang, t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'all' | 'kinesitherapie' | 'minceur'>('all');
+  const [activePole, setActivePole] = useState<'all' | 'kinesitherapie' | 'minceur'>('all');
+  const [activeTag, setActiveTag] = useState<string>('all');
 
-  const filteredPoles = POLES.filter((p) => activeTab === 'all' || p.id === activeTab);
+  const filteredServices = SERVICES.filter((service) => {
+    const matchesPole = activePole === 'all' || service.pole === activePole;
+    if (!matchesPole) return false;
+
+    if (activeTag === 'all') return true;
+    if (activeTag === 'posture') {
+      return ['reeducation-posturale', 'massage-therapeutique', 'electrostimulation'].includes(service.slug);
+    }
+    if (activeTag === 'slimming') {
+      return ['cryolipolyse', 'cavitation', 'radiofrequence', 'laser-lipo'].includes(service.slug);
+    }
+    if (activeTag === 'drainage') {
+      return ['drainage-lymphatique', 'pressotherapie', 'massage-drainant'].includes(service.slug);
+    }
+    if (activeTag === 'postpartum') {
+      return ['reeducation-post-partum', 'pressotherapie', 'massage-therapeutique'].includes(service.slug);
+    }
+    return true;
+  });
 
   return (
-    <section id="services" className="relative pt-16 md:pt-24 pb-20 bg-[#FAFAF8] overflow-hidden">
-      {/* Ambient Radial Luxury Glow */}
+    <section id="services" className="relative py-16 sm:py-24 bg-[#FAFAF8] overflow-hidden select-none">
+      
+      {/* Background Architectural Light Ambient */}
       <div className="absolute inset-0 pointer-events-none">
         <div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full"
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[550px]"
           style={{
             background:
-              'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(245,233,200,0.4) 0%, transparent 70%)',
+              'radial-gradient(ellipse 70% 45% at 50% 30%, rgba(245,233,200,0.45) 0%, transparent 70%)',
           }}
         />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-5 md:px-12">
-        {/* Header */}
-        <ScrollReveal className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md border border-[#C49A3C]/30 px-4 py-1.5 rounded-full mb-4 shadow-sm">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 md:px-12">
+        
+        {/* ── Section Header ── */}
+        <ScrollReveal className="text-center mb-10 sm:mb-12">
+          <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md border border-[#C49A3C]/35 px-4 py-1.5 rounded-full mb-3 sm:mb-4 shadow-xs">
             <IconSparkles size={14} className="text-[#C49A3C]" />
-            <span className="font-mono text-[11px] tracking-[0.24em] text-[#9A7428] uppercase font-semibold">
-              {lang === 'pt' ? 'Os Nossos Polos de ExcelÃªncia' : lang === 'en' ? 'Our Centers of Excellence' : 'Nos PÃ´les d\'Excellence'}
+            <span className="font-mono text-[11px] tracking-[0.24em] text-[#9A7428] uppercase font-bold">
+              {lang === 'pt' ? 'Polos Clínicos de Excelência' : lang === 'en' ? 'Centers of Clinical Excellence' : 'Pôles de Soins d\'Excellence'}
             </span>
           </div>
 
-          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-4 tracking-[-0.02em]">
-            {lang === 'pt' ? 'Cuidados e Tratamentos Clinicos' : lang === 'en' ? 'Clinical Care & Treatments' : 'Soins & Traitements'}
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-3 sm:mb-4 tracking-tight">
+            {lang === 'pt' ? 'Os Nossos Cuidados Especializados' : lang === 'en' ? 'Specialized Medical Treatments' : 'Nos Soins & Protocoles Médicaux'}
           </h2>
-          <p className="text-[#6B6058] max-w-2xl mx-auto text-base md:text-lg leading-relaxed font-normal">
+
+          <p className="text-[#6B6058] max-w-2xl mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-normal">
             {lang === 'pt'
-              ? '13 tratamentos especializados desenhados Ã  medida para responder a todos os seus objetivos de saÃºde, reabilitaÃ§Ã£o e remodelaÃ§Ã£o corporal.'
+              ? '13 tratamentos de vanguarda estruturados para a saúde postural, alívio de dor articular e remodelação corporal sem cirurgia.'
               : lang === 'en'
-              ? '13 specialized treatments tailored to achieve all your goals in health, rehabilitation, and body contouring.'
-              : '13 soins spÃ©cialisÃ©s conÃ§us sur mesure pour rÃ©pondre Ã  tous vos objectifs de santÃ©, rÃ©Ã©ducation et remodelage.'}
+              ? '13 advanced protocols tailored for postural alignment, joint recovery, and non-invasive silhouette remodeling.'
+              : '13 soins sur mesure alliant précision clinique et technologies de pointe pour votre posture et votre silhouette.'}
           </p>
+
+          {/* ── Category Segmented Switcher ── */}
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 p-1.5 bg-white border border-[#C49A3C]/30 rounded-full max-w-md mx-auto mt-6 sm:mt-8 shadow-xs">
+            <button
+              onClick={() => { setActivePole('all'); setActiveTag('all'); playSoftClick(); }}
+              className={`flex-1 py-2 px-3 rounded-full text-xs font-semibold transition-all ${
+                activePole === 'all'
+                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                  : 'text-[#554C42] hover:text-[#9A7428]'
+              }`}
+            >
+              {lang === 'pt' ? 'Todos (13)' : lang === 'en' ? 'All (13)' : 'Tous (13)'}
+            </button>
+            <button
+              onClick={() => { setActivePole('kinesitherapie'); setActiveTag('all'); playSoftClick(); }}
+              className={`flex-1 py-2 px-3 rounded-full text-xs font-semibold transition-all ${
+                activePole === 'kinesitherapie'
+                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                  : 'text-[#554C42] hover:text-[#9A7428]'
+              }`}
+            >
+              {lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
+            </button>
+            <button
+              onClick={() => { setActivePole('minceur'); setActiveTag('all'); playSoftClick(); }}
+              className={`flex-1 py-2 px-3 rounded-full text-xs font-semibold transition-all ${
+                activePole === 'minceur'
+                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                  : 'text-[#554C42] hover:text-[#9A7428]'
+              }`}
+            >
+              {lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
+            </button>
+          </div>
+
+          {/* ── Sub-Filter Goal Chips ── */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-4 max-w-2xl mx-auto">
+            {[
+              { id: 'all', label: { pt: 'Todos os Objetivos', en: 'All Goals', fr: 'Tous les Objectifs' } },
+              { id: 'posture', label: { pt: 'Postura & Coluna', en: 'Posture & Spine', fr: 'Posture & Dos' } },
+              { id: 'slimming', label: { pt: 'Gordura & Firmeza', en: 'Fat & Tightening', fr: 'Graisse & Fermeté' } },
+              { id: 'drainage', label: { pt: 'Drenagem & Pernas', en: 'Drainage & Legs', fr: 'Drainage & Jambes' } },
+              { id: 'postpartum', label: { pt: 'Saúde Pós-Parto', en: 'Postpartum Care', fr: 'Soins Post-Partum' } },
+            ].map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => { setActiveTag(tag.id); playSoftClick(); }}
+                className={`px-3 py-1 rounded-full text-[11px] font-mono transition-all border ${
+                  activeTag === tag.id
+                    ? 'bg-[#FAF5EA] border-[#C49A3C] text-[#8A6A24] font-bold shadow-xs'
+                    : 'bg-white/70 border-[#E8E2D8] text-[#8A8078] hover:text-[#1A1412] hover:bg-white'
+                }`}
+              >
+                {tag.label[lang] || tag.label.pt}
+              </button>
+            ))}
+          </div>
         </ScrollReveal>
 
-        {/* Pole Filter Selector */}
-        <div className="flex items-center justify-center gap-1.5 p-1.5 bg-[#F4F0E8]/90 backdrop-blur-xl rounded-full border border-[#C49A3C]/30 max-w-md mx-auto mb-14 shadow-inner">
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`flex-1 py-2.5 px-4 rounded-full text-xs font-semibold transition-all duration-300 ${
-              activeTab === 'all'
-                ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-md'
-                : 'text-[#4A4540] hover:text-[#C49A3C]'
-            }`}
-          >
-            {lang === 'pt' ? 'Todos os Polos' : lang === 'en' ? 'All Centers' : 'Tous les PÃ´les'}
-          </button>
-          <button
-            onClick={() => setActiveTab('kinesitherapie')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full text-xs font-semibold transition-all duration-300 ${
-              activeTab === 'kinesitherapie'
-                ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-md'
-                : 'text-[#4A4540] hover:text-[#C49A3C]'
-            }`}
-          >
-            <IconStethoscope size={15} />
-            <span>{lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'KinÃ©sithÃ©rapie'}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('minceur')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full text-xs font-semibold transition-all duration-300 ${
-              activeTab === 'minceur'
-                ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-md'
-                : 'text-[#4A4540] hover:text-[#C49A3C]'
-            }`}
-          >
-            <IconFlame size={15} />
-            <span>{lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}</span>
-          </button>
-        </div>
+        {/* ── Services Responsive Grid ── */}
+        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <AnimatePresence mode="popLayout">
+            {filteredServices.map((service, i) => (
+              <motion.div
+                key={service.slug}
+                layout
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.25, delay: i * 0.03 }}
+              >
+                <ServiceCard service={service} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
 
-        {/* Poles Render */}
-        {filteredPoles.map((pole) => {
-          const poleServices = SERVICES.filter((s) => s.pole === pole.id);
-          const visibleServices = poleServices.slice(0, 3);
-          return (
-            <div key={pole.id} className="mb-16 md:mb-20">
-              <ScrollReveal delay={0.1}>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-md"
-                      style={{ background: `linear-gradient(135deg, ${pole.accentColor}, #E8C97A)` }}
-                    >
-                      {pole.icon}
-                    </div>
-                    <Badge variant={pole.badge} className="text-xs md:text-sm px-4 py-1.5 font-semibold">
-                      {pole.label[lang] || pole.label.pt || pole.label.fr}
-                    </Badge>
-                  </div>
-                  <div className="h-px flex-1 bg-gradient-to-r from-[#C49A3C]/30 via-[#C49A3C]/10 to-transparent" />
-                </div>
-                <p className="text-[#8A8078] mb-8 text-xs md:text-sm leading-relaxed max-w-2xl font-normal">
-                  {pole.desc[lang] || pole.desc.pt || pole.desc.fr}
-                </p>
-              </ScrollReveal>
-
-              {/* Desktop: 3-column grid (unchanged) */}
-              <div className="hidden lg:grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {visibleServices.map((service, i) => (
-                  <ScrollReveal key={service.slug} delay={i * 0.07}>
-                    <ServiceCard service={service} />
-                  </ScrollReveal>
-                ))}
+        {/* ── Bottom Section CTA Action ── */}
+        <div className="mt-12 sm:mt-16 text-center">
+          <ScrollReveal>
+            <div className="inline-flex flex-col sm:flex-row items-center gap-3 p-2 sm:p-2.5 bg-white border border-[#C49A3C]/30 rounded-2xl sm:rounded-full shadow-xs">
+              <div className="flex items-center gap-2 px-3 text-xs text-[#554C42]">
+                <IconShieldCheck size={16} className="text-[#6F8F72]" />
+                <span className="font-semibold">
+                  {lang === 'pt'
+                    ? 'Avaliação personalizada e recibos para comparticipação ADSE/Seguros'
+                    : lang === 'en'
+                    ? 'Personalized consultation & certified insurance receipts'
+                    : 'Bilan personnalisé & factures conformes mutuelles'}
+                </span>
               </div>
 
-              {/* Mobile / Tablet: clean vertical stack â€” no horizontal scroll */}
-              <div className="lg:hidden">
-                <MobileServiceStack services={visibleServices} lang={lang} />
-              </div>
-
-              <div className="mt-8 text-center">
-                <Button href="/services" variant="ghost" size="sm" className="hover:text-[#9A7428]">
-                  {lang === 'pt' ? 'Ver todos os tratamentos deste polo â†’' : lang === 'en' ? 'View all treatments in this area â†’' : 'Voir tous les soins de ce pÃ´le â†’'}
-                </Button>
-              </div>
+              <Link
+                href="/services"
+                onClick={playSoftClick}
+                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl sm:rounded-full bg-[#1A1412] hover:bg-[#2C2420] text-[#E8C97A] text-xs font-bold transition-all shadow-xs"
+              >
+                <span>{lang === 'pt' ? 'Ver Catálogo Completo' : lang === 'en' ? 'View Full Catalog' : 'Catalogue Complet'}</span>
+                <IconArrowRight size={13} />
+              </Link>
             </div>
-          );
-        })}
-
-        {/* Bottom CTA */}
-        <ScrollReveal className="text-center mt-6">
-          <Button href="/tarifs" variant="outline" size="lg" className="bg-white/95 backdrop-blur-xl border-[#C49A3C]/30 text-[#1A1412] shadow-sm hover:border-[#C49A3C]">
-            {t.common.seeRates}
-          </Button>
-        </ScrollReveal>
+          </ScrollReveal>
+        </div>
       </div>
     </section>
   );
 }
-

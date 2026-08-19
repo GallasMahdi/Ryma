@@ -146,15 +146,15 @@ export function Hero() {
   const currentSlide = HERO_SLIDES[currentIndex];
 
   const stats = [
-    { end: 1200, suffix: '+', label: t.hero.stat1Label },
-    { end: 8,    suffix: '+', label: t.hero.stat2Label },
-    { end: 13,   suffix: '',  label: lang === 'pt' ? 'Tratamentos' : lang === 'en' ? 'Treatments' : 'Soins' },
-    { end: 99,   suffix: '%', label: t.hero.stat4Label },
+    { end: 420, suffix: '+', label: t.hero.stat1Label },
+    { end: 8, suffix: '+', label: t.hero.stat2Label },
+    { end: 13, suffix: '', label: lang === 'pt' ? 'Tratamentos' : lang === 'en' ? 'Treatments' : 'Soins' },
+    { end: 99, suffix: '%', label: t.hero.stat4Label },
   ];
 
   return (
     <section className="relative min-h-[85vh] sm:min-h-[90vh] lg:min-h-[94vh] flex flex-col justify-between overflow-hidden pt-4 pb-6 sm:pt-10 sm:pb-10 select-none">
-      
+
       {/* ── Background Slides with Cinematic Crossfade & Gentle Zoom ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {HERO_SLIDES.map((slide, index) => {
@@ -220,8 +220,8 @@ export function Hero() {
             {lang === 'pt'
               ? 'Digital Clínica • Lisboa'
               : lang === 'en'
-              ? 'Digital Clinic • Lisbon'
-              : 'Digital Clínica • Lisbonne'}
+                ? 'Digital Clinic • Lisbon'
+                : 'Digital Clínica • Lisbonne'}
           </span>
 
           <span className="hidden sm:inline-block h-3 w-px bg-[#C49A3C]/30" />
@@ -235,7 +235,7 @@ export function Hero() {
 
       {/* ── Main Center Narrative ── */}
       <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center w-full my-auto">
-        
+
         {/* Dynamic Slide Tag Pill */}
         <div className="h-5 sm:h-6 mb-1 sm:mb-2 flex items-center justify-center">
           <AnimatePresence mode="wait">
@@ -304,28 +304,26 @@ export function Hero() {
         </div>
 
         {/* ── Dual Core Expertise Cards ── */}
-        
+
         {/* MOBILE (< 768px): Segment Switcher & Compact Card */}
         <div className="block md:hidden mb-4 max-w-sm mx-auto">
           <div className="p-1 bg-white/90 backdrop-blur-md rounded-full border border-[#C49A3C]/30 flex items-center mb-2.5 shadow-xs">
             <button
               onClick={() => { setActiveSegment('kine'); playSoftClick(); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${
-                activeSegment === 'kine'
-                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                  : 'text-[#554C42]'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${activeSegment === 'kine'
+                ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                : 'text-[#554C42]'
+                }`}
             >
               <IconStethoscope size={13} />
               <span>{lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}</span>
             </button>
             <button
               onClick={() => { setActiveSegment('minceur'); playSoftClick(); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${
-                activeSegment === 'minceur'
-                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                  : 'text-[#554C42]'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${activeSegment === 'minceur'
+                ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                : 'text-[#554C42]'
+                }`}
             >
               <IconFlame size={13} />
               <span>{lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}</span>
@@ -354,8 +352,8 @@ export function Hero() {
                   {lang === 'pt'
                     ? 'Protocolos clínicos especializados para postura, hérnias e recuperação articular.'
                     : lang === 'en'
-                    ? 'Specialized clinical protocols for posture, spinal discs, and joint rehab.'
-                    : 'Protocoles cliniques pour la posture, le dos et la rééducation.'}
+                      ? 'Specialized clinical protocols for posture, spinal discs, and joint rehab.'
+                      : 'Protocoles cliniques pour la posture, le dos et la rééducation.'}
                 </p>
                 <div className="flex items-center justify-between pt-1 border-t border-[#C49A3C]/15">
                   <div className="flex gap-1 text-[9px] font-mono font-semibold text-[#8A6A24]">
@@ -392,8 +390,8 @@ export function Hero() {
                   {lang === 'pt'
                     ? 'Redução de gordura localizada, firmeza da pele e drenagem sem cirurgia.'
                     : lang === 'en'
-                    ? 'Targeted fat reduction, skin firming, and drainage with zero downtime.'
-                    : 'Élimination des graisses localisées et raffermissement sans chirurgie.'}
+                      ? 'Targeted fat reduction, skin firming, and drainage with zero downtime.'
+                      : 'Élimination des graisses localisées et raffermissement sans chirurgie.'}
                 </p>
                 <div className="flex items-center justify-between pt-1 border-t border-[#C49A3C]/15">
                   <div className="flex gap-1 text-[9px] font-mono font-semibold text-[#8A6A24]">
@@ -442,8 +440,8 @@ export function Hero() {
                   {lang === 'pt'
                     ? 'RPG, alívio de hérnias discais, recuperação articular e reabilitação pós-parto com acompanhamento contínuo.'
                     : lang === 'en'
-                    ? 'GPR therapy, spinal disc relief, joint restoration, and dedicated postpartum pelvic health.'
-                    : 'RPG, soulagement du dos, rééducation articulaire et soins périnéaux post-partum.'}
+                      ? 'GPR therapy, spinal disc relief, joint restoration, and dedicated postpartum pelvic health.'
+                      : 'RPG, soulagement du dos, rééducation articulaire et soins périnéaux post-partum.'}
                 </p>
                 <div className="flex flex-wrap gap-1 text-[10px] font-mono font-bold text-[#8A6A24]">
                   <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">RPG</span>
@@ -477,8 +475,8 @@ export function Hero() {
                   {lang === 'pt'
                     ? 'Tecnologias avançadas não invasivas para destruição de gordura, refirmação cutânea e drenagem sequencial.'
                     : lang === 'en'
-                    ? 'Cutting-edge non-invasive modalities for targeted fat apoptosis, collagen tightening, and drainage.'
-                    : 'Technologies médicales pour la réduction graisseuse ciblée et le raffermissement cutané.'}
+                      ? 'Cutting-edge non-invasive modalities for targeted fat apoptosis, collagen tightening, and drainage.'
+                      : 'Technologies médicales pour la réduction graisseuse ciblée et le raffermissement cutané.'}
                 </p>
                 <div className="flex flex-wrap gap-1 text-[10px] font-mono font-bold text-[#8A6A24]">
                   <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Criolipólise</span>
@@ -527,8 +525,8 @@ export function Hero() {
               lang === 'pt'
                 ? 'Olá Digital Clínica! Gostaria de informações sobre marcação de consulta.'
                 : lang === 'en'
-                ? 'Hello Digital Clinic! I would like to inquire about booking an appointment.'
-                : 'Bonjour Digital Clínica ! Je souhaite réserver une consultation.'
+                  ? 'Hello Digital Clinic! I would like to inquire about booking an appointment.'
+                  : 'Bonjour Digital Clínica ! Je souhaite réserver une consultation.'
             )}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -567,10 +565,10 @@ export function Hero() {
 
       {/* ── Bottom Section: Floating Slide Navigator & Metric Ribbon ── */}
       <div className="relative z-10 mx-auto max-w-5xl px-3 sm:px-6 w-full mt-auto">
-        
+
         {/* Floating Slide Control Dock */}
         <div className="flex items-center justify-between bg-white/90 backdrop-blur-xl border border-[#C49A3C]/30 px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-[0_6px_24px_rgba(196,154,60,0.1)] mb-2.5 sm:mb-4">
-          
+
           {/* Slide Numbers with Progress */}
           <div className="flex items-center gap-1.5 sm:gap-3">
             {HERO_SLIDES.map((slide, i) => {
@@ -579,11 +577,10 @@ export function Hero() {
                 <button
                   key={i}
                   onClick={() => goToSlide(i)}
-                  className={`relative flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-xs font-mono font-bold transition-all duration-300 ${
-                    isCurrent
-                      ? 'bg-[#F5E9C8] text-[#8A6A24] ring-1 ring-[#C49A3C]/60 shadow-xs'
-                      : 'text-[#8A8078] hover:text-[#1A1412] hover:bg-[#FAF6EE]'
-                  }`}
+                  className={`relative flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-xs font-mono font-bold transition-all duration-300 ${isCurrent
+                    ? 'bg-[#F5E9C8] text-[#8A6A24] ring-1 ring-[#C49A3C]/60 shadow-xs'
+                    : 'text-[#8A8078] hover:text-[#1A1412] hover:bg-[#FAF6EE]'
+                    }`}
                   aria-label={`Go to slide ${i + 1}`}
                 >
                   <span>0{i + 1}</span>
