@@ -1,4 +1,6 @@
-import Database from 'better-sqlite3';
+// better-sqlite3 is only imported lazily inside getDb() to avoid crashing on
+// Vercel serverless where the native .node binary cannot be loaded.
+// At module level we only declare the type.
 import { createClient, type Client as LibSqlClient } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
@@ -260,9 +262,9 @@ function resolveDbPath(): string {
   }
 }
 
-let _sqliteDb: Database.Database | null = null;
+let _sqliteDb: import('better-sqlite3').Database | null = null;
 
-export function getDb(): Database.Database {
+export function getDb(): import('better-sqlite3').Database {
   if (!_sqliteDb) {
     const dbPath = resolveDbPath();
     const dbDir = path.dirname(dbPath);
@@ -275,6 +277,8 @@ export function getDb(): Database.Database {
       }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Database = require('better-sqlite3') as typeof import('better-sqlite3');
     _sqliteDb = new Database(dbPath);
 
     try {
@@ -292,7 +296,7 @@ export function getDb(): Database.Database {
   return _sqliteDb;
 }
 
-function initSchemaSync(db: Database.Database): void {
+function initSchemaSync(db: import('better-sqlite3').Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS appointments (
       id               TEXT PRIMARY KEY,
@@ -452,8 +456,16 @@ async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]
     if (tursoSucceeded && rows !== null) {
       return rows;
     }
+
+    // On serverless, never fall back to SQLite — it will crash on a read-only filesystem.
+    // Turso failures on Vercel should surface as actual errors.
+    if (isServerless) {
+      throw new Error('[DB] Turso query failed in serverless environment with no fallback available.');
+    }
+
     return executeSqliteQuery<T>(sql, args);
   } else {
+    // Turso not configured — local dev only path
     return executeSqliteQuery<T>(sql, args);
   }
 }
