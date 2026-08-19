@@ -6,7 +6,6 @@ import {
   IconCalendarEvent,
   IconChartBar,
   IconNotes,
-  IconActivity,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { AdminTab } from './AdminMobileNav';
@@ -61,13 +60,13 @@ export function AdminSidebar({
   ];
 
   return (
-    <aside className="w-64 bg-[#FAFAF8] border-e border-[#E9E6DF] p-3.5 hidden md:flex flex-col justify-between shrink-0 z-20 select-none">
-      <div className="space-y-5">
-        <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#77736B] px-3 pt-1">
-          {txt('Navigation Principale', 'Main Navigation', 'Navegação Principal')}
+    <aside className="w-64 bg-[#FAFAF9] border-e border-[#E2E8F0] p-3.5 hidden md:flex flex-col justify-between shrink-0 z-20 select-none font-sans">
+      <div className="space-y-4">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] px-3 pt-1">
+          {txt('Navigation', 'Navigation', 'Navegação')}
         </div>
 
-        <nav className="space-y-1.5" aria-label="Menu latéral">
+        <nav className="space-y-1" aria-label="Menu latéral">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -76,43 +75,31 @@ export function AdminSidebar({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-sans transition-all duration-200 text-left relative group ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-sans transition-all duration-150 text-left relative ${
                   isActive
-                    ? 'bg-white text-[#1A1412] shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-[#E8D7B0]'
-                    : 'text-[#4A4540] hover:text-[#1A1412] hover:bg-[#F4F2EE] border border-transparent'
+                    ? 'bg-[#0F172A] text-white shadow-xs font-semibold'
+                    : 'text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] font-medium'
                 }`}
               >
-                {/* Gold left bar on active */}
-                {isActive && (
-                  <div className="absolute left-0 top-2 bottom-2 w-1 bg-[#C49A3C] rounded-r-full" />
-                )}
-
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                      isActive
-                        ? 'bg-[#FAF6EE] text-[#C49A3C] border border-[#E8D7B0]'
-                        : 'bg-[#F4F2EE] text-[#77736B] group-hover:text-[#1A1412]'
-                    }`}
-                  >
-                    <Icon size={18} strokeWidth={isActive ? 2 : 1.75} />
-                  </div>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Icon
+                    size={18}
+                    strokeWidth={isActive ? 2 : 1.75}
+                    className={isActive ? 'text-white' : 'text-[#64748B]'}
+                  />
                   <div className="min-w-0">
-                    <div className={`font-semibold truncate ${isActive ? 'text-[#1A1412]' : 'text-[#4A4540]'}`}>
+                    <div className="truncate text-xs">
                       {item.label}
-                    </div>
-                    <div className="text-[10px] font-mono text-[#77736B] truncate">
-                      {item.sublabel}
                     </div>
                   </div>
                 </div>
 
                 {item.badge !== null && item.badge > 0 && (
                   <span
-                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                    className={`text-[11px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${
                       isActive
-                        ? 'bg-[#C49A3C] text-white shadow-xs'
-                        : 'bg-[#E9E6DF] text-[#4A4540]'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-[#E2E8F0] text-[#475569]'
                     }`}
                   >
                     {item.badge}
@@ -125,19 +112,14 @@ export function AdminSidebar({
       </div>
 
       {/* System Status Card */}
-      <div className="p-3.5 rounded-2xl bg-white border border-[#E9E6DF] text-xs font-mono text-[#77736B] space-y-2 shadow-xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[#166534] font-semibold text-[11px]">
-            <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-            <span>{txt('Système Opérationnel', 'System Online', 'Sistema Operacional')}</span>
-          </div>
-          <span className="text-[10px] font-bold text-[#C49A3C] bg-[#FAF6EE] px-1.5 py-0.5 rounded border border-[#E8D7B0]">
-            v2.4
-          </span>
+      <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] text-xs text-[#64748B] flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-2 text-[#166534] font-medium text-[11px]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#166534]" />
+          <span>{txt('Système Prêt', 'System Ready', 'Sistema Ativo')}</span>
         </div>
-        <div className="text-[10px] text-[#77736B] leading-relaxed">
-          {txt('Cabinet Ryma Kiné • Lisbonne', 'Ryma Kiné Clinic • Lisbon', 'Clínica Ryma Kiné • Lisboa')}
-        </div>
+        <span className="font-mono text-[10px] text-[#94A3B8]">
+          v2.4
+        </span>
       </div>
     </aside>
   );

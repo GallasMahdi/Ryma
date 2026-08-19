@@ -6,7 +6,6 @@ import {
   IconListCheck,
   IconNotes,
   IconChartBar,
-  IconPlus,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 
@@ -27,7 +26,6 @@ export function AdminMobileNav({
   lang,
   totalAppointments,
   totalNotes,
-  onOpenAddModal,
 }: AdminMobileNavProps) {
   const tabs = [
     {
@@ -59,7 +57,7 @@ export function AdminMobileNav({
   return (
     <nav
       aria-label="Navigation mobile"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[9990] bg-white/95 backdrop-blur-xl border-t border-[#E9E6DF] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-2 pt-1 pb-safe"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-[9990] bg-white border-t border-[#E2E8F0] shadow-md px-2 pt-1 pb-safe font-sans"
     >
       <div className="flex items-center justify-around max-w-lg mx-auto">
         {tabs.map((tab) => {
@@ -70,29 +68,28 @@ export function AdminMobileNav({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 relative min-h-[48px] touch-target ${
+              className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all relative min-h-[48px] touch-target ${
                 isActive
-                  ? 'text-[#C49A3C]'
-                  : 'text-[#77736B] hover:text-[#1A1412] active:scale-95'
+                  ? 'text-[#0F172A]'
+                  : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
             >
-              {/* Active gold background pill */}
               {isActive && (
-                <div className="absolute inset-x-2 top-1 bottom-1 bg-[#FAF6EE] rounded-xl -z-10 border border-[#E8D7B0]/60" />
+                <div className="absolute inset-x-2 top-1 bottom-1 bg-[#F1F5F9] rounded-lg -z-10" />
               )}
 
               <div className="relative">
                 <Icon
                   size={20}
                   strokeWidth={isActive ? 2.2 : 1.75}
-                  className={isActive ? 'text-[#C49A3C]' : 'text-[#77736B]'}
+                  className={isActive ? 'text-[#0F172A]' : 'text-[#64748B]'}
                 />
                 {tab.badge !== null && (
                   <span
-                    className={`absolute -top-1.5 -right-2.5 text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full leading-none shadow-xs ${
+                    className={`absolute -top-1.5 -right-2.5 text-[10px] font-semibold px-1.5 py-0.2 rounded-full leading-none ${
                       isActive
-                        ? 'bg-[#C49A3C] text-white'
-                        : 'bg-[#E9E6DF] text-[#4A4540]'
+                        ? 'bg-[#0F172A] text-white'
+                        : 'bg-[#E2E8F0] text-[#475569]'
                     }`}
                   >
                     {tab.badge > 99 ? '99+' : tab.badge}
@@ -101,8 +98,8 @@ export function AdminMobileNav({
               </div>
 
               <span
-                className={`text-[10px] font-sans font-medium mt-0.5 tracking-tight ${
-                  isActive ? 'font-bold text-[#1A1412]' : 'text-[#77736B]'
+                className={`text-[11px] font-medium mt-0.5 tracking-tight ${
+                  isActive ? 'font-semibold text-[#0F172A]' : 'text-[#64748B]'
                 }`}
               >
                 {tab.label}

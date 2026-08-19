@@ -61,7 +61,7 @@ export default function AdminPage() {
   const knownAppointmentIdsRef = useRef<Set<string>>(new Set());
   const isInitialLoadDoneRef = useRef<boolean>(false);
 
-  // Luxury Toasts Queue
+  // Toast Queue
   const [toasts, setToasts] = useState<LuxuryToast[]>([]);
 
   const addToast = useCallback((toast: Omit<LuxuryToast, 'id'>) => {
@@ -695,8 +695,8 @@ export default function AdminPage() {
   const next7Days = useMemo(() => getNext7Days(), []);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#FAFAF8] text-[#1A1412] flex flex-col overflow-hidden font-sans">
-      {/* Global Activity Progress Bar */}
+    <div className="fixed inset-0 z-[9999] bg-[#F8FAFC] text-[#0F172A] flex flex-col overflow-hidden font-sans">
+      {/* Activity Progress Bar */}
       <LuxuryProgressBar isLoading={isGlobalBusy || loadingAppointments || loadingSlots} />
 
       {/* Real-time Toast Notifications */}
@@ -710,19 +710,18 @@ export default function AdminPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E9E6DF] p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.1)] text-center relative overflow-hidden font-sans"
+              className="bg-white border border-[#E2E8F0] p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-xl text-center font-sans"
             >
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#C49A3C]" />
-              <div className="w-12 h-12 rounded-2xl bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 rounded-xl bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] flex items-center justify-center mx-auto">
                 <IconAlertTriangle size={24} />
               </div>
-              <h3 className="font-serif text-base font-bold text-[#1A1412] leading-snug">
+              <h3 className="font-semibold text-base text-[#0F172A] leading-snug">
                 {confirmDialog.title}
               </h3>
               <div className="flex gap-2.5 justify-center pt-2">
                 <button
                   onClick={() => setConfirmDialog(null)}
-                  className="px-4 py-2.5 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-xs font-mono font-semibold text-[#77736B] hover:text-[#1A1412] hover:bg-[#F4F2EE] transition-all touch-target"
+                  className="px-4 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target"
                 >
                   {lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar'}
                 </button>
@@ -731,7 +730,7 @@ export default function AdminPage() {
                     confirmDialog.onConfirm();
                     setConfirmDialog(null);
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-mono font-bold shadow-md transition-all touch-target"
+                  className="px-4 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold shadow-xs transition-colors touch-target"
                 >
                   {lang === 'fr' ? 'Confirmer' : lang === 'en' ? 'Confirm' : 'Confirmar'}
                 </button>
@@ -762,7 +761,7 @@ export default function AdminPage() {
           totalNotes={Math.max(patientsList.length, patientNotes.length)}
         />
 
-        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-8 bg-[#FAFAF8] space-y-4 sm:space-y-6 pb-24 md:pb-8">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             <AdminKpiCards stats={stats} lang={lang} />
 

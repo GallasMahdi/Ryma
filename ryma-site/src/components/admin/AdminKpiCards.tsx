@@ -33,15 +33,15 @@ export function AdminKpiCards({ stats, lang }: AdminKpiCardsProps) {
       value: stats.total,
       badge: null,
       icon: IconCalendarEvent,
-      iconBg: 'bg-[#F4F2EE] text-[#1A1412] border-[#E9E6DF]',
-      valColor: 'text-[#1A1412]',
+      iconBg: 'bg-[#F1F5F9] text-[#334155] border-[#E2E8F0]',
+      valColor: 'text-[#0F172A]',
     },
     {
       label: txt('Confirmés', 'Confirmed', 'Confirmados'),
       value: stats.confirmed,
       badge: stats.total > 0 ? `${Math.round((stats.confirmed / stats.total) * 100)}%` : null,
       icon: IconCheck,
-      iconBg: 'bg-[#F0FDF4] text-[#166534] border-[#BBF7D0]',
+      iconBg: 'bg-[#DCFCE7] text-[#166534] border-[#BBF7D0]',
       valColor: 'text-[#166534]',
     },
     {
@@ -57,7 +57,7 @@ export function AdminKpiCards({ stats, lang }: AdminKpiCardsProps) {
       value: stats.completed,
       badge: null,
       icon: IconChecklist,
-      iconBg: 'bg-[#EFF6FF] text-[#1E40AF] border-[#BFDBFE]',
+      iconBg: 'bg-[#DBEAFE] text-[#1E40AF] border-[#BFDBFE]',
       valColor: 'text-[#1E40AF]',
     },
     {
@@ -65,13 +65,13 @@ export function AdminKpiCards({ stats, lang }: AdminKpiCardsProps) {
       value: `${stats.revenue} €`,
       badge: null,
       icon: IconCurrencyEuro,
-      iconBg: 'bg-[#FAF6EE] text-[#C49A3C] border-[#E8D7B0]',
-      valColor: 'text-[#C49A3C]',
+      iconBg: 'bg-[#F8FAFC] text-[#0F172A] border-[#E2E8F0]',
+      valColor: 'text-[#0F172A]',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 font-sans">
       {items.map((it, idx) => {
         const Icon = it.icon;
         const isRevenue = idx === 4;
@@ -79,29 +79,29 @@ export function AdminKpiCards({ stats, lang }: AdminKpiCardsProps) {
         return (
           <div
             key={it.label}
-            className={`p-3.5 sm:p-4 rounded-2xl bg-white border border-[#E9E6DF] flex flex-col justify-between shadow-[0_2px_12px_rgba(0,0,0,0.02)] transition-all hover:shadow-[0_6px_20px_rgba(0,0,0,0.05)] ${
-              isRevenue ? 'col-span-2 sm:col-span-2 lg:col-span-1 bg-gradient-to-br from-white to-[#FAF6EE]/50 border-[#E8D7B0]' : ''
+            className={`p-4 rounded-xl bg-white border border-[#E2E8F0] flex flex-col justify-between shadow-xs transition-colors hover:border-[#CBD5E1] ${
+              isRevenue ? 'col-span-2 sm:col-span-2 lg:col-span-1 bg-[#F8FAFC]' : ''
             }`}
           >
             <div className="flex items-center justify-between gap-1.5 mb-2">
               <div className="flex items-center gap-2 min-w-0">
                 <div
-                  className={`w-7 h-7 rounded-xl flex items-center justify-center border shrink-0 ${it.iconBg}`}
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center border shrink-0 ${it.iconBg}`}
                 >
                   <Icon size={15} strokeWidth={2} />
                 </div>
-                <span className="text-[10.5px] sm:text-[11px] font-mono uppercase tracking-wider text-[#77736B] truncate font-semibold">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-[#64748B] truncate">
                   {it.label}
                 </span>
               </div>
               {it.badge && (
-                <span className="text-[9.5px] font-mono font-bold px-1.5 py-0.2 rounded-md bg-[#FAF6EE] text-[#9A7428] border border-[#E8D7B0] shrink-0">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#DCFCE7] text-[#166534] shrink-0">
                   {it.badge}
                 </span>
               )}
             </div>
 
-            <div className={`font-serif text-xl sm:text-2xl font-bold tracking-tight ${it.valColor}`}>
+            <div className={`text-2xl font-bold tracking-tight ${it.valColor}`}>
               {it.value}
             </div>
           </div>

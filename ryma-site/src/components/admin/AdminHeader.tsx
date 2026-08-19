@@ -34,25 +34,25 @@ export function AdminHeader({
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   return (
-    <header className="h-14 md:h-16 bg-white/95 backdrop-blur-xl border-b border-[#E9E6DF] px-3.5 sm:px-5 md:px-6 flex items-center justify-between shrink-0 z-30 sticky top-0">
+    <header className="h-14 md:h-16 bg-white border-b border-[#E2E8F0] px-3.5 sm:px-5 md:px-6 flex items-center justify-between shrink-0 z-30 sticky top-0 font-sans">
       {/* Brand & Status */}
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1A1412] to-[#2E2420] flex items-center justify-center text-[#E8C97A] font-serif font-bold text-sm shadow-sm shrink-0 border border-[#C49A3C]/30">
+        <div className="w-8 h-8 rounded-lg bg-[#0F172A] flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
           R
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <span className="font-serif font-bold text-sm sm:text-base text-[#1A1412] tracking-tight truncate">
+          <span className="font-semibold text-sm sm:text-base text-[#0F172A] tracking-tight truncate">
             Ryma Kiné
           </span>
-          <span className="text-[#D3CEB8] hidden sm:inline">/</span>
-          <span className="text-xs text-[#77736B] font-mono hidden md:inline truncate">
-            {txt('Administration', 'Management', 'Gestão')}
+          <span className="text-[#CBD5E1] hidden sm:inline">/</span>
+          <span className="text-xs text-[#64748B] font-medium hidden md:inline truncate">
+            {txt('Administration Clinique', 'Clinic Management', 'Gestão Clínica')}
           </span>
 
           {/* Live Real-time SSE Connection Indicator */}
           <div
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-mono font-medium shrink-0 ml-1 ${
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11px] font-medium shrink-0 ml-1 ${
               isLive
                 ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'
                 : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#94A3B8]'
@@ -78,10 +78,10 @@ export function AdminHeader({
           href="/api/admin/export?type=appointments"
           target="_blank"
           download
-          className="hidden lg:inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1.5 rounded-xl border border-[#E9E6DF] text-[#4A4540] hover:bg-[#FAF6EE] hover:border-[#E8D7B0] hover:text-[#9A7428] transition-all"
+          className="hidden lg:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] text-[#334155] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors"
           title={txt('Exporter les rendez-vous en CSV', 'Export appointments to CSV', 'Exportar consultas em CSV')}
         >
-          <IconFileSpreadsheet size={14} className="text-[#C49A3C]" />
+          <IconFileSpreadsheet size={15} className="text-[#64748B]" />
           <span>CSV</span>
         </a>
 
@@ -90,32 +90,32 @@ export function AdminHeader({
           onClick={onRefresh}
           disabled={loadingAppointments}
           title={txt('Actualiser', 'Refresh', 'Atualizar')}
-          className="p-2 rounded-xl border border-[#E9E6DF] text-[#77736B] hover:text-[#1A1412] hover:bg-[#FAF6EE] hover:border-[#E8D7B0] active:scale-95 transition-all touch-target flex items-center justify-center"
+          className="p-2 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] active:scale-95 transition-all touch-target flex items-center justify-center"
         >
           <IconRefresh
             size={16}
-            className={loadingAppointments ? 'animate-spin text-[#C49A3C]' : ''}
+            className={loadingAppointments ? 'animate-spin text-[#2563EB]' : ''}
           />
         </button>
 
         {/* New Appointment Primary Button */}
         <button
           onClick={onOpenAddModal}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[#1A1412] hover:bg-[#2E2420] text-white font-medium text-xs shadow-sm hover:shadow-md active:scale-95 transition-all touch-target"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs shadow-xs hover:shadow transition-all touch-target"
         >
-          <IconPlus size={16} className="text-[#E8C97A]" />
+          <IconPlus size={16} />
           <span className="hidden xs:inline sm:inline">
             {txt('Nouveau RDV', 'New Appt', 'Nova Consulta')}
           </span>
         </button>
 
-        <div className="h-4 w-px bg-[#E9E6DF] mx-0.5 sm:mx-1" />
+        <div className="h-4 w-px bg-[#E2E8F0] mx-0.5 sm:mx-1" />
 
         {/* Public Website Link (Desktop) */}
         <Link
           href="/"
           target="_blank"
-          className="hidden md:inline-flex items-center gap-1 text-xs text-[#77736B] hover:text-[#1A1412] px-2 py-1.5 rounded-xl hover:bg-[#FAF6EE] transition-colors font-mono"
+          className="hidden md:inline-flex items-center gap-1 text-xs text-[#64748B] hover:text-[#0F172A] px-2 py-1.5 rounded-lg hover:bg-[#F8FAFC] transition-colors font-medium"
           title={txt('Voir le site public', 'View public website', 'Ver site público')}
         >
           <span>{txt('Site', 'Site', 'Site')}</span>
@@ -125,7 +125,7 @@ export function AdminHeader({
         {/* Language Switch */}
         <button
           onClick={toggleLang}
-          className="text-xs px-2.5 py-1.5 rounded-xl border border-[#E9E6DF] text-[#4A4540] hover:text-[#1A1412] hover:bg-[#FAF6EE] hover:border-[#E8D7B0] transition-all font-mono font-bold uppercase touch-target flex items-center justify-center"
+          className="text-xs px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] text-[#334155] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors font-semibold uppercase touch-target flex items-center justify-center"
           title={txt('Changer de langue', 'Switch language', 'Mudar idioma')}
         >
           {lang}
@@ -134,7 +134,7 @@ export function AdminHeader({
         {/* Logout (Desktop & Tablet) */}
         <button
           onClick={onLogout}
-          className="hidden sm:inline-flex items-center gap-1 text-xs text-[#991B1B] hover:text-[#7F1D1D] px-2.5 py-1.5 rounded-xl hover:bg-[#FEE2E2]/60 transition-colors font-mono font-semibold"
+          className="hidden sm:inline-flex items-center gap-1 text-xs text-[#991B1B] hover:text-[#7F1D1D] px-2.5 py-1.5 rounded-lg hover:bg-[#FEE2E2]/50 transition-colors font-medium"
           title={txt('Déconnexion', 'Sign Out', 'Terminar Sessão')}
         >
           <IconLock size={14} />

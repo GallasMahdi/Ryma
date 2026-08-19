@@ -49,7 +49,6 @@ export default function AdminLoginPage() {
               : 'Muitas tentativas. Por favor aguarde 15 minutos.'
           );
         } else {
-          // Generic error — never reveals why the login failed
           setError(
             lang === 'fr'
               ? 'Identifiants incorrects'
@@ -80,35 +79,31 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-[#FAFAF8] text-[#202020] flex flex-col justify-between overflow-hidden font-sans">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#C6A15B]/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-[#E8D7B0]/20 rounded-full blur-[120px] pointer-events-none" />
-
+    <div className="fixed inset-0 z-[99999] bg-[#F8FAFC] text-[#0F172A] flex flex-col justify-between overflow-hidden font-sans">
       {/* Top header */}
-      <div className="relative z-10 p-6 md:p-8 flex items-center justify-between">
+      <div className="relative z-10 p-4 sm:p-6 md:p-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#FAF6EE] border border-[#E8D7B0] flex items-center justify-center shadow-sm">
-            <IconBuildingHospital size={20} className="text-[#C6A15B]" />
+          <div className="w-10 h-10 rounded-xl bg-[#0F172A] text-white flex items-center justify-center shadow-xs">
+            <IconBuildingHospital size={20} />
           </div>
           <div>
-            <div className="font-serif text-lg font-bold tracking-wide text-[#202020]">RYMA OUICHKA</div>
-            <div className="font-mono text-[10px] uppercase text-[#77736B] tracking-widest">
+            <div className="font-semibold text-base sm:text-lg text-[#0F172A]">RYMA OUICHKA</div>
+            <div className="text-[11px] font-medium uppercase text-[#64748B] tracking-wider">
               {lang === 'fr' ? 'Portail Administratif' : lang === 'en' ? 'Admin Portal' : 'Portal Administrativo'}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={toggleLang}
-            className="font-mono text-xs px-3 py-1.5 rounded-xl border border-[#E9E6DF] bg-white text-[#77736B] hover:text-[#202020] hover:border-[#C6A15B]/40 hover:bg-[#FAF6EE] transition-all shadow-sm"
+            className="text-xs px-3 py-1.5 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors shadow-xs font-semibold"
           >
             🌐 {getLangLabel()}
           </button>
           <Link
             href="/"
-            className="flex items-center gap-1.5 font-mono text-xs px-3.5 py-1.5 rounded-xl bg-white border border-[#E9E6DF] text-[#77736B] hover:text-[#202020] hover:border-[#C6A15B]/40 hover:bg-[#FAF6EE] transition-all shadow-sm"
+            className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-lg bg-white border border-[#E2E8F0] text-[#334155] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors shadow-xs font-medium"
           >
             <span>{lang === 'fr' ? 'Site public' : lang === 'en' ? 'Public Website' : 'Website Público'}</span>
             <IconExternalLink size={13} />
@@ -117,26 +112,23 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Center login form */}
-      <div className="relative z-10 flex-1 flex items-center justify-center p-6">
+      <div className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6">
         <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
           className="w-full max-w-md"
         >
-          <div className="p-8 md:p-10 rounded-3xl bg-white/95 backdrop-blur-2xl border border-[#E9E6DF] shadow-[0_25px_60px_rgba(0,0,0,0.06)] relative overflow-hidden">
-            {/* Gold accent line */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C6A15B] to-transparent" />
-
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FAF6EE] to-[#F4F2EE] border border-[#E8D7B0] flex items-center justify-center mx-auto mb-6 shadow-[0_4px_20px_rgba(198,161,91,0.15)]">
-              <IconLock size={28} className="text-[#C6A15B]" />
+          <div className="p-6 sm:p-8 md:p-10 rounded-2xl bg-white border border-[#E2E8F0] shadow-xl">
+            <div className="w-14 h-14 rounded-xl bg-[#F1F5F9] text-[#0F172A] flex items-center justify-center mx-auto mb-6 border border-[#E2E8F0]">
+              <IconLock size={26} />
             </div>
 
-            <div className="text-center mb-8">
-              <h1 className="font-serif text-2xl md:text-3xl font-bold text-[#202020] mb-2">
+            <div className="text-center mb-6">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A] mb-1.5">
                 {lang === 'fr' ? 'Connexion Administration' : lang === 'en' ? 'Admin Login' : 'Acesso Administrativo'}
               </h1>
-              <p className="text-xs text-[#77736B] font-sans">
+              <p className="text-xs text-[#64748B]">
                 {lang === 'fr'
                   ? 'Saisissez votre mot de passe pour accéder au tableau de bord'
                   : lang === 'en'
@@ -156,16 +148,16 @@ export default function AdminLoginPage() {
                   autoComplete="current-password"
                   maxLength={128}
                   required
-                  className={`w-full bg-[#FAFAF8] border text-[#202020] placeholder-[#77736B]/50 rounded-xl pl-4 pr-12 py-4 text-sm focus:outline-none transition-all ${
+                  className={`w-full bg-[#F8FAFC] border text-[#0F172A] placeholder:text-[#94A3B8] rounded-xl pl-4 pr-12 py-3.5 text-xs sm:text-sm focus:outline-none transition-colors ${
                     error
-                      ? 'border-[#A9655F] ring-2 ring-[#A9655F]/20'
-                      : 'border-[#E9E6DF] focus:border-[#C6A15B] focus:ring-1 focus:ring-[#C6A15B]'
+                      ? 'border-[#EF4444] ring-2 ring-[#EF4444]/20'
+                      : 'border-[#E2E8F0] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#77736B] hover:text-[#202020] transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A] transition-colors"
                   tabIndex={-1}
                   aria-label={showPwd ? 'Masquer' : 'Afficher'}
                 >
@@ -174,20 +166,15 @@ export default function AdminLoginPage() {
               </div>
 
               {error && (
-                <motion.p
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-[#A9655F] text-xs font-mono text-center font-semibold"
-                  role="alert"
-                >
+                <p className="text-[#EF4444] text-xs text-center font-medium" role="alert">
                   ⚠️ {error}
-                </motion.p>
+                </p>
               )}
 
               <button
                 type="submit"
                 disabled={loading || !pwd}
-                className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-[#C6A15B] to-[#9B793A] text-white font-semibold text-sm shadow-[0_4px_20px_rgba(198,161,91,0.3)] hover:shadow-[0_6px_25px_rgba(198,161,91,0.45)] hover:from-[#9B793A] hover:to-[#C6A15B] active:scale-[0.99] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full py-3.5 px-6 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs sm:text-sm shadow-xs hover:shadow active:scale-[0.99] transition-all disabled:opacity-60 disabled:cursor-not-allowed touch-target"
               >
                 {loading
                   ? (lang === 'fr' ? 'Vérification...' : lang === 'en' ? 'Verifying...' : 'A verificar...')
@@ -199,7 +186,7 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Footer */}
-      <div className="relative z-10 p-6 text-center text-xs font-mono text-[#77736B]/80">
+      <div className="relative z-10 p-4 sm:p-6 text-center text-xs text-[#64748B]">
         {lang === 'fr'
           ? 'Clinique Ryma Ouichka — Lisbonne, Portugal • Accès sécurisé'
           : lang === 'en'

@@ -11,8 +11,6 @@ import {
   IconBan,
   IconSun,
   IconSunset,
-  IconCalendar,
-  IconUser,
 } from '@tabler/icons-react';
 import {
   SlotInfo,
@@ -136,25 +134,25 @@ export function SlotsTab({
             toggleSlot(st.time);
           }
         }}
-        className={`p-3 sm:p-3.5 rounded-2xl border transition-all flex flex-col justify-between min-h-[105px] select-none ${
-          !isSunday && !isBooked ? 'cursor-pointer hover:shadow-sm' : ''
+        className={`p-3 sm:p-3.5 rounded-xl border transition-all flex flex-col justify-between min-h-[105px] select-none ${
+          !isSunday && !isBooked ? 'cursor-pointer hover:shadow-xs' : ''
         } ${
           isBlocked
             ? 'bg-[#FEF2F2] border-[#FECACA]'
             : isBooked
-            ? 'bg-[#F4F2EE] border-[#E9E6DF]'
+            ? 'bg-[#F8FAFC] border-[#E2E8F0]'
             : isSunday
-            ? 'bg-[#FAFAF8] border-[#E9E6DF] opacity-50 cursor-not-allowed'
-            : 'bg-white border-[#E9E6DF] hover:border-[#C49A3C]'
+            ? 'bg-[#F8FAFC] border-[#E2E8F0] opacity-50 cursor-not-allowed'
+            : 'bg-white border-[#E2E8F0] hover:border-[#CBD5E1]'
         }`}
       >
         {/* Top: Time & Status */}
         <div className="flex items-center justify-between gap-1 mb-1">
-          <span className="font-mono font-bold text-sm text-[#1A1412]">
+          <span className="font-semibold text-sm text-[#0F172A]">
             {st.time}
           </span>
           <span
-            className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-md border ${
+            className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
               isBlocked
                 ? 'bg-[#FEE2E2] text-[#991B1B] border-[#FECACA]'
                 : isBooked
@@ -176,18 +174,18 @@ export function SlotsTab({
 
         {/* Middle: Patient detail or status text */}
         {isBooked ? (
-          <div className="bg-white p-2 rounded-xl border border-[#E9E6DF] mb-2 space-y-0.5">
-            <div className="font-semibold text-xs text-[#1A1412] truncate">
+          <div className="bg-white p-2 rounded-lg border border-[#E2E8F0] mb-2 space-y-0.5">
+            <div className="font-semibold text-xs text-[#0F172A] truncate">
               {bookedAppt?.patientName ?? txt('Patient réservé', 'Patient booked', 'Utente registado')}
             </div>
             {bookedAppt && (
-              <div className="text-[10px] text-[#77736B] truncate">
+              <div className="text-[11px] text-[#64748B] truncate">
                 {getServiceName(bookedAppt.service, lang)}
               </div>
             )}
           </div>
         ) : (
-          <div className="text-[11px] text-[#77736B] font-sans mb-2">
+          <div className="text-xs text-[#64748B] mb-2">
             {isBlocked
               ? txt('Indisponible', 'Unavailable', 'Indisponível')
               : isSunday
@@ -207,12 +205,12 @@ export function SlotsTab({
               }
             }}
             disabled={isBooked || batchProcessing}
-            className={`w-full py-2 px-2.5 rounded-xl text-xs font-mono font-semibold transition-all touch-target flex items-center justify-center ${
+            className={`w-full py-1.5 px-2.5 rounded-lg text-xs font-medium transition-colors touch-target flex items-center justify-center ${
               isBooked
                 ? 'opacity-40 cursor-not-allowed bg-transparent text-[#94A3B8]'
                 : isBlocked
                 ? 'bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FECACA]'
-                : 'bg-[#FAF6EE] text-[#9A7428] border border-[#E8D7B0] hover:bg-[#F5E9C8]'
+                : 'bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0]'
             }`}
           >
             {isBlocked
@@ -228,31 +226,31 @@ export function SlotsTab({
 
   return (
     <div className="space-y-4 font-sans">
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E9E6DF] shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-4 sm:space-y-5">
+      <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#E2E8F0] shadow-xs space-y-4 sm:space-y-5">
         {/* Header & Date Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#E9E6DF]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#E2E8F0]">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-serif font-bold text-base sm:text-lg text-[#1A1412]">
+              <h3 className="font-semibold text-base sm:text-lg text-[#0F172A]">
                 {txt('Créneaux & Horaires', 'Schedule & Slot Management', 'Gestão de Horários & Agenda')}
               </h3>
               {slotDateMeta.isSunday && (
-                <span className="text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-lg bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B]">
+                <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B]">
                   {txt('Dimanche fermé', 'Sunday closed', 'Domingo fechado')}
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#77736B] font-mono">
+            <p className="text-xs text-[#64748B]">
               {slotDateMeta.title} • {slotDateMeta.subtitle}
             </p>
           </div>
 
           {/* Date controls */}
           <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end">
-            <div className="flex items-center bg-[#FAFAF8] p-1 rounded-xl border border-[#E9E6DF]">
+            <div className="flex items-center bg-[#F1F5F9] p-0.5 rounded-lg border border-[#E2E8F0]">
               <button
                 onClick={() => setSelectedDateForSlots(prev => shiftDateString(prev, -1))}
-                className="p-1.5 rounded-lg text-[#77736B] hover:text-[#1A1412] transition-colors touch-target flex items-center justify-center"
+                className="p-1.5 rounded-md text-[#64748B] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
                 title={txt('Jour précédent', 'Previous day', 'Dia anterior')}
               >
                 <IconChevronLeft size={16} />
@@ -260,10 +258,10 @@ export function SlotsTab({
 
               <button
                 onClick={() => setSelectedDateForSlots(todayStr)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                   selectedDateForSlots === todayStr
-                    ? 'bg-[#C49A3C] text-white shadow-xs'
-                    : 'text-[#77736B] hover:text-[#1A1412]'
+                    ? 'bg-white text-[#0F172A] shadow-xs font-semibold'
+                    : 'text-[#64748B] hover:text-[#0F172A]'
                 }`}
               >
                 {txt("Auj.", 'Today', 'Hoje')}
@@ -271,7 +269,7 @@ export function SlotsTab({
 
               <button
                 onClick={() => setSelectedDateForSlots(prev => shiftDateString(prev, 1))}
-                className="p-1.5 rounded-lg text-[#77736B] hover:text-[#1A1412] transition-colors touch-target flex items-center justify-center"
+                className="p-1.5 rounded-md text-[#64748B] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
                 title={txt('Jour suivant', 'Next day', 'Dia seguinte')}
               >
                 <IconChevronRight size={16} />
@@ -282,14 +280,14 @@ export function SlotsTab({
               type="date"
               value={selectedDateForSlots}
               onChange={e => setSelectedDateForSlots(e.target.value)}
-              className="bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] px-3 py-2 rounded-xl text-xs font-mono font-semibold focus:outline-none focus:border-[#C49A3C] transition-colors"
+              className="bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] px-3 py-1.5 rounded-lg text-xs font-medium focus:outline-none focus:border-[#2563EB] transition-colors"
             />
           </div>
         </div>
 
         {/* 7-Day Quick Strip */}
         <div className="space-y-1.5">
-          <div className="text-[10.5px] font-mono font-bold uppercase tracking-wider text-[#77736B]">
+          <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-medium">
             {txt('7 Prochains Jours', 'Next 7 Days', 'Próximos 7 Dias')}
           </div>
           <div className="grid grid-cols-2 xs:grid-cols-4 sm:grid-cols-4 lg:grid-cols-7 gap-2">
@@ -301,18 +299,18 @@ export function SlotsTab({
                 <button
                   key={dateStr}
                   onClick={() => setSelectedDateForSlots(dateStr)}
-                  className={`p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 touch-target ${
+                  className={`p-2.5 rounded-xl border text-center transition-colors flex flex-col items-center justify-center gap-0.5 touch-target ${
                     isSelected
-                      ? 'bg-[#1A1412] border-[#1A1412] text-white shadow-sm scale-[1.02]'
+                      ? 'bg-[#0F172A] border-[#0F172A] text-white shadow-xs font-semibold'
                       : meta.isSunday
-                      ? 'bg-[#FAFAF8] border-[#E9E6DF] text-[#94A3B8]'
-                      : 'bg-white border-[#E9E6DF] text-[#4A4540] hover:bg-[#FAF6EE] hover:border-[#E8D7B0]'
+                      ? 'bg-[#F8FAFC] border-[#E2E8F0] text-[#94A3B8]'
+                      : 'bg-white border-[#E2E8F0] text-[#475569] hover:bg-[#F8FAFC] hover:border-[#CBD5E1]'
                   }`}
                 >
-                  <span className="text-[10px] font-mono uppercase font-bold">
+                  <span className="text-[10px] uppercase font-semibold">
                     {meta.title.substring(0, 3)}
                   </span>
-                  <span className={`text-xs font-serif font-bold ${isSelected ? 'text-[#E8C97A]' : 'text-[#77736B]'}`}>
+                  <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-[#64748B]'}`}>
                     {meta.subtitle}
                   </span>
                 </button>
@@ -323,43 +321,43 @@ export function SlotsTab({
 
         {/* Slot Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div className="p-3 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
             <div>
-              <div className="text-[10px] font-mono font-bold uppercase text-[#77736B]">{txt('Total', 'Total', 'Total')}</div>
-              <div className="text-xl font-serif font-bold text-[#1A1412]">{slotStats.total}</div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-[#64748B]">{txt('Total', 'Total', 'Total')}</div>
+              <div className="text-xl font-semibold text-[#0F172A]">{slotStats.total}</div>
             </div>
-            <IconClock size={18} className="text-[#C49A3C]" />
+            <IconClock size={18} className="text-[#94A3B8]" />
           </div>
 
-          <div className="p-3 rounded-xl bg-[#F0FDF4] border border-[#DCFCE7] flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
             <div>
-              <div className="text-[10px] font-mono font-bold uppercase text-[#166534]">{txt('Libres', 'Available', 'Livres')}</div>
-              <div className="text-xl font-serif font-bold text-[#166534]">{slotStats.available}</div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-[#166534]">{txt('Libres', 'Available', 'Livres')}</div>
+              <div className="text-xl font-semibold text-[#166534]">{slotStats.available}</div>
             </div>
             <IconCheck size={18} className="text-[#166534]" />
           </div>
 
-          <div className="p-3 rounded-xl bg-[#F4F2EE] border border-[#E9E6DF] flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
             <div>
-              <div className="text-[10px] font-mono font-bold uppercase text-[#4A4540]">{txt('Réservés', 'Booked', 'Ocupados')}</div>
-              <div className="text-xl font-serif font-bold text-[#4A4540]">{slotStats.booked}</div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-[#334155]">{txt('Réservés', 'Booked', 'Ocupados')}</div>
+              <div className="text-xl font-semibold text-[#334155]">{slotStats.booked}</div>
             </div>
-            <IconLock size={18} className="text-[#77736B]" />
+            <IconLock size={18} className="text-[#64748B]" />
           </div>
 
-          <div className="p-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
             <div>
-              <div className="text-[10px] font-mono font-bold uppercase text-[#991B1B]">{txt('Bloqués', 'Blocked', 'Bloqueados')}</div>
-              <div className="text-xl font-serif font-bold text-[#991B1B]">{slotStats.blocked}</div>
+              <div className="text-[11px] font-medium uppercase tracking-wider text-[#991B1B]">{txt('Bloqués', 'Blocked', 'Bloqueados')}</div>
+              <div className="text-xl font-semibold text-[#991B1B]">{slotStats.blocked}</div>
             </div>
             <IconBan size={18} className="text-[#991B1B]" />
           </div>
         </div>
 
         {/* Filter Pills & Batch Action Toolbar */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2 border-t border-[#E9E6DF]">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2 border-t border-[#E2E8F0]">
           {/* Quick Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar font-mono text-xs">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar text-xs">
             {[
               { id: 'all', label: txt(`Tous (${slotList.length})`, `All (${slotList.length})`, `Todos (${slotList.length})`) },
               { id: 'available', label: txt(`Libres (${slotStats.available})`, `Open (${slotStats.available})`, `Livres (${slotStats.available})`) },
@@ -369,10 +367,10 @@ export function SlotsTab({
               <button
                 key={tab.id}
                 onClick={() => setSlotFilter(tab.id as typeof slotFilter)}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                   slotFilter === tab.id
-                    ? 'bg-[#1A1412] text-white shadow-xs'
-                    : 'bg-[#FAFAF8] text-[#77736B] hover:text-[#1A1412] border border-[#E9E6DF]'
+                    ? 'bg-[#0F172A] text-white'
+                    : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
                 }`}
               >
                 {tab.label}
@@ -386,7 +384,7 @@ export function SlotsTab({
               <button
                 onClick={() => handleBatchAction('block_morning')}
                 disabled={batchProcessing || loadingSlots}
-                className="px-2.5 py-1.5 rounded-xl border border-[#E9E6DF] bg-[#FAFAF8] text-[#4A4540] hover:bg-[#F4F2EE] text-xs font-mono font-medium transition-all disabled:opacity-50 touch-target"
+                className="px-2.5 py-1 rounded-lg border border-[#E2E8F0] text-[#334155] hover:bg-[#F8FAFC] text-xs font-medium transition-colors disabled:opacity-50 touch-target"
               >
                 {txt('Bloquer Matin', 'Block Morning', 'Bloquear Manhã')}
               </button>
@@ -394,7 +392,7 @@ export function SlotsTab({
               <button
                 onClick={() => handleBatchAction('block_afternoon')}
                 disabled={batchProcessing || loadingSlots}
-                className="px-2.5 py-1.5 rounded-xl border border-[#E9E6DF] bg-[#FAFAF8] text-[#4A4540] hover:bg-[#F4F2EE] text-xs font-mono font-medium transition-all disabled:opacity-50 touch-target"
+                className="px-2.5 py-1 rounded-lg border border-[#E2E8F0] text-[#334155] hover:bg-[#F8FAFC] text-xs font-medium transition-colors disabled:opacity-50 touch-target"
               >
                 {txt('Bloquer Après-midi', 'Block Afternoon', 'Bloquear Tarde')}
               </button>
@@ -402,7 +400,7 @@ export function SlotsTab({
               <button
                 onClick={() => handleBatchAction('block_all')}
                 disabled={batchProcessing || loadingSlots}
-                className="px-2.5 py-1.5 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] hover:bg-[#FEE2E2] text-xs font-mono font-semibold transition-all disabled:opacity-50 touch-target"
+                className="px-2.5 py-1 rounded-lg bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FECACA] text-xs font-medium transition-colors disabled:opacity-50 touch-target"
               >
                 {txt('Bloquer Jour', 'Block Day', 'Bloquear Dia')}
               </button>
@@ -410,7 +408,7 @@ export function SlotsTab({
               <button
                 onClick={() => handleBatchAction('unblock_all')}
                 disabled={batchProcessing || loadingSlots}
-                className="px-2.5 py-1.5 rounded-xl bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] hover:bg-[#BBF7D0] text-xs font-mono font-semibold transition-all disabled:opacity-50 touch-target"
+                className="px-2.5 py-1 rounded-lg bg-[#DCFCE7] text-[#166534] hover:bg-[#BBF7D0] text-xs font-medium transition-colors disabled:opacity-50 touch-target"
               >
                 {txt('Débloquer Tout', 'Unblock All', 'Desbloquear Tudo')}
               </button>
@@ -419,24 +417,24 @@ export function SlotsTab({
         </div>
 
         {/* Morning & Afternoon Grids */}
-        <div className="space-y-6 pt-2">
+        <div className="space-y-5 pt-1">
           {loadingSlots && slotList.length === 0 ? (
-            <div className="py-16 text-center text-[#77736B] text-xs font-mono flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-[#C49A3C] border-t-transparent rounded-full animate-spin" />
+            <div className="py-16 text-center text-[#64748B] text-xs flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin" />
               <span>{txt('Chargement des créneaux...', 'Loading slots...', 'A carregar horários...')}</span>
             </div>
           ) : (
             <>
               {/* Morning */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-[#E9E6DF]">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between pb-1.5 border-b border-[#E2E8F0]">
                   <div className="flex items-center gap-2">
-                    <IconSun size={18} className="text-[#C49A3C]" />
-                    <h4 className="font-serif font-bold text-sm text-[#1A1412]">
+                    <IconSun size={17} className="text-[#F59E0B]" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
                       {txt('Matinée (08:00 – 12:30)', 'Morning (08:00 – 12:30)', 'Manhã (08:00 – 12:30)')}
                     </h4>
                   </div>
-                  <span className="font-mono text-xs text-[#77736B]">
+                  <span className="text-[11px] text-[#64748B]">
                     {morningSlots.filter(s => s.available && s.reason !== 'blocked').length} {txt('libres', 'open', 'livres')}
                   </span>
                 </div>
@@ -447,15 +445,15 @@ export function SlotsTab({
               </div>
 
               {/* Afternoon */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-[#E9E6DF]">
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between pb-1.5 border-b border-[#E2E8F0]">
                   <div className="flex items-center gap-2">
-                    <IconSunset size={18} className="text-[#9A7428]" />
-                    <h4 className="font-serif font-bold text-sm text-[#1A1412]">
+                    <IconSunset size={17} className="text-[#D97706]" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#0F172A]">
                       {txt('Après-midi (14:00 – 18:30)', 'Afternoon (14:00 – 18:30)', 'Tarde (14:00 – 18:30)')}
                     </h4>
                   </div>
-                  <span className="font-mono text-xs text-[#77736B]">
+                  <span className="text-[11px] text-[#64748B]">
                     {afternoonSlots.filter(s => s.available && s.reason !== 'blocked').length} {txt('libres', 'open', 'livres')}
                   </span>
                 </div>

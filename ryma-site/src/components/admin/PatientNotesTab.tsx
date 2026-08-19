@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconSearch,
   IconPhoneCall,
@@ -9,18 +8,11 @@ import {
   IconTrash,
   IconPlus,
   IconFileText,
-  IconStethoscope,
   IconActivity,
-  IconX,
   IconChevronRight,
-  IconChevronLeft,
   IconUserPlus,
-  IconCheck,
-  IconCalendar,
-  IconClock,
   IconPencil,
   IconShieldCheck,
-  IconUser,
   IconTag,
   IconArrowLeft,
   IconNotes,
@@ -28,7 +20,6 @@ import {
 import {
   PatientNote,
   PatientRecord,
-  PatientSession,
   Appointment,
   getServiceName,
   getServicePrice,
@@ -57,18 +48,6 @@ interface PatientNotesTabProps {
   onActionToast?: (toast: { type: 'success' | 'error' | 'info' | 'loading'; title: string; message?: string }) => void;
 }
 
-const QUICK_PATHOLOGIES = [
-  'Lombalgie',
-  'Cervicalgie',
-  'Entorse Genou',
-  'Rééducation Périnéale',
-  'Post-Opératoire',
-  'Drainage Lymphatique',
-  'Prothèse Hanche',
-  'Accident de Travail',
-  'Seguro / Regime Livre',
-];
-
 export function PatientNotesTab({
   lang,
   patientNotes,
@@ -94,18 +73,15 @@ export function PatientNotesTab({
     return ptStr;
   };
 
-  // Selected EMR Patient State
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [activeDossierTab, setActiveDossierTab] = useState<'overview' | 'timeline' | 'eva' | 'notes'>('overview');
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
 
-  // Modals state
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const [isAddSessionModalOpen, setIsAddSessionModalOpen] = useState(false);
   const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // New Patient Form
   const [newPatientForm, setNewPatientForm] = useState({
     patientName: '',
     phone: '',
@@ -121,7 +97,6 @@ export function PatientNotesTab({
     totalPrescribedSessions: 10,
   });
 
-  // Edit Patient Form
   const [editPatientForm, setEditPatientForm] = useState({
     id: '',
     patientName: '',
@@ -138,7 +113,6 @@ export function PatientNotesTab({
     totalPrescribedSessionsStr: '10',
   });
 
-  // Session form
   const [sessionForm, setSessionForm] = useState<{
     date: string;
     time: string;
@@ -157,7 +131,6 @@ export function PatientNotesTab({
     practitioner: 'Ryma Ouichka',
   });
 
-  // Combined List of Patients (Merging Patients + Legacy Notes)
   const allPatientsList = useMemo(() => {
     const map = new Map<string, PatientRecord>();
     patientsList.forEach(p => map.set(p.phone, p));
@@ -181,7 +154,6 @@ export function PatientNotesTab({
     return Array.from(map.values()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }, [patientsList, patientNotes]);
 
-  // Active Patient Object
   const activePatient = useMemo<PatientRecord | null>(() => {
     if (selectedPatientId) {
       const foundById = patientsList.find(p => p.id === selectedPatientId);
@@ -214,7 +186,6 @@ export function PatientNotesTab({
     return allPatientsList[0] ?? null;
   }, [selectedPatientId, selectedNote, patientsList, allPatientsList]);
 
-  // Filtered patient list
   const filteredPatients = useMemo(() => {
     const q = noteSearch.toLowerCase().trim();
     if (!q) return allPatientsList;
@@ -227,7 +198,6 @@ export function PatientNotesTab({
     );
   }, [allPatientsList, noteSearch]);
 
-  // Combined Timeline
   const combinedTimeline = useMemo(() => {
     if (!activePatient) return [];
 
@@ -276,7 +246,6 @@ export function PatientNotesTab({
     return list.sort((a, b) => `${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`));
   }, [activePatient, appointments, lang]);
 
-  // EVA Score Analytics
   const evaAnalytics = useMemo(() => {
     if (!activePatient?.sessions || activePatient.sessions.length === 0) return null;
     const scores = activePatient.sessions
@@ -539,54 +508,54 @@ export function PatientNotesTab({
   return (
     <div className="space-y-4 font-sans">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#E9E6DF] shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-[#E2E8F0] shadow-xs">
         <div>
-          <h2 className="font-serif font-bold text-base sm:text-lg text-[#1A1412]">
+          <h2 className="font-semibold text-base sm:text-lg text-[#0F172A]">
             {txt('Dossiers Médicaux & EMR Patients', 'Clinical Files & Patient Records', 'Processos Clínicos & Fichas')}
           </h2>
-          <p className="text-xs text-[#77736B] font-mono mt-0.5">
+          <p className="text-xs text-[#64748B] mt-0.5">
             {txt('Historique clinique, prescriptions, séances et échelle EVA', 'Medical history, prescription tracking and pain scale', 'Histórico clínico e evolução da dor')}
           </p>
         </div>
 
         <button
           onClick={() => setIsNewPatientModalOpen(true)}
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1A1412] hover:bg-[#2E2420] text-white text-xs font-semibold shadow-sm transition-all touch-target shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-semibold shadow-xs transition-colors touch-target shrink-0"
         >
-          <IconUserPlus size={16} className="text-[#E8C97A]" />
+          <IconUserPlus size={16} />
           <span>{txt('Nouveau Patient', 'New Patient', 'Novo Utente')}</span>
         </button>
       </div>
 
-      {/* Main Workstation Layout (Responsive Master-Detail) */}
+      {/* Main Workstation Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Patient Master List (Hidden on mobile when viewing detail) */}
+        {/* Patient Master List */}
         <div
-          className={`lg:col-span-4 bg-white border border-[#E9E6DF] rounded-2xl p-3.5 sm:p-4 flex flex-col min-h-[500px] lg:h-[750px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] ${
+          className={`lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-3.5 sm:p-4 flex flex-col min-h-[500px] lg:h-[750px] shadow-xs ${
             isMobileDetailOpen ? 'hidden lg:flex' : 'flex'
           }`}
         >
           {/* Search Box */}
           <div className="relative mb-3">
-            <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#77736B]" size={16} />
+            <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={16} />
             <input
               type="text"
               value={noteSearch}
               onChange={e => setNoteSearch(e.target.value)}
               placeholder={txt('Rechercher patient, téléphone...', 'Search patient, phone...', 'Pesquisar utente...')}
-              className="w-full pl-10 pr-3 py-2.5 bg-[#FAFAF8] border border-[#E9E6DF] rounded-xl text-xs text-[#1A1412] placeholder:text-[#77736B] focus:outline-none focus:border-[#C49A3C] transition-colors"
+              className="w-full pl-10 pr-3 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB] transition-colors"
             />
           </div>
 
-          <div className="flex justify-between items-center px-1 mb-2 text-xs font-mono text-[#77736B]">
+          <div className="flex justify-between items-center px-1 mb-2 text-xs text-[#64748B]">
             <span>{txt('Dossiers enregistrés', 'Registered Records', 'Fichas Registadas')}</span>
-            <span className="font-bold text-[#1A1412]">{filteredPatients.length}</span>
+            <span className="font-semibold text-[#0F172A]">{filteredPatients.length}</span>
           </div>
 
           {/* List items */}
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
             {filteredPatients.length === 0 ? (
-              <div className="text-center py-12 text-[#77736B] text-xs font-mono">
+              <div className="text-center py-12 text-[#64748B] text-xs">
                 {txt('Aucun dossier trouvé', 'No records found', 'Nenhuma ficha encontrada')}
               </div>
             ) : (
@@ -597,30 +566,30 @@ export function PatientNotesTab({
                   <button
                     key={p.id}
                     onClick={() => handleSelectPatient(p)}
-                    className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between group touch-target ${
+                    className={`w-full text-left p-3 rounded-xl border transition-colors flex items-center justify-between group touch-target ${
                       isSelected
-                        ? 'bg-[#FAF6EE] border-[#C49A3C] shadow-xs'
-                        : 'bg-[#FAFAF8] border-[#E9E6DF] hover:bg-white hover:border-[#D3CEB8]'
+                        ? 'bg-[#F8FAFC] border-[#0F172A] shadow-xs'
+                        : 'bg-white border-[#E2E8F0] hover:bg-[#F8FAFC]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-xs shrink-0 border ${
                           isSelected
-                            ? 'bg-[#C49A3C] text-white border-[#C49A3C]'
-                            : 'bg-white text-[#4A4540] border-[#E9E6DF]'
+                            ? 'bg-[#0F172A] text-white border-[#0F172A]'
+                            : 'bg-[#F1F5F9] text-[#334155] border-[#E2E8F0]'
                         }`}
                       >
                         {p.patientName.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-semibold text-xs text-[#1A1412] truncate">
+                        <div className="font-semibold text-xs text-[#0F172A] truncate">
                           {p.patientName}
                         </div>
-                        <div className="text-[11px] text-[#77736B] font-mono flex items-center gap-1.5 mt-0.5">
+                        <div className="text-[11px] text-[#64748B] flex items-center gap-1.5 mt-0.5">
                           <span>{p.phone}</span>
                           {p.coverageType && p.coverageType !== 'PARTICULAR' && (
-                            <span className="bg-[#DCFCE7] text-[#166534] px-1.5 py-0.2 rounded text-[9.5px] font-bold">
+                            <span className="bg-[#DCFCE7] text-[#166534] px-1.5 py-0.2 rounded text-[10px] font-medium">
                               {p.coverageType === 'ADSE' ? 'ADSE' : (p.coverageProvider || 'Mutuelle')}
                             </span>
                           )}
@@ -629,7 +598,7 @@ export function PatientNotesTab({
                     </div>
                     <IconChevronRight
                       size={15}
-                      className={`shrink-0 ${isSelected ? 'text-[#C49A3C]' : 'text-[#D3CEB8]'}`}
+                      className={`shrink-0 ${isSelected ? 'text-[#0F172A]' : 'text-[#CBD5E1]'}`}
                     />
                   </button>
                 );
@@ -640,17 +609,17 @@ export function PatientNotesTab({
 
         {/* Patient Detail Dossier View */}
         <div
-          className={`lg:col-span-8 bg-white border border-[#E9E6DF] rounded-2xl p-4 sm:p-5 flex flex-col min-h-[500px] lg:h-[750px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden ${
+          className={`lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-4 sm:p-5 flex flex-col min-h-[500px] lg:h-[750px] shadow-xs overflow-hidden ${
             !isMobileDetailOpen ? 'hidden lg:flex' : 'flex'
           }`}
         >
           {activePatient ? (
             <div className="flex-1 flex flex-col overflow-hidden space-y-4">
               {/* Mobile Back Button */}
-              <div className="lg:hidden pb-1 border-b border-[#E9E6DF]">
+              <div className="lg:hidden pb-1 border-b border-[#E2E8F0]">
                 <button
                   onClick={() => setIsMobileDetailOpen(false)}
-                  className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#C49A3C] hover:text-[#9A7428] py-1 touch-target"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] py-1 touch-target"
                 >
                   <IconArrowLeft size={16} />
                   <span>{txt('← Retour à la liste des patients', '← Back to patient list', '← Voltar à lista de doentes')}</span>
@@ -658,18 +627,18 @@ export function PatientNotesTab({
               </div>
 
               {/* Patient Identity Banner */}
-              <div className="bg-[#FAFAF8] border border-[#E9E6DF] p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+              <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 sm:p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-2xl bg-[#1A1412] text-[#E8C97A] font-serif font-bold text-base flex items-center justify-center shrink-0 border border-[#C49A3C]/30 shadow-xs">
+                  <div className="w-10 h-10 rounded-lg bg-[#0F172A] text-white font-semibold text-sm flex items-center justify-center shrink-0 shadow-xs">
                     {activePatient.patientName.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <h3 className="font-serif font-bold text-base text-[#1A1412] truncate">
+                      <h3 className="font-semibold text-base text-[#0F172A] truncate">
                         {activePatient.patientName}
                       </h3>
                       {activePatient.coverageType && activePatient.coverageType !== 'PARTICULAR' && (
-                        <span className="bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
+                        <span className="bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] text-[10px] font-medium px-2 py-0.5 rounded flex items-center gap-1">
                           <IconShieldCheck size={12} />
                           <span>
                             {activePatient.coverageType === 'ADSE' ? 'ADSE' : (activePatient.coverageProvider || txt('Mutuelle', 'Insurance', 'Seguro'))}
@@ -677,7 +646,7 @@ export function PatientNotesTab({
                         </span>
                       )}
                     </div>
-                    <div className="font-mono text-xs text-[#77736B] flex flex-wrap items-center gap-3 mt-1">
+                    <div className="text-xs text-[#64748B] flex flex-wrap items-center gap-3 mt-1">
                       <span>📞 {activePatient.phone}</span>
                       {activePatient.referringDoctor && (
                         <span>🩺 Dr. {activePatient.referringDoctor}</span>
@@ -690,10 +659,10 @@ export function PatientNotesTab({
                 <div className="flex items-center gap-1.5 shrink-0 justify-end">
                   <button
                     onClick={() => openEditPatientModal(activePatient)}
-                    className="px-2.5 py-1.5 rounded-xl border border-[#E9E6DF] bg-white text-[#4A4540] hover:bg-[#FAF6EE] text-xs font-mono font-semibold transition-all touch-target flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] hover:bg-[#F8FAFC] text-xs font-medium transition-colors touch-target flex items-center gap-1"
                     title={txt('Modifier', 'Edit', 'Editar')}
                   >
-                    <IconPencil size={14} className="text-[#C49A3C]" />
+                    <IconPencil size={14} className="text-[#64748B]" />
                     <span>{txt('Modifier', 'Edit', 'Editar')}</span>
                   </button>
 
@@ -701,7 +670,7 @@ export function PatientNotesTab({
                     href={`https://wa.me/${activePatient.phone.replace(/[^0-9]/g, '')}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2 rounded-xl bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7] transition-colors border border-[#DCFCE7] touch-target flex items-center justify-center"
+                    className="p-2 rounded-lg bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7] transition-colors border border-[#DCFCE7] touch-target flex items-center justify-center"
                     title="WhatsApp"
                   >
                     <IconBrandWhatsapp size={16} />
@@ -709,7 +678,7 @@ export function PatientNotesTab({
 
                   <a
                     href={`tel:${activePatient.phone}`}
-                    className="p-2 rounded-xl border border-[#E9E6DF] bg-white text-[#4A4540] hover:bg-[#FAF6EE] transition-colors touch-target flex items-center justify-center"
+                    className="p-2 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] hover:bg-[#F8FAFC] transition-colors touch-target flex items-center justify-center"
                     title={txt('Appeler', 'Call', 'Ligar')}
                   >
                     <IconPhoneCall size={16} />
@@ -717,7 +686,7 @@ export function PatientNotesTab({
 
                   <button
                     onClick={() => handleDeletePatient(activePatient)}
-                    className="p-2 rounded-xl border border-[#FECACA] bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] transition-colors touch-target flex items-center justify-center"
+                    className="p-2 rounded-lg border border-[#FECACA] bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] transition-colors touch-target flex items-center justify-center"
                     title={txt('Supprimer Dossier', 'Delete File', 'Eliminar Ficha')}
                   >
                     <IconTrash size={16} />
@@ -726,29 +695,29 @@ export function PatientNotesTab({
               </div>
 
               {/* Prescription Progress Tracker Bar */}
-              <div className="bg-[#FAF6EE] border border-[#E8D7B0] p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+              <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-[#1A1412] text-[#E8C97A] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#0F172A] text-white flex items-center justify-center shrink-0">
                     <IconActivity size={16} />
                   </div>
                   <div>
-                    <div className="text-[11px] font-mono font-bold uppercase text-[#9A7428] flex items-center gap-2">
+                    <div className="text-[11px] font-semibold uppercase text-[#475569] flex items-center gap-2">
                       <span>{txt('Prescription Médicale :', 'Prescription :', 'Prescrição Médica :')}</span>
-                      <div className="inline-flex items-center gap-1 bg-white px-1.5 py-0.5 rounded-lg border border-[#E8D7B0]">
+                      <div className="inline-flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-[#CBD5E1]">
                         <button
                           type="button"
                           onClick={() => updatePrescribedTarget(-1)}
-                          className="w-4 h-4 rounded text-[#77736B] hover:text-[#1A1412] font-bold flex items-center justify-center text-xs"
+                          className="w-4 h-4 rounded text-[#64748B] hover:text-[#0F172A] font-bold flex items-center justify-center text-xs"
                         >
                           -
                         </button>
-                        <span className="text-xs font-mono font-bold text-[#1A1412] px-1">
+                        <span className="text-xs font-semibold text-[#0F172A] px-1">
                           {targetSessions}
                         </span>
                         <button
                           type="button"
                           onClick={() => updatePrescribedTarget(1)}
-                          className="w-4 h-4 rounded text-[#77736B] hover:text-[#1A1412] font-bold flex items-center justify-center text-xs"
+                          className="w-4 h-4 rounded text-[#64748B] hover:text-[#0F172A] font-bold flex items-center justify-center text-xs"
                         >
                           +
                         </button>
@@ -757,13 +726,13 @@ export function PatientNotesTab({
                     </div>
 
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="w-36 sm:w-48 h-2 rounded-full bg-[#E8D7B0]/40 overflow-hidden">
+                      <div className="w-36 sm:w-48 h-2 rounded-full bg-[#E2E8F0] overflow-hidden">
                         <div
-                          className="h-full bg-[#C49A3C] rounded-full transition-all duration-500"
+                          className="h-full bg-[#0F172A] rounded-full transition-all duration-300"
                           style={{ width: `${prescriptionPercent}%` }}
                         />
                       </div>
-                      <span className="font-mono font-bold text-xs text-[#1A1412]">
+                      <span className="font-semibold text-xs text-[#0F172A]">
                         {completedSessionsCount} / {targetSessions} ({prescriptionPercent}%)
                       </span>
                     </div>
@@ -772,15 +741,15 @@ export function PatientNotesTab({
 
                 <button
                   onClick={() => setIsAddSessionModalOpen(true)}
-                  className="px-3 py-2 rounded-xl bg-[#1A1412] hover:bg-[#2E2420] text-white text-xs font-mono font-bold transition-all shadow-xs touch-target flex items-center justify-center gap-1.5 self-stretch sm:self-auto"
+                  className="px-3 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-medium transition-colors shadow-xs touch-target flex items-center justify-center gap-1.5 self-stretch sm:self-auto"
                 >
-                  <IconPlus size={14} className="text-[#E8C97A]" />
+                  <IconPlus size={14} />
                   <span>{txt('Enregistrer Séance', 'Log Session', 'Registar Sessão')}</span>
                 </button>
               </div>
 
               {/* Dossier Tabs */}
-              <div className="flex items-center gap-1.5 border-b border-[#E9E6DF] pb-1 overflow-x-auto no-scrollbar font-mono text-xs shrink-0">
+              <div className="flex items-center gap-1.5 border-b border-[#E2E8F0] pb-1 overflow-x-auto no-scrollbar text-xs shrink-0">
                 {[
                   { id: 'overview', label: txt('Aperçu & Clinique', 'Overview & Clinic', 'Visão Geral') },
                   { id: 'timeline', label: txt(`Historique (${combinedTimeline.length})`, `History (${combinedTimeline.length})`, `Histórico (${combinedTimeline.length})`) },
@@ -790,10 +759,10 @@ export function PatientNotesTab({
                   <button
                     key={t.id}
                     onClick={() => setActiveDossierTab(t.id as typeof activeDossierTab)}
-                    className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap touch-target ${
+                    className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap touch-target ${
                       activeDossierTab === t.id
-                        ? 'bg-[#1A1412] text-white shadow-xs'
-                        : 'text-[#77736B] hover:text-[#1A1412] hover:bg-[#FAF6EE]'
+                        ? 'bg-[#0F172A] text-white font-semibold'
+                        : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
                     }`}
                   >
                     {t.label}
@@ -806,9 +775,9 @@ export function PatientNotesTab({
                 {activeDossierTab === 'overview' && (
                   <div className="space-y-4">
                     {/* Pathologies & Tags */}
-                    <div className="bg-[#FAFAF8] border border-[#E9E6DF] p-3.5 rounded-2xl space-y-2">
-                      <div className="text-[11px] font-mono font-bold uppercase text-[#77736B] flex items-center gap-1.5">
-                        <IconTag size={14} className="text-[#C49A3C]" />
+                    <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 rounded-xl space-y-2">
+                      <div className="text-[11px] font-semibold uppercase text-[#64748B] flex items-center gap-1.5">
+                        <IconTag size={14} className="text-[#64748B]" />
                         <span>{txt('Pathologies & Diagnostic', 'Pathologies & Diagnosis', 'Patologias & Diagnóstico')}</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
@@ -816,13 +785,13 @@ export function PatientNotesTab({
                           activePatient.pathologyTags.split(',').map((t, i) => (
                             <span
                               key={i}
-                              className="px-2.5 py-1 rounded-xl bg-white border border-[#E9E6DF] text-xs font-mono font-semibold text-[#1A1412]"
+                              className="px-2.5 py-1 rounded-md bg-white border border-[#E2E8F0] text-xs font-medium text-[#0F172A]"
                             >
                               {t.trim()}
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs text-[#77736B] italic font-mono">
+                          <span className="text-xs text-[#64748B] italic">
                             {txt('Aucun diagnostic renseigné', 'No diagnosis specified', 'Sem diagnóstico')}
                           </span>
                         )}
@@ -830,32 +799,32 @@ export function PatientNotesTab({
                     </div>
 
                     {/* Medical History */}
-                    <div className="bg-[#FAFAF8] border border-[#E9E6DF] p-3.5 rounded-2xl space-y-2">
-                      <div className="text-[11px] font-mono font-bold uppercase text-[#77736B] flex items-center gap-1.5">
-                        <IconFileText size={14} className="text-[#C49A3C]" />
+                    <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 rounded-xl space-y-2">
+                      <div className="text-[11px] font-semibold uppercase text-[#64748B] flex items-center gap-1.5">
+                        <IconFileText size={14} className="text-[#64748B]" />
                         <span>{txt('Antécédents & Observations', 'Medical History', 'Histórico Médico')}</span>
                       </div>
-                      <p className="text-xs text-[#4A4540] leading-relaxed whitespace-pre-wrap font-sans">
+                      <p className="text-xs text-[#334155] leading-relaxed whitespace-pre-wrap font-sans">
                         {activePatient.medicalHistory || txt('Aucune observation clinique pour le moment.', 'No clinical observations yet.', 'Sem observações clínicas.')}
                       </p>
                     </div>
 
                     {/* EVA Evolution Snapshot */}
                     {evaAnalytics && (
-                      <div className="bg-[#FAF6EE] border border-[#E8D7B0] p-3.5 rounded-2xl flex items-center justify-between">
+                      <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 rounded-xl flex items-center justify-between">
                         <div>
-                          <div className="text-[10.5px] font-mono font-bold uppercase text-[#9A7428]">
+                          <div className="text-[11px] font-semibold uppercase text-[#64748B]">
                             {txt('Évolution de la douleur (EVA)', 'Pain Score Progression (EVA)', 'Evolução da Dor (EVA)')}
                           </div>
-                          <div className="font-serif font-bold text-sm text-[#1A1412] mt-0.5">
+                          <div className="font-semibold text-sm text-[#0F172A] mt-0.5">
                             {txt('Score Initial :', 'Initial :', 'Inicial :')} {evaAnalytics.initial}/10 → {txt('Actuel :', 'Current :', 'Atual :')} {evaAnalytics.current}/10
                           </div>
                         </div>
                         <div
-                          className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold ${
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
                             evaAnalytics.diff > 0
                               ? 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]'
-                              : 'bg-white text-[#77736B] border border-[#E9E6DF]'
+                              : 'bg-white text-[#64748B] border border-[#E2E8F0]'
                           }`}
                         >
                           {evaAnalytics.diff > 0 ? `-${evaAnalytics.diff} pts (${txt('Amélioration', 'Improvement', 'Melhoria')})` : txt('Stable', 'Stable', 'Estável')}
@@ -866,25 +835,25 @@ export function PatientNotesTab({
                 )}
 
                 {activeDossierTab === 'timeline' && (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {combinedTimeline.length === 0 ? (
-                      <div className="text-center py-12 text-[#77736B] text-xs font-mono">
+                      <div className="text-center py-12 text-[#64748B] text-xs">
                         {txt('Aucune séance enregistrée pour ce patient', 'No recorded sessions for this patient', 'Sem sessões registadas')}
                       </div>
                     ) : (
                       combinedTimeline.map(item => (
                         <div
                           key={item.id}
-                          className="p-3.5 rounded-2xl bg-[#FAFAF8] border border-[#E9E6DF] space-y-1.5"
+                          className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5"
                         >
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 font-mono text-xs">
-                              <span className="font-bold text-[#1A1412]">{item.date}</span>
-                              <span className="text-[#77736B]">{item.time}</span>
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-semibold text-[#0F172A]">{item.date}</span>
+                              <span className="text-[#64748B]">{item.time}</span>
                               <span
-                                className={`px-2 py-0.5 rounded-md text-[9.5px] font-bold ${
+                                className={`px-2 py-0.5 rounded text-[10px] font-medium ${
                                   item.source === 'online'
-                                    ? 'bg-[#EFF6FF] text-[#1E40AF] border border-[#BFDBFE]'
+                                    ? 'bg-[#DBEAFE] text-[#1E40AF] border border-[#BFDBFE]'
                                     : item.source === 'paper'
                                     ? 'bg-[#FEF9C3] text-[#854D0E] border border-[#FEF08A]'
                                     : 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]'
@@ -899,18 +868,18 @@ export function PatientNotesTab({
                             </div>
 
                             {item.evaPainScore !== undefined && (
-                              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-[#FAF6EE] text-[#9A7428] border border-[#E8D7B0]">
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white text-[#0F172A] border border-[#E2E8F0]">
                                 EVA: {item.evaPainScore}/10
                               </span>
                             )}
                           </div>
 
-                          <div className="font-semibold text-xs text-[#1A1412]">
+                          <div className="font-medium text-xs text-[#0F172A]">
                             {item.title}
                           </div>
 
                           {item.notes && (
-                            <p className="text-xs text-[#77736B] bg-white p-2 rounded-xl border border-[#E9E6DF]">
+                            <p className="text-xs text-[#64748B] bg-white p-2 rounded-lg border border-[#E2E8F0]">
                               {item.notes}
                             </p>
                           )}
@@ -922,11 +891,11 @@ export function PatientNotesTab({
 
                 {activeDossierTab === 'eva' && (
                   <div className="space-y-4">
-                    <div className="bg-[#FAFAF8] border border-[#E9E6DF] p-4 rounded-2xl space-y-3">
-                      <h4 className="font-serif font-bold text-sm text-[#1A1412]">
+                    <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-xl space-y-3">
+                      <h4 className="font-semibold text-sm text-[#0F172A]">
                         {txt('Échelle Visuelle Analogique (EVA 0 – 10)', 'Visual Analog Scale (EVA 0 – 10)', 'Escala Visual Analógica (EVA 0 – 10)')}
                       </h4>
-                      <p className="text-xs text-[#77736B] leading-relaxed">
+                      <p className="text-xs text-[#64748B] leading-relaxed">
                         {txt(
                           'L’évaluation de la douleur permet d’ajuster le protocole de rééducation au fur et à mesure des séances.',
                           'Pain scale tracking allows fine-tuning rehabilitation protocols session by session.',
@@ -934,20 +903,19 @@ export function PatientNotesTab({
                         )}
                       </p>
 
-                      {/* Sessions EVA List */}
                       {activePatient.sessions && activePatient.sessions.length > 0 ? (
                         <div className="space-y-2 pt-2">
                           {activePatient.sessions.map((s, idx) => (
                             <div
                               key={s.id}
-                              className="p-3 rounded-xl bg-white border border-[#E9E6DF] flex items-center justify-between gap-3"
+                              className="p-3 rounded-lg bg-white border border-[#E2E8F0] flex items-center justify-between gap-3"
                             >
-                              <div className="font-mono text-xs">
-                                <span className="font-bold text-[#1A1412]">{s.date}</span>
-                                <span className="text-[#77736B] ml-2">{getServiceName(s.serviceSlug, lang)}</span>
+                              <div className="text-xs">
+                                <span className="font-semibold text-[#0F172A]">{s.date}</span>
+                                <span className="text-[#64748B] ml-2">{getServiceName(s.serviceSlug, lang)}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <div className="w-24 h-2 bg-[#E9E6DF] rounded-full overflow-hidden">
+                                <div className="w-24 h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
                                   <div
                                     className={`h-full rounded-full ${
                                       s.evaPainScore >= 7
@@ -959,7 +927,7 @@ export function PatientNotesTab({
                                     style={{ width: `${s.evaPainScore * 10}%` }}
                                   />
                                 </div>
-                                <span className="font-mono font-bold text-xs text-[#1A1412] w-10 text-right">
+                                <span className="font-semibold text-xs text-[#0F172A] w-10 text-right">
                                   {s.evaPainScore}/10
                                 </span>
                               </div>
@@ -967,7 +935,7 @@ export function PatientNotesTab({
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-8 text-xs font-mono text-[#77736B]">
+                        <div className="text-center py-8 text-xs text-[#64748B]">
                           {txt('Aucune note EVA enregistrée pour l’instant', 'No EVA score recorded yet', 'Sem notas EVA registadas')}
                         </div>
                       )}
@@ -982,13 +950,13 @@ export function PatientNotesTab({
                       value={noteForm.content}
                       onChange={e => setNoteForm(p => ({ ...p, content: e.target.value }))}
                       placeholder={txt('Rédigez vos notes de suivi clinique...', 'Write your clinical session notes...', 'Escreva as notas de evolução clínica...')}
-                      className="w-full bg-[#FAFAF8] border border-[#E9E6DF] rounded-2xl p-4 text-xs font-sans text-[#1A1412] focus:outline-none focus:border-[#C49A3C] transition-colors"
+                      className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 text-xs font-sans text-[#0F172A] focus:outline-none focus:border-[#2563EB] transition-colors"
                     />
                     <div className="flex justify-end">
                       <button
                         onClick={saveNote}
                         disabled={savingNote}
-                        className="px-5 py-2.5 rounded-xl bg-[#1A1412] hover:bg-[#2E2420] text-white font-mono font-bold text-xs transition-all shadow-sm touch-target"
+                        className="px-4 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs transition-colors shadow-xs touch-target"
                       >
                         {savingNote ? txt('Enregistrement...', 'Saving...', 'A guardar...') : txt('Sauvegarder les Notes', 'Save Notes', 'Guardar Ficha')}
                       </button>
@@ -998,9 +966,9 @@ export function PatientNotesTab({
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-[#77736B] space-y-2">
-              <IconNotes size={40} className="text-[#D3CEB8]" />
-              <h3 className="font-serif font-bold text-base text-[#1A1412]">
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-[#64748B] space-y-2">
+              <IconNotes size={40} className="text-[#CBD5E1]" />
+              <h3 className="font-semibold text-base text-[#0F172A]">
                 {txt('Sélectionnez un patient', 'Select a patient', 'Selecione um utente')}
               </h3>
               <p className="text-xs max-w-xs">
@@ -1018,9 +986,9 @@ export function PatientNotesTab({
         title={txt('Nouveau Patient', 'New Patient Record', 'Nova Ficha de Utente')}
         maxWidth="lg"
       >
-        <form onSubmit={handleCreatePatientSubmit} className="space-y-4 font-sans text-xs">
+        <form onSubmit={handleCreatePatientSubmit} className="space-y-3.5 font-sans text-xs">
           <div>
-            <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+            <label className="font-medium text-[#475569] block mb-1">
               {txt('Nom Complet *', 'Full Name *', 'Nome Completo *')}
             </label>
             <input
@@ -1028,13 +996,13 @@ export function PatientNotesTab({
               required
               value={newPatientForm.patientName}
               onChange={e => setNewPatientForm(p => ({ ...p, patientName: e.target.value }))}
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+              <label className="font-medium text-[#475569] block mb-1">
                 {txt('Téléphone *', 'Phone *', 'Telefone *')}
               </label>
               <input
@@ -1042,23 +1010,23 @@ export function PatientNotesTab({
                 required
                 value={newPatientForm.phone}
                 onChange={e => setNewPatientForm(p => ({ ...p, phone: e.target.value }))}
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">Email</label>
+              <label className="font-medium text-[#475569] block mb-1">Email</label>
               <input
                 type="email"
                 value={newPatientForm.email}
                 onChange={e => setNewPatientForm(p => ({ ...p, email: e.target.value }))}
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+              <label className="font-medium text-[#475569] block mb-1">
                 {txt('Séances prescrites', 'Prescribed Sessions', 'Sessões prescritas')}
               </label>
               <input
@@ -1067,11 +1035,11 @@ export function PatientNotesTab({
                 max={100}
                 value={newPatientForm.totalPrescribedSessions}
                 onChange={e => setNewPatientForm(p => ({ ...p, totalPrescribedSessions: Number(e.target.value) }))}
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+              <label className="font-medium text-[#475569] block mb-1">
                 {txt('Médecin prescripteur', 'Referring Doctor', 'Médico Prescritor')}
               </label>
               <input
@@ -1079,13 +1047,13 @@ export function PatientNotesTab({
                 value={newPatientForm.referringDoctor}
                 onChange={e => setNewPatientForm(p => ({ ...p, referringDoctor: e.target.value }))}
                 placeholder="Dr. Dupont"
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
           </div>
 
           <div>
-            <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+            <label className="font-medium text-[#475569] block mb-1">
               {txt('Pathologies / Tags (séparés par virgule)', 'Pathologies (comma separated)', 'Patologias')}
             </label>
             <input
@@ -1093,34 +1061,34 @@ export function PatientNotesTab({
               value={newPatientForm.pathologyTags}
               onChange={e => setNewPatientForm(p => ({ ...p, pathologyTags: e.target.value }))}
               placeholder="Lombalgie, Cervicalgie..."
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
             />
           </div>
 
           <div>
-            <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+            <label className="font-medium text-[#475569] block mb-1">
               {txt('Antécédents & Observations', 'Medical History', 'Histórico Médico')}
             </label>
             <textarea
               rows={3}
               value={newPatientForm.medicalHistory}
               onChange={e => setNewPatientForm(p => ({ ...p, medicalHistory: e.target.value }))}
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
             />
           </div>
 
-          <div className="pt-3 flex justify-end gap-2 border-t border-[#E9E6DF]">
+          <div className="pt-3 flex justify-end gap-2 border-t border-[#E2E8F0]">
             <button
               type="button"
               onClick={() => setIsNewPatientModalOpen(false)}
-              className="px-4 py-2.5 rounded-xl border border-[#E9E6DF] text-[#4A4540] hover:bg-[#FAF6EE] font-semibold"
+              className="px-3.5 py-2 rounded-lg border border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9] font-medium"
             >
               {txt('Annuler', 'Cancel', 'Cancelar')}
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2.5 rounded-xl bg-[#1A1412] hover:bg-[#2E2420] text-white font-mono font-bold disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium disabled:opacity-50"
             >
               {submitting ? txt('Création...', 'Creating...', 'A criar...') : txt('Créer la Fiche', 'Create Record', 'Criar Ficha')}
             </button>
@@ -1135,9 +1103,9 @@ export function PatientNotesTab({
         title={txt('Modifier le Patient', 'Edit Patient', 'Editar Utente')}
         maxWidth="lg"
       >
-        <form onSubmit={handleEditPatientSubmit} className="space-y-4 font-sans text-xs">
+        <form onSubmit={handleEditPatientSubmit} className="space-y-3.5 font-sans text-xs">
           <div>
-            <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+            <label className="font-medium text-[#475569] block mb-1">
               {txt('Nom Complet *', 'Full Name *', 'Nome Completo *')}
             </label>
             <input
@@ -1145,13 +1113,13 @@ export function PatientNotesTab({
               required
               value={editPatientForm.patientName}
               onChange={e => setEditPatientForm(p => ({ ...p, patientName: e.target.value }))}
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+              <label className="font-medium text-[#475569] block mb-1">
                 {txt('Téléphone *', 'Phone *', 'Telefone *')}
               </label>
               <input
@@ -1159,81 +1127,81 @@ export function PatientNotesTab({
                 required
                 value={editPatientForm.phone}
                 onChange={e => setEditPatientForm(p => ({ ...p, phone: e.target.value }))}
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">Email</label>
+              <label className="font-medium text-[#475569] block mb-1">Email</label>
               <input
                 type="email"
                 value={editPatientForm.email}
                 onChange={e => setEditPatientForm(p => ({ ...p, email: e.target.value }))}
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+              <label className="font-medium text-[#475569] block mb-1">
                 {txt('Séances prescrites', 'Prescribed Sessions', 'Sessões prescritas')}
               </label>
               <input
                 type="text"
                 value={editPatientForm.totalPrescribedSessionsStr}
                 onChange={e => setEditPatientForm(p => ({ ...p, totalPrescribedSessionsStr: e.target.value }))}
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+              <label className="font-medium text-[#475569] block mb-1">
                 {txt('Médecin prescripteur', 'Referring Doctor', 'Médico Prescritor')}
               </label>
               <input
                 type="text"
                 value={editPatientForm.referringDoctor}
                 onChange={e => setEditPatientForm(p => ({ ...p, referringDoctor: e.target.value }))}
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
           </div>
 
           <div>
-            <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+            <label className="font-medium text-[#475569] block mb-1">
               {txt('Pathologies / Tags', 'Pathologies / Tags', 'Patologias')}
             </label>
             <input
               type="text"
               value={editPatientForm.pathologyTags}
               onChange={e => setEditPatientForm(p => ({ ...p, pathologyTags: e.target.value }))}
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
             />
           </div>
 
           <div>
-            <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+            <label className="font-medium text-[#475569] block mb-1">
               {txt('Antécédents & Observations', 'Medical History', 'Histórico Médico')}
             </label>
             <textarea
               rows={3}
               value={editPatientForm.medicalHistory}
               onChange={e => setEditPatientForm(p => ({ ...p, medicalHistory: e.target.value }))}
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
             />
           </div>
 
-          <div className="pt-3 flex justify-end gap-2 border-t border-[#E9E6DF]">
+          <div className="pt-3 flex justify-end gap-2 border-t border-[#E2E8F0]">
             <button
               type="button"
               onClick={() => setIsEditPatientModalOpen(false)}
-              className="px-4 py-2.5 rounded-xl border border-[#E9E6DF] text-[#4A4540] hover:bg-[#FAF6EE] font-semibold"
+              className="px-3.5 py-2 rounded-lg border border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9] font-medium"
             >
               {txt('Annuler', 'Cancel', 'Cancelar')}
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2.5 rounded-xl bg-[#1A1412] hover:bg-[#2E2420] text-white font-mono font-bold disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium disabled:opacity-50"
             >
               {submitting ? txt('Enregistrement...', 'Saving...', 'A guardar...') : txt('Sauvegarder', 'Save', 'Guardar')}
             </button>
@@ -1249,10 +1217,10 @@ export function PatientNotesTab({
         subtitle={activePatient ? activePatient.patientName : ''}
         maxWidth="md"
       >
-        <form onSubmit={handleAddSessionSubmit} className="space-y-4 font-sans text-xs">
+        <form onSubmit={handleAddSessionSubmit} className="space-y-3.5 font-sans text-xs">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+              <label className="font-medium text-[#475569] block mb-1">
                 {txt('Date *', 'Date *', 'Data *')}
               </label>
               <input
@@ -1260,30 +1228,30 @@ export function PatientNotesTab({
                 required
                 value={sessionForm.date}
                 onChange={e => setSessionForm(p => ({ ...p, date: e.target.value }))}
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
             <div>
-              <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+              <label className="font-medium text-[#475569] block mb-1">
                 {txt('Heure', 'Time', 'Hora')}
               </label>
               <input
                 type="time"
                 value={sessionForm.time}
                 onChange={e => setSessionForm(p => ({ ...p, time: e.target.value }))}
-                className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+                className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
               />
             </div>
           </div>
 
           <div>
-            <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+            <label className="font-medium text-[#475569] block mb-1">
               {txt('Soin dispensé *', 'Treatment *', 'Tratamento *')}
             </label>
             <select
               value={sessionForm.serviceSlug}
               onChange={e => setSessionForm(p => ({ ...p, serviceSlug: e.target.value }))}
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
             >
               {SERVICES.map(s => (
                 <option key={s.slug} value={s.slug}>
@@ -1294,12 +1262,12 @@ export function PatientNotesTab({
           </div>
 
           {/* EVA Slider */}
-          <div className="bg-[#FAF6EE] border border-[#E8D7B0] p-3.5 rounded-2xl space-y-2">
+          <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-3 rounded-lg space-y-2">
             <div className="flex justify-between items-center">
-              <label className="font-mono font-bold uppercase text-[#9A7428]">
+              <label className="font-semibold text-[#0F172A] text-xs">
                 {txt('Échelle de douleur EVA (0 – 10)', 'EVA Pain Score (0 – 10)', 'Escala EVA (0 – 10)')}
               </label>
-              <span className="font-mono font-bold text-sm text-[#1A1412] bg-white px-2 py-0.5 rounded-lg border border-[#E8D7B0]">
+              <span className="font-bold text-xs text-[#0F172A] bg-white px-2 py-0.5 rounded border border-[#E2E8F0]">
                 {sessionForm.evaPainScore} / 10
               </span>
             </div>
@@ -1310,9 +1278,9 @@ export function PatientNotesTab({
               step={1}
               value={sessionForm.evaPainScore}
               onChange={e => setSessionForm(p => ({ ...p, evaPainScore: Number(e.target.value) }))}
-              className="w-full accent-[#C49A3C]"
+              className="w-full accent-[#0F172A]"
             />
-            <div className="flex justify-between text-[10px] font-mono text-[#77736B]">
+            <div className="flex justify-between text-[10px] text-[#64748B]">
               <span>0 (Aucune douleur)</span>
               <span>5 (Modérée)</span>
               <span>10 (Intolérable)</span>
@@ -1320,7 +1288,7 @@ export function PatientNotesTab({
           </div>
 
           <div>
-            <label className="font-mono font-bold uppercase text-[#77736B] block mb-1">
+            <label className="font-medium text-[#475569] block mb-1">
               {txt('Notes cliniques de séance', 'Session clinical notes', 'Notas clínicas')}
             </label>
             <textarea
@@ -1328,22 +1296,22 @@ export function PatientNotesTab({
               value={sessionForm.notes}
               onChange={e => setSessionForm(p => ({ ...p, notes: e.target.value }))}
               placeholder={txt('Ex: mobilisation passive, étirements, cryothérapie...', 'E.g. passive mobilization, cryo...', 'Ex: mobilização articular...')}
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-xl p-3 focus:outline-none focus:border-[#C49A3C]"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg p-2.5 focus:outline-none focus:border-[#2563EB]"
             />
           </div>
 
-          <div className="pt-3 flex justify-end gap-2 border-t border-[#E9E6DF]">
+          <div className="pt-3 flex justify-end gap-2 border-t border-[#E2E8F0]">
             <button
               type="button"
               onClick={() => setIsAddSessionModalOpen(false)}
-              className="px-4 py-2.5 rounded-xl border border-[#E9E6DF] text-[#4A4540] hover:bg-[#FAF6EE] font-semibold"
+              className="px-3.5 py-2 rounded-lg border border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9] font-medium"
             >
               {txt('Annuler', 'Cancel', 'Cancelar')}
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2.5 rounded-xl bg-[#1A1412] hover:bg-[#2E2420] text-white font-mono font-bold disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium disabled:opacity-50"
             >
               {submitting ? txt('Enregistrement...', 'Saving...', 'A registar...') : txt('Valider la Séance', 'Confirm Session', 'Confirmar Sessão')}
             </button>

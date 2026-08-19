@@ -57,7 +57,7 @@ export function ResponsiveModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[99999] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-4 overflow-hidden">
+        <div className="fixed inset-0 z-[99999] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-4 overflow-hidden font-sans">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -75,24 +75,21 @@ export function ResponsiveModal({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className={`relative z-10 w-full ${MAX_WIDTH_CLASSES[maxWidth]} bg-white border border-[#E9E6DF] rounded-t-3xl md:rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.15)] flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden`}
+            className={`relative z-10 w-full ${MAX_WIDTH_CLASSES[maxWidth]} bg-white border border-[#E2E8F0] rounded-t-2xl md:rounded-2xl shadow-xl flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden`}
           >
-            {/* Top gold accent line */}
-            <div className="h-1 w-full bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#C49A3C] shrink-0" />
-
             {/* Mobile Drag Indicator Handle */}
             <div className="w-full flex justify-center pt-2.5 pb-1 md:hidden">
-              <div className="w-12 h-1.5 rounded-full bg-[#E2E8F0]" />
+              <div className="w-10 h-1 rounded-full bg-[#E2E8F0]" />
             </div>
 
             {/* Header */}
-            <div className="px-5 py-3.5 md:px-6 md:py-4 border-b border-[#E9E6DF] flex items-center justify-between shrink-0 bg-white">
+            <div className="px-5 py-3.5 md:px-6 md:py-4 border-b border-[#E2E8F0] flex items-center justify-between shrink-0 bg-white">
               <div className="min-w-0 pr-2">
-                <h3 className="font-serif font-bold text-base md:text-lg text-[#1A1412] truncate">
+                <h3 className="font-semibold text-base md:text-lg text-[#0F172A] truncate">
                   {title}
                 </h3>
                 {subtitle && (
-                  <p className="text-xs text-[#77736B] font-mono mt-0.5 truncate">
+                  <p className="text-xs text-[#64748B] mt-0.5 truncate">
                     {subtitle}
                   </p>
                 )}
@@ -102,7 +99,7 @@ export function ResponsiveModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-2 rounded-xl text-[#77736B] hover:text-[#1A1412] hover:bg-[#F4F2EE] transition-colors shrink-0 touch-target flex items-center justify-center"
+                  className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors shrink-0 touch-target flex items-center justify-center"
                   aria-label="Fermer"
                 >
                   <IconX size={18} />

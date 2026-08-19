@@ -61,30 +61,30 @@ export function FilterSheet({
       subtitle={txt(`${totalResults} résultats correspondants`, `${totalResults} matching results`, `${totalResults} resultados encontrados`)}
       maxWidth="md"
     >
-      <div className="space-y-5 font-sans">
+      <div className="space-y-4 font-sans text-xs">
         {/* Search Bar */}
         <div className="space-y-1.5">
-          <label className="text-xs font-mono font-bold uppercase text-[#77736B]">
+          <label className="font-semibold uppercase tracking-wider text-[#475569] text-[11px]">
             {txt('Recherche patient', 'Patient search', 'Pesquisa do utente')}
           </label>
           <div className="relative">
             <IconSearch
               size={18}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#77736B]"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]"
             />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={txt('Nom, téléphone, traitement...', 'Name, phone, service...', 'Nome, telefone, tratamento...')}
-              className="w-full bg-[#FAFAF8] border border-[#E9E6DF] text-[#1A1412] rounded-2xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C] transition-colors"
+              className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-[#2563EB] transition-colors"
             />
           </div>
         </div>
 
         {/* Status Filter */}
-        <div className="space-y-2">
-          <label className="text-xs font-mono font-bold uppercase text-[#77736B]">
+        <div className="space-y-1.5">
+          <label className="font-semibold uppercase tracking-wider text-[#475569] text-[11px]">
             {txt('Statut du rendez-vous', 'Appointment status', 'Estado da consulta')}
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -97,11 +97,11 @@ export function FilterSheet({
                   onClick={() => setFilter(opt.id)}
                   className={`p-2.5 rounded-xl border text-xs font-medium text-center transition-all flex items-center justify-center gap-1.5 touch-target ${
                     isSelected
-                      ? 'bg-[#1A1412] border-[#1A1412] text-white font-bold shadow-xs'
-                      : 'bg-[#FAFAF8] border-[#E9E6DF] text-[#4A4540] hover:bg-[#F4F2EE]'
+                      ? 'bg-[#0F172A] border-[#0F172A] text-white font-semibold shadow-xs'
+                      : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9]'
                   }`}
                 >
-                  {isSelected && <IconCheck size={14} className="text-[#E8C97A]" />}
+                  {isSelected && <IconCheck size={14} />}
                   <span>{opt.label}</span>
                 </button>
               );
@@ -110,8 +110,8 @@ export function FilterSheet({
         </div>
 
         {/* Date Filter */}
-        <div className="space-y-2">
-          <label className="text-xs font-mono font-bold uppercase text-[#77736B]">
+        <div className="space-y-1.5">
+          <label className="font-semibold uppercase tracking-wider text-[#475569] text-[11px]">
             {txt('Période', 'Period', 'Período')}
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -124,11 +124,11 @@ export function FilterSheet({
                   onClick={() => setDateFilter(opt.id)}
                   className={`p-2.5 rounded-xl border text-xs font-medium text-center transition-all flex items-center justify-center gap-1.5 touch-target ${
                     isSelected
-                      ? 'bg-[#1A1412] border-[#1A1412] text-white font-bold shadow-xs'
-                      : 'bg-[#FAFAF8] border-[#E9E6DF] text-[#4A4540] hover:bg-[#F4F2EE]'
+                      ? 'bg-[#0F172A] border-[#0F172A] text-white font-semibold shadow-xs'
+                      : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9]'
                   }`}
                 >
-                  {isSelected && <IconCheck size={14} className="text-[#E8C97A]" />}
+                  {isSelected && <IconCheck size={14} />}
                   <span>{opt.label}</span>
                 </button>
               );
@@ -137,12 +137,12 @@ export function FilterSheet({
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-3 border-t border-[#E9E6DF] flex items-center justify-between gap-3">
+        <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between gap-3">
           {isFiltered ? (
             <button
               type="button"
               onClick={onReset}
-              className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#991B1B] hover:text-[#7F1D1D] p-2"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#991B1B] hover:text-[#7F1D1D] p-2"
             >
               <IconRotate size={15} />
               <span>{txt('Réinitialiser', 'Reset', 'Repor')}</span>
@@ -154,7 +154,7 @@ export function FilterSheet({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-3 rounded-2xl bg-[#1A1412] hover:bg-[#2E2420] text-white font-semibold text-xs transition-all shadow-md touch-target"
+            className="px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs transition-colors shadow-xs touch-target"
           >
             {txt('Appliquer les filtres', 'Apply filters', 'Aplicar filtros')}
           </button>
