@@ -125,7 +125,12 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
     }
 
     _tursoInitialized = true;
-    await syncTursoToLocalSqlite(client);
+    const isServerless = Boolean(
+      process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
+    );
+    if (!isServerless) {
+      await syncTursoToLocalSqlite(client);
+    }
   } catch (migErr) {
     console.warn('[Turso Migration Note]:', migErr);
   }
@@ -432,8 +437,11 @@ async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]
       }
     }
 
-    // Dual-write: Always mirror write operations (INSERT, UPDATE, DELETE) to local SQLite
-    if (isWrite) {
+    // Dual-write: Mirror write operations to local SQLite only in local non-serverless dev
+    const isServerless = Boolean(
+      process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
+    );
+    if (isWrite && !isServerless) {
       try {
         executeSqliteQuery<T>(sql, args);
       } catch (sqliteErr) {
@@ -546,15 +554,20 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
       ]
     );
 
-    // Mirror the new appointment to local SQLite for consistency (best-effort)
-    try {
-      executeSqliteQuery(
-        `INSERT OR REPLACE INTO appointments
-          (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, ?)`,
-        [id, input.patientName, input.email ?? null, normalizedPhone, input.service, input.date, input.startTime, input.notes ?? null, input.coverageType ?? 'PARTICULAR', input.coverageProvider ?? null, input.coverageNumber ?? null, now, now]
-      );
-    } catch { /* silent — local SQLite is only a mirror */ }
+    // Mirror the new appointment to local SQLite for consistency (only in local non-serverless dev)
+    const isServerless = Boolean(
+      process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
+    );
+    if (!isServerless) {
+      try {
+        executeSqliteQuery(
+          `INSERT OR REPLACE INTO appointments
+            (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, ?)`,
+          [id, input.patientName, input.email ?? null, normalizedPhone, input.service, input.date, input.startTime, input.notes ?? null, input.coverageType ?? 'PARTICULAR', input.coverageProvider ?? null, input.coverageNumber ?? null, now, now]
+        );
+      } catch { /* silent — local SQLite is only a mirror */ }
+    }
 
     const rows = await executeTursoDirectly<Appointment>('SELECT * FROM appointments WHERE id = ?', [id]);
     const appointment = rows[0];

@@ -57,45 +57,53 @@ export async function POST(request: NextRequest) {
   await dbRecordRateLimitAttempt(ip, 'booking_ip');
   await dbRecordRateLimitAttempt(`phone:${phone}`, 'booking_phone');
 
-  const result = await dbCreateAppointment({
-    patientName:      String(body.patientName).trim().slice(0, 100),
-    email:            body.email ? String(body.email).trim().slice(0, 254) : undefined,
-    phone:            String(body.phone).trim().slice(0, 30),
-    service:          String(body.service).trim(),
-    date:             String(body.date).trim(),
-    startTime:        String(body.startTime).trim(),
-    notes:            body.notes ? String(body.notes).trim().slice(0, 1000) : undefined,
-    coverageType:     body.coverageType ? String(body.coverageType).trim() : 'PARTICULAR',
-    coverageProvider: body.coverageProvider ? String(body.coverageProvider).trim().slice(0, 100) : undefined,
-    coverageNumber:   body.coverageNumber ? String(body.coverageNumber).trim().slice(0, 100) : undefined,
-  });
+  try {
+    const result = await dbCreateAppointment({
+      patientName:      String(body.patientName).trim().slice(0, 100),
+      email:            body.email ? String(body.email).trim().slice(0, 254) : undefined,
+      phone:            String(body.phone).trim().slice(0, 30),
+      service:          String(body.service).trim(),
+      date:             String(body.date).trim(),
+      startTime:        String(body.startTime).trim(),
+      notes:            body.notes ? String(body.notes).trim().slice(0, 1000) : undefined,
+      coverageType:     body.coverageType ? String(body.coverageType).trim() : 'PARTICULAR',
+      coverageProvider: body.coverageProvider ? String(body.coverageProvider).trim().slice(0, 100) : undefined,
+      coverageNumber:   body.coverageNumber ? String(body.coverageNumber).trim().slice(0, 100) : undefined,
+    });
 
-  if (!result.success) {
-    if (result.error === 'slot_taken') {
-      return NextResponse.json(
-        { error: 'slot_taken', message: 'Ce créneau vient d\'être réservé. Veuillez choisir un autre horaire.' },
-        { status: 409 }
-      );
+    if (!result.success) {
+      if (result.error === 'slot_taken') {
+        return NextResponse.json(
+          { error: 'slot_taken', message: 'Ce créneau vient d\'être réservé. Veuillez choisir un autre horaire.' },
+          { status: 409 }
+        );
+      }
+      if (result.error === 'slot_blocked') {
+        return NextResponse.json(
+          { error: 'slot_taken', message: 'Ce créneau n\'est pas disponible.' },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json({ error: 'Données invalides' }, { status: 422 });
     }
-    if (result.error === 'slot_blocked') {
-      return NextResponse.json(
-        { error: 'slot_taken', message: 'Ce créneau n\'est pas disponible.' },
-        { status: 409 }
-      );
-    }
-    return NextResponse.json({ error: 'Données invalides' }, { status: 422 });
-  }
 
-  // Return minimal confirmation — never return the full appointment object to the public
-  return NextResponse.json(
-    {
-      success: true,
-      confirmation: {
-        date: result.appointment.date,
-        startTime: result.appointment.startTime,
-        service: result.appointment.service,
+    // Return minimal confirmation — never return the full appointment object to the public
+    return NextResponse.json(
+      {
+        success: true,
+        confirmation: {
+          date: result.appointment.date,
+          startTime: result.appointment.startTime,
+          service: result.appointment.service,
+        },
       },
-    },
-    { status: 201 }
-  );
+      { status: 201 }
+    );
+  } catch (err) {
+    console.error('[API /api/appointments Error]:', err);
+    return NextResponse.json(
+      { error: 'Erreur lors de l\'enregistrement de la réservation. Veuillez réessayer.' },
+      { status: 500 }
+    );
+  }
 }

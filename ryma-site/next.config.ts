@@ -39,6 +39,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['better-sqlite3'],
   poweredByHeader: false,
   compress: true,
   images: {
