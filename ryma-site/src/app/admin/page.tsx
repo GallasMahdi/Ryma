@@ -22,6 +22,7 @@ import { playNotificationChime } from '@/lib/sound';
 
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminMobileNav, AdminTab } from '@/components/admin/AdminMobileNav';
 import { AdminKpiCards } from '@/components/admin/AdminKpiCards';
 import { AppointmentsTab } from '@/components/admin/AppointmentsTab';
 import { SlotsTab } from '@/components/admin/SlotsTab';
@@ -46,7 +47,7 @@ async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
 export default function AdminPage() {
   const { lang, toggleLang } = useLanguage();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'appointments' | 'slots' | 'analytics' | 'patients'>('appointments');
+  const [activeTab, setActiveTab] = useState<AdminTab>('appointments');
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -89,7 +90,7 @@ export default function AdminPage() {
   const [slotList, setSlotList] = useState<SlotInfo[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
-  // In-memory slot cache & abort controller for zero-freeze, buttery-smooth switching
+  // In-memory slot cache & abort controller for zero-freeze switching
   const slotCacheRef = useRef<Record<string, SlotInfo[]>>({});
   const slotAbortRef = useRef<AbortController | null>(null);
 
@@ -108,7 +109,6 @@ export default function AdminPage() {
       knownAppointmentIdsRef.current.add(appt.id);
 
       if (!isInitial) {
-        // 1. Temporarily highlight the appointment on the calendar/card views
         setRecentNewIds(prev => new Set(prev).add(appt.id));
 
         setTimeout(() => {
@@ -119,10 +119,8 @@ export default function AdminPage() {
           });
         }, 30000);
 
-        // 2. Play subtle luxury audio chime
         playNotificationChime();
 
-        // 3. Trigger Luxury Toast Alert
         const svcName = getServiceName(appt.service, lang);
         const toastTitle =
           lang === 'fr'
@@ -144,14 +142,13 @@ export default function AdminPage() {
           duration: 7000,
         });
 
-        // 4. Invalidate slot cache so slot views stay 100% updated
         slotCacheRef.current = {};
       }
     },
     [lang, addToast]
   );
 
-  // ── Fetch admin metadata (Backup & No-Show counts) ─────────────────────────
+  // ── Fetch admin metadata ───────────────────────────────────────────────────
   const fetchAdminMetadata = useCallback(async () => {
     try {
       const data = await apiFetch<{ authenticated: boolean; noShowCounts?: Record<string, number> }>('/api/admin/me');
@@ -164,6 +161,7 @@ export default function AdminPage() {
   useEffect(() => {
     fetchAdminMetadata();
   }, [fetchAdminMetadata]);
+
   const [selectedNote, setSelectedNote] = useState<PatientNote | null>(null);
   const [noteForm, setNoteForm] = useState({ content: '', tags: '' });
   const [savingNote, setSavingNote] = useState(false);
@@ -186,7 +184,7 @@ export default function AdminPage() {
     onConfirm: () => void;
   } | null>(null);
 
-  // ── Fetch appointments with Smart Diffing ──────────────────────────────────
+  // ── Fetch appointments ─────────────────────────────────────────────────────
   const fetchAppointments = useCallback(async (isSilent = false) => {
     if (!isSilent) {
       setLoadingAppointments(prev => prev || appointments.length === 0);
@@ -200,7 +198,6 @@ export default function AdminPage() {
           isInitialLoadDoneRef.current = true;
           setAppointments(data.appointments);
         } else {
-          // Detect newly arrived appointments not seen yet
           data.appointments.forEach(a => {
             if (!knownAppointmentIdsRef.current.has(a.id)) {
               handleNewIncomingAppointment(a, false);
@@ -315,19 +312,16 @@ export default function AdminPage() {
     };
   }, [handleNewIncomingAppointment]);
 
-  // ── Parallel Initial Loading & Adaptive Fast Polling Fallback ──────────────
+  // ── Auto-refresh & window focus sync ───────────────────────────────────────
   useEffect(() => {
-    // Fire all initial requests in parallel
     Promise.all([fetchAppointments(false), fetchPatientNotes(), fetchAdminMetadata()]);
 
-    // Silent background auto-refresh every 6s when tab is active
     const interval = setInterval(() => {
       if (!document.hidden) {
         fetchAppointments(true);
       }
     }, 6000);
 
-    // Instant sync whenever admin focuses or returns to the tab
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         fetchAppointments(true);
@@ -349,7 +343,7 @@ export default function AdminPage() {
     };
   }, [fetchAppointments, fetchPatientNotes, fetchAdminMetadata]);
 
-  // ── Fast, Cached Slot Fetching ─────────────────────────────────────────────
+  // ── Cached Slot Fetching ───────────────────────────────────────────────────
   const fetchSlots = useCallback(async (date: string, forceRefresh = false) => {
     if (!forceRefresh && slotCacheRef.current[date]) {
       setSlotList(slotCacheRef.current[date]);
@@ -401,7 +395,6 @@ export default function AdminPage() {
 
   // ── Action helpers ─────────────────────────────────────────────────────────
   const updateStatus = async (id: string, status: AppointmentStatus) => {
-    // 0ms Optimistic UI update: update local state instantly
     const prevList = appointments;
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status, updatedAt: new Date().toISOString() } : a));
     setIsGlobalBusy(true);
@@ -431,7 +424,6 @@ export default function AdminPage() {
   };
 
   const toggleSlot = async (time: string) => {
-    // 0ms Optimistic toggle: flip the available boolean instantly
     const prevList = slotList;
     setSlotList(prev => prev.map(s => s.time === time ? { ...s, available: !s.available } : s));
     setIsGlobalBusy(true);
@@ -461,7 +453,6 @@ export default function AdminPage() {
   };
 
   const softDeleteAppointment = async (id: string) => {
-    // 0ms Optimistic removal
     const prevList = appointments;
     setAppointments(prev => prev.filter(a => a.id !== id));
     setIsGlobalBusy(true);
@@ -472,7 +463,7 @@ export default function AdminPage() {
       addToast({
         type: 'success',
         title: lang === 'pt' ? 'Consulta Eliminada' : lang === 'en' ? 'Appointment Deleted' : 'Rendez-vous Supprimé',
-        message: lang === 'pt' ? 'O registo foi removido com sucesso.' : lang === 'en' ? 'Record deleted successfully.' : 'Enregistrement supprimé.',
+        message: lang === 'pt' ? 'O registo foi removido.' : lang === 'en' ? 'Record deleted.' : 'Enregistrement supprimé.',
       });
     } catch (err) {
       setAppointments(prevList);
@@ -638,8 +629,6 @@ export default function AdminPage() {
     }
   };
 
-
-
   // ── Computed ───────────────────────────────────────────────────────────────
   const filteredAppointments = useMemo(() => {
     return appointments.filter(a => {
@@ -706,34 +695,34 @@ export default function AdminPage() {
   const next7Days = useMemo(() => getNext7Days(), []);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#FAFAF8] text-[#202020] flex flex-col overflow-hidden font-sans">
-      {/* Global Luxury Gold Activity Progress Bar */}
+    <div className="fixed inset-0 z-[9999] bg-[#FAFAF8] text-[#1A1412] flex flex-col overflow-hidden font-sans">
+      {/* Global Activity Progress Bar */}
       <LuxuryProgressBar isLoading={isGlobalBusy || loadingAppointments || loadingSlots} />
 
-      {/* Luxury Real-time Toast Notifications */}
+      {/* Real-time Toast Notifications */}
       <LuxuryToastContainer toasts={toasts} onDismiss={dismissToast} />
-
-
 
       {/* Confirmation Dialog */}
       <AnimatePresence>
         {confirmDialog && (
-          <div className="fixed inset-0 z-[999998] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[999998] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E9E6DF] p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.1)] text-center relative overflow-hidden"
+              className="bg-white border border-[#E9E6DF] p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.1)] text-center relative overflow-hidden font-sans"
             >
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#C6A15B] via-[#E8D7B0] to-[#C6A15B]" />
-              <div className="w-12 h-12 rounded-2xl bg-[#A9655F]/10 text-[#A9655F] flex items-center justify-center mx-auto">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#C49A3C]" />
+              <div className="w-12 h-12 rounded-2xl bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] flex items-center justify-center mx-auto">
                 <IconAlertTriangle size={24} />
               </div>
-              <h3 className="font-serif text-lg font-bold text-[#202020]">{confirmDialog.title}</h3>
-              <div className="flex gap-3 justify-center pt-2">
+              <h3 className="font-serif text-base font-bold text-[#1A1412] leading-snug">
+                {confirmDialog.title}
+              </h3>
+              <div className="flex gap-2.5 justify-center pt-2">
                 <button
                   onClick={() => setConfirmDialog(null)}
-                  className="px-4 py-2.5 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-xs font-mono text-[#77736B] hover:text-[#202020] hover:bg-[#F4F2EE] transition-all"
+                  className="px-4 py-2.5 rounded-xl bg-[#FAFAF8] border border-[#E9E6DF] text-xs font-mono font-semibold text-[#77736B] hover:text-[#1A1412] hover:bg-[#F4F2EE] transition-all touch-target"
                 >
                   {lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar'}
                 </button>
@@ -742,7 +731,7 @@ export default function AdminPage() {
                     confirmDialog.onConfirm();
                     setConfirmDialog(null);
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-[#A9655F] hover:bg-[#8F534D] text-white text-xs font-mono font-bold shadow-md transition-all"
+                  className="px-4 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-mono font-bold shadow-md transition-all touch-target"
                 >
                   {lang === 'fr' ? 'Confirmer' : lang === 'en' ? 'Confirm' : 'Confirmar'}
                 </button>
@@ -773,79 +762,92 @@ export default function AdminPage() {
           totalNotes={Math.max(patientsList.length, patientNotes.length)}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#FAFAF8] space-y-6">
-          <AdminKpiCards stats={stats} lang={lang} />
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-8 bg-[#FAFAF8] space-y-4 sm:space-y-6 pb-24 md:pb-8">
+          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+            <AdminKpiCards stats={stats} lang={lang} />
 
-          {activeTab === 'appointments' && (
-            <AppointmentsTab
-              lang={lang}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              filter={filter}
-              setFilter={setFilter}
-              appointmentsError={appointmentsError}
-              loadingAppointments={loadingAppointments}
-              appointments={appointments}
-              filteredAppointments={filteredAppointments}
-              updateStatus={updateStatus}
-              setConfirmDialog={setConfirmDialog}
-              softDeleteAppointment={softDeleteAppointment}
-              openPatientNote={openPatientNote}
-              noShowCounts={noShowCounts}
-              recentNewIds={recentNewIds}
-            />
-          )}
+            {activeTab === 'appointments' && (
+              <AppointmentsTab
+                lang={lang}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                filter={filter}
+                setFilter={setFilter}
+                appointmentsError={appointmentsError}
+                loadingAppointments={loadingAppointments}
+                appointments={appointments}
+                filteredAppointments={filteredAppointments}
+                updateStatus={updateStatus}
+                setConfirmDialog={setConfirmDialog}
+                softDeleteAppointment={softDeleteAppointment}
+                openPatientNote={openPatientNote}
+                noShowCounts={noShowCounts}
+                recentNewIds={recentNewIds}
+              />
+            )}
 
-          {activeTab === 'slots' && (
-            <SlotsTab
-              lang={lang}
-              selectedDateForSlots={selectedDateForSlots}
-              setSelectedDateForSlots={setSelectedDateForSlots}
-              todayStr={todayStr}
-              next7Days={next7Days}
-              slotList={slotList}
-              loadingSlots={loadingSlots}
-              appointments={appointments}
-              toggleSlot={toggleSlot}
-              refreshSlots={(date) => {
-                delete slotCacheRef.current[date];
-                fetchSlots(date, true);
-              }}
-            />
-          )}
+            {activeTab === 'slots' && (
+              <SlotsTab
+                lang={lang}
+                selectedDateForSlots={selectedDateForSlots}
+                setSelectedDateForSlots={setSelectedDateForSlots}
+                todayStr={todayStr}
+                next7Days={next7Days}
+                slotList={slotList}
+                loadingSlots={loadingSlots}
+                appointments={appointments}
+                toggleSlot={toggleSlot}
+                refreshSlots={(date) => {
+                  delete slotCacheRef.current[date];
+                  fetchSlots(date, true);
+                }}
+              />
+            )}
 
-          {activeTab === 'analytics' && (
-            <AnalyticsTab
-              lang={lang}
-              stats={stats}
-              analyticsData={analyticsData}
-            />
-          )}
+            {activeTab === 'patients' && (
+              <PatientNotesTab
+                lang={lang}
+                patientNotes={patientNotes}
+                patientsList={patientsList}
+                onRefreshPatients={fetchPatientNotes}
+                noteSearch={noteSearch}
+                setNoteSearch={setNoteSearch}
+                selectedNote={selectedNote}
+                setSelectedNote={setSelectedNote}
+                noteForm={noteForm}
+                setNoteForm={setNoteForm}
+                savingNote={savingNote}
+                saveNote={saveNote}
+                deleteNote={deleteNote}
+                appointments={appointments}
+                setConfirmDialog={setConfirmDialog}
+                createDirectPatientNote={createDirectPatientNote}
+                onActionToast={addToast}
+              />
+            )}
 
-          {activeTab === 'patients' && (
-            <PatientNotesTab
-              lang={lang}
-              patientNotes={patientNotes}
-              patientsList={patientsList}
-              onRefreshPatients={fetchPatientNotes}
-              noteSearch={noteSearch}
-              setNoteSearch={setNoteSearch}
-              selectedNote={selectedNote}
-              setSelectedNote={setSelectedNote}
-              noteForm={noteForm}
-              setNoteForm={setNoteForm}
-              savingNote={savingNote}
-              saveNote={saveNote}
-              deleteNote={deleteNote}
-              appointments={appointments}
-              setConfirmDialog={setConfirmDialog}
-              createDirectPatientNote={createDirectPatientNote}
-              onActionToast={addToast}
-            />
-          )}
+            {activeTab === 'analytics' && (
+              <AnalyticsTab
+                lang={lang}
+                stats={stats}
+                analyticsData={analyticsData}
+              />
+            )}
+          </div>
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation Bar (< 768px) */}
+      <AdminMobileNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        lang={lang}
+        totalAppointments={stats.total}
+        totalNotes={Math.max(patientsList.length, patientNotes.length)}
+        onOpenAddModal={() => setIsAddModalOpen(true)}
+      />
+
+      {/* Add Appointment Modal / Bottom Sheet */}
       <AddAppointmentModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}

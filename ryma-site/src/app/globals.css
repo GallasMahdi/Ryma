@@ -268,3 +268,36 @@ body {
 .section-gold-subtle {
   background: linear-gradient(135deg, #FDFCF8 0%, #F9F4E8 50%, #FDFCF8 100%);
 }
+
+/* ======================== SAFE AREA & MOBILE HELPERS ======================== */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.75rem);
+}
+
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), 0.75rem);
+}
+
+.mb-safe {
+  margin-bottom: max(env(safe-area-inset-bottom, 0px), 0.75rem);
+}
+
+/* Touch-friendly target minimum */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Custom smooth horizontal scroll container */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

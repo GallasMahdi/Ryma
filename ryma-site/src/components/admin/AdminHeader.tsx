@@ -8,6 +8,7 @@ import {
   IconRefresh,
   IconExternalLink,
   IconLock,
+  IconFileSpreadsheet,
 } from '@tabler/icons-react';
 
 interface AdminHeaderProps {
@@ -29,93 +30,116 @@ export function AdminHeader({
   onOpenAddModal,
   onLogout,
 }: AdminHeaderProps) {
+  const txt = (fr: string, en: string, pt: string) =>
+    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+
   return (
-    <header className="h-14 bg-white border-b border-[#E2E8F0] px-4 md:px-6 flex items-center justify-between shrink-0 z-20">
-      <div className="flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg bg-[#0F172A] flex items-center justify-center text-white font-serif font-bold text-xs">
+    <header className="h-14 md:h-16 bg-white/95 backdrop-blur-xl border-b border-[#E9E6DF] px-3.5 sm:px-5 md:px-6 flex items-center justify-between shrink-0 z-30 sticky top-0">
+      {/* Brand & Status */}
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1A1412] to-[#2E2420] flex items-center justify-center text-[#E8C97A] font-serif font-bold text-sm shadow-sm shrink-0 border border-[#C49A3C]/30">
           R
         </div>
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm text-[#0F172A] tracking-tight">
-            Ryma Clinic
+
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <span className="font-serif font-bold text-sm sm:text-base text-[#1A1412] tracking-tight truncate">
+            Ryma Kiné
           </span>
-          <span className="text-[#CBD5E1]">/</span>
-          <span className="text-xs text-[#64748B] font-medium hidden sm:inline">
-            {lang === 'pt' ? 'Gestão Clínica' : lang === 'en' ? 'Clinic Management' : 'Gestion Clinique'}
+          <span className="text-[#D3CEB8] hidden sm:inline">/</span>
+          <span className="text-xs text-[#77736B] font-mono hidden md:inline truncate">
+            {txt('Administration', 'Management', 'Gestão')}
           </span>
-          {/* Live Real-time connection badge */}
-          <div className="flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] text-[10px] font-mono font-medium">
-            <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-[#10B981] animate-pulse' : 'bg-[#94A3B8]'}`} />
-            <span className="hidden md:inline">{isLive ? (lang === 'fr' ? 'En direct' : lang === 'en' ? 'Live' : 'Em direto') : 'Offline'}</span>
+
+          {/* Live Real-time SSE Connection Indicator */}
+          <div
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-mono font-medium shrink-0 ml-1 ${
+              isLive
+                ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'
+                : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#94A3B8]'
+            }`}
+            title={isLive ? txt('Connexion en direct active', 'Live real-time sync active', 'Sincronização em direto ativa') : txt('Hors ligne', 'Offline', 'Offline')}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                isLive ? 'bg-[#22C55E] animate-pulse' : 'bg-[#94A3B8]'
+              }`}
+            />
+            <span className="hidden sm:inline font-semibold">
+              {isLive ? txt('Direct', 'Live', 'Direto') : 'Offline'}
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {/* Export CSV */}
+      {/* Actions */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Export CSV (Desktop / Tablet) */}
         <a
           href="/api/admin/export?type=appointments"
           target="_blank"
           download
-          className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] text-[#334155] hover:bg-[#F8FAFC] transition-colors"
-          title={lang === 'pt' ? 'Exportar em CSV' : lang === 'en' ? 'Export to CSV' : 'Exporter en CSV'}
+          className="hidden lg:inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1.5 rounded-xl border border-[#E9E6DF] text-[#4A4540] hover:bg-[#FAF6EE] hover:border-[#E8D7B0] hover:text-[#9A7428] transition-all"
+          title={txt('Exporter les rendez-vous en CSV', 'Export appointments to CSV', 'Exportar consultas em CSV')}
         >
-          <span>{lang === 'pt' ? 'Exportar CSV' : lang === 'en' ? 'Export CSV' : 'Export CSV'}</span>
+          <IconFileSpreadsheet size={14} className="text-[#C49A3C]" />
+          <span>CSV</span>
         </a>
 
-        {/* Refresh */}
+        {/* Refresh button */}
         <button
           onClick={onRefresh}
-          title={lang === 'pt' ? 'Atualizar' : lang === 'en' ? 'Refresh' : 'Actualiser'}
-          className="p-1.5 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors"
+          disabled={loadingAppointments}
+          title={txt('Actualiser', 'Refresh', 'Atualizar')}
+          className="p-2 rounded-xl border border-[#E9E6DF] text-[#77736B] hover:text-[#1A1412] hover:bg-[#FAF6EE] hover:border-[#E8D7B0] active:scale-95 transition-all touch-target flex items-center justify-center"
         >
-          <IconRefresh size={15} className={loadingAppointments ? 'animate-spin text-[#2563EB]' : ''} />
+          <IconRefresh
+            size={16}
+            className={loadingAppointments ? 'animate-spin text-[#C49A3C]' : ''}
+          />
         </button>
 
-        {/* New Appointment — Primary Button */}
+        {/* New Appointment Primary Button */}
         <button
           onClick={onOpenAddModal}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[#1A1412] hover:bg-[#2E2420] text-white font-medium text-xs shadow-sm hover:shadow-md active:scale-95 transition-all touch-target"
         >
-          <IconPlus size={15} />
-          <span>
-            {lang === 'pt'
-              ? 'Nova Consulta'
-              : lang === 'en'
-              ? 'New Appointment'
-              : 'Nouveau Rendez-vous'}
+          <IconPlus size={16} className="text-[#E8C97A]" />
+          <span className="hidden xs:inline sm:inline">
+            {txt('Nouveau RDV', 'New Appt', 'Nova Consulta')}
           </span>
         </button>
 
-        <div className="h-4 w-px bg-[#E2E8F0] mx-1" />
+        <div className="h-4 w-px bg-[#E9E6DF] mx-0.5 sm:mx-1" />
 
-        {/* View Site */}
+        {/* Public Website Link (Desktop) */}
         <Link
           href="/"
           target="_blank"
-          className="hidden lg:inline-flex items-center gap-1 text-xs text-[#64748B] hover:text-[#0F172A] px-2 py-1.5 rounded-lg hover:bg-[#F8FAFC] transition-colors"
+          className="hidden md:inline-flex items-center gap-1 text-xs text-[#77736B] hover:text-[#1A1412] px-2 py-1.5 rounded-xl hover:bg-[#FAF6EE] transition-colors font-mono"
+          title={txt('Voir le site public', 'View public website', 'Ver site público')}
         >
-          <span>{lang === 'pt' ? 'Website' : lang === 'en' ? 'Website' : 'Site'}</span>
+          <span>{txt('Site', 'Site', 'Site')}</span>
           <IconExternalLink size={13} />
         </Link>
 
         {/* Language Switch */}
         <button
           onClick={toggleLang}
-          className="text-xs px-2 py-1 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors uppercase font-medium"
+          className="text-xs px-2.5 py-1.5 rounded-xl border border-[#E9E6DF] text-[#4A4540] hover:text-[#1A1412] hover:bg-[#FAF6EE] hover:border-[#E8D7B0] transition-all font-mono font-bold uppercase touch-target flex items-center justify-center"
+          title={txt('Changer de langue', 'Switch language', 'Mudar idioma')}
         >
-          {lang.toUpperCase()}
+          {lang}
         </button>
 
-        {/* Logout */}
+        {/* Logout (Desktop & Tablet) */}
         <button
           onClick={onLogout}
-          className="inline-flex items-center gap-1 text-xs text-[#991B1B] hover:text-[#7F1D1D] px-2 py-1.5 rounded-lg hover:bg-[#FEE2E2]/50 transition-colors font-medium"
-          title={lang === 'pt' ? 'Terminar Sessão' : lang === 'en' ? 'Sign Out' : 'Déconnexion'}
+          className="hidden sm:inline-flex items-center gap-1 text-xs text-[#991B1B] hover:text-[#7F1D1D] px-2.5 py-1.5 rounded-xl hover:bg-[#FEE2E2]/60 transition-colors font-mono font-semibold"
+          title={txt('Déconnexion', 'Sign Out', 'Terminar Sessão')}
         >
-          <IconLock size={13} />
-          <span className="hidden md:inline">
-            {lang === 'pt' ? 'Sair' : lang === 'en' ? 'Logout' : 'Quitter'}
+          <IconLock size={14} />
+          <span className="hidden lg:inline">
+            {txt('Quitter', 'Logout', 'Sair')}
           </span>
         </button>
       </div>
