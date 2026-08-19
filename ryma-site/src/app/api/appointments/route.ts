@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbCreateAppointment, dbCheckRateLimit, dbRecordRateLimitAttempt } from '@/lib/db';
 import { validateAppointmentInput, getClientIp } from '@/lib/validation';
 import { broadcastAppointmentCreated } from '@/lib/events';
+import { sendAppointmentConfirmationEmail, sendAdminNewBookingNotification } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -90,6 +91,15 @@ export async function POST(request: NextRequest) {
 
     // Broadcast the new appointment in real-time to active admin calendar dashboards
     broadcastAppointmentCreated(result.appointment);
+
+    // Asynchronously dispatch confirmation emails (non-blocking)
+    const clientLang = typeof body.lang === 'string' ? body.lang : 'fr';
+    Promise.all([
+      sendAppointmentConfirmationEmail(result.appointment, clientLang),
+      sendAdminNewBookingNotification(result.appointment),
+    ]).catch(err => {
+      console.error('[Booking Email Background Error]:', err);
+    });
 
     // Return minimal confirmation — never return the full appointment object to the public
     return NextResponse.json(

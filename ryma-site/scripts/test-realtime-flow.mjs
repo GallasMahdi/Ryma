@@ -84,15 +84,21 @@ async function testRealtimeFlow() {
   // Wait 500ms for SSE handshake
   await new Promise((r) => setTimeout(r, 600));
 
-  // Step 3: Simulate Patient Booking
+  // Step 3: Simulate Patient Booking with dynamic available slot
   const testPhone = '+3519129' + Math.floor(10000 + Math.random() * 90000);
+  
+  // Pick an available slot
+  const slotsRes = await fetch(`http://localhost:${activePort}/api/slots?date=2026-08-25`);
+  const slotsJson = await slotsRes.json();
+  const availableSlot = slotsJson.slots?.find(s => s.available)?.time || '15:00';
+
   const testBooking = {
     patientName: 'Test Patient ' + Math.floor(Math.random() * 1000),
     phone: testPhone,
-    email: 'testpatient@example.com',
+    email: 'mehdi.gallas.98@gmail.com',
     service: 'reeducation-posturale',
     date: '2026-08-25',
-    startTime: '10:00',
+    startTime: availableSlot,
     notes: 'Real-time sync automated test booking',
   };
 

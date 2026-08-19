@@ -6,6 +6,7 @@ import {
 } from '@/lib/db';
 import { VALID_SERVICES, VALID_TIME_SLOTS, validateAppointmentInput } from '@/lib/validation';
 import { broadcastAppointmentCreated } from '@/lib/events';
+import { sendAppointmentConfirmationEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -66,6 +67,11 @@ export async function POST(request: NextRequest) {
 
   // Broadcast to all active admin tabs
   broadcastAppointmentCreated(result.appointment);
+
+  // Dispatch confirmation email to patient if email is provided
+  if (result.appointment.email) {
+    sendAppointmentConfirmationEmail(result.appointment).catch(() => {});
+  }
 
   return NextResponse.json({ appointment: result.appointment }, { status: 201 });
 }
