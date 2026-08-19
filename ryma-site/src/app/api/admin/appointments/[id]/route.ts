@@ -8,6 +8,7 @@ import {
   AppointmentStatus,
 } from '@/lib/db';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
+import { broadcastAppointmentUpdated } from '@/lib/events';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -100,6 +101,9 @@ export async function PATCH(
   }
 
   const updated = await dbUpdateAppointment(id, updates);
+  if (updated) {
+    broadcastAppointmentUpdated(updated);
+  }
   return NextResponse.json({ appointment: updated });
 }
 
@@ -119,5 +123,8 @@ export async function DELETE(
   }
 
   const updated = await dbUpdateAppointment(id, { status: 'CANCELLED' });
+  if (updated) {
+    broadcastAppointmentUpdated(updated);
+  }
   return NextResponse.json({ appointment: updated });
 }

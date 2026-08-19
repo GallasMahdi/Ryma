@@ -88,6 +88,7 @@ interface WeekCalendarViewProps {
   softDeleteAppointment: (id: string) => void;
   openPatientNote: (appt: Appointment) => void;
   setConfirmDialog: (dlg: { title: string; onConfirm: () => void } | null) => void;
+  recentNewIds?: Set<string>;
 }
 
 function WeekCalendarView({
@@ -97,6 +98,7 @@ function WeekCalendarView({
   softDeleteAppointment,
   openPatientNote,
   setConfirmDialog,
+  recentNewIds,
 }: WeekCalendarViewProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
@@ -269,23 +271,35 @@ function WeekCalendarView({
                     <span className="text-[10px] text-[#E2E8F0] font-mono">—</span>
                   </div>
                 ) : (
-                  dayAppts.map(appt => (
-                    <button
-                      key={appt.id}
-                      onClick={() => setSelectedAppt(appt)}
-                      className={`w-full text-left px-1.5 py-1 rounded-lg border text-[10px] leading-tight transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] ${
-                        STATUS_CHIP[appt.status]
-                      } ${selectedAppt?.id === appt.id ? 'ring-2 ring-[#C6A15B] ring-offset-1' : ''}`}
-                    >
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[appt.status]}`} />
-                        <span className="font-bold font-mono">{appt.startTime}</span>
-                      </div>
-                      <div className="font-semibold truncate leading-tight" style={{ fontSize: '9.5px' }}>
-                        {appt.patientName.split(' ')[0]}
-                      </div>
-                    </button>
-                  ))
+                  dayAppts.map(appt => {
+                    const isNew = recentNewIds?.has(appt.id);
+                    return (
+                      <button
+                        key={appt.id}
+                        onClick={() => setSelectedAppt(appt)}
+                        className={`w-full text-left px-1.5 py-1 rounded-lg border text-[10px] leading-tight transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] ${
+                          STATUS_CHIP[appt.status]
+                        } ${selectedAppt?.id === appt.id ? 'ring-2 ring-[#C6A15B] ring-offset-1' : ''} ${
+                          isNew ? 'ring-2 ring-[#C6A15B] shadow-[0_0_10px_rgba(198,161,91,0.5)] border-[#C6A15B] animate-pulse' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-0.5">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[appt.status]}`} />
+                            <span className="font-bold font-mono">{appt.startTime}</span>
+                          </div>
+                          {isNew && (
+                            <span className="bg-[#C6A15B] text-white text-[7.5px] font-bold px-1 py-0.2 rounded-xs tracking-wider uppercase shrink-0">
+                              {txt('NOUV.', 'NEW', 'NOVO')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-semibold truncate leading-tight" style={{ fontSize: '9.5px' }}>
+                          {appt.patientName.split(' ')[0]}
+                        </div>
+                      </button>
+                    );
+                  })
                 )}
               </div>
             );
@@ -456,6 +470,7 @@ interface AppointmentsTabProps {
   softDeleteAppointment: (id: string) => void;
   openPatientNote: (appt: Appointment) => void;
   noShowCounts?: Record<string, number>;
+  recentNewIds?: Set<string>;
 }
 
 function getInitials(name: string): string {
@@ -480,6 +495,7 @@ export function AppointmentsTab({
   softDeleteAppointment,
   openPatientNote,
   noShowCounts,
+  recentNewIds,
 }: AppointmentsTabProps) {
   const txt = (frStr: string, enStr: string, ptStr: string) => {
     if (lang === 'fr') return frStr;
@@ -548,11 +564,16 @@ export function AppointmentsTab({
     const st = STATUS_CONFIG[item.status];
     const price = getServicePrice(item.service);
     const initials = getInitials(item.patientName);
+    const isRecentNew = recentNewIds?.has(item.id);
 
     return (
       <div
         key={item.id}
-        className="bg-white border border-[#E2E8F0] p-4 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors hover:border-[#CBD5E1]"
+        className={`bg-white border p-4 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-500 ${
+          isRecentNew
+            ? 'border-[#C6A15B] bg-[#FAF6EE]/50 shadow-[0_0_20px_rgba(198,161,91,0.25)] ring-1 ring-[#C6A15B]'
+            : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
+        }`}
       >
         <div className="flex items-start gap-3.5 flex-1 min-w-0">
           {/* Patient Avatar Initials */}
@@ -565,6 +586,11 @@ export function AppointmentsTab({
               <span className="font-semibold text-sm text-[#0F172A]">
                 {item.patientName}
               </span>
+              {isRecentNew && (
+                <span className="bg-gradient-to-r from-[#C6A15B] to-[#9B793A] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs animate-pulse uppercase tracking-wider">
+                  {txt('NOUVEAU', 'NEW', 'NOVO')}
+                </span>
+              )}
               <span className={`text-[11px] font-medium px-2 py-0.5 rounded border ${st.bg} ${st.color} ${st.border}`}>
                 {st[lang] || st.pt || st.fr}
               </span>
@@ -850,6 +876,7 @@ export function AppointmentsTab({
               softDeleteAppointment={softDeleteAppointment}
               openPatientNote={openPatientNote}
               setConfirmDialog={setConfirmDialog}
+              recentNewIds={recentNewIds}
             />
           ) : viewMode === 'cards' ? (
             /* 1. CARDS VIEW */
@@ -875,16 +902,29 @@ export function AppointmentsTab({
                       const st = STATUS_CONFIG[item.status];
                       const price = getServicePrice(item.service);
                       const initials = getInitials(item.patientName);
+                      const isRecentNew = recentNewIds?.has(item.id);
 
                       return (
-                        <tr key={item.id} className="hover:bg-[#F8FAFC] transition-colors">
+                        <tr
+                          key={item.id}
+                          className={`transition-colors duration-500 ${
+                            isRecentNew ? 'bg-[#FAF6EE] font-medium' : 'hover:bg-[#F8FAFC]'
+                          }`}
+                        >
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-md bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center text-[#334155] font-semibold text-[11px] shrink-0">
                                 {initials}
                               </div>
                               <div>
-                                <div className="font-semibold text-[#0F172A] text-xs">{item.patientName}</div>
+                                <div className="font-semibold text-[#0F172A] text-xs flex items-center gap-1.5">
+                                  <span>{item.patientName}</span>
+                                  {isRecentNew && (
+                                    <span className="bg-[#C6A15B] text-white text-[8px] font-bold px-1.5 py-0.2 rounded-xs uppercase tracking-wider animate-pulse">
+                                      {txt('NOUV.', 'NEW', 'NOVO')}
+                                    </span>
+                                  )}
+                                </div>
                                 <div className="text-[11px] text-[#64748B]">{item.phone}</div>
                               </div>
                             </div>

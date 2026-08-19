@@ -13,10 +13,12 @@ import {
   PatientNote,
   PatientRecord,
   SlotInfo,
+  getServiceName,
   getServicePrice,
   getNext7Days,
   formatLocalDate,
 } from '@/types/admin';
+import { playNotificationChime } from '@/lib/sound';
 
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -51,6 +53,12 @@ export default function AdminPage() {
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
   const [isGlobalBusy, setIsGlobalBusy] = useState(false);
+
+  // Real-time synchronization state
+  const [recentNewIds, setRecentNewIds] = useState<Set<string>>(new Set());
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
+  const knownAppointmentIdsRef = useRef<Set<string>>(new Set());
+  const isInitialLoadDoneRef = useRef<boolean>(false);
 
   // Luxury Toasts Queue
   const [toasts, setToasts] = useState<LuxuryToast[]>([]);
@@ -91,6 +99,58 @@ export default function AdminPage() {
   const [noShowCounts, setNoShowCounts] = useState<Record<string, number>>({});
   const [noteSearch, setNoteSearch] = useState('');
 
+  // ── Handle Newly Arrived Booking ───────────────────────────────────────────
+  const handleNewIncomingAppointment = useCallback(
+    (appt: Appointment, isInitial = false) => {
+      if (!appt || !appt.id) return;
+      if (knownAppointmentIdsRef.current.has(appt.id)) return;
+
+      knownAppointmentIdsRef.current.add(appt.id);
+
+      if (!isInitial) {
+        // 1. Temporarily highlight the appointment on the calendar/card views
+        setRecentNewIds(prev => new Set(prev).add(appt.id));
+
+        setTimeout(() => {
+          setRecentNewIds(prev => {
+            const next = new Set(prev);
+            next.delete(appt.id);
+            return next;
+          });
+        }, 30000);
+
+        // 2. Play subtle luxury audio chime
+        playNotificationChime();
+
+        // 3. Trigger Luxury Toast Alert
+        const svcName = getServiceName(appt.service, lang);
+        const toastTitle =
+          lang === 'fr'
+            ? 'Nouveau Rendez-vous !'
+            : lang === 'en'
+            ? 'New Appointment Booked!'
+            : 'Nova Consulta Agendada!';
+        const toastMsg =
+          lang === 'fr'
+            ? `${appt.patientName} — ${svcName} le ${appt.date} à ${appt.startTime}`
+            : lang === 'en'
+            ? `${appt.patientName} — ${svcName} on ${appt.date} at ${appt.startTime}`
+            : `${appt.patientName} — ${svcName} a ${appt.date} às ${appt.startTime}`;
+
+        addToast({
+          type: 'success',
+          title: toastTitle,
+          message: toastMsg,
+          duration: 7000,
+        });
+
+        // 4. Invalidate slot cache so slot views stay 100% updated
+        slotCacheRef.current = {};
+      }
+    },
+    [lang, addToast]
+  );
+
   // ── Fetch admin metadata (Backup & No-Show counts) ─────────────────────────
   const fetchAdminMetadata = useCallback(async () => {
     try {
@@ -126,7 +186,7 @@ export default function AdminPage() {
     onConfirm: () => void;
   } | null>(null);
 
-  // ── Fetch appointments ─────────────────────────────────────────────────────
+  // ── Fetch appointments with Smart Diffing ──────────────────────────────────
   const fetchAppointments = useCallback(async (isSilent = false) => {
     if (!isSilent) {
       setLoadingAppointments(prev => prev || appointments.length === 0);
@@ -135,7 +195,19 @@ export default function AdminPage() {
     try {
       const data = await apiFetch<{ appointments: Appointment[] }>('/api/admin/appointments');
       if (Array.isArray(data.appointments)) {
-        setAppointments(data.appointments);
+        if (!isInitialLoadDoneRef.current) {
+          data.appointments.forEach(a => knownAppointmentIdsRef.current.add(a.id));
+          isInitialLoadDoneRef.current = true;
+          setAppointments(data.appointments);
+        } else {
+          // Detect newly arrived appointments not seen yet
+          data.appointments.forEach(a => {
+            if (!knownAppointmentIdsRef.current.has(a.id)) {
+              handleNewIncomingAppointment(a, false);
+            }
+          });
+          setAppointments(data.appointments);
+        }
       }
     } catch (err) {
       if ((err as Error).message !== 'Session expirée' && (err as Error).message !== 'Sessão expirada. A redirecionar...') {
@@ -151,7 +223,7 @@ export default function AdminPage() {
     } finally {
       setLoadingAppointments(false);
     }
-  }, [lang]);
+  }, [lang, handleNewIncomingAppointment, appointments.length]);
 
   // ── Fetch patient notes ────────────────────────────────────────────────────
   const fetchPatientNotes = useCallback(async () => {
@@ -162,15 +234,119 @@ export default function AdminPage() {
     } catch { /* silent */ }
   }, []);
 
-  // ── Parallel Initial Loading & Silent Auto-Polling ──────────────────────────
+  // ── Server-Sent Events (SSE) Live Real-Time Stream ──────────────────────────
+  useEffect(() => {
+    let eventSource: EventSource | null = null;
+    let reconnectTimer: NodeJS.Timeout | null = null;
+    let isUnmounted = false;
+
+    const setupSSE = () => {
+      if (isUnmounted) return;
+      try {
+        eventSource = new EventSource('/api/admin/events');
+
+        eventSource.onopen = () => {
+          if (!isUnmounted) setIsLiveConnected(true);
+        };
+
+        eventSource.addEventListener('connected', () => {
+          if (!isUnmounted) setIsLiveConnected(true);
+        });
+
+        eventSource.addEventListener('appointment:created', (e: MessageEvent) => {
+          try {
+            const parsed = JSON.parse(e.data);
+            const appt: Appointment = parsed.data;
+            if (appt && appt.id) {
+              setAppointments(prev => {
+                if (prev.some(a => a.id === appt.id)) return prev;
+                return [appt, ...prev];
+              });
+              handleNewIncomingAppointment(appt, false);
+            }
+          } catch { /* silent */ }
+        });
+
+        eventSource.addEventListener('appointment:updated', (e: MessageEvent) => {
+          try {
+            const parsed = JSON.parse(e.data);
+            const updated = parsed.data;
+            if (updated && updated.id) {
+              setAppointments(prev =>
+                prev.map(a => (a.id === updated.id ? { ...a, ...updated } : a))
+              );
+              slotCacheRef.current = {};
+            }
+          } catch { /* silent */ }
+        });
+
+        eventSource.addEventListener('appointment:deleted', (e: MessageEvent) => {
+          try {
+            const parsed = JSON.parse(e.data);
+            const { id } = parsed.data;
+            if (id) {
+              setAppointments(prev => prev.filter(a => a.id !== id));
+              slotCacheRef.current = {};
+            }
+          } catch { /* silent */ }
+        });
+
+        eventSource.onerror = () => {
+          if (!isUnmounted) {
+            setIsLiveConnected(false);
+            if (eventSource) {
+              eventSource.close();
+              eventSource = null;
+            }
+            reconnectTimer = setTimeout(setupSSE, 5000);
+          }
+        };
+      } catch {
+        if (!isUnmounted) setIsLiveConnected(false);
+      }
+    };
+
+    setupSSE();
+
+    return () => {
+      isUnmounted = true;
+      if (eventSource) eventSource.close();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+    };
+  }, [handleNewIncomingAppointment]);
+
+  // ── Parallel Initial Loading & Adaptive Fast Polling Fallback ──────────────
   useEffect(() => {
     // Fire all initial requests in parallel
     Promise.all([fetchAppointments(false), fetchPatientNotes(), fetchAdminMetadata()]);
 
+    // Silent background auto-refresh every 6s when tab is active
     const interval = setInterval(() => {
-      fetchAppointments(true); // Silent background auto-refresh every 20s
-    }, 20000);
-    return () => clearInterval(interval);
+      if (!document.hidden) {
+        fetchAppointments(true);
+      }
+    }, 6000);
+
+    // Instant sync whenever admin focuses or returns to the tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchAppointments(true);
+        fetchAdminMetadata();
+      }
+    };
+
+    const handleWindowFocus = () => {
+      fetchAppointments(true);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
   }, [fetchAppointments, fetchPatientNotes, fetchAdminMetadata]);
 
   // ── Fast, Cached Slot Fetching ─────────────────────────────────────────────
@@ -581,6 +757,7 @@ export default function AdminPage() {
         lang={lang}
         toggleLang={toggleLang}
         loadingAppointments={loadingAppointments || isGlobalBusy}
+        isLive={isLiveConnected}
         onRefresh={() => fetchAppointments(false)}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onLogout={handleLogout}
@@ -615,6 +792,7 @@ export default function AdminPage() {
               softDeleteAppointment={softDeleteAppointment}
               openPatientNote={openPatientNote}
               noShowCounts={noShowCounts}
+              recentNewIds={recentNewIds}
             />
           )}
 

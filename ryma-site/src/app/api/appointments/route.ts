@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbCreateAppointment, dbCheckRateLimit, dbRecordRateLimitAttempt } from '@/lib/db';
 import { validateAppointmentInput, getClientIp } from '@/lib/validation';
+import { broadcastAppointmentCreated } from '@/lib/events';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -86,6 +87,9 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json({ error: 'Données invalides' }, { status: 422 });
     }
+
+    // Broadcast the new appointment in real-time to active admin calendar dashboards
+    broadcastAppointmentCreated(result.appointment);
 
     // Return minimal confirmation — never return the full appointment object to the public
     return NextResponse.json(

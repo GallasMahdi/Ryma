@@ -14,6 +14,7 @@ interface AdminHeaderProps {
   lang: Lang;
   toggleLang: () => void;
   loadingAppointments: boolean;
+  isLive?: boolean;
   onRefresh: () => void;
   onOpenAddModal: () => void;
   onLogout: () => void;
@@ -23,6 +24,7 @@ export function AdminHeader({
   lang,
   toggleLang,
   loadingAppointments,
+  isLive = true,
   onRefresh,
   onOpenAddModal,
   onLogout,
@@ -41,6 +43,11 @@ export function AdminHeader({
           <span className="text-xs text-[#64748B] font-medium hidden sm:inline">
             {lang === 'pt' ? 'Gestão Clínica' : lang === 'en' ? 'Clinic Management' : 'Gestion Clinique'}
           </span>
+          {/* Live Real-time connection badge */}
+          <div className="flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] text-[10px] font-mono font-medium">
+            <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-[#10B981] animate-pulse' : 'bg-[#94A3B8]'}`} />
+            <span className="hidden md:inline">{isLive ? (lang === 'fr' ? 'En direct' : lang === 'en' ? 'Live' : 'Em direto') : 'Offline'}</span>
+          </div>
         </div>
       </div>
 

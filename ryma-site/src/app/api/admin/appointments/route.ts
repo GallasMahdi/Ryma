@@ -5,6 +5,7 @@ import {
   dbCreateAppointment,
 } from '@/lib/db';
 import { VALID_SERVICES, VALID_TIME_SLOTS, validateAppointmentInput } from '@/lib/validation';
+import { broadcastAppointmentCreated } from '@/lib/events';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -62,6 +63,9 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ error: 'Données invalides' }, { status: 422 });
   }
+
+  // Broadcast to all active admin tabs
+  broadcastAppointmentCreated(result.appointment);
 
   return NextResponse.json({ appointment: result.appointment }, { status: 201 });
 }
