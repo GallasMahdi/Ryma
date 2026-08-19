@@ -24,9 +24,9 @@ export async function GET() {
   // Test Turso connection
   try {
     const rawUrl = process.env.TURSO_DATABASE_URL ?? '';
-    const httpUrl = rawUrl.replace(/^libsql:\/\//, 'https://');
+    // Use rawUrl directly — @libsql/client handles libsql:// natively
     const client = createClient({
-      url: httpUrl,
+      url: rawUrl,
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
     const res = await client.execute('SELECT 1 as ok');

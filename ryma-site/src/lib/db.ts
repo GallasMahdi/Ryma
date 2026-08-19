@@ -177,9 +177,11 @@ async function syncTursoToLocalSqlite(client: LibSqlClient): Promise<void> {
 function getTursoClient(): LibSqlClient {
   if (!_tursoClient) {
     const rawUrl = process.env.TURSO_DATABASE_URL ?? '';
-    const httpUrl = rawUrl.replace(/^libsql:\/\//, 'https://');
+    // Pass the URL as-is: @libsql/client natively supports both
+    // libsql:// (WebSocket) and https:// (HTTP) schemes.
+    // Converting libsql:// → https:// breaks it with "Invalid URL".
     _tursoClient = createClient({
-      url: httpUrl,
+      url: rawUrl,
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
   }
