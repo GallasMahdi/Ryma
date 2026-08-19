@@ -16,48 +16,48 @@ export const revalidate = 0;
  *  - DB-level UNIQUE(date, startTime) constraint for atomic double-booking prevention
  */
 export async function POST(request: NextRequest) {
-  const ip = getClientIp(request);
-
-  // IP-level rate limit: raised to 20/hour to avoid false 429s from Vercel shared reverse-proxy IPs.
-  // A real patient rarely books more than 1-2 appointments per hour, so the per-phone
-  // check below is the actual meaningful guard against abuse.
-  const ipAllowed = await dbCheckRateLimit(ip, 'booking_ip', 20, 60 * 60);
-  if (!ipAllowed) {
-    return NextResponse.json(
-      { error: 'Trop de demandes. Veuillez réessayer plus tard.' },
-      { status: 429 }
-    );
-  }
-
-  let body: Record<string, unknown>;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
-  }
+    const ip = getClientIp(request);
 
-  // Server-side validation — never trust client values
-  const validation = validateAppointmentInput(body);
-  if (!validation.ok) {
-    return NextResponse.json({ error: validation.error }, { status: 422 });
-  }
+    // IP-level rate limit: raised to 20/hour to avoid false 429s from Vercel shared reverse-proxy IPs.
+    // A real patient rarely books more than 1-2 appointments per hour, so the per-phone
+    // check below is the actual meaningful guard against abuse.
+    const ipAllowed = await dbCheckRateLimit(ip, 'booking_ip', 20, 60 * 60);
+    if (!ipAllowed) {
+      return NextResponse.json(
+        { error: 'Trop de demandes. Veuillez réessayer plus tard.' },
+        { status: 429 }
+      );
+    }
 
-  // Per-phone rate limit: 3 bookings per phone number per hour.
-  // This is the real abuse prevention that is independent of shared IPs.
-  const phone = String(body.phone ?? '').trim();
-  const phoneAllowed = await dbCheckRateLimit(`phone:${phone}`, 'booking_phone', 3, 60 * 60);
-  if (!phoneAllowed) {
-    return NextResponse.json(
-      { error: 'Vous avez déjà effectué plusieurs réservations. Veuillez patienter avant d\'en faire une nouvelle.' },
-      { status: 429 }
-    );
-  }
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
+    }
 
-  // Record both rate limit counters
-  await dbRecordRateLimitAttempt(ip, 'booking_ip');
-  await dbRecordRateLimitAttempt(`phone:${phone}`, 'booking_phone');
+    // Server-side validation — never trust client values
+    const validation = validateAppointmentInput(body);
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 422 });
+    }
 
-  try {
+    // Per-phone rate limit: 3 bookings per phone number per hour.
+    // This is the real abuse prevention that is independent of shared IPs.
+    const phone = String(body.phone ?? '').trim();
+    const phoneAllowed = await dbCheckRateLimit(`phone:${phone}`, 'booking_phone', 3, 60 * 60);
+    if (!phoneAllowed) {
+      return NextResponse.json(
+        { error: 'Vous avez déjà effectué plusieurs réservations. Veuillez patienter avant d\'en faire une nouvelle.' },
+        { status: 429 }
+      );
+    }
+
+    // Record both rate limit counters
+    await dbRecordRateLimitAttempt(ip, 'booking_ip');
+    await dbRecordRateLimitAttempt(`phone:${phone}`, 'booking_phone');
+
     const result = await dbCreateAppointment({
       patientName:      String(body.patientName).trim().slice(0, 100),
       email:            body.email ? String(body.email).trim().slice(0, 254) : undefined,
