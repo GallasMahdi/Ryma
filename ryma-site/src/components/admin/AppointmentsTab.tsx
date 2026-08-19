@@ -59,23 +59,26 @@ const STATUS_CHIP: Record<AppointmentStatus, string> = {
 };
 
 function getWeekStart(date: Date): Date {
-  const d = new Date(date);
+  // Use midday (12:00:00) to avoid any DST or timezone midnight shifts
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
   const day = d.getDay();
-  // Monday = 0 offset
+  // Monday = 1 in JS (Sunday = 0) -> offset to Monday
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
   return d;
 }
 
 function addDays(date: Date, n: number): Date {
-  const d = new Date(date);
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
   d.setDate(d.getDate() + n);
   return d;
 }
 
 function toDateStr(d: Date): string {
-  return d.toISOString().split('T')[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 interface WeekCalendarViewProps {
@@ -98,7 +101,7 @@ function WeekCalendarView({
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = useMemo(() => toDateStr(new Date()), []);
   const [weekStart, setWeekStart] = useState<Date>(() => getWeekStart(new Date()));
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -491,12 +494,8 @@ export function AppointmentsTab({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
-  const tomorrowStr = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
-  }, []);
+  const todayStr = useMemo(() => toDateStr(new Date()), []);
+  const tomorrowStr = useMemo(() => toDateStr(addDays(new Date(), 1)), []);
 
   // Reset page to 1 whenever filters change
   useEffect(() => {

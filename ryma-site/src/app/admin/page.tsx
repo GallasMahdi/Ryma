@@ -15,6 +15,7 @@ import {
   SlotInfo,
   getServicePrice,
   getNext7Days,
+  formatLocalDate,
 } from '@/types/admin';
 
 import { AdminHeader } from '@/components/admin/AdminHeader';
@@ -75,7 +76,7 @@ export default function AdminPage() {
   const [filter, setFilter] = useState<AppointmentStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDateForSlots, setSelectedDateForSlots] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    () => formatLocalDate(new Date())
   );
   const [slotList, setSlotList] = useState<SlotInfo[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -113,7 +114,7 @@ export default function AdminPage() {
     phone: '',
     email: '',
     service: SERVICES[0]?.slug ?? '',
-    date: new Date().toISOString().split('T')[0],
+    date: formatLocalDate(new Date()),
     startTime: '09:00',
     notes: '',
   });
@@ -330,7 +331,7 @@ export default function AdminPage() {
         phone: '',
         email: '',
         service: SERVICES[0]?.slug ?? '',
-        date: new Date().toISOString().split('T')[0],
+        date: formatLocalDate(new Date()),
         startTime: '09:00',
         notes: '',
       });
@@ -525,7 +526,7 @@ export default function AdminPage() {
     return { dowLabels, dowCounts, topServices, peakHours, cancelRate, completionRate };
   }, [appointments, stats, lang]);
 
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = useMemo(() => formatLocalDate(new Date()), []);
   const next7Days = useMemo(() => getNext7Days(), []);
 
   return (

@@ -77,13 +77,20 @@ export function getServicePrice(slug: string): number {
   return SERVICES.find(s => s.slug === slug)?.price ?? 0;
 }
 
+export function formatLocalDate(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function getNext7Days(): string[] {
   const list: string[] = [];
   const today = new Date();
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    list.push(d.toISOString().split('T')[0]);
+    list.push(formatLocalDate(d));
   }
   return list;
 }
@@ -91,15 +98,15 @@ export function getNext7Days(): string[] {
 export function shiftDateString(dateStr: string, deltaDays: number): string {
   const d = new Date(dateStr + 'T12:00:00');
   d.setDate(d.getDate() + deltaDays);
-  return d.toISOString().split('T')[0];
+  return formatLocalDate(d);
 }
 
 export function formatSlotDateLabel(dateStr: string, lang: Lang): { title: string; subtitle: string; isSunday: boolean } {
   const d = new Date(dateStr + 'T12:00:00');
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalDate(new Date());
   const tomorrowObj = new Date();
   tomorrowObj.setDate(tomorrowObj.getDate() + 1);
-  const tomorrowStr = tomorrowObj.toISOString().split('T')[0];
+  const tomorrowStr = formatLocalDate(tomorrowObj);
 
   const isSunday = d.getDay() === 0;
 

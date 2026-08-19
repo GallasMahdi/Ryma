@@ -106,8 +106,8 @@ await check('Slots: future date returns array', async () => {
 });
 
 await check('Slots: Sunday returns all unavailable', async () => {
-  // Aug 24 2026 is a Sunday
-  const r = await get('/api/slots?date=2026-08-24');
+  // Aug 23 2026 is a Sunday
+  const r = await get('/api/slots?date=2026-08-23');
   if (r.status !== 200) return 'HTTP ' + r.status;
   const allUnavailable = r.body?.slots?.every(s => !s.available && s.reason === 'sunday');
   return allUnavailable || 'Not all slots marked sunday';
@@ -135,7 +135,7 @@ await check('Booking: valid booking creates appointment (201)', async () => {
     patientName: 'Test Audit Patient',
     phone: '+351912345678',
     email: 'audit@test.com',
-    service: 'kinesitherapie-generale',
+    service: 'reeducation-posturale',
     date: TEST_DATE,
     startTime: TEST_TIME,
     coverageType: 'PARTICULAR',
@@ -151,7 +151,7 @@ await check('Booking: duplicate slot returns 409 slot_taken', async () => {
   const r = await post('/api/appointments', {
     patientName: 'Another Patient',
     phone: '+351923456789',
-    service: 'kinesitherapie-generale',
+    service: 'reeducation-posturale',
     date: TEST_DATE,
     startTime: TEST_TIME,
     coverageType: 'PARTICULAR',
@@ -164,7 +164,7 @@ await check('Booking: duplicate slot returns 409 slot_taken', async () => {
 await check('Booking: missing name returns 422', async () => {
   const r = await post('/api/appointments', {
     phone: '+351912000000',
-    service: 'kinesitherapie-generale',
+    service: 'reeducation-posturale',
     date: '2026-09-21',
     startTime: '10:00',
   });
@@ -186,7 +186,7 @@ await check('Booking: past date returns 422', async () => {
   const r = await post('/api/appointments', {
     patientName: 'Test',
     phone: '+351912000000',
-    service: 'kinesitherapie-generale',
+    service: 'reeducation-posturale',
     date: '2020-01-01',
     startTime: '10:00',
   });
@@ -309,10 +309,10 @@ await check('GET /api/admin/patients returns array', async () => {
 console.log('\n\x1b[1m[8] Admin — Blocked Slots\x1b[0m');
 
 await check('GET /api/admin/slots returns blockedSlots array', async () => {
-  const r = await get('/api/admin/slots');
+  const r = await get('/api/admin/slots?date=2026-09-25');
   if (r.status !== 200) return 'HTTP ' + r.status;
-  if (!Array.isArray(r.body?.blockedSlots)) return 'blockedSlots not array: ' + JSON.stringify(r.body);
-  log(BLUE, `  Total blocked slots: ${r.body.blockedSlots.length}`);
+  if (!Array.isArray(r.body?.slots)) return 'slots not array: ' + JSON.stringify(r.body);
+  log(BLUE, `  Slots returned for date: ${r.body.slots.length}`);
   return true;
 });
 
