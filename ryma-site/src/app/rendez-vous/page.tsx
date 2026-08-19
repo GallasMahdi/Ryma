@@ -273,18 +273,30 @@ export default function RendezVousPage() {
   const fetchSlots = useCallback(async (date: string) => {
     setLoadingSlots(true);
     setAvailableSlots([]);
+    setSlotError(null);
     try {
       const res = await fetch(`/api/slots?date=${date}`);
       if (res.ok) {
         const data = await res.json();
         setAvailableSlots(data.slots ?? []);
+      } else {
+        // API error (500 etc.) — show actionable error, not "no slots"
+        setSlotError(
+          lang === 'pt' ? 'Erro ao carregar horários. Por favor, tente novamente.' :
+          lang === 'en' ? 'Error loading slots. Please try again.' :
+          'Erreur lors du chargement des créneaux. Veuillez réessayer.'
+        );
       }
     } catch {
-      // On error, leave slots empty — user can refresh
+      setSlotError(
+        lang === 'pt' ? 'Sem ligação. Verifique a sua internet e tente novamente.' :
+        lang === 'en' ? 'Connection error. Check your internet and try again.' :
+        'Erreur de connexion. Vérifiez votre internet et réessayez.'
+      );
     } finally {
       setLoadingSlots(false);
     }
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -698,6 +710,17 @@ export default function RendezVousPage() {
                     <div className="w-6 h-6 border-2 border-[#C49A3C] border-t-transparent rounded-full animate-spin mr-3" />
                     <span className="font-mono text-sm">{lang === 'pt' ? 'A carregar horários...' : lang === 'en' ? 'Loading slots...' : 'Chargement des créneaux...'}</span>
                   </div>
+                ) : slotError ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[#FDF3F3] border border-[#E8C8C8] flex items-center justify-center text-[#A9655F] text-xl">⚠️</div>
+                    <p className="text-[#A9655F] font-mono text-sm text-center max-w-xs">{slotError}</p>
+                    <button
+                      onClick={() => selectedDate && fetchSlots(selectedDate)}
+                      className="px-5 py-2.5 rounded-xl bg-[#C49A3C] text-white font-mono text-sm font-semibold hover:bg-[#9A7428] transition-colors"
+                    >
+                      {lang === 'pt' ? '↺ Tentar novamente' : lang === 'en' ? '↺ Try again' : '↺ Réessayer'}
+                    </button>
+                  </div>
                 ) : availableSlots.length === 0 ? (
                   <div className="text-center py-10 text-[#8A8078] font-mono text-sm">
                     {lang === 'pt' ? 'Nenhum horário disponível para esta data.' : lang === 'en' ? 'No slots available for this date.' : 'Aucun créneau disponible pour cette date.'}
@@ -736,11 +759,7 @@ export default function RendezVousPage() {
                   </span>
                 </div>
 
-                {slotError && (
-                  <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-sans text-center">
-                    ⚠️ {slotError}
-                  </div>
-                )}
+
 
                 <div className="flex items-center justify-between mt-8">
                   <Button variant="outline" onClick={() => setStep(2)} className="px-5">
