@@ -23,18 +23,18 @@ export async function GET() {
 
   // Test Turso connection
   try {
-    const rawUrl = process.env.TURSO_DATABASE_URL ?? '';
-    // Use rawUrl directly — @libsql/client handles libsql:// natively
+    const rawUrl = (process.env.TURSO_DATABASE_URL ?? '').trim();
+    diagnostics.raw_url_full = rawUrl;
     const client = createClient({
       url: rawUrl,
-      authToken: process.env.TURSO_AUTH_TOKEN,
+      authToken: (process.env.TURSO_AUTH_TOKEN ?? '').trim(),
     });
     const res = await client.execute('SELECT 1 as ok');
     diagnostics.turso_connection = 'SUCCESS';
     diagnostics.turso_result = res.rows[0];
   } catch (err: unknown) {
     diagnostics.turso_connection = 'FAILED';
-    diagnostics.turso_error = String(err instanceof Error ? err.message : err);
+    diagnostics.turso_error = String(err instanceof Error ? (err.stack || err.message) : err);
   }
 
   // Test env module
