@@ -74,9 +74,9 @@ function getGoogleCalendarUrl(appointment: AppointmentData, serviceName: string)
     const endM = endMinutes % 60;
     const endIso = `${year}${month}${day}T${String(endH).padStart(2, '0')}${String(endM).padStart(2, '0')}00`;
 
-    const title = encodeURIComponent(`Appointment: ${serviceName} — Ryma Kiné`);
+    const title = encodeURIComponent(`Appointment: ${serviceName} — Digital Clínica`);
     const details = encodeURIComponent(
-      `Confirmed appointment at Ryma Ouichka Clinic.\n\nTreatment: ${serviceName}\nPractitioner: Ryma Ouichka\nPhone: ${SITE.phone}\nWhatsApp: ${SITE.whatsappDisplay}\nAddress: ${SITE.address.en || SITE.address.fr}`
+      `Confirmed appointment at Digital Clínica.\n\nTreatment: ${serviceName}\nPractitioner: Digital Clínica\nPhone: ${SITE.phone}\nWhatsApp: ${SITE.whatsappDisplay}\nAddress: ${SITE.address.en || SITE.address.fr}`
     );
     const location = encodeURIComponent(SITE.address.en || SITE.address.fr);
 
@@ -99,7 +99,7 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
   const clinicAddress = SITE.address.en || SITE.address.fr || 'Avenida da Liberdade 120, 1250-146 Lisbon, Portugal';
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinicAddress)}`;
   const whatsappUrl = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(
-    `Hello Ryma, I have booked a session for ${serviceName} on ${appointment.date} at ${appointment.startTime}.`
+    `Hello Digital Clínica, I have booked a session for ${serviceName} on ${appointment.date} at ${appointment.startTime}.`
   )}`;
 
   return `
@@ -297,7 +297,7 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
 
       <!-- Header -->
       <div class="header-bar">
-        <h1 class="clinic-name">Ryma Ouichka</h1>
+        <h1 class="clinic-name">Digital Clínica</h1>
         <div class="clinic-tagline">Physiotherapy & Advanced Care Clinic</div>
       </div>
 
@@ -344,7 +344,7 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
         <div class="location-box">
           <div class="detail-label" style="margin-bottom: 6px;">📍 Consultation Location</div>
           <div style="font-size: 14px; font-weight: 600; color: #1A1412; margin-bottom: 6px;">
-            Ryma Ouichka Clinic
+            Digital Clínica
           </div>
           <div style="font-size: 13px; color: #666158; margin-bottom: 12px;">
             ${clinicAddress}
@@ -376,7 +376,7 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
 
       <!-- Footer -->
       <div class="footer">
-        <div><strong>Ryma Ouichka — Licensed Physiotherapist</strong></div>
+        <div><strong>Digital Clínica — Physiotherapy & Advanced Aesthetics</strong></div>
         <div>Phone: <a href="tel:${SITE.phone}">${SITE.phone}</a> · Lisbon, Portugal</div>
         <div style="margin-top: 10px; font-size: 11px; color: #A6A095;">
           This is an automated confirmation email. To reschedule or cancel your session, please contact us at least 24 hours in advance.
@@ -409,7 +409,7 @@ export async function sendAppointmentConfirmationEmail(
 
   const serviceObj = SERVICES.find(s => s.slug === appointment.service);
   const serviceName = serviceObj ? getLocalizedText(serviceObj.name, 'en') || getLocalizedText(serviceObj.name, 'fr') : appointment.service;
-  const fromName = process.env.SMTP_FROM_NAME || 'Ryma Ouichka — Physiotherapy & Care';
+  const fromName = process.env.SMTP_FROM_NAME || 'Digital Clínica — Physiotherapy & Care';
   const fromAddress = process.env.SMTP_USER;
 
   const subject = `Appointment Confirmation — ${serviceName} (${appointment.date} at ${appointment.startTime})`;
@@ -446,7 +446,7 @@ export async function sendAdminNewBookingNotification(
 
   const serviceObj = SERVICES.find(s => s.slug === appointment.service);
   const serviceName = serviceObj?.name?.en || serviceObj?.name?.fr || appointment.service;
-  const fromName = process.env.SMTP_FROM_NAME || 'Ryma Clinic System';
+  const fromName = process.env.SMTP_FROM_NAME || 'Digital Clínica System';
   const fromAddress = process.env.SMTP_USER;
 
   const subject = `🔔 New Online Booking: ${appointment.patientName} (${appointment.date} at ${appointment.startTime})`;

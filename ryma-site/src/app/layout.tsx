@@ -36,8 +36,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ryma Ouichka — Clínica de Fisioterapia & Estética Avançada em Lisboa',
-    template: '%s | Ryma Ouichka',
+    default: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
+    template: '%s | Digital Clínica',
   },
   description:
     'Clínica de fisioterapia e tratamentos estéticos avançados em Lisboa, Portugal. Reeducação postural (RPG), recuperação pós-parto, drenagem linfática, cavitação, radiofrequência e criolipólise. Marcação online de consultas.',
@@ -49,16 +49,16 @@ export const metadata: Metadata = {
     'cavitação Lisboa',
     'radiofrequência Lisboa',
     'criolipólise Lisboa',
-    'Ryma Ouichka',
+    'Digital Clínica',
     'clínica fisioterapia Portugal',
   ],
-  authors: [{ name: 'Ryma Ouichka' }],
-  creator: 'Ryma Ouichka',
+  authors: [{ name: 'Digital Clínica' }],
+  creator: 'Digital Clínica',
   openGraph: {
     type: 'website',
     locale: 'pt_PT',
-    siteName: 'Ryma Ouichka — Fisioterapia & Estética Avançada',
-    title: 'Ryma Ouichka — Clínica de Fisioterapia & Estética Avançada em Lisboa',
+    siteName: 'Digital Clínica — Fisioterapia & Estética Avançada',
+    title: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
     description:
       'Clínica especializada em Lisboa, Portugal. Fisioterapia médica, reabilitação do pavimento pélvico, tratamentos corporais não invasivos.',
   },
@@ -80,11 +80,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': ['LocalBusiness', 'MedicalBusiness', 'PhysicalTherapy'],
-              name: 'Ryma Ouichka — Clínica de Fisioterapia & Estética Avançada',
+              name: 'Digital Clínica — Fisioterapia & Estética Avançada',
               description: 'Clínica de fisioterapia e estética médica avançada em Lisboa, Portugal.',
-              url: 'https://ryma-ouichka.pt',
+              url: 'https://digitalclinica.pt',
               telephone: '+351912345678',
-              email: 'contacto@ryma-ouichka.pt',
+              email: 'contacto@digitalclinica.pt',
               address: {
                 '@type': 'PostalAddress',
                 streetAddress: 'Avenida da Liberdade 120',

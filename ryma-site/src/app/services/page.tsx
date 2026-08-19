@@ -36,10 +36,10 @@ export default function ServicesPage() {
             </h1>
             <p className="text-[#6B6058] text-lg max-w-2xl mx-auto leading-relaxed">
               {lang === 'pt'
-                ? 'Dos tratamentos clínicos de fisioterapia às tecnologias de remodelação corporal de ponta, descubra os cuidados especializados da clínica Ryma Ouichka.'
+                ? 'Dos tratamentos clínicos de fisioterapia às tecnologias de remodelação corporal de ponta, descubra os cuidados especializados da Digital Clínica.'
                 : lang === 'en'
-                ? 'From therapeutic physiotherapy to state-of-the-art slimming technologies, discover all treatments offered by Dr. Ryma Ouichka.'
-                : 'Des soins thérapeutiques aux technologies minceur de pointe, découvrez tout ce que le cabinet Ryma Ouichka propose pour votre santé et votre silhouette.'}
+                ? 'From therapeutic physiotherapy to state-of-the-art slimming technologies, discover all treatments offered by Digital Clinic.'
+                : 'Des soins thérapeutiques aux technologies minceur de pointe, découvrez tout ce que la Digital Clínica propose pour votre santé et votre silhouette.'}
             </p>
           </ScrollReveal>
         </div>

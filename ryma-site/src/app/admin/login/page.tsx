@@ -87,7 +87,7 @@ export default function AdminLoginPage() {
             <IconBuildingHospital size={20} />
           </div>
           <div>
-            <div className="font-semibold text-base sm:text-lg text-[#0F172A]">RYMA OUICHKA</div>
+            <div className="font-semibold text-base sm:text-lg text-[#0F172A]">DIGITAL CLÍNICA</div>
             <div className="text-[11px] font-medium uppercase text-[#64748B] tracking-wider">
               {lang === 'fr' ? 'Portail Administratif' : lang === 'en' ? 'Admin Portal' : 'Portal Administrativo'}
             </div>
@@ -188,10 +188,10 @@ export default function AdminLoginPage() {
       {/* Footer */}
       <div className="relative z-10 p-4 sm:p-6 text-center text-xs text-[#64748B]">
         {lang === 'fr'
-          ? 'Clinique Ryma Ouichka — Lisbonne, Portugal • Accès sécurisé'
+          ? 'Digital Clínica — Lisbonne, Portugal • Accès sécurisé'
           : lang === 'en'
-          ? 'Ryma Ouichka Clinic — Lisbon, Portugal • Secure Access'
-          : 'Clínica Ryma Ouichka — Lisboa, Portugal • Acesso Seguro'}
+          ? 'Digital Clinic — Lisbon, Portugal • Secure Access'
+          : 'Digital Clínica — Lisboa, Portugal • Acesso Seguro'}
       </div>
     </div>
   );

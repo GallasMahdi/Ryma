@@ -35,10 +35,10 @@ export default function MentionsLegalesPage() {
           </h1>
           <p className="text-[#6B6058] text-lg mb-10 leading-relaxed border-b border-[#E8E2D8] pb-6">
             {lang === 'pt'
-              ? 'Em conformidade com a legislação aplicável, encontra abaixo todas as informações legais relativas à utilização do website oficial do Ryma Ouichka.'
+              ? 'Em conformidade com a legislação aplicável, encontra abaixo todas as informações legais relativas à utilização do website oficial da Digital Clínica.'
               : lang === 'en'
-              ? 'In accordance with current regulations, below is the legal information regarding the publication and use of Dr. Ryma Ouichka official website.'
-              : 'Conformément à la législation en vigueur, vous trouverez ci-dessous toutes les informations légales relatives à la publication et à l\'utilisation du site officiel du Cabinet Ryma Ouichka.'}
+              ? 'In accordance with current regulations, below is the legal information regarding the publication and use of Digital Clinic official website.'
+              : 'Conformément à la législation en vigueur, vous trouverez ci-dessous toutes les informations légales relatives à la publication et à l\'utilisation du site officiel de la Digital Clínica.'}
           </p>
         </ScrollReveal>
 
@@ -50,8 +50,8 @@ export default function MentionsLegalesPage() {
               {lang === 'pt' ? '1. Identificação e Entidade' : lang === 'en' ? '1. Website Publisher' : '1. Éditeur du site'}
             </h2>
             <div className="space-y-2 text-sm md:text-base">
-              <p><strong>{lang === 'pt' ? 'Nome da Clínica :' : lang === 'en' ? 'Practice Name :' : 'Nom du cabinet :'}</strong> Clínica Ryma Ouichka — Fisioterapia & Estética Avançada</p>
-              <p><strong>{lang === 'pt' ? 'Profissional Responsável :' : lang === 'en' ? 'Licensed Practitioner :' : 'Praticienne responsable :'}</strong> Dra. Ryma Ouichka (Fisioterapeuta Licenciada)</p>
+              <p><strong>{lang === 'pt' ? 'Nome da Clínica :' : lang === 'en' ? 'Practice Name :' : 'Nom du cabinet :'}</strong> Digital Clínica — Fisioterapia & Estética Avançada</p>
+              <p><strong>{lang === 'pt' ? 'Profissional Responsável :' : lang === 'en' ? 'Licensed Practitioner :' : 'Praticienne responsable :'}</strong> Digital Clínica (Equipa de Fisioterapeutas Licenciados)</p>
               <p><strong>{lang === 'pt' ? 'Morada da Clínica :' : lang === 'en' ? 'Clinic Address :' : 'Adresse du cabinet :'}</strong> Lisboa, Portugal</p>
               <p><strong>{lang === 'pt' ? 'Telefone :' : lang === 'en' ? 'Phone :' : 'Téléphone :'}</strong> {t.common.phone}</p>
               <p><strong>{lang === 'pt' ? 'E-mail :' : lang === 'en' ? 'Email :' : 'Email de contact :'}</strong> {t.common.email}</p>
@@ -90,8 +90,8 @@ export default function MentionsLegalesPage() {
               {lang === 'pt'
                 ? 'Qualquer reprodução, adaptação ou utilização não autorizada por escrito é estritamente proibida.'
                 : lang === 'en'
-                ? 'Any reproduction or distribution without prior written consent from Dr. Ryma Ouichka is strictly prohibited.'
-                : 'Toute reproduction, représentation, modification ou adaptation sans l\'autorisation écrite préalable du Cabinet Ryma Ouichka est strictement interdite.'}
+                ? 'Any reproduction or distribution without prior written consent from Digital Clinic is strictly prohibited.'
+                : 'Toute reproduction, représentation, modification ou adaptation sans l\'autorisation écrite préalable de la Digital Clínica est strictement interdite.'}
             </p>
           </div>
 

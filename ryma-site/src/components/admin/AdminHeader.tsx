@@ -43,7 +43,7 @@ export function AdminHeader({
 
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <span className="font-semibold text-sm sm:text-base text-[#0F172A] tracking-tight truncate">
-            Ryma Kiné
+            Digital Clínica
           </span>
           <span className="text-[#CBD5E1] hidden sm:inline">/</span>
           <span className="text-xs text-[#64748B] font-medium hidden md:inline truncate">

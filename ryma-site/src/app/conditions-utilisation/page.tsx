@@ -35,10 +35,10 @@ export default function ConditionsUtilisationPage() {
           </h1>
           <p className="text-[#6B6058] text-lg mb-10 leading-relaxed border-b border-[#E8E2D8] pb-6">
             {lang === 'pt'
-              ? 'Bem-vindo ao website oficial da Clínica Ryma Ouichka. A utilização deste website e dos serviços de agendamento online rege-se pelos presentes termos e condições.'
+              ? 'Bem-vindo ao website oficial da Digital Clínica. A utilização deste website e dos serviços de agendamento online rege-se pelos presentes termos e condições.'
               : lang === 'en'
-              ? 'Welcome to the official website of Ryma Ouichka Clinic. The use of this website and its online booking services is subject to these Terms & Conditions.'
-              : 'Bienvenue sur le site de la Clinique Ryma Ouichka. L\'utilisation de ce site et des services de réservation en ligne implique l\'acceptation pleine et entière des présentes conditions.'}
+              ? 'Welcome to the official website of Digital Clinic. The use of this website and its online booking services is subject to these Terms & Conditions.'
+              : 'Bienvenue sur le site de la Digital Clínica. L\'utilisation de ce site et des services de réservation en ligne implique l\'acceptation pleine et entière des présentes conditions.'}
           </p>
         </ScrollReveal>
 

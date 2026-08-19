@@ -37,7 +37,7 @@ export function Footer() {
             <Link href="/" className="group inline-block mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C49A3C] to-[#E8C97A] flex items-center justify-center shadow-[0_2px_12px_rgba(196,154,60,0.4)]">
-                  <span className="font-serif text-base font-bold text-[#1A1412]">R</span>
+                  <span className="font-bold text-base text-[#1A1412]">D</span>
                 </div>
                 <div>
                   <div className="font-serif text-lg font-bold text-white group-hover:text-[#E8C97A] transition-colors">

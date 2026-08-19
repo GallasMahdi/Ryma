@@ -589,7 +589,7 @@ export default function RendezVousPage() {
                         <span className="font-mono text-[15px] font-bold text-[#C49A3C]">{service.price} {t.common.currency}</span>
                       </div>
                       <div className="font-semibold text-[#1A1412] group-hover:text-[#9A7428] transition-colors text-base mb-2 leading-tight">
-                        {service.name[lang]}
+                        {service.name[lang] || service.name.pt || service.name.en || service.name.fr}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs font-medium text-[#8A8078]">
                         <IconClock size={14} className="text-[#C49A3C]" />
@@ -611,7 +611,7 @@ export default function RendezVousPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
                   <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412]">{t.booking.step2Title}</h2>
                   {selectedService && (
-                    <Badge variant="gold" className="self-start sm:self-auto">{selectedService.name[lang]}</Badge>
+                    <Badge variant="gold" className="self-start sm:self-auto">{selectedService.name[lang] || selectedService.name.pt || selectedService.name.en || selectedService.name.fr}</Badge>
                   )}
                 </div>
 
@@ -793,7 +793,7 @@ export default function RendezVousPage() {
                   <div className="grid grid-cols-3 gap-4 text-center divide-x divide-[#E8E2D8]">
                     <div className="px-2">
                       <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'pt' ? 'Tratamento' : lang === 'en' ? 'Treatment' : 'Soin'}</div>
-                      <div className="text-[13px] md:text-sm font-semibold text-[#1A1412] leading-tight">{selectedService?.name[lang] || selectedService?.name.pt || selectedService?.name.fr}</div>
+                      <div className="text-[13px] md:text-sm font-semibold text-[#1A1412] leading-tight">{selectedService?.name[lang] || selectedService?.name.pt || selectedService?.name.en || selectedService?.name.fr}</div>
                     </div>
                     <div className="px-2">
                       <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'pt' ? 'Data' : lang === 'en' ? 'Date' : 'Date'}</div>
@@ -942,7 +942,7 @@ export default function RendezVousPage() {
                   <div className="grid grid-cols-3 text-center gap-4 divide-x divide-[#E8E2D8]">
                     <div className="px-1">
                       <div className="font-mono text-[10px] font-bold text-[#8A8078] uppercase mb-1">{lang === 'pt' ? 'Tratamento' : lang === 'en' ? 'Treatment' : 'Soin'}</div>
-                      <div className="text-xs font-semibold text-[#1A1412] mt-1 leading-tight">{selectedService?.name[lang] || selectedService?.name.pt || selectedService?.name.fr}</div>
+                      <div className="text-xs font-semibold text-[#1A1412] mt-1 leading-tight">{selectedService?.name[lang] || selectedService?.name.pt || selectedService?.name.en || selectedService?.name.fr}</div>
                     </div>
                     <div className="px-1">
                       <div className="font-mono text-[10px] font-bold text-[#8A8078] uppercase mb-1">{lang === 'pt' ? 'Data' : lang === 'en' ? 'Date' : 'Date'}</div>

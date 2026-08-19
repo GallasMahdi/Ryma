@@ -128,7 +128,7 @@ export function PatientNotesTab({
     evaPainScore: 5,
     sessionType: 'MANUAL',
     notes: '',
-    practitioner: 'Ryma Ouichka',
+    practitioner: 'Digital Clínica',
   });
 
   const allPatientsList = useMemo(() => {

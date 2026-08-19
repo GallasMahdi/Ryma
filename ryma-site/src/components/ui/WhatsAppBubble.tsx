@@ -167,10 +167,10 @@ export function WhatsAppBubble() {
                   </button>
                 )}
                 <div className="w-9 h-9 rounded-full bg-[#128C7E] flex items-center justify-center shrink-0">
-                  <span className="font-serif font-bold text-white text-base leading-none">R</span>
+                  <span className="font-bold text-white text-base leading-none">D</span>
                 </div>
                 <div>
-                  <p className="text-white font-semibold text-sm leading-none">Ryma Ouichka</p>
+                  <p className="text-white font-semibold text-sm leading-none">Digital Clínica</p>
                   <p className="text-green-200 text-[11px] mt-0.5 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-[#25D366] rounded-full inline-block animate-pulse" />
                     {lang === 'pt' ? 'Online · Responde rápido' : lang === 'en' ? 'Online · Fast reply' : 'En ligne · Répond vite'}

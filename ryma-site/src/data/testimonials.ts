@@ -25,9 +25,9 @@ export const TESTIMONIALS: Testimonial[] = [
     location: 'Lisboa',
     verified: true,
     comment: {
-      fr: 'Ryma est une professionnelle d\'une douceur et d\'un écoute exceptionnelles. Après mon 2ème accouchement, j\'avais de fortes douleurs et des fuites. En 8 séances, tout est rentré dans l\'ordre.',
-      pt: 'A Ryma é uma profissional de uma empatia e competência excecionais. Após o meu segundo parto, tinha dores intensas e desconforto. Em 8 sessões, recuperei a qualidade de vida. Muito obrigada!',
-      en: 'Ryma is an exceptionally caring and skilled professional. After my second childbirth, I had severe discomfort. Within 8 sessions, everything was completely resolved. Thank you so much!',
+      fr: 'Une équipe professionnelle d\'une douceur et d\'un écoute exceptionnelles. Après mon 2ème accouchement, j\'avais de fortes douleurs et des fuites. En 8 séances, tout est rentré dans l\'ordre.',
+      pt: 'A equipa da Digital Clínica é de uma empatia e competência excecionais. Após o meu segundo parto, tinha dores intensas e desconforto. Em 8 sessões, recuperei a qualidade de vida. Muito obrigada!',
+      en: 'The Digital Clinic team is exceptionally caring and skilled. After my second childbirth, I had severe discomfort. Within 8 sessions, everything was completely resolved. Thank you so much!',
     },
   },
   {
@@ -63,9 +63,9 @@ export const TESTIMONIALS: Testimonial[] = [
     location: 'Sintra',
     verified: true,
     comment: {
-      fr: 'Après des mois d\'automédication inefficace pour mes douleurs de dos au bureau, les séances de RPG chez Ryma ont totalement changé ma posture et soulagé ma douleur.',
-      pt: 'Após meses com dores de costas devidas ao trabalho de escritório, as sessões de RPG com a Fisioterapeuta Ryma mudaram radicalmente a minha postura e eliminaram a dor.',
-      en: 'After months of back pain from working at a desk, GPR sessions with Ryma completely corrected my posture and relieved my pain.',
+      fr: 'Après des mois d\'automédication inefficace pour mes douleurs de dos au bureau, les séances de RPG à la Digital Clínica ont totalement changé ma posture et soulagé ma douleur.',
+      pt: 'Após meses com dores de costas devidas ao trabalho de escritório, as sessões de RPG na Digital Clínica mudaram radicalmente a minha postura e eliminaram a dor.',
+      en: 'After months of back pain from working at a desk, GPR sessions at Digital Clinic completely corrected my posture and relieved my pain.',
     },
   },
   {

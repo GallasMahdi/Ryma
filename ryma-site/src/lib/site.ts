@@ -6,8 +6,8 @@ export interface LocalizedText {
 }
 
 export const SITE = {
-  name: 'Ryma Ouichka',
-  nameAr: 'ريما ويشكة',
+  name: 'Digital Clínica',
+  nameAr: 'العيادة الرقمية',
   tagline: {
     pt: 'Clínica de Fisioterapia & Estética Avançada',
     en: 'Physiotherapy & Advanced Aesthetics Clinic',
@@ -21,7 +21,7 @@ export const SITE = {
   phone: '+351 912 345 678',
   whatsapp: '351912345678',
   whatsappDisplay: '+351 912 345 678',
-  email: 'contacto@ryma-ouichka.pt',
+  email: 'contacto@digitalclinica.pt',
   address: {
     pt: 'Avenida da Liberdade 120, 1250-146 Lisboa, Portugal',
     en: 'Avenida da Liberdade 120, 1250-146 Lisbon, Portugal',
@@ -33,11 +33,11 @@ export const SITE = {
     fr: 'Lun – Sam : 08h30 – 19h00 | Dimanche fermé',
   } as LocalizedText,
   // Professional Information
-  professionalName: 'Ryma Ouichka',
+  professionalName: 'Digital Clínica',
   professionalTitle: {
-    pt: 'Fisioterapeuta Licenciada',
-    en: 'Licensed Physiotherapist',
-    fr: 'Kinésithérapeute Diplômée',
+    pt: 'Equipa de Fisioterapeutas Licenciados',
+    en: 'Licensed Physiotherapy Team',
+    fr: 'Équipe de Kinésithérapeutes Diplômés',
   } as LocalizedText,
   professionalLicense: process.env.NEXT_PUBLIC_PROFESSIONAL_LICENSE || '', // e.g., 'C-054321' (Ordem dos Fisioterapeutas)
   professionalOrganization: {
@@ -51,8 +51,8 @@ export const SITE = {
   livroReclamacoesUrl: 'https://www.livroreclamacoes.pt/inicio/',
   mapEmbed: 'https://www.google.com/maps/embed?pb=',
   googlePlaceId: '',
-  facebook: 'https://facebook.com/rymaouichka',
-  instagram: 'https://instagram.com/ryma.ouichka',
+  facebook: 'https://facebook.com/digitalclinica',
+  instagram: 'https://instagram.com/digitalclinica',
   bookingApiUrl: '',
   analytics: {
     gaMeasurementId: process.env.NEXT_PUBLIC_GA_ID ?? '',

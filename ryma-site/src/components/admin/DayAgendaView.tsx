@@ -278,10 +278,10 @@ export function DayAgendaView({
                     <a
                       href={`https://wa.me/${appt.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
                         lang === 'fr'
-                          ? `Bonjour ${appt.patientName}, rappel de votre séance pour ${getServiceName(appt.service, 'fr')} le ${appt.date} à ${appt.startTime} au Cabinet Ryma Kiné.`
+                          ? `Bonjour ${appt.patientName}, rappel de votre séance pour ${getServiceName(appt.service, 'fr')} le ${appt.date} à ${appt.startTime} à la Digital Clínica.`
                           : lang === 'en'
-                          ? `Hello ${appt.patientName}, reminder for your appointment for ${getServiceName(appt.service, 'en')} on ${appt.date} at ${appt.startTime} at Ryma Kiné Clinic.`
-                          : `Olá ${appt.patientName}, lembramos a sua consulta de ${getServiceName(appt.service, 'pt')} no dia ${appt.date} às ${appt.startTime} na Clínica Ryma Kiné.`
+                          ? `Hello ${appt.patientName}, reminder for your appointment for ${getServiceName(appt.service, 'en')} on ${appt.date} at ${appt.startTime} at Digital Clinic.`
+                          : `Olá ${appt.patientName}, lembramos a sua consulta de ${getServiceName(appt.service, 'pt')} no dia ${appt.date} às ${appt.startTime} na Digital Clínica.`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"

@@ -197,17 +197,17 @@ export default function BlogPostPage({ params }: Props) {
 
               {/* Author Card */}
               <div className="mt-10 bg-white border border-[#E8E2D8] rounded-2xl p-6 flex items-center gap-5 shadow-xs">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#9A7428] to-[#C49A3C] flex items-center justify-center text-white font-serif font-bold text-xl shadow-md shrink-0">
-                  R
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0F172A] to-[#334155] flex items-center justify-center text-white font-bold text-xl shadow-md shrink-0">
+                  D
                 </div>
                 <div>
-                  <div className="font-serif font-bold text-lg text-[#1A1412]">Ryma Ouichka</div>
+                  <div className="font-semibold text-lg text-[#1A1412]">Digital Clínica</div>
                   <div className="text-sm text-[#6B6058] mt-0.5">
                     {lang === 'pt'
-                      ? 'Fisioterapeuta & Estética Avançada — Lisboa, Portugal'
+                      ? 'Equipa de Fisioterapia & Estética Avançada — Lisboa, Portugal'
                       : lang === 'en'
-                      ? 'Physiotherapist & Advanced Aesthetics Specialist — Lisbon, Portugal'
-                      : 'Physiothérapeute & Soins Avancés — Lisbonne, Portugal'}
+                      ? 'Physiotherapy & Advanced Aesthetics Team — Lisbon, Portugal'
+                      : 'Équipe de Physiothérapie & Soins Avancés — Lisbonne, Portugal'}
                   </div>
                 </div>
               </div>

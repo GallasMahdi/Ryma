@@ -123,11 +123,11 @@ function LogoMark() {
 
 // Letter-by-letter animation for the main title
 function AnimatedTitle() {
-  const name = 'RYMA OUICHKA';
+  const name = 'DIGITAL CLÍNICA';
   const letters = name.split('');
 
   return (
-    <div className="flex items-center overflow-hidden" aria-label="Ryma Ouichka">
+    <div className="flex items-center overflow-hidden" aria-label="Digital Clínica">
       {letters.map((letter, i) => (
         <motion.span
           key={i}

@@ -22,8 +22,8 @@ export const BLOG_POSTS: BlogPost[] = [
       ar: 'السيلوليت: الأساطير والحقائق — ما تقوله العلوم فعلاً',
     },
     excerpt: {
-      fr: "La cellulite touche 80 à 90% des femmes adultes. Pourtant, les fausses croyances restent nombreuses. Décryptage avec Ryma Ouichka.",
-      ar: 'يصيب السيلوليت 80 إلى 90٪ من النساء البالغات. ومع ذلك، تبقى المعتقدات الخاطئة كثيرة. تحليل مع ريما ويشكة.',
+      fr: "La cellulite touche 80 à 90% des femmes adultes. Pourtant, les fausses croyances restent nombreuses. Décryptage avec la Digital Clínica.",
+      ar: 'يصيب السيلوليت 80 إلى 90٪ من النساء البالغات. ومع ذلك، تبقى المعتقدات الخاطئة كثيرة. تحليل مع العيادة الرقمية.',
     },
     content: {
       fr: `## Qu'est-ce que la cellulite vraiment ?
@@ -73,7 +73,7 @@ Ancienne et fibreuse, dure au toucher, parfois douloureuse. La plus difficile à
 
 ## Conclusion
 
-Il n'existe pas de traitement miracle contre la cellulite. En revanche, une approche combinée, personnalisée selon votre type de cellulite, donne des résultats durables et significatifs. Chez Ryma Ouichka, chaque programme commence par un bilan morphologique pour identifier votre type de cellulite et concevoir le protocole le plus adapté.`,
+Il n'existe pas de traitement miracle contre la cellulite. En revanche, une approche combinée, personnalisée selon votre type de cellulite, donne des résultats durables et significatifs. À la Digital Clínica, chaque programme commence par un bilan morphologique pour identifier votre type de cellulite et concevoir le protocole le plus adapté.`,
       ar: `## ما هو السيلوليت فعلاً؟
 
 السيلوليت ليس مرضاً. إنه تغيير هيكلي في الأنسجة الدهنية تحت الجلد، يتميز بتراكم الدهون في فصيصات دهنية محاطة بحواجز ليفية. عندما تتصلب هذه الحواجز وتتدهور الدورة الدموية الدقيقة، تأخذ سطح الجلد مظهر "جلد البرتقال".
@@ -106,8 +106,8 @@ Il n'existe pas de traitement miracle contre la cellulite. En revanche, une appr
     coverImage: '/blog/blog_cellulite.png',
     tags: ['cellulite', 'minceur', 'corps', 'peau'],
     seoDescription: {
-      fr: 'Décryptage scientifique de la cellulite : types, mythes populaires et traitements réellement efficaces. Guide complet par Ryma Ouichka, kinésithérapeute à Ezzahra.',
-      ar: 'تحليل علمي للسيلوليت: الأنواع والأساطير الشائعة والعلاجات الفعالة فعلاً. دليل شامل من ريما ويشكة.',
+      fr: 'Décryptage scientifique de la cellulite : types, mythes populaires et traitements réellement efficaces. Guide complet par la Digital Clínica.',
+      ar: 'تحليل علمي للسيلوليت: الأنواع والأساطير الشائعة والعلاجات الفعالة فعلاً. دليل شامل من العيادة الرقمية.',
     },
   },
   {
@@ -177,7 +177,7 @@ Vos besoins nutritionnels sont augmentés. Ne faites pas de régime restrictif. 
 
 ## Conclusion
 
-La rééducation post-partum n'est pas un luxe. C'est un droit et une nécessité pour toutes les femmes après un accouchement. Chez Ryma Ouichka, nous vous accueillons avec votre bébé et adaptons chaque programme à votre rythme. N'attendez pas d'avoir des symptômes graves — la prévention est toujours plus facile que la réparation.`,
+La rééducation post-partum n'est pas un luxe. C'est un droit et une nécessité pour toutes les femmes après un accouchement. À la Digital Clínica, nous vous accueillons avec votre bébé et adaptons chaque programme à votre rythme. N'attendez pas d'avoir des symptômes graves — la prévention est toujours plus facile que la réparation.`,
       ar: `## لماذا إعادة التأهيل بعد الولادة مهمة جداً؟
 
 الحمل والولادة يحدثان تغييرات عميقة في جسم المرأة: امتداد عضلات البطن، وإضعاف العجان، وتغيير مركز الثقل والوضعية. تهدف إعادة التأهيل إلى استعادة هذه الهياكل لتجنب العواقب طويلة الأمد.
@@ -205,7 +205,7 @@ La rééducation post-partum n'est pas un luxe. C'est un droit et une nécessit�
     coverImage: '/blog/blog_postpartum.png',
     tags: ['post-partum', 'périnée', 'grossesse', 'jeune maman'],
     seoDescription: {
-      fr: "Guide complet de la rééducation périnéale et abdominale après accouchement. Quand commencer, comment se déroule-t-elle, diastasis, retour au sport — par Ryma Ouichka, kinésithérapeute à Ezzahra, Tunisie.",
+      fr: "Guide complet de la rééducation périnéale et abdominale après accouchement. Quand commencer, comment se déroule-t-elle, diastasis, retour au sport — par Digital Clínica.",
       ar: 'دليل كامل لإعادة تأهيل العجان والبطن بعد الولادة. متى تبدأين، كيف تجري، الفجوة البطنية، العودة للرياضة.',
     },
   },
@@ -263,7 +263,7 @@ Le DLM du visage et du crâne (technique très douce) peut réduire la pression 
 
 Le Dr Emil Vodder a développé en 1936 un protocole précis de mouvements : effleurages rotatoires, pressions stationnaires, pompage et crochets. Ces mouvements imitent le rythme naturel du système lymphatique (6 à 12 contractions par minute) et respectent le sens de circulation.
 
-Chez Ryma Ouichka, seule la technique Vodder est utilisée, garantissant un drainage efficace et sécurisé.
+À la Digital Clínica, seule la technique Vodder est utilisée, garantissant un drainage efficace et sécurisé.
 
 ## Fréquence et durée d'une cure
 
@@ -298,7 +298,7 @@ Le drainage lymphatique manuel est une technique médicale à part entière, bie
     coverImage: '/blog/blog_drainage.png',
     tags: ['drainage', 'lymphatique', 'oedème', 'post-opératoire'],
     seoDescription: {
-      fr: 'Tout savoir sur le drainage lymphatique manuel : indications médicales, technique Vodder, différence avec le massage de relaxation. Par Ryma Ouichka, kinésithérapeute Ezzahra Tunisie.',
+      fr: 'Tout savoir sur le drainage lymphatique manuel : indications médicales, technique Vodder, différence avec le massage de relaxation. Par Digital Clínica.',
       ar: 'كل ما تعرفه عن الصرف اللمفاوي اليدوي: المؤشرات الطبية، تقنية فودر، الفرق عن مساج الاسترخاء.',
     },
   },
@@ -402,7 +402,7 @@ Ces exercices sont préventifs et adaptés aux personnes sans pathologie connue.
 - Douleurs nocturnes
 - Douleurs qui persistent malgré ces exercices depuis plus de 3 semaines
 
-Consultez Ryma Ouichka pour un bilan postural complet. La rééducation posturale globale (RPG) traite les causes profondes de vos douleurs, là où ces exercices ne font qu'entretenir.`,
+Consultez la Digital Clínica pour un bilan postural complet. La rééducation posturale globale (RPG) traite les causes profondes de vos douleurs, là où ces exercices ne font qu'entretenir.`,
       ar: `## لماذا الجلوس الطويل في المكتب مشكلة صحية؟
 
 يؤدي العمل المكتبي إلى اختلالات عضلية قابلة للتنبؤ: psoas مقصر → انحناء الظهر → آلام الظهر، والعضلات الصدرية المقصرة → تدوير الكتفين → آلام الرقبة.
@@ -429,7 +429,7 @@ Consultez Ryma Ouichka pour un bilan postural complet. La rééducation postural
     coverImage: '/blog/blog_posture.png',
     tags: ['posture', 'bureau', 'exercices', 'mal de dos'],
     seoDescription: {
-      fr: '5 exercices simples et efficaces pour corriger la posture au bureau et prévenir les douleurs de dos. Guide pratique par Ryma Ouichka, kinésithérapeute à Ezzahra, Tunisie.',
+      fr: '5 exercices simples et efficaces pour corriger la posture au bureau et prévenir les douleurs de dos. Guide pratique par Digital Clínica.',
       ar: '5 تمارين بسيطة وفعالة لتصحيح الوضعية في المكتب ومنع آلام الظهر.',
     },
   },
@@ -514,7 +514,7 @@ Ce ne sont pas des promesses miracles — ce sont des résultats réels observé
 
 ## Commencer maintenant
 
-La meilleure façon de commencer est un **bilan minceur personnalisé** avec Ryma Ouichka. En 60 minutes, vous ressortez avec un programme clair, des objectifs réalistes et un calendrier de séances.`,
+La meilleure façon de commencer est un **bilan minceur personnalisé** avec la Digital Clínica. En 60 minutes, vous ressortez avec un programme clair, des objectifs réalistes et un calendrier de séances.`,
       ar: `## الحقيقة حول "تحضير الشاطئ"
 
 التحضير الصيفي الفعال لا يختصر في حمية. هو مزيج من علاجات موجهة ونشاط بدني مناسب وتعديلات غذائية مستدامة. ويُعدَّ الأمر 8 إلى 12 أسبوعاً قبل الصيف.
@@ -542,7 +542,7 @@ La meilleure façon de commencer est un **bilan minceur personnalisé** avec Rym
     coverImage: '/blog/blog_cryolipolyse.png',
     tags: ['minceur', 'été', 'plage', 'programme'],
     seoDescription: {
-      fr: "Programme minceur estival réaliste pour préparer son corps pour la plage en Tunisie : cavitation, radiofréquence, drainage, nutrition. Par Ryma Ouichka, spécialiste en amincissement à Ezzahra.",
+      fr: "Programme minceur estival réaliste pour préparer son corps pour la plage : cavitation, radiofréquence, drainage, nutrition. Par Digital Clínica.",
       ar: 'برنامج إنقاص صيفي واقعي لتحضير الجسم للشاطئ في تونس: تكهيف، ترددات راديوية، صرف، تغذية.',
     },
   },
@@ -622,7 +622,7 @@ Semaines 7-12 : Reconditionnement et prévention (programme d'exercices autonome
 
 La lombalgie chronique se traite. Mais pas avec des anti-douleurs seuls. La kinésithérapie, combinée à un mode de vie actif et à quelques adaptations ergonomiques, est la solution la plus efficace et la plus durable.
 
-N'attendez pas que la douleur devienne insupportable. Un bilan postural précoce avec Ryma Ouichka peut vous éviter des mois de souffrance.`,
+N'attendez pas que la douleur devienne insupportable. Un bilan postural précoce avec la Digital Clínica peut vous éviter des mois de souffrance.`,
       ar: `## آلام أسفل الظهر: مشكلة صحة عامة في تونس
 
 آلام أسفل الظهر هي أول سبب للعجز في العالم وتصيب سكان تونس بكثرة. معظم الناس يعانون في صمت ويتناولون مسكنات ألم.
@@ -648,7 +648,7 @@ N'attendez pas que la douleur devienne insupportable. Un bilan postural précoce
     coverImage: '/blog/blog_lombalgie.png',
     tags: ['lombalgie', 'dos', 'douleur chronique', 'kiné'],
     seoDescription: {
-      fr: 'Lombalgie chronique en Tunisie : pourquoi l\'automédication est insuffisante et comment la kinésithérapie traite la cause. Par Ryma Ouichka, kinésithérapeute Ezzahra.',
+      fr: 'Lombalgie chronique : pourquoi l\'automédication est insuffisante et comment la kinésithérapie traite la cause. Par Digital Clínica.',
       ar: 'آلام أسفل الظهر المزمنة في تونس: لماذا العلاج الذاتي غير كافٍ وكيف يعالج العلاج الطبيعي السبب.',
     },
   },
@@ -733,7 +733,7 @@ Si vous avez à la fois de la graisse localisée ET un relâchement cutané (fr�
 
 ## Conclusion
 
-Il n'y a pas de "meilleure" technologie — il y a la technologie adaptée à votre problème spécifique. C'est pourquoi le bilan minceur personnalisé avec Ryma Ouichka est indispensable avant tout traitement. En 60 minutes, nous analyserons ensemble votre morphologie, vos objectifs et votre budget pour concevoir le programme le plus adapté.`,
+Il n'y a pas de "meilleure" technologie — il y a la technologie adaptée à votre problème spécifique. C'est pourquoi le bilan minceur personnalisé avec la Digital Clínica est indispensable avant tout traitement. En 60 minutes, nous analyserons ensemble votre morphologie, vos objectifs et votre budget pour concevoir le programme le plus adapté.`,
       ar: `## مقدمة: تقنيتان متكاملتان، لا متنافستان
 
 الترددات الراديوية تعالج **ترهل الجلد وتماسكه**، بينما تعالج الكريوليبوليز **الدهون الموضعية**. يمكن دمجهما في نفس البرنامج.
@@ -763,7 +763,7 @@ Il n'y a pas de "meilleure" technologie — il y a la technologie adaptée à vo
     coverImage: '/hero_slimming_bg.png',
     tags: ['radiofréquence', 'cryolipolyse', 'minceur', 'comparatif'],
     seoDescription: {
-      fr: 'Comparatif radiofréquence vs cryolipolyse : mécanismes, indications, résultats et prix. Guide de choix par Ryma Ouichka, spécialiste minceur à Ezzahra, Tunisie.',
+      fr: 'Comparatif radiofréquence vs cryolipolyse : mécanismes, indications, résultats et prix. Guide de choix par la Digital Clínica.',
       ar: 'مقارنة الترددات الراديوية وتحليل الدهون بالتبريد: الآليات، المؤشرات، النتائج والأسعار.',
     },
   },
@@ -831,7 +831,7 @@ Souvent par manque d'échauffement ou de souplesse. La prévention repose sur de
 
 ## Conclusion
 
-Intégrer la kinésithérapie à votre pratique sportive n'est pas une dépense, c'est un investissement dans la durée. Vous récupérez plus vite, vous vous blessez moins, et vous progressez mieux. Chez Ryma Ouichka, les sportifs d'Ezzahra et des alentours bénéficient d'un suivi qui combine massage thérapeutique, électrothérapie et programmes de réathlétisation.`,
+Intégrer la kinésithérapie à votre pratique sportive n'est pas une dépense, c'est un investissement dans la durée. Vous récupérez plus vite, vous vous blessez moins, et vous progressez mieux. À la Digital Clínica, les sportifs bénéficient d'un suivi personnalisé combinant massage thérapeutique, électrothérapie et programmes de réathlétisation.`,
       ar: `## التعافي ليس رفاهية، بل جزء من التدريب
 
 أياً كان مستواك، فإن التعافي يحدد تقدمك بقدر ما يحدده التدريب نفسه. تتقوى العضلة أثناء الراحة، لا أثناء المجهود.
@@ -879,7 +879,7 @@ Intégrer la kinésithérapie à votre pratique sportive n'est pas une dépense,
     coverImage: '/hero_wellness_bg.png',
     tags: ['sport', 'récupération', 'blessures', 'kiné du sport'],
     seoDescription: {
-      fr: "Récupération sportive : rôle du kinésithérapeute, blessures fréquentes du sportif amateur, plan de récupération. Par Ryma Ouichka, kiné du sport à Ezzahra, Tunisie.",
+      fr: "Récupération sportive : rôle du kinésithérapeute, blessures fréquentes du sportif amateur, plan de récupération. Par Digital Clínica.",
       ar: 'التعافي الرياضي: دور أخصائي العلاج الطبيعي، الإصابات الشائعة للرياضي الهاوي، خطة التعافي.',
     },
   },

@@ -1,6 +1,6 @@
 export const en = {
   common: {
-    siteName: 'Ryma Ouichka',
+    siteName: 'Digital Clinic',
     subtitle: 'Physiotherapy & High-Tech Aesthetics',
     location: 'Lisbon, Portugal',
     bookAppointment: 'Book Appointment',
@@ -13,7 +13,7 @@ export const en = {
     switchLang: 'EN',
     phone: '+351 912 345 678',
     whatsapp: '+351 912 345 678',
-    email: 'contact@ryma-ouichka.pt',
+    email: 'contact@digitalclinica.pt',
     address: 'Avenida da Liberdade 120, 1250-146 Lisbon, Portugal',
     hours: 'Mon - Sat: 08:30 - 19:00 | Sunday Closed',
     allRightsReserved: 'All rights reserved.',
@@ -134,7 +134,7 @@ export const en = {
   blog: {
     heroBadge: 'Health & Physiotherapy Blog',
     heroTitle: 'Articles & Guides',
-    heroSub: 'Rehabilitation, posture, and wellness advice written by Ryma Ouichka.',
+    heroSub: 'Rehabilitation, posture, and wellness advice written by Digital Clinic.',
     readTime: 'min read',
     allCategories: 'All Categories',
     relatedTitle: 'Related Articles',
@@ -227,7 +227,7 @@ export const en = {
   },
   about: {
     heroBadge: 'Meet the Physiotherapist',
-    heroTitle: 'Ryma Ouichka',
+    heroTitle: 'Digital Clinic',
     heroSub: 'Licensed Physiotherapist & Postural Rehabilitation Specialist.',
     bioTitle: 'A Practice Bridging Science and Clinical Compassion',
     bioText1: 'Graduated physiotherapist specialized in Global Postural Reeducation (GPR), pelvic floor rehabilitation, and Vodder manual lymphatic drainage.',
@@ -268,7 +268,7 @@ export const en = {
     call: 'Call Clinic',
   },
   seo: {
-    defaultTitle: 'Ryma Ouichka | Physiotherapy & Advanced Body Aesthetics',
+    defaultTitle: 'Digital Clinic | Physiotherapy & Advanced Body Aesthetics',
     defaultDescription: 'Physiotherapy and body aesthetic clinic. Global postural reeducation, postpartum recovery, manual lymphatic drainage, cavitation, and radiofrequency. Online booking.',
   },
 };

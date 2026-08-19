@@ -118,8 +118,8 @@ export function Navbar() {
               <Link href="/" className="flex items-center gap-2.5 group shrink-0 whitespace-nowrap">
                 <div className="relative w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-[#C49A3C] via-[#E8C97A] to-[#9A7428] p-[1.5px] shadow-[0_2px_10px_rgba(196,154,60,0.3)] group-hover:shadow-[0_4px_16px_rgba(196,154,60,0.45)] transition-all duration-300">
                   <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                    <span className="font-serif text-base md:text-lg font-bold bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#E8C97A] bg-clip-text text-transparent">
-                      R
+                    <span className="text-base md:text-lg font-bold bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#E8C97A] bg-clip-text text-transparent">
+                      D
                     </span>
                   </div>
                 </div>

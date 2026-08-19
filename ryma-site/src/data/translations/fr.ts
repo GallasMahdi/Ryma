@@ -1,6 +1,6 @@
 export const fr = {
   common: {
-    siteName: 'Ryma Ouichka',
+    siteName: 'Digital Clínica',
     subtitle: 'Physiothérapie & Soins Avancés',
     location: 'Lisbonne, Portugal',
     bookAppointment: 'Prendre Rendez-vous',
@@ -13,7 +13,7 @@ export const fr = {
     switchLang: 'FR',
     phone: '+351 912 345 678',
     whatsapp: '+351 912 345 678',
-    email: 'contact@ryma-ouichka.pt',
+    email: 'contact@digitalclinica.pt',
     address: 'Avenida da Liberdade 120, 1250-146 Lisbonne, Portugal',
     hours: 'Lun - Sam : 08h30 - 19h00 | Dimanche fermé',
     allRightsReserved: 'Tous droits réservés.',
@@ -134,7 +134,7 @@ export const fr = {
   blog: {
     heroBadge: 'Le Blog Santé',
     heroTitle: 'Articles & Conseils',
-    heroSub: 'Rééducation, minceur, posture : nos guides écrits par Ryma Ouichka.',
+    heroSub: 'Rééducation, minceur, posture : nos guides écrits par Digital Clínica.',
     readTime: 'min de lecture',
     allCategories: 'Tous',
     relatedTitle: 'Articles similaires',
@@ -227,7 +227,7 @@ export const fr = {
   },
   about: {
     heroBadge: 'Qui suis-je',
-    heroTitle: 'Ryma Ouichka',
+    heroTitle: 'Digital Clínica',
     heroSub: 'Physiothérapeute et spécialiste en rééducation et esthétique avancée à Lisbonne, Portugal.',
     bioTitle: 'Une pratique entre science et bienveillance',
     bioText1: 'Physiothérapeute diplômée, formée à la Rééducation Posturale Globale (RPG), à la périnéologie et au drainage lymphatique méthode Vodder, j\'ai développé une approche qui considère le corps dans sa globalité.',
@@ -268,7 +268,7 @@ export const fr = {
     call: 'Appeler le cabinet',
   },
   seo: {
-    defaultTitle: 'Ryma Ouichka | Physiothérapie & Esthétique Avancée à Lisbonne',
+    defaultTitle: 'Digital Clínica | Physiothérapie & Esthétique Avancée à Lisbonne',
     defaultDescription: 'Physiothérapeute et spécialiste en rééducation et remodelage corporel à Lisbonne, Portugal. Rééducation posturale, post-partum, drainage lymphatique, cavitation. Prise de rendez-vous en ligne.',
   },
 };

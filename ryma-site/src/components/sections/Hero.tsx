@@ -1,57 +1,182 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { Button } from '@/components/ui/Button';
 import { CounterAnimation } from '@/components/animation/CounterAnimation';
-import { IconArrowDown, IconSparkles, IconStethoscope, IconFlame } from '@tabler/icons-react';
+import { playSoftClick, playSlideChange } from '@/lib/sound';
+import {
+  IconStethoscope,
+  IconFlame,
+  IconChevronLeft,
+  IconChevronRight,
+  IconPlayerPlay,
+  IconPlayerPause,
+  IconCalendarEvent,
+  IconBrandWhatsapp,
+  IconShieldCheck,
+  IconAward,
+  IconArrowUpRight,
+  IconCheck,
+} from '@tabler/icons-react';
 
-const HERO_IMAGES = [
-  { src: '/hero_wellness_bg.png', alt: 'Cabinet Medical Kinésithérapie & Minceur' },
-  { src: '/hero_kine_bg.png', alt: 'Séance Kinésithérapie & Rééducation' },
-  { src: '/hero_slimming_bg.png', alt: 'Soin Minceur High-Tech' },
+interface Slide {
+  src: string;
+  tag: { pt: string; en: string; fr: string };
+  title: { pt: string; en: string; fr: string };
+  subtitle: { pt: string; en: string; fr: string };
+}
+
+const HERO_SLIDES: Slide[] = [
+  {
+    src: '/hero/therapy.jpg',
+    tag: {
+      pt: 'Fisioterapia & Biomecânica',
+      en: 'Physiotherapy & Biomechanics',
+      fr: 'Kinésithérapie & Biomécanique',
+    },
+    title: {
+      pt: 'Reeducação Postural & Alívio Clínico',
+      en: 'Postural Reeducation & Clinical Relief',
+      fr: 'Rééducation Posturale & Soulagement',
+    },
+    subtitle: {
+      pt: 'Recupere a liberdade de movimento através do método RPG e reabilitação especializada.',
+      en: 'Restore pain-free movement through specialized GPR method and targeted therapy.',
+      fr: 'Retrouvez votre liberté de mouvement grâce à la méthode RPG et aux soins ciblés.',
+    },
+  },
+  {
+    src: '/hero/slimming.jpg',
+    tag: {
+      pt: 'Alta Tecnologia Não Invasiva',
+      en: 'High-Tech Non-Invasive',
+      fr: 'Haute Technologie Non-Invasive',
+    },
+    title: {
+      pt: 'Remodelação & Estética Médica',
+      en: 'Body Contouring & Medical Aesthetics',
+      fr: 'Remodelage & Esthétique Médicale',
+    },
+    subtitle: {
+      pt: 'Criolipólise, cavitação e radiofrequência para definição corporal e firmeza da pele.',
+      en: 'Cryolipolysis, cavitation, and radiofrequency for lasting body sculpting and firming.',
+      fr: 'Cryolipolyse, cavitation et radiofréquence pour un raffermissement naturel et durable.',
+    },
+  },
+  {
+    src: '/hero/consultation.jpg',
+    tag: {
+      pt: 'Diagnóstico Sob Medida',
+      en: 'Tailored Clinical Assessment',
+      fr: 'Bilan Sur-Mesure',
+    },
+    title: {
+      pt: 'Avaliação & Plano Individualizado',
+      en: 'Comprehensive Personal Consultation',
+      fr: 'Consultation & Protocole Personnalisé',
+    },
+    subtitle: {
+      pt: 'Análise minuciosa de cada caso para desenhar um protocolo seguro com metas claras.',
+      en: 'In-depth clinical diagnostic evaluation to design a safe, outcome-driven protocol.',
+      fr: 'Analyse clinique approfondie pour concevoir un programme personnalisé et sécurisé.',
+    },
+  },
+  {
+    src: '/hero/clinic.jpg',
+    tag: {
+      pt: 'Ambiente de Excelência',
+      en: 'Sanctuary of Excellence',
+      fr: 'Espace d\'Exception',
+    },
+    title: {
+      pt: 'Privacidade, Conforto & Serenidade',
+      en: 'Privacy, Comfort & Peace of Mind',
+      fr: 'Confidentialité & Sérénité',
+    },
+    subtitle: {
+      pt: 'Instalações modernas concebidas para proporcionar uma experiência clínica sem igual.',
+      en: 'State-of-the-art practice environment curated for your supreme comfort and care.',
+      fr: 'Un cadre moderne et apaisant pensé pour votre bien-être et votre santé.',
+    },
+  },
 ];
+
+const SLIDE_DURATION_MS = 6000;
 
 export function Hero() {
   const { lang, t } = useLanguage();
-  const [currentImgIndex, setCurrentImgIndex] = useState(0);
-  const [activeMobileTab, setActiveMobileTab] = useState<'kine' | 'minceur'>('kine');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [activeSegment, setActiveSegment] = useState<'kine' | 'minceur'>('kine');
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-rotate background image every 4 seconds seamlessly
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentImgIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 4000);
-    return () => clearInterval(timer);
+  const goToSlide = useCallback((index: number) => {
+    playSlideChange();
+    setCurrentIndex(index);
   }, []);
+
+  const nextSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+    playSlideChange();
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+    playSlideChange();
+  }, []);
+
+  useEffect(() => {
+    if (!isPlaying) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+    timerRef.current = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, SLIDE_DURATION_MS);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isPlaying, currentIndex]);
+
+  const currentSlide = HERO_SLIDES[currentIndex];
 
   const stats = [
     { end: 1200, suffix: '+', label: t.hero.stat1Label },
     { end: 8,    suffix: '+', label: t.hero.stat2Label },
-    { end: 3,    suffix: '',  label: t.hero.stat3Label },
+    { end: 13,   suffix: '',  label: lang === 'pt' ? 'Tratamentos' : lang === 'en' ? 'Treatments' : 'Soins' },
     { end: 99,   suffix: '%', label: t.hero.stat4Label },
   ];
 
   return (
-    <section className="relative min-h-[85vh] md:min-h-[92vh] flex flex-col items-center justify-center overflow-hidden pt-14 pb-10 md:pt-20 md:pb-16">
-      {/* ── Seamless Preloaded Stacked Image Carousel ── */}
+    <section className="relative min-h-[85vh] sm:min-h-[90vh] lg:min-h-[94vh] flex flex-col justify-between overflow-hidden pt-4 pb-6 sm:pt-10 sm:pb-10 select-none">
+      
+      {/* ── Background Slides with Cinematic Crossfade & Gentle Zoom ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {HERO_IMAGES.map((img, index) => {
-          const isActive = currentImgIndex === index;
+        {HERO_SLIDES.map((slide, index) => {
+          const isActive = currentIndex === index;
           return (
             <motion.div
-              key={img.src}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isActive ? 0.9 : 0, scale: isActive ? 1 : 1.04 }}
-              transition={{ opacity: { duration: 1.2, ease: 'easeInOut' }, scale: { duration: 4, ease: 'linear' } }}
+              key={slide.src}
+              initial={{ opacity: 0, scale: 1.04 }}
+              animate={{
+                opacity: isActive ? 1 : 0,
+                scale: isActive ? 1 : 1.04,
+              }}
+              transition={{
+                opacity: { duration: 1.4, ease: [0.25, 1, 0.5, 1] },
+                scale: { duration: SLIDE_DURATION_MS / 1000, ease: 'linear' },
+              }}
               className="absolute inset-0"
               style={{ willChange: 'opacity, transform' }}
             >
               <Image
-                src={img.src}
-                alt={img.alt}
+                src={slide.src}
+                alt={slide.title[lang] || slide.title.pt}
                 fill
                 priority={index === 0}
                 quality={85}
@@ -62,372 +187,466 @@ export function Hero() {
           );
         })}
 
-        {/* Soft vignette overlay - keeps edges soft while leaving center vivid */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#FAFAF8]/40 via-transparent to-[#FAFAF8]" />
-
-        {/* Subtle center glow overlay to protect text readability */}
+        {/* Multi-layered Frosted Luxury Light Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-white/55 to-[#FAFAF8]" />
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 75% 55% at 50% 40%, rgba(255,255,255,0.65) 0%, rgba(250,250,248,0.1) 100%)',
+            background:
+              'radial-gradient(ellipse 90% 65% at 50% 30%, rgba(255,255,255,0.9) 0%, rgba(250,248,242,0.5) 60%, rgba(245,238,225,0.85) 100%)',
           }}
         />
 
-        <div className="absolute left-[-120px] top-[18%] h-[280px] w-[280px] rounded-full bg-[#C49A3C]/10 blur-3xl" />
-        <div className="absolute right-[-80px] top-[12%] h-[220px] w-[220px] rounded-full bg-[#E8C97A]/14 blur-3xl" />
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#FAFAF8] to-transparent" />
+        {/* Ambient Subtle Gold Aura Orbs */}
+        <div className="absolute -left-20 top-1/4 h-80 w-80 sm:h-96 sm:w-96 rounded-full bg-[#C49A3C]/12 blur-3xl" />
+        <div className="absolute -right-20 top-1/3 h-80 w-80 sm:h-96 sm:w-96 rounded-full bg-[#E8C97A]/15 blur-3xl" />
+        <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-[#FAFAF8] via-[#FAFAF8]/80 to-transparent" />
       </div>
 
-      {/* ── Main Hero Content ── */}
-      <div className="relative z-10 mx-auto max-w-5xl px-5 md:px-12 text-center w-full">
-
-        {/* Carousel Indicators with Progress Animation */}
+      {/* ── Top Header Micro Badge ── */}
+      <div className="relative z-10 mx-auto max-w-5xl px-3 sm:px-6 w-full text-center mb-2 sm:mb-4">
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 mb-4 md:mb-6 bg-white/90 backdrop-blur-md px-3.5 py-1.5 md:px-4 md:py-2 rounded-full border border-[#C49A3C]/35 shadow-md"
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="inline-flex items-center gap-2 sm:gap-3 bg-white/90 backdrop-blur-xl border border-[#C49A3C]/35 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full shadow-[0_4px_20px_rgba(196,154,60,0.12)]"
         >
-          {HERO_IMAGES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentImgIndex(i)}
-              className={`relative h-2 md:h-2.5 rounded-full transition-all duration-500 overflow-hidden pointer-events-auto ${
-                currentImgIndex === i
-                  ? 'w-7 md:w-8 bg-[#E8E2D8]'
-                  : 'w-2 md:w-2.5 bg-[#D4CEBE] hover:bg-[#9A7428]'
-              }`}
-              aria-label={`Go to slide ${i + 1}`}
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C49A3C] opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C49A3C]" />
+          </span>
+
+          <span className="font-sans text-[10px] sm:text-xs tracking-[0.2em] text-[#8A6A24] uppercase font-bold">
+            {lang === 'pt'
+              ? 'Digital Clínica • Lisboa'
+              : lang === 'en'
+              ? 'Digital Clinic • Lisbon'
+              : 'Digital Clínica • Lisbonne'}
+          </span>
+
+          <span className="hidden sm:inline-block h-3 w-px bg-[#C49A3C]/30" />
+
+          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-[#554C42] font-medium">
+            <IconAward size={13} className="text-[#C49A3C]" />
+            {lang === 'pt' ? 'Excelência Clínica & Estética' : lang === 'en' ? 'Clinical & Aesthetic Mastery' : 'Excellence Médicale & Esthétique'}
+          </span>
+        </motion.div>
+      </div>
+
+      {/* ── Main Center Narrative ── */}
+      <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center w-full my-auto">
+        
+        {/* Dynamic Slide Tag Pill */}
+        <div className="h-5 sm:h-6 mb-1 sm:mb-2 flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`tag-${currentIndex}`}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.25 }}
+              className="inline-flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.24em] text-[#9A7428]"
             >
-              {currentImgIndex === i && (
-                <motion.div
-                  key={`progress-${i}-${currentImgIndex}`}
-                  initial={{ width: '0%' }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 4, ease: 'linear' }}
-                  className="h-full bg-[#C49A3C] rounded-full"
-                />
-              )}
-            </button>
-          ))}
-        </motion.div>
+              <span className="w-4 sm:w-5 h-px bg-[#C49A3C]" />
+              <span>{currentSlide.tag[lang] || currentSlide.tag.pt}</span>
+              <span className="w-4 sm:w-5 h-px bg-[#C49A3C]" />
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-        {/* Badge pill */}
+        {/* Master Heading with Animated Typography */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="inline-flex items-center gap-2.5 md:gap-3 bg-white/95 backdrop-blur-xl border border-[#C49A3C]/30 px-4 py-2 md:px-5 md:py-2.5 rounded-full mb-6 md:mb-8 shadow-[0_6px_30px_rgba(196,154,60,0.24)]"
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto max-w-4xl mb-2 sm:mb-4"
         >
-          <span className="grid place-items-center h-7 w-7 md:h-9 md:w-9 rounded-full bg-[#C49A3C]/10 text-[#C49A3C] shadow-sm">
-            <IconSparkles size={15} className="md:w-4 md:h-4" />
-          </span>
-          <span className="font-mono text-[10px] md:text-xs tracking-[0.22em] md:tracking-[0.28em] text-[#9A7428] uppercase font-semibold">
-            {t.hero.badge}
-          </span>
-        </motion.div>
-
-        {/* Main Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="mx-auto max-w-3xl"
-        >
-          <div className="mb-4 md:mb-6 flex items-center justify-center gap-2.5 md:gap-3">
-            <div className="h-px w-8 md:w-10 bg-[#D4CEBE]/80" />
-            <span className="text-[10px] md:text-[11px] uppercase tracking-[0.28em] md:tracking-[0.32em] text-[#9A7428] font-semibold">
-              {lang === 'pt'
-                ? 'Experiência Premium'
-                : lang === 'en'
-                ? 'Premium Experience'
-                : 'Expérience Premium'}
-            </span>
-            <div className="h-px w-8 md:w-10 bg-[#D4CEBE]/80" />
-          </div>
-
-          <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-medium leading-[1.08] md:leading-[1.02] mb-5 md:mb-6 text-[#1A1412] tracking-[-0.02em] drop-shadow-[0_24px_80px_rgba(26,20,18,0.08)]">
-            {t.hero.titleLine1}
-            <br />
-            <span className="text-gradient-bronze">
-              {t.hero.titleLine2}
-            </span>
+          <h1 className="font-serif text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.15] sm:leading-[1.1] text-[#1A1412] tracking-tight">
+            {lang === 'pt' ? (
+              <>
+                A Arte da Fisioterapia & <br className="hidden sm:inline" />
+                <span className="bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">
+                  Estética Médica Avançada
+                </span>
+              </>
+            ) : lang === 'en' ? (
+              <>
+                The Art of Physiotherapy & <br className="hidden sm:inline" />
+                <span className="bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">
+                  Advanced Aesthetics
+                </span>
+              </>
+            ) : (
+              <>
+                L&apos;Art de la Kinésithérapie & <br className="hidden sm:inline" />
+                <span className="bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">
+                  Soins Minceur de Pointe
+                </span>
+              </>
+            )}
           </h1>
         </motion.div>
 
-        {/* ── Highlight Section: Desktop Dual Grid & Mobile Segment Switcher ── */}
+        {/* Dynamic Sub-Headline Description */}
+        <div className="min-h-[32px] sm:h-10 mb-4 sm:mb-6 flex items-center justify-center max-w-xl mx-auto px-2">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={`sub-${currentIndex}`}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.28 }}
+              className="text-xs sm:text-sm md:text-base text-[#554C42] font-normal leading-relaxed"
+            >
+              {currentSlide.subtitle[lang] || currentSlide.subtitle.pt}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+
+        {/* ── Dual Core Expertise Cards ── */}
         
-        {/* MOBILE Segment Switcher (< 768px) */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="block md:hidden mb-6"
-        >
-          {/* Segmented Pill Selector */}
-          <div className="inline-flex items-center p-1 bg-[#F4F0E8]/90 backdrop-blur-lg rounded-full border border-[#C49A3C]/30 mb-3.5 mx-auto w-full max-w-[320px] shadow-inner">
+        {/* MOBILE (< 768px): Segment Switcher & Compact Card */}
+        <div className="block md:hidden mb-4 max-w-sm mx-auto">
+          <div className="p-1 bg-white/90 backdrop-blur-md rounded-full border border-[#C49A3C]/30 flex items-center mb-2.5 shadow-xs">
             <button
-              onClick={() => setActiveMobileTab('kine')}
-              className={`relative flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${
-                activeMobileTab === 'kine'
-                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-md'
-                  : 'text-[#4A4540] hover:text-[#C49A3C]'
+              onClick={() => { setActiveSegment('kine'); playSoftClick(); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${
+                activeSegment === 'kine'
+                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                  : 'text-[#554C42]'
               }`}
             >
-              <IconStethoscope size={14} />
-              <span>
-                {lang === 'pt'
-                  ? 'Fisioterapia'
-                  : lang === 'en'
-                  ? 'Physiotherapy'
-                  : 'Kinésithérapie'}
-              </span>
+              <IconStethoscope size={13} />
+              <span>{lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}</span>
             </button>
             <button
-              onClick={() => setActiveMobileTab('minceur')}
-              className={`relative flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${
-                activeMobileTab === 'minceur'
-                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-md'
-                  : 'text-[#4A4540] hover:text-[#C49A3C]'
+              onClick={() => { setActiveSegment('minceur'); playSoftClick(); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${
+                activeSegment === 'minceur'
+                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
+                  : 'text-[#554C42]'
               }`}
             >
-              <IconFlame size={14} />
-              <span>
-                {lang === 'pt'
-                  ? 'Emagrecimento'
-                  : lang === 'en'
-                  ? 'Slimming Care'
-                  : 'Soins Minceur'}
-              </span>
+              <IconFlame size={13} />
+              <span>{lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}</span>
             </button>
           </div>
 
-          {/* Animated Card Content */}
           <AnimatePresence mode="wait">
-            {activeMobileTab === 'kine' ? (
+            {activeSegment === 'kine' ? (
               <motion.div
-                key="kine"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.22 }}
-                className="relative overflow-hidden rounded-[24px] border border-[#C49A3C]/30 bg-white/95 p-4 text-left shadow-[0_16px_40px_rgba(196,154,60,0.12)]"
+                key="mob-kine"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white/95 backdrop-blur-xl border border-[#C49A3C]/30 rounded-xl p-3.5 text-left shadow-sm"
               >
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#9A7428]" />
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="grid place-items-center h-9 w-9 rounded-xl bg-[#C49A3C]/10 text-[#9A7428] shrink-0">
-                    <IconStethoscope size={18} />
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="grid place-items-center h-7 w-7 rounded-lg bg-[#C49A3C]/10 text-[#9A7428] shrink-0">
+                    <IconStethoscope size={15} />
                   </div>
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#9A7428]">
-                      {lang === 'pt'
-                        ? 'Fisioterapia Especializada'
-                        : lang === 'en'
-                        ? 'Specialized Physiotherapy'
-                        : 'Kinésithérapie Sur Mesure'}
-                    </div>
-                    <div className="text-[10px] text-[#C49A3C] font-mono tracking-wider uppercase font-medium">
-                      {lang === 'pt'
-                        ? 'Postura & Alívio Duradouro'
-                        : lang === 'en'
-                        ? 'Posture & Lasting Relief'
-                        : 'Posture & Soulagement Durable'}
-                    </div>
-                  </div>
+                  <span className="text-xs font-bold text-[#1A1412]">
+                    {lang === 'pt' ? 'Reeducação Postural & Alívio' : lang === 'en' ? 'Postural Rehab & Pain Relief' : 'Rééducation Posturale'}
+                  </span>
                 </div>
-                <p className="text-xs text-[#4A4540] leading-5">
+                <p className="text-[11px] text-[#554C42] mb-2 leading-relaxed">
                   {lang === 'pt'
-                    ? 'Cuidados especializados para uma postura otimizada, reabilitação ativa e bem-estar duradouro.'
+                    ? 'Protocolos clínicos especializados para postura, hérnias e recuperação articular.'
                     : lang === 'en'
-                    ? 'Expert care for optimized posture, targeted rehabilitation, and long-term well-being.'
-                    : 'Soins experts pour une posture optimisée, une rééducation ciblée et un bien-être durable.'}
+                    ? 'Specialized clinical protocols for posture, spinal discs, and joint rehab.'
+                    : 'Protocoles cliniques pour la posture, le dos et la rééducation.'}
                 </p>
+                <div className="flex items-center justify-between pt-1 border-t border-[#C49A3C]/15">
+                  <div className="flex gap-1 text-[9px] font-mono font-semibold text-[#8A6A24]">
+                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">RPG</span>
+                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">TENS</span>
+                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">Vodder</span>
+                  </div>
+                  <Link
+                    href="/services?pole=kinesitherapie"
+                    className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#9A7428]"
+                  >
+                    {lang === 'pt' ? 'Ver Todos' : lang === 'en' ? 'Explore' : 'Voir'} →
+                  </Link>
+                </div>
               </motion.div>
             ) : (
               <motion.div
-                key="minceur"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.22 }}
-                className="relative overflow-hidden rounded-[24px] border border-[#C49A3C]/30 bg-white/95 p-4 text-left shadow-[0_16px_40px_rgba(196,154,60,0.12)]"
+                key="mob-minceur"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white/95 backdrop-blur-xl border border-[#C49A3C]/30 rounded-xl p-3.5 text-left shadow-sm"
               >
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#E8C97A] via-[#C49A3C] to-[#9A7428]" />
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="grid place-items-center h-9 w-9 rounded-xl bg-[#E8C97A]/15 text-[#C49A3C] shrink-0">
-                    <IconFlame size={18} />
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="grid place-items-center h-7 w-7 rounded-lg bg-[#E8C97A]/15 text-[#C49A3C] shrink-0">
+                    <IconFlame size={15} />
                   </div>
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#C49A3C]">
-                      {lang === 'pt'
-                        ? 'Protocolos de Emagrecimento High-Tech'
-                        : lang === 'en'
-                        ? 'High-Tech Slimming Protocols'
-                        : 'Protocoles Minceur High-Tech'}
-                    </div>
-                    <div className="text-[10px] text-[#9A7428] font-mono tracking-wider uppercase font-medium">
-                      {lang === 'pt'
-                        ? 'Remodelação 100% Não Invasiva'
-                        : lang === 'en'
-                        ? '100% Non-Invasive Sculpting'
-                        : 'Remodelage 100% Non-Invasif'}
-                    </div>
-                  </div>
+                  <span className="text-xs font-bold text-[#1A1412]">
+                    {lang === 'pt' ? 'Remodelação & Emagrecimento' : lang === 'en' ? 'Body Sculpting & Slimming' : 'Remodelage Minceur'}
+                  </span>
                 </div>
-                <p className="text-xs text-[#4A4540] leading-5">
+                <p className="text-[11px] text-[#554C42] mb-2 leading-relaxed">
                   {lang === 'pt'
-                    ? 'Firmeza localizada e remodelação natural da silhueta sem dor ou cirurgia.'
+                    ? 'Redução de gordura localizada, firmeza da pele e drenagem sem cirurgia.'
                     : lang === 'en'
-                    ? 'Targeted firming and natural body contouring without pain or surgery.'
-                    : 'Raffermissement ciblé et remodelage naturel de la silhouette sans douleur ni chirurgie.'}
+                    ? 'Targeted fat reduction, skin firming, and drainage with zero downtime.'
+                    : 'Élimination des graisses localisées et raffermissement sans chirurgie.'}
                 </p>
+                <div className="flex items-center justify-between pt-1 border-t border-[#C49A3C]/15">
+                  <div className="flex gap-1 text-[9px] font-mono font-semibold text-[#8A6A24]">
+                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">Criolipólise</span>
+                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">Cavitação</span>
+                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">RF</span>
+                  </div>
+                  <Link
+                    href="/services?pole=minceur"
+                    className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#9A7428]"
+                  >
+                    {lang === 'pt' ? 'Ver Todos' : lang === 'en' ? 'Explore' : 'Voir'} →
+                  </Link>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
 
-        {/* DESKTOP Side-by-Side Dual Pills (>= 768px) */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="hidden md:grid md:grid-cols-2 gap-4 mb-10 text-left"
-        >
-          <div className="relative overflow-hidden rounded-[32px] border border-[#C49A3C]/20 bg-white/90 p-4 shadow-[0_25px_80px_rgba(196,154,60,0.08)]">
-            <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-[#C49A3C] via-[#E8C97A] to-[#9A7428]" />
-            <div className="relative flex items-start gap-3">
-              <div className="grid place-items-center h-11 w-11 rounded-2xl bg-[#C49A3C]/10 text-[#9A7428] shadow-sm shrink-0">
-                <IconStethoscope size={18} />
-              </div>
-              <div>
-                <div className="text-xs uppercase tracking-[0.24em] font-semibold text-[#9A7428] mb-1">
-                  {lang === 'pt'
-                    ? 'Fisioterapia Terapêutica'
-                    : lang === 'en'
-                    ? 'Therapeutic Physiotherapy'
-                    : 'Kinésithérapie Sur Mesure'}
-                </div>
-                <p className="text-sm text-[#4A4540] leading-6">
-                  {lang === 'pt'
-                    ? 'Cuidados especializados para uma postura otimizada e alívio duradouro da dor.'
-                    : lang === 'en'
-                    ? 'Expert clinical care for optimized posture and long-term pain relief.'
-                    : 'Soins experts pour une posture optimisée et un soulagement durable.'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative overflow-hidden rounded-[32px] border border-[#C49A3C]/20 bg-white/90 p-4 shadow-[0_25px_80px_rgba(196,154,60,0.08)]">
-            <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-[#E8C97A] via-[#C49A3C] to-[#9A7428]" />
-            <div className="relative flex items-start gap-3">
-              <div className="grid place-items-center h-11 w-11 rounded-2xl bg-[#E8C97A]/12 text-[#C49A3C] shadow-sm shrink-0">
-                <IconFlame size={18} />
-              </div>
-              <div>
-                <div className="text-xs uppercase tracking-[0.24em] font-semibold text-[#C49A3C] mb-1">
-                  {lang === 'pt'
-                    ? 'Protocolos Minceur Não Invasivos'
-                    : lang === 'en'
-                    ? 'Non-Invasive Slimming Protocols'
-                    : 'Protocoles Minceur Non-Invasifs'}
-                </div>
-                <p className="text-sm text-[#4A4540] leading-6">
-                  {lang === 'pt'
-                    ? 'Firmeza localizada e remodelação natural da silhueta sem cirurgia.'
-                    : lang === 'en'
-                    ? 'Targeted firming and natural body contouring without surgery.'
-                    : 'Raffermissement ciblé et remodelage naturel sans chirurgie.'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-
-        {/* CTAs */}
+        {/* DESKTOP (>= 768px): Dual Ultra-Luxury Glass Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-8 md:mb-16 w-full max-w-sm sm:max-w-none mx-auto"
+          transition={{ duration: 0.7, delay: 0.25 }}
+          className="hidden md:grid md:grid-cols-2 gap-4 lg:gap-5 max-w-3xl mx-auto mb-6 lg:mb-8 text-left"
         >
-          <Button href="/rendez-vous" variant="primary" size="lg" className="w-full sm:w-auto shadow-[0_8px_34px_rgba(196,154,60,0.2)] tracking-[0.04em]">
-            {t.common.bookAppointment}
-          </Button>
-          <Button href="/services" variant="outline" size="lg" className="w-full sm:w-auto bg-white/95 backdrop-blur-xl border-[#C49A3C]/20 text-[#1A1412] tracking-[0.04em]">
-            {t.common.ourServices}
-          </Button>
-        </motion.div>
-
-        {/* ── Stats Section: Desktop Grid & Mobile Glass Ribbon ── */}
-
-        {/* MOBILE Stats Compact Glass Ribbon (< 768px) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.8 }}
-          className="block md:hidden"
-        >
-          <div className="relative overflow-hidden rounded-2xl border border-[#C49A3C]/30 bg-white/90 backdrop-blur-md p-3 shadow-[0_12px_32px_rgba(196,154,60,0.12)]">
-            <div className="grid grid-cols-4 divide-x divide-[#C49A3C]/20 rtl:divide-x-reverse text-center">
-              {stats.map((stat, i) => (
-                <div key={i} className="px-1 py-1">
-                  <div className="font-serif text-lg font-bold text-[#C49A3C] leading-none mb-1">
-                    <CounterAnimation end={stat.end} suffix={stat.suffix} />
-                  </div>
-                  <div className="font-mono text-[9px] font-semibold text-[#8A8078] tracking-wider uppercase line-clamp-1">
-                    {stat.label}
-                  </div>
+          {/* Card 1: Fisioterapia */}
+          <Link
+            href="/services?pole=kinesitherapie"
+            onClick={playSoftClick}
+            className="group relative overflow-hidden rounded-2xl bg-white/85 backdrop-blur-xl border border-[#C49A3C]/25 p-4.5 shadow-[0_8px_30px_rgba(196,154,60,0.08)] hover:border-[#C49A3C] hover:shadow-[0_16px_40px_rgba(196,154,60,0.2)] hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#E8C97A] opacity-80 group-hover:opacity-100" />
+            <div className="flex items-start gap-3">
+              <div className="grid place-items-center h-10 w-10 rounded-xl bg-gradient-to-br from-[#F5E9C8] to-[#FAF3E0] text-[#9A7428] border border-[#C49A3C]/30 shadow-xs shrink-0 group-hover:scale-110 transition-transform">
+                <IconStethoscope size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="font-serif text-sm lg:text-base font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors truncate">
+                    {lang === 'pt' ? 'Fisioterapia & Reeducação' : lang === 'en' ? 'Physiotherapy & Rehab' : 'Kinésithérapie & Rééducation'}
+                  </span>
+                  <IconArrowUpRight size={15} className="text-[#C49A3C] opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                 </div>
-              ))}
+                <p className="text-xs text-[#554C42] leading-relaxed mb-2 line-clamp-2">
+                  {lang === 'pt'
+                    ? 'RPG, alívio de hérnias discais, recuperação articular e reabilitação pós-parto com acompanhamento contínuo.'
+                    : lang === 'en'
+                    ? 'GPR therapy, spinal disc relief, joint restoration, and dedicated postpartum pelvic health.'
+                    : 'RPG, soulagement du dos, rééducation articulaire et soins périnéaux post-partum.'}
+                </p>
+                <div className="flex flex-wrap gap-1 text-[10px] font-mono font-bold text-[#8A6A24]">
+                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">RPG</span>
+                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">TENS</span>
+                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Vodder</span>
+                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">{lang === 'pt' ? 'Seguros' : lang === 'en' ? 'Insurance' : 'Mutuelle'}</span>
+                </div>
+              </div>
             </div>
-          </div>
+          </Link>
+
+          {/* Card 2: Estética Minceur */}
+          <Link
+            href="/services?pole=minceur"
+            onClick={playSoftClick}
+            className="group relative overflow-hidden rounded-2xl bg-white/85 backdrop-blur-xl border border-[#C49A3C]/25 p-4.5 shadow-[0_8px_30px_rgba(196,154,60,0.08)] hover:border-[#C49A3C] hover:shadow-[0_16px_40px_rgba(196,154,60,0.2)] hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#E8C97A] via-[#C49A3C] to-[#9A7428] opacity-80 group-hover:opacity-100" />
+            <div className="flex items-start gap-3">
+              <div className="grid place-items-center h-10 w-10 rounded-xl bg-gradient-to-br from-[#FAF3E0] to-[#F5E9C8] text-[#C49A3C] border border-[#C49A3C]/30 shadow-xs shrink-0 group-hover:scale-110 transition-transform">
+                <IconFlame size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="font-serif text-sm lg:text-base font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors truncate">
+                    {lang === 'pt' ? 'Estética Médica & Minceur' : lang === 'en' ? 'Slimming & Body Sculpting' : 'Soins Minceur High-Tech'}
+                  </span>
+                  <IconArrowUpRight size={15} className="text-[#C49A3C] opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                </div>
+                <p className="text-xs text-[#554C42] leading-relaxed mb-2 line-clamp-2">
+                  {lang === 'pt'
+                    ? 'Tecnologias avançadas não invasivas para destruição de gordura, refirmação cutânea e drenagem sequencial.'
+                    : lang === 'en'
+                    ? 'Cutting-edge non-invasive modalities for targeted fat apoptosis, collagen tightening, and drainage.'
+                    : 'Technologies médicales pour la réduction graisseuse ciblée et le raffermissement cutané.'}
+                </p>
+                <div className="flex flex-wrap gap-1 text-[10px] font-mono font-bold text-[#8A6A24]">
+                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Criolipólise</span>
+                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Cavitação</span>
+                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Radiofrequência</span>
+                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Pressoterapia</span>
+                </div>
+              </div>
+            </div>
+          </Link>
         </motion.div>
 
-        {/* DESKTOP Stats Grid (>= 768px) */}
+        {/* ── Luxury CTAs ── */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.85 }}
-          className="hidden md:grid md:grid-cols-4 gap-4 md:gap-6"
+          transition={{ duration: 0.7, delay: 0.35 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3.5 mb-4 sm:mb-6 w-full max-w-sm sm:max-w-none mx-auto"
         >
-          {stats.map((stat, i) => (
-            <div
-              key={i}
-              className="group relative overflow-hidden rounded-[28px] border border-[#C49A3C]/25 bg-white/95 p-5 text-center shadow-[0_16px_40px_rgba(196,154,60,0.1)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(196,154,60,0.18)]"
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-3.5 w-full sm:w-auto">
+            {/* Primary Button */}
+            <Button
+              href="/rendez-vous"
+              variant="primary"
+              size="lg"
+              className="w-full sm:w-auto text-xs sm:text-base px-4 py-2.5 sm:px-8 sm:py-3.5 shadow-[0_8px_30px_rgba(196,154,60,0.28)] hover:shadow-[0_12px_40px_rgba(196,154,60,0.4)] tracking-wide font-semibold justify-center"
             >
-              <div className="absolute inset-x-6 top-0 h-1 rounded-full bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#9A7428] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <div className="relative font-serif text-3xl md:text-4xl font-bold text-[#C49A3C] mb-1">
-                <CounterAnimation end={stat.end} suffix={stat.suffix} />
-              </div>
-              <div className="relative font-mono text-[11px] font-semibold text-[#8A8078] tracking-[0.21em] uppercase">
-                {stat.label}
-              </div>
-            </div>
-          ))}
+              <IconCalendarEvent size={16} className="me-1.5 shrink-0" />
+              <span className="truncate">{t.common.bookAppointment}</span>
+            </Button>
+
+            {/* Secondary Button */}
+            <Button
+              href="/services"
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto text-xs sm:text-base px-4 py-2.5 sm:px-8 sm:py-3.5 bg-white/90 backdrop-blur-xl border-[#C49A3C]/35 text-[#1A1412] hover:bg-white hover:border-[#C49A3C] tracking-wide font-medium shadow-xs justify-center"
+            >
+              <span className="truncate">{t.common.ourServices}</span>
+            </Button>
+          </div>
+
+          {/* WhatsApp Compact Fast-Track Link */}
+          <a
+            href={`https://wa.me/${t.common.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+              lang === 'pt'
+                ? 'Olá Digital Clínica! Gostaria de informações sobre marcação de consulta.'
+                : lang === 'en'
+                ? 'Hello Digital Clinic! I would like to inquire about booking an appointment.'
+                : 'Bonjour Digital Clínica ! Je souhaite réserver une consultation.'
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={playSoftClick}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-[#1F8A4C] bg-white/90 hover:bg-white border border-[#25D366]/40 shadow-xs transition-all duration-200"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[#25D366] animate-pulse" />
+            <IconBrandWhatsapp size={14} className="text-[#25D366]" />
+            <span>WhatsApp Fast-Track</span>
+          </a>
+        </motion.div>
+
+        {/* ── Key Trust Pillars ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.7, delay: 0.45 }}
+          className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-1.5 text-[10px] sm:text-xs text-[#6B6058] font-medium mb-3 sm:mb-5"
+        >
+          <span className="flex items-center gap-1">
+            <IconCheck size={13} className="text-[#9A7428]" />
+            {lang === 'pt' ? 'Atendimento 1-a-1' : lang === 'en' ? '1-on-1 Care' : 'Soins 1-à-1'}
+          </span>
+          <span className="text-[#C49A3C]/40">•</span>
+          <span className="flex items-center gap-1">
+            <IconShieldCheck size={13} className="text-[#9A7428]" />
+            {lang === 'pt' ? 'Equipamentos Médicos' : lang === 'en' ? 'Medical Grade' : 'Équipements Médicaux'}
+          </span>
+          <span className="text-[#C49A3C]/40">•</span>
+          <span className="flex items-center gap-1">
+            <IconAward size={13} className="text-[#9A7428]" />
+            {lang === 'pt' ? 'Recibos p/ Seguros' : lang === 'en' ? 'Insurance Receipts' : 'Reçus Assurances'}
+          </span>
         </motion.div>
       </div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.4 }}
-        className="mt-8 md:mt-12 flex flex-col items-center gap-1.5"
-      >
-        <span className="font-mono text-[10px] font-bold tracking-widest text-[#9A7428] uppercase">
-          {lang === 'pt' ? 'Deslizar' : lang === 'en' ? 'Scroll' : 'Défiler'}
-        </span>
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="text-[#C49A3C]"
-        >
-          <IconArrowDown size={18} />
-        </motion.div>
-      </motion.div>
+      {/* ── Bottom Section: Floating Slide Navigator & Metric Ribbon ── */}
+      <div className="relative z-10 mx-auto max-w-5xl px-3 sm:px-6 w-full mt-auto">
+        
+        {/* Floating Slide Control Dock */}
+        <div className="flex items-center justify-between bg-white/90 backdrop-blur-xl border border-[#C49A3C]/30 px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-[0_6px_24px_rgba(196,154,60,0.1)] mb-2.5 sm:mb-4">
+          
+          {/* Slide Numbers with Progress */}
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            {HERO_SLIDES.map((slide, i) => {
+              const isCurrent = currentIndex === i;
+              return (
+                <button
+                  key={i}
+                  onClick={() => goToSlide(i)}
+                  className={`relative flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-xs font-mono font-bold transition-all duration-300 ${
+                    isCurrent
+                      ? 'bg-[#F5E9C8] text-[#8A6A24] ring-1 ring-[#C49A3C]/60 shadow-xs'
+                      : 'text-[#8A8078] hover:text-[#1A1412] hover:bg-[#FAF6EE]'
+                  }`}
+                  aria-label={`Go to slide ${i + 1}`}
+                >
+                  <span>0{i + 1}</span>
+                  <span className="hidden md:inline-block font-sans text-[11px] font-medium text-[#554C42]">
+                    {slide.tag[lang] || slide.tag.pt}
+                  </span>
+                  {isCurrent && isPlaying && (
+                    <motion.div
+                      key={`dock-progress-${i}-${currentIndex}`}
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: SLIDE_DURATION_MS / 1000, ease: 'linear' }}
+                      className="absolute bottom-0 left-1.5 right-1.5 h-0.5 bg-[#C49A3C] rounded-full origin-left"
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Controls: Play/Pause + Prev/Next */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              onClick={() => { setIsPlaying((p) => !p); playSoftClick(); }}
+              className="p-1 rounded-full text-[#8A8078] hover:text-[#9A7428] hover:bg-[#FAF6EE] transition-colors"
+              aria-label={isPlaying ? 'Pause slideshow' : 'Play slideshow'}
+            >
+              {isPlaying ? <IconPlayerPause size={14} /> : <IconPlayerPlay size={14} />}
+            </button>
+            <span className="h-3 w-px bg-[#C49A3C]/20" />
+            <button
+              onClick={prevSlide}
+              className="p-1 rounded-full text-[#8A8078] hover:text-[#9A7428] hover:bg-[#FAF6EE] transition-colors"
+              aria-label="Previous slide"
+            >
+              <IconChevronLeft size={15} />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="p-1 rounded-full text-[#8A8078] hover:text-[#9A7428] hover:bg-[#FAF6EE] transition-colors"
+              aria-label="Next slide"
+            >
+              <IconChevronRight size={15} />
+            </button>
+          </div>
+        </div>
+
+        {/* ── Luxury Stats Ribbon ── */}
+        <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-[#C49A3C]/25 bg-white/90 backdrop-blur-xl p-2 sm:p-4 shadow-[0_8px_28px_rgba(196,154,60,0.06)]">
+          <div className="grid grid-cols-4 divide-x divide-[#C49A3C]/20 text-center">
+            {stats.map((stat, i) => (
+              <div key={i} className="px-1 py-0.5">
+                <div className="font-serif text-base sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent leading-none mb-0.5 sm:mb-1">
+                  <CounterAnimation end={stat.end} suffix={stat.suffix} />
+                </div>
+                <div className="font-mono text-[8px] sm:text-[10px] md:text-[11px] font-semibold text-[#8A8078] tracking-wider uppercase truncate">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
-

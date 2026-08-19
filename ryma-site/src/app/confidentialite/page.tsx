@@ -35,10 +35,10 @@ export default function ConfidentialitePage() {
           </h1>
           <p className="text-[#6B6058] text-lg mb-10 leading-relaxed border-b border-[#E8E2D8] pb-6">
             {lang === 'pt'
-              ? 'A Clínica Ryma Ouichka compromete-se a proteger a privacidade e os dados pessoais dos seus utentes e visitantes, em estrito cumprimento do Regulamento Geral sobre a Proteção de Dados (RGPD — Regulamento UE 2016/679) e da legislação portuguesa de proteção de dados (Lei n.º 58/2019).'
+              ? 'A Digital Clínica compromete-se a proteger a privacidade e os dados pessoais dos seus utentes e visitantes, em estrito cumprimento do Regulamento Geral sobre a Proteção de Dados (RGPD — Regulamento UE 2016/679) e da legislação portuguesa de proteção de dados (Lei n.º 58/2019).'
               : lang === 'en'
-              ? 'Ryma Ouichka Clinic is committed to protecting the privacy and personal data of its patients and visitors, in full compliance with the General Data Protection Regulation (GDPR — Regulation EU 2016/679) and Portuguese data protection legislation (Law no. 58/2019).'
-              : 'La Clinique Ryma Ouichka s\'engage à protéger la vie privée de ses patients et utilisateurs, conformément au Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679).'}
+              ? 'Digital Clinic is committed to protecting the privacy and personal data of its patients and visitors, in full compliance with the General Data Protection Regulation (GDPR — Regulation EU 2016/679) and Portuguese data protection legislation (Law no. 58/2019).'
+              : 'La Digital Clínica s\'engage à protéger la vie privée de ses patients et utilisateurs, conformément au Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679).'}
           </p>
         </ScrollReveal>
 
@@ -87,10 +87,10 @@ export default function ConfidentialitePage() {
             </p>
             <p className="text-sm md:text-base font-semibold text-[#9A7428]">
               {lang === 'pt'
-                ? 'A Clínica Ryma Ouichka não vende, aluga nem partilha quaisquer dados pessoais com terceiros para fins comerciais sob qualquer pretexto.'
+                ? 'A Digital Clínica não vende, aluga nem partilha quaisquer dados pessoais com terceiros para fins comerciais sob qualquer pretexto.'
                 : lang === 'en'
-                ? 'Ryma Ouichka Clinic does not sell, rent, or transfer any personal data to third parties under any circumstances.'
-                : 'Le Cabinet Ryma Ouichka ne vend, ne loue et ne cède aucune donnée personnelle à des tiers.'}
+                ? 'Digital Clinic does not sell, rent, or transfer any personal data to third parties under any circumstances.'
+                : 'La Digital Clínica ne vend, ne loue et ne cède aucune donnée personnelle à des tiers.'}
             </p>
           </div>
 
@@ -109,10 +109,10 @@ export default function ConfidentialitePage() {
             </p>
             <p className="text-sm md:text-base text-[#6B6058]">
               {lang === 'pt'
-                ? 'Para exercer qualquer um dos seus direitos ou para esclarecimentos adicionais sobre a privacidade dos seus dados, pode contactar-nos através do e-mail: contacto@ryma-ouichka.pt. Tem igualmente o direito de apresentar reclamação junto da autoridade de controlo portuguesa: Comissão Nacional de Proteção de Dados (CNPD).'
+                ? 'Para exercer qualquer um dos seus direitos ou para esclarecimentos adicionais sobre a privacidade dos seus dados, pode contactar-nos através do e-mail: contacto@digitalclinica.pt. Tem igualmente o direito de apresentar reclamação junto da autoridade de controlo portuguesa: Comissão Nacional de Proteção de Dados (CNPD).'
                 : lang === 'en'
-                ? 'To exercise your rights, please contact us at: contacto@ryma-ouichka.pt. You also have the right to lodge a complaint with the Portuguese supervisory authority: CNPD (National Data Protection Commission).'
-                : 'Pour exercer vos droits, contactez-nous à : contact@ryma-ouichka.tn.'}
+                ? 'To exercise your rights, please contact us at: contacto@digitalclinica.pt. You also have the right to lodge a complaint with the Portuguese supervisory authority: CNPD (National Data Protection Commission).'
+                : 'Pour exercer vos droits, contactez-nous à : contact@digitalclinica.pt.'}
             </p>
           </div>
         </ScrollReveal>

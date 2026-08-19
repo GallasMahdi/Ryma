@@ -40,7 +40,7 @@ export default function AboutPage() {
         <div className="relative mx-auto max-w-5xl px-6 md:px-12 text-center">
           <ScrollReveal>
             <Badge variant="gold" className="mb-6">
-              {lang === 'pt' ? 'Sobre a Dra. Ryma Ouichka' : lang === 'en' ? 'About Dr. Ryma Ouichka' : 'À Propos de Ryma Ouichka'}
+              {lang === 'pt' ? 'Sobre a Digital Clínica' : lang === 'en' ? 'About Digital Clinic' : 'À Propos de Digital Clínica'}
             </Badge>
             <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl font-bold text-[#1A1412] mb-6">
               {lang === 'pt' ? (
@@ -53,10 +53,10 @@ export default function AboutPage() {
             </h1>
             <p className="text-[#6B6058] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
               {lang === 'pt'
-                ? 'Fisioterapeuta diplomada com 12 anos de experiência clínica, Ryma Ouichka alia o rigor médico às tecnologias de vanguarda para a sua saúde e remodelação corporal.'
+                ? 'Com anos de experiência clínica consolidada, a Digital Clínica alia o rigor médico às tecnologias de vanguarda para a sua saúde e remodelação corporal.'
                 : lang === 'en'
-                ? 'Certified Physiotherapist with 12 years of clinical practice, Ryma Ouichka combines medical expertise and state-of-the-art technologies for your health and body contouring.'
-                : 'Kinésithérapeute diplômée avec 12 ans d\'expérience, Ryma Ouichka conjugue expertise médicale et technologies de pointe pour votre santé et votre silhouette.'}
+                ? 'With years of clinical excellence, Digital Clinic combines medical expertise and state-of-the-art technologies for your health and body contouring.'
+                : 'Avec des années d\'expérience clinique, Digital Clínica conjugue expertise médicale et technologies de pointe pour votre santé et votre silhouette.'}
             </p>
           </ScrollReveal>
         </div>
@@ -71,7 +71,7 @@ export default function AboutPage() {
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border-2 border-[#C49A3C]/40 shadow-xl group">
                 <Image
                   src="/ryma_ouichka.jpg"
-                  alt="Ryma Ouichka — Fisioterapeuta"
+                  alt="Digital Clínica — Fisioterapia"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
@@ -82,9 +82,9 @@ export default function AboutPage() {
 
                 {/* Name & Title Overlay */}
                 <div className="absolute bottom-16 inset-x-6 text-center text-white">
-                  <h3 className="font-serif text-2xl font-bold mb-1 drop-shadow-md">Ryma Ouichka</h3>
+                  <h3 className="font-serif text-2xl font-bold mb-1 drop-shadow-md">Digital Clínica</h3>
                   <span className="font-mono text-xs font-semibold text-[#E8C97A] tracking-wider uppercase bg-[#1A1412]/60 backdrop-blur-md px-3 py-1 rounded-full border border-[#C49A3C]/40 inline-block shadow-sm">
-                    {lang === 'pt' ? 'Fisioterapeuta & Estética Médica' : lang === 'en' ? 'Physiotherapist & Medical Aesthetics' : 'Kinésithérapeute & Esthéticienne Médicale'}
+                    {lang === 'pt' ? 'Fisioterapia & Estética Médica' : lang === 'en' ? 'Physiotherapy & Medical Aesthetics' : 'Kinésithérapie & Soins Avancés'}
                   </span>
                 </div>
 

@@ -28,10 +28,10 @@ export default function BlogPage() {
             </h1>
             <p className="text-[#6B6058] text-base md:text-lg max-w-xl mx-auto leading-relaxed">
               {lang === 'pt'
-                ? 'Informações médicas, conselhos práticos e atualidades de saúde pela Dra. Ryma Ouichka em Lisboa.'
+                ? 'Informações médicas, conselhos práticos e atualidades de saúde pela equipa da Digital Clínica em Lisboa.'
                 : lang === 'en'
-                ? 'Clinical insights, wellness guides, and health advice by Dr. Ryma Ouichka in Lisbon.'
-                : 'Informations médicales, conseils pratiques et actualités santé par Ryma Ouichka, physiothérapeute à Lisbonne.'}
+                ? 'Clinical insights, wellness guides, and health advice by Digital Clinic in Lisbon.'
+                : 'Informations médicales, conseils pratiques et actualités santé par l\'équipe de la Digital Clínica à Lisbonne.'}
             </p>
           </ScrollReveal>
         </div>

@@ -1,6 +1,6 @@
 export const pt = {
   common: {
-    siteName: 'Ryma Ouichka',
+    siteName: 'Digital Clínica',
     subtitle: 'Fisioterapia & Cuidados Estéticos',
     location: 'Lisboa, Portugal',
     bookAppointment: 'Marcar Consulta',
@@ -13,7 +13,7 @@ export const pt = {
     switchLang: 'PT',
     phone: '+351 912 345 678',
     whatsapp: '+351 912 345 678',
-    email: 'contacto@ryma-ouichka.pt',
+    email: 'contacto@digitalclinica.pt',
     address: 'Avenida da Liberdade 120, 1250-146 Lisboa, Portugal',
     hours: 'Seg - Sáb: 08h30 - 19h00 | Domingo Encerrado',
     allRightsReserved: 'Todos os direitos reservados.',
@@ -134,7 +134,7 @@ export const pt = {
   blog: {
     heroBadge: 'Blog de Saúde & Fisioterapia',
     heroTitle: 'Artigos & Guia de Saúde',
-    heroSub: 'Reabilitação, postura e bem-estar corporal escritos por Ryma Ouichka.',
+    heroSub: 'Reabilitação, postura e bem-estar corporal escritos pela equipa da Digital Clínica.',
     readTime: 'min de leitura',
     allCategories: 'Todas as Categorias',
     relatedTitle: 'Artigos Relacionados',
@@ -204,7 +204,7 @@ export const pt = {
     bookableDaysLabel: 'Dias de Funcionamento',
   },
   admin: {
-    title: 'Painel de Gestão — Clínica Ryma Ouichka',
+    title: 'Painel de Gestão — Digital Clínica',
     loginPrompt: 'Insira a palavra-passe de acesso para gerir os agendamentos.',
     passwordPlaceholder: 'Palavra-passe de administrador',
     loginButton: 'Iniciar Sessão',
@@ -226,11 +226,11 @@ export const pt = {
     exportCsv: 'Exportar CSV',
   },
   about: {
-    heroBadge: 'Conheça a Fisioterapeuta',
-    heroTitle: 'Ryma Ouichka',
-    heroSub: 'Fisioterapeuta diplomada e especialista em fisioterapia postural e cuidados de emagrecimento.',
+    heroBadge: 'Conheça a Nossa Equipa',
+    heroTitle: 'Digital Clínica',
+    heroSub: 'Clínica de referência em fisioterapia postural, reabilitação e cuidados avançados de saúde.',
     bioTitle: 'Uma Prática entre a Ciência e a Excelência Clínica',
-    bioText1: 'Fisioterapeuta diplomada com especialização em Reeducação Postural Global (RPG), reabilitação perineal e drenagem linfática médica (Método Vodder).',
+    bioText1: 'Equipa de fisioterapeutas com especialização em Reeducação Postural Global (RPG), reabilitação perineal e drenagem linfática médica (Método Vodder).',
     bioText2: 'Desde o tratamento de dores de costas crónicas a programas de recuperação pós-parto, cada paciente passa por uma avaliação clínica rigorosa.',
     bioText3: 'A nossa clínica oferece um ambiente sereno, seguro e confidencial, onde cada paciente recebe um tratamento individualizado.',
     philosophyTitle: 'A Nossa Filosofia Clínica',
@@ -268,7 +268,7 @@ export const pt = {
     call: 'Ligar para a Clínica',
   },
   seo: {
-    defaultTitle: 'Ryma Ouichka | Fisioterapia & Cuidados de Estética Avançada',
+    defaultTitle: 'Digital Clínica | Fisioterapia & Cuidados de Estética Avançada',
     defaultDescription: 'Clínica de fisioterapia e estética avançada. Reeducação postural, pós-parto, drenagem linfática manual, cavitação e radiofrequência. Agendamento online.',
   },
 };

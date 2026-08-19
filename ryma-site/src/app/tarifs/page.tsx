@@ -125,7 +125,7 @@ export default function TarifsPage() {
               <ScrollReveal key={service.slug} delay={i * 0.04}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#E8E2D8] px-6 py-4.5 rounded-xl hover:border-[#C49A3C]/50 hover:shadow-sm transition-all duration-200 gap-3">
                   <div>
-                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang] || service.name.pt || service.name.fr}</span>
+                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang] || service.name.pt || service.name.en || service.name.fr}</span>
                     <span className="font-mono text-xs font-medium text-[#8A8078] ms-3 bg-[#FAF6EE] px-2 py-0.5 rounded-md">{service.duration}</span>
                   </div>
                   <span className="font-mono text-lg font-bold text-[#C49A3C]">{service.price} {t.common.currency}</span>
@@ -146,7 +146,7 @@ export default function TarifsPage() {
               <ScrollReveal key={service.slug} delay={i * 0.04}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#E8E2D8] px-6 py-4.5 rounded-xl hover:border-[#C49A3C]/50 hover:shadow-sm transition-all duration-200 gap-3">
                   <div>
-                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang] || service.name.pt || service.name.fr}</span>
+                    <span className="font-semibold text-[#1A1412] text-[15px]">{service.name[lang] || service.name.pt || service.name.en || service.name.fr}</span>
                     <span className="font-mono text-xs font-medium text-[#8A8078] ms-3 bg-[#FAF6EE] px-2 py-0.5 rounded-md">{service.duration}</span>
                   </div>
                   <span className="font-mono text-lg font-bold text-[#C49A3C]">{service.price} {t.common.currency}</span>

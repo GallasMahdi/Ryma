@@ -600,10 +600,10 @@ export function AppointmentsTab({
           <a
             href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
               lang === 'fr'
-                ? `Bonjour ${item.patientName}, rappel de votre séance pour ${getServiceName(item.service, 'fr')} le ${item.date} à ${item.startTime} au Cabinet Ryma Kiné.`
+                ? `Bonjour ${item.patientName}, rappel de votre séance pour ${getServiceName(item.service, 'fr')} le ${item.date} à ${item.startTime} à la Digital Clínica.`
                 : lang === 'en'
-                ? `Hello ${item.patientName}, reminder for your appointment for ${getServiceName(item.service, 'en')} on ${item.date} at ${item.startTime} at Ryma Kiné Clinic.`
-                : `Olá ${item.patientName}, lembramos a sua consulta de ${getServiceName(item.service, 'pt')} no dia ${item.date} às ${item.startTime} na Clínica Ryma Kiné.`
+                ? `Hello ${item.patientName}, reminder for your appointment for ${getServiceName(item.service, 'en')} on ${item.date} at ${item.startTime} at Digital Clinic.`
+                : `Olá ${item.patientName}, lembramos a sua consulta de ${getServiceName(item.service, 'pt')} no dia ${item.date} às ${item.startTime} na Digital Clínica.`
             )}`}
             target="_blank"
             rel="noopener noreferrer"

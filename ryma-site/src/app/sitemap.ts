@@ -3,7 +3,7 @@ import { SERVICES } from '@/data/services';
 import { BLOG_POSTS } from '@/data/blog-posts';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://ryma-ouichka.tn';
+  const baseUrl = 'https://digitalclinica.pt';
   const lastModified = new Date();
 
   const staticPages = [
