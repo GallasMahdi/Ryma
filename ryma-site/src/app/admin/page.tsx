@@ -35,6 +35,8 @@ import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { PatientNotesTab } from '@/components/admin/PatientNotesTab';
 import { InvoicesTab } from '@/components/admin/InvoicesTab';
 import { AddAppointmentModal } from '@/components/admin/AddAppointmentModal';
+import { CreateInvoiceModal } from '@/components/admin/CreateInvoiceModal';
+import { AdminCommandPalette } from '@/components/admin/AdminCommandPalette';
 import { LuxuryToastContainer, LuxuryProgressBar, LuxuryToast } from '@/components/admin/LuxuryFeedback';
 
 async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
@@ -176,6 +178,60 @@ export default function AdminPage() {
   const [selectedNote, setSelectedNote] = useState<PatientNote | null>(null);
   const [noteForm, setNoteForm] = useState({ content: '', tags: '' });
   const [savingNote, setSavingNote] = useState(false);
+
+  // Desktop Sidebar Drawer Collapsed State (Persisted)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('ryma_admin_sidebar_collapsed');
+      if (saved !== null) {
+        setIsSidebarCollapsed(saved === 'true');
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('ryma_admin_sidebar_collapsed', String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
+  // Command Palette State
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isCreateInvoiceFromPaletteOpen, setIsCreateInvoiceFromPaletteOpen] = useState(false);
+
+  // Keyboard shortcut Ctrl+B / Cmd+B (Sidebar) and Ctrl+K / Cmd+K (Command Palette)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+K / Cmd+K -> Open/Close Command Palette
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+        return;
+      }
+
+      // Ctrl+B / Cmd+B -> Toggle Sidebar Drawer
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        const target = e.target as HTMLElement | null;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+          return;
+        }
+        e.preventDefault();
+        handleToggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleToggleSidebar]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newForm, setNewForm] = useState({
@@ -839,6 +895,9 @@ export default function AdminPage() {
         onRefresh={() => fetchAppointments(false)}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onLogout={handleLogout}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={handleToggleSidebar}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Main Body */}
@@ -850,6 +909,8 @@ export default function AdminPage() {
           totalAppointments={stats.total}
           totalNotes={Math.max(patientsList.length, patientNotes.length)}
           totalInvoices={invoices.length}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
         />
 
         <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8">
@@ -967,6 +1028,64 @@ export default function AdminPage() {
         addingError={addingError}
         addingLoading={addingLoading}
         onSubmit={handleCreateAppointment}
+      />
+
+      {/* Global Command Palette (Ctrl+K / Cmd+K) */}
+      <AdminCommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        lang={lang}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        appointments={appointments}
+        patientsList={patientsList}
+        patientNotes={patientNotes}
+        invoices={invoices}
+        onOpenNewAppointment={() => setIsAddModalOpen(true)}
+        onOpenCreateInvoice={() => setIsCreateInvoiceFromPaletteOpen(true)}
+        onSelectPatient={(patient) => {
+          setActiveTab('patients');
+          setNoteSearch(patient.patientName);
+          const existing = patientNotes.find(n => phonesMatch(n.phone, patient.phone));
+          if (existing) {
+            setSelectedNote(existing);
+            setNoteForm({ content: existing.content, tags: existing.tags });
+          } else {
+            setSelectedNote({
+              phone: patient.phone,
+              patientName: patient.patientName,
+              tags: patient.pathologyTags || '',
+              content: patient.medicalHistory || '',
+              updatedAt: patient.updatedAt || new Date().toISOString(),
+            });
+            setNoteForm({ content: patient.medicalHistory || '', tags: patient.pathologyTags || '' });
+          }
+        }}
+        onSelectAppointment={(appt) => {
+          setActiveTab('appointments');
+          setSearchQuery(appt.patientName);
+        }}
+        onRefresh={() => {
+          fetchAppointments(false);
+          fetchPatientNotes();
+          fetchInvoices();
+          fetchAdminMetadata();
+        }}
+        toggleLang={toggleLang}
+        onLogout={handleLogout}
+      />
+
+      {/* Direct Create Invoice Modal triggered from Command Palette */}
+      <CreateInvoiceModal
+        isOpen={isCreateInvoiceFromPaletteOpen}
+        onClose={() => setIsCreateInvoiceFromPaletteOpen(false)}
+        onCreated={(inv) => {
+          handleInvoiceCreated(inv);
+          setIsCreateInvoiceFromPaletteOpen(false);
+        }}
+        lang={lang}
+        patients={patientsList}
+        appointments={appointments}
       />
     </div>
   );

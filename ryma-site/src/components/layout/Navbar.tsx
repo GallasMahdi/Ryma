@@ -39,6 +39,26 @@ export function Navbar() {
     setServicesDropdownOpen(false);
   }, [pathname]);
 
+  // Close drawer on Escape key & manage scroll lock
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileOpen(false);
+        setServicesDropdownOpen(false);
+      }
+    };
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileOpen]);
+
   if (pathname?.startsWith('/admin')) {
     return null;
   }

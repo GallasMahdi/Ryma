@@ -7,6 +7,8 @@ import {
   IconChartBar,
   IconNotes,
   IconReceiptTax,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { AdminTab } from './AdminMobileNav';
@@ -18,6 +20,8 @@ interface AdminSidebarProps {
   totalAppointments: number;
   totalNotes: number;
   totalInvoices?: number;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export function AdminSidebar({
@@ -27,6 +31,8 @@ export function AdminSidebar({
   totalAppointments,
   totalNotes,
   totalInvoices,
+  isCollapsed = false,
+  onToggleCollapse,
 }: AdminSidebarProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
@@ -70,10 +76,39 @@ export function AdminSidebar({
   ];
 
   return (
-    <aside className="w-64 bg-[#FAFAF9] border-e border-[#E2E8F0] p-3.5 hidden md:flex flex-col justify-between shrink-0 z-20 select-none font-sans">
+    <aside
+      className={`bg-[#FAFAF9] border-e border-[#E2E8F0] hidden md:flex flex-col justify-between shrink-0 z-20 select-none font-sans transition-all duration-300 ease-in-out ${
+        isCollapsed ? 'w-[72px] p-2.5' : 'w-64 p-3.5'
+      }`}
+    >
       <div className="space-y-4">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] px-3 pt-1">
-          {txt('Navigation', 'Navigation', 'Navegação')}
+        <div className="flex items-center justify-between px-2 pt-1 min-h-[22px]">
+          {!isCollapsed && (
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] px-1 truncate">
+              {txt('Navigation', 'Navigation', 'Navegação')}
+            </span>
+          )}
+          {onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              title={
+                isCollapsed
+                  ? txt('Agrandir le menu (Ctrl+B)', 'Expand sidebar (Ctrl+B)', 'Expandir menu (Ctrl+B)')
+                  : txt('Réduire le menu (Ctrl+B)', 'Collapse sidebar (Ctrl+B)', 'Recolher menu (Ctrl+B)')
+              }
+              className={`p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#E2E8F0]/70 transition-colors flex items-center justify-center ${
+                isCollapsed ? 'w-full' : 'shrink-0'
+              }`}
+              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {isCollapsed ? (
+                <IconLayoutSidebarLeftExpand size={18} />
+              ) : (
+                <IconLayoutSidebarLeftCollapse size={18} />
+              )}
+            </button>
+          )}
         </div>
 
         <nav className="space-y-1" aria-label="Menu latéral">
@@ -85,35 +120,52 @@ export function AdminSidebar({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-sans transition-all duration-150 text-left relative ${
+                title={isCollapsed ? `${item.label} (${item.sublabel})` : undefined}
+                className={`w-full flex items-center ${
+                  isCollapsed ? 'justify-center px-2 py-3' : 'justify-between px-3 py-2.5'
+                } rounded-xl text-xs font-sans transition-all duration-150 text-left relative group ${
                   isActive
                     ? 'bg-[#0F172A] text-white shadow-xs font-semibold'
                     : 'text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] font-medium'
                 }`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2.5'} min-w-0`}>
                   <Icon
-                    size={18}
+                    size={20}
                     strokeWidth={isActive ? 2 : 1.75}
-                    className={isActive ? 'text-white' : 'text-[#64748B]'}
+                    className={`shrink-0 ${isActive ? 'text-white' : 'text-[#64748B] group-hover:text-[#0F172A]'}`}
                   />
-                  <div className="min-w-0">
-                    <div className="truncate text-xs">
-                      {item.label}
+                  {!isCollapsed && (
+                    <div className="min-w-0">
+                      <div className="truncate text-xs">
+                        {item.label}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {item.badge !== null && item.badge > 0 && (
-                  <span
-                    className={`text-[11px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${
-                      isActive
-                        ? 'bg-white/20 text-white'
-                        : 'bg-[#E2E8F0] text-[#475569]'
-                    }`}
-                  >
-                    {item.badge}
-                  </span>
+                  isCollapsed ? (
+                    <span
+                      className={`absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full flex items-center justify-center ${
+                        isActive
+                          ? 'bg-[#38BDF8] text-[#0F172A]'
+                          : 'bg-[#0F172A] text-white'
+                      }`}
+                    >
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  ) : (
+                    <span
+                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-[#E2E8F0] text-[#475569]'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )
                 )}
               </button>
             );
@@ -121,15 +173,27 @@ export function AdminSidebar({
         </nav>
       </div>
 
-      {/* System Status Card */}
-      <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] text-xs text-[#64748B] flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-2 text-[#166534] font-medium text-[11px]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#166534]" />
-          <span>{txt('Système Prêt', 'System Ready', 'Sistema Ativo')}</span>
-        </div>
-        <span className="font-mono text-[10px] text-[#94A3B8]">
-          v2.4
-        </span>
+      {/* Bottom Footer Section */}
+      <div className="space-y-2 pt-2 border-t border-[#E2E8F0]/80">
+        {/* System Status Card */}
+        {isCollapsed ? (
+          <div
+            className="p-2 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-center shadow-xs"
+            title={txt('Système Prêt (v2.4)', 'System Ready (v2.4)', 'Sistema Ativo (v2.4)')}
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-[#166534] animate-pulse" />
+          </div>
+        ) : (
+          <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] text-xs text-[#64748B] flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2 text-[#166534] font-medium text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#166534]" />
+              <span>{txt('Système Prêt', 'System Ready', 'Sistema Ativo')}</span>
+            </div>
+            <span className="font-mono text-[10px] text-[#94A3B8]">
+              v2.4
+            </span>
+          </div>
+        )}
       </div>
     </aside>
   );
