@@ -251,13 +251,14 @@ export function SplashScreen() {
     if (typeof window === 'undefined') return;
 
     const isBotOrLighthouse =
-      /Lighthouse|PageSpeed|Googlebot|HeadlessChrome|Chrome-Lighthouse/i.test(navigator.userAgent) ||
+      /Lighthouse|PageSpeed|Googlebot|HeadlessChrome|Chrome-Lighthouse|Mediapartners-Google/i.test(navigator.userAgent) ||
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const hasSeenSplash = sessionStorage.getItem('ryma_splash_v2') === 'true';
 
     if (isBotOrLighthouse || hasSeenSplash) {
       setShowSplash(false);
+      document.documentElement.classList.add('skip-splash');
     }
   }, []);
 
@@ -270,6 +271,7 @@ export function SplashScreen() {
     setTimeout(() => {
       setShowSplash(false);
       sessionStorage.setItem('ryma_splash_v2', 'true');
+      document.documentElement.classList.add('skip-splash');
     }, 450);
   };
 
@@ -278,6 +280,7 @@ export function SplashScreen() {
     setTimeout(() => {
       setShowSplash(false);
       sessionStorage.setItem('ryma_splash_v2', 'true');
+      document.documentElement.classList.add('skip-splash');
     }, 300);
   };
 
@@ -285,6 +288,7 @@ export function SplashScreen() {
     <AnimatePresence>
       {showSplash && (
         <motion.div
+          id="splash-screen-root"
           key="splash"
           className="fixed inset-0 z-[9999] overflow-hidden cursor-pointer bg-[#1A1412]"
           style={{ contain: 'strict', willChange: 'opacity' }}

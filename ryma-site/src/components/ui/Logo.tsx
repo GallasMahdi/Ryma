@@ -169,7 +169,7 @@ export function Logo({
           <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-[#1A1412] group-hover:text-[#9A7428] transition-colors">
             Digital Clínica
           </span>
-          <span className="font-mono text-[9px] sm:text-[9.5px] font-semibold tracking-[0.18em] text-[#C49A3C] uppercase mt-0.5">
+          <span className="font-mono text-[9px] sm:text-[9.5px] font-semibold tracking-[0.18em] text-[#8A6A24] uppercase mt-0.5">
             {subtitle || 'Fisioterapia & Estética'}
           </span>
         </div>

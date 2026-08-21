@@ -109,10 +109,10 @@ export function Footer() {
 
           {/* Navigation Links */}
           <div>
-            <h4 className="font-mono text-[10px] tracking-widest text-[#C49A3C] uppercase mb-4 sm:mb-5 font-bold flex items-center gap-1.5">
+            <h3 className="font-mono text-[10px] tracking-widest text-[#C49A3C] uppercase mb-4 sm:mb-5 font-bold flex items-center gap-1.5">
               <span className="w-2 h-px bg-[#C49A3C]" />
               <span>{lang === 'pt' ? 'Navegação' : lang === 'en' ? 'Navigation' : 'Navigation'}</span>
-            </h4>
+            </h3>
             <ul className="space-y-2 text-xs sm:text-sm">
               {[
                 { href: '/',         label: t.nav.home },
@@ -139,10 +139,10 @@ export function Footer() {
 
           {/* Treatments List */}
           <div>
-            <h4 className="font-mono text-[10px] tracking-widest text-[#C49A3C] uppercase mb-4 sm:mb-5 font-bold flex items-center gap-1.5">
+            <h3 className="font-mono text-[10px] tracking-widest text-[#C49A3C] uppercase mb-4 sm:mb-5 font-bold flex items-center gap-1.5">
               <span className="w-2 h-px bg-[#C49A3C]" />
               <span>{lang === 'pt' ? 'Tratamentos' : lang === 'en' ? 'Treatments' : 'Nos Soins'}</span>
-            </h4>
+            </h3>
             <ul className="space-y-2 text-xs sm:text-sm">
               {services.map((service) => (
                 <li key={service.slug}>
@@ -173,10 +173,10 @@ export function Footer() {
 
           {/* Contact Details */}
           <div>
-            <h4 className="font-mono text-[10px] tracking-widest text-[#C49A3C] uppercase mb-4 sm:mb-5 font-bold flex items-center gap-1.5">
+            <h3 className="font-mono text-[10px] tracking-widest text-[#C49A3C] uppercase mb-4 sm:mb-5 font-bold flex items-center gap-1.5">
               <span className="w-2 h-px bg-[#C49A3C]" />
               <span>{lang === 'pt' ? 'Contacto & Horário' : lang === 'en' ? 'Contact & Hours' : 'Contact & Horaires'}</span>
-            </h4>
+            </h3>
             <ul className="space-y-3 text-xs sm:text-sm">
               <li className="flex items-start gap-2.5 text-[#9A9080]">
                 <IconMapPin size={16} className="text-[#C49A3C] mt-0.5 shrink-0" />
@@ -222,9 +222,9 @@ export function Footer() {
                   <span>{lang === 'pt' ? 'Localização & Acessos' : lang === 'en' ? 'Location & Access' : 'Accès & Localisation'}</span>
                 </div>
 
-                <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-1.5">
+                <h4 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-1.5">
                   Avenida da Liberdade 120
-                </h3>
+                </h4>
                 
                 <p className="text-xs sm:text-sm text-[#A49C90] font-normal">
                   1250-146 Lisboa, Portugal • {lang === 'pt' ? 'Centro Histórico & Financeiro' : lang === 'en' ? 'Prime Boulevard Area' : 'Avenue de Prestige'}

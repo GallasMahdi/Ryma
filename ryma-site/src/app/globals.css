@@ -57,6 +57,10 @@ html {
   scrollbar-color: rgba(196, 154, 60, 0.35) transparent;
 }
 
+html.skip-splash #splash-screen-root {
+  display: none !important;
+}
+
 body {
   background-color: var(--color-bg);
   color: var(--color-text);

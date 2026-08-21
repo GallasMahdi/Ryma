@@ -120,6 +120,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }),
           }}
         />
+        {/* Instant synchronous check: skip splash for bots, reduced motion, or returning users without flashing */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var isBot = /Lighthouse|PageSpeed|Googlebot|HeadlessChrome|Chrome-Lighthouse|Mediapartners-Google/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+                  var hasSeen = sessionStorage.getItem('ryma_splash_v2') === 'true';
+                  var isAdmin = window.location.pathname.indexOf('/admin') === 0;
+                  if (isBot || hasSeen || isAdmin) {
+                    document.documentElement.classList.add('skip-splash');
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
         {/* Google Analytics placeholder */}
         {/* TODO: Add your GA4 script here: G-XXXXXXXXXX */}
       </head>

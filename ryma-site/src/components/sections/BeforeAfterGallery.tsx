@@ -138,7 +138,7 @@ const BeforeAfterSlider = memo(function BeforeAfterSlider({
         alt={`After — ${alt}`}
         fill
         priority={priority}
-        quality={85}
+        quality={75}
         sizes="(max-width: 1024px) 100vw, 50vw"
         className="object-cover object-center pointer-events-none"
       />

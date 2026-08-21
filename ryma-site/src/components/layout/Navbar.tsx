@@ -125,7 +125,7 @@ export function Navbar() {
                   <span className="font-serif text-base md:text-lg font-bold tracking-tight text-[#1A1412] group-hover:text-[#9A7428] transition-colors whitespace-nowrap">
                     {t.common.siteName}
                   </span>
-                  <span className="font-sans text-[9px] font-semibold tracking-[0.16em] text-[#C49A3C] uppercase mt-0.5 whitespace-nowrap">
+                  <span className="font-sans text-[9px] font-semibold tracking-[0.16em] text-[#8A6A24] uppercase mt-0.5 whitespace-nowrap">
                     {t.common.subtitle}
                   </span>
                 </div>
@@ -299,16 +299,17 @@ export function Navbar() {
               <div className="flex xl:hidden items-center gap-2 shrink-0">
                 <button
                   onClick={toggleLang}
-                  className="text-xs font-mono font-extrabold text-[#9A7428] bg-[#F5E9C8] border border-[#C49A3C]/30 px-2.5 py-1 rounded-full uppercase"
+                  aria-label={lang === 'pt' ? 'Mudar idioma' : lang === 'en' ? 'Change language' : 'Changer de langue'}
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-xs font-mono font-extrabold text-[#9A7428] bg-[#F5E9C8] border border-[#C49A3C]/30 px-3 py-1.5 rounded-full uppercase transition-transform active:scale-95"
                 >
                   {lang}
                 </button>
                 <button
                   onClick={() => setMobileOpen(!mobileOpen)}
-                  className="p-1.5 rounded-xl text-[#1A1412] hover:bg-[#F5E9C8] transition-colors"
-                  aria-label="Menu"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl text-[#1A1412] hover:bg-[#F5E9C8] transition-colors"
+                  aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
                 >
-                  {mobileOpen ? <IconX size={22} /> : <IconMenu2 size={22} />}
+                  {mobileOpen ? <IconX size={24} /> : <IconMenu2 size={24} />}
                 </button>
               </div>
 

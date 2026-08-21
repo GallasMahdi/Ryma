@@ -179,7 +179,8 @@ export function Hero() {
                 alt={slide.title[lang] || slide.title.pt}
                 fill
                 priority={index === 0}
-                quality={85}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                quality={75}
                 sizes="100vw"
                 className="object-cover object-center"
               />

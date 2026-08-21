@@ -744,9 +744,9 @@ function EmptyState({
                         </span>
                       </div>
 
-                      <h4 className="font-serif font-bold text-sm leading-snug line-clamp-2 mb-2 text-[#1A1412]">
+                      <h3 className="font-serif font-bold text-sm leading-snug line-clamp-2 mb-2 text-[#1A1412]">
                         {getLocalizedText(service.name, lang)}
-                      </h4>
+                      </h3>
 
                       <p className="text-[11px] text-[#6B6058] line-clamp-2 mb-3 leading-relaxed">
                         {getLocalizedText(service.shortDesc, lang)}
@@ -815,9 +815,9 @@ function EmptyState({
                     </span>
                   </div>
 
-                  <h4 className="font-semibold text-xs leading-snug line-clamp-2 mb-2 transition-colors text-[#1A1412] group-hover:text-[#9A7428]">
+                  <h3 className="font-semibold text-xs leading-snug line-clamp-2 mb-2 transition-colors text-[#1A1412] group-hover:text-[#9A7428]">
                     {getLocalizedText(service.name, lang)}
-                  </h4>
+                  </h3>
 
                   <div className="flex items-center justify-between pt-1 border-t border-[#E8E2D8]">
                     <span className="font-mono text-xs font-bold text-[#C49A3C]">
