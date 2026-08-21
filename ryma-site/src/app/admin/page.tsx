@@ -809,7 +809,10 @@ export default function AdminPage() {
                 lang={lang}
                 patientNotes={patientNotes}
                 patientsList={patientsList}
-                onRefreshPatients={fetchPatientNotes}
+                onRefreshPatients={() => {
+                  fetchPatientNotes();
+                  fetchAppointments(true);
+                }}
                 noteSearch={noteSearch}
                 setNoteSearch={setNoteSearch}
                 selectedNote={selectedNote}

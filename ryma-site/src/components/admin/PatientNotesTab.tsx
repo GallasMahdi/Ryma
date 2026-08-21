@@ -242,7 +242,18 @@ export function PatientNotesTab({
       practitioner?: string;
     }> = [];
 
-    const online = appointments.filter(a => phonesMatch(a.phone, activePatient.phone));
+    const sessionIds = new Set((activePatient.sessions || []).map(s => s.id));
+
+    // Exclude synced session appointments (apt_sess_*) to prevent double counting in history
+    const online = appointments.filter(a => {
+      if (!phonesMatch(a.phone, activePatient.phone)) return false;
+      if (a.id.startsWith('apt_sess_')) {
+        const correspondingId = a.id.replace('apt_', '');
+        if (sessionIds.has(correspondingId)) return false;
+      }
+      return true;
+    });
+
     online.forEach(a => {
       list.push({
         id: a.id,

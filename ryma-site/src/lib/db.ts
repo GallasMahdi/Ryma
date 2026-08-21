@@ -415,7 +415,7 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
 }
 
 // ─── Unified Async Query Abstraction with Automatic Fallback & Dual-Write ─────
-async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]> {
+export async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]> {
   const trimmed = sql.trim().toUpperCase();
   const isWrite = trimmed.startsWith('INSERT') || trimmed.startsWith('UPDATE') || trimmed.startsWith('DELETE');
 
@@ -909,6 +909,7 @@ export async function dbDeletePatientRecord(idOrPhone: string): Promise<void> {
   const p = (await dbGetPatientById(idOrPhone)) ?? (await dbGetPatientByPhone(idOrPhone));
   if (p) {
     await executeQuery('DELETE FROM patient_sessions WHERE patientId = ?', [p.id]);
+    await executeQuery("DELETE FROM appointments WHERE id LIKE 'apt_sess_%' AND phone = ?", [p.phone]);
     await executeQuery('DELETE FROM patients WHERE id = ?', [p.id]);
     await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ?', [p.phone, idOrPhone]);
   } else {
