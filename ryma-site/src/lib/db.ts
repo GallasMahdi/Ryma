@@ -727,7 +727,9 @@ export async function dbGetAllPatientNotes(): Promise<PatientNote[]> {
 }
 
 export async function dbGetPatientNote(phone: string): Promise<PatientNote | null> {
-  const rows = await executeQuery<PatientNote>('SELECT * FROM patient_notes WHERE phone = ?', [phone]);
+  const phoneValidation = validateAndNormalizePhone(phone);
+  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : phone.trim();
+  const rows = await executeQuery<PatientNote>('SELECT * FROM patient_notes WHERE phone = ? OR phone = ?', [phone, normalizedPhone]);
   return rows[0] ?? null;
 }
 
@@ -738,21 +740,23 @@ export async function dbUpsertPatientNote(
   tags: string
 ): Promise<PatientNote> {
   const now = new Date().toISOString();
+  const phoneValidation = validateAndNormalizePhone(phone);
+  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : phone.trim();
   const existing = await dbGetPatientNote(phone);
 
   if (existing) {
     await executeQuery(
-      'UPDATE patient_notes SET patientName = ?, content = ?, tags = ?, updatedAt = ? WHERE phone = ?',
-      [patientName, content, tags, now, phone]
+      'UPDATE patient_notes SET patientName = ?, content = ?, tags = ?, updatedAt = ?, phone = ? WHERE phone = ?',
+      [patientName, content, tags, now, normalizedPhone, existing.phone]
     );
   } else {
     await executeQuery(
       'INSERT INTO patient_notes (phone, patientName, content, tags, updatedAt) VALUES (?, ?, ?, ?, ?)',
-      [phone, patientName, content, tags, now]
+      [normalizedPhone, patientName, content, tags, now]
     );
   }
 
-  const updated = await dbGetPatientNote(phone);
+  const updated = await dbGetPatientNote(normalizedPhone);
   return updated!;
 }
 
@@ -761,15 +765,19 @@ export async function dbEnsurePatientNote(phone: string, patientName: string): P
   if (existing) return existing;
 
   const now = new Date().toISOString();
+  const phoneValidation = validateAndNormalizePhone(phone);
+  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : phone.trim();
   await executeQuery(
     'INSERT INTO patient_notes (phone, patientName, content, tags, updatedAt) VALUES (?, ?, \'\', \'\', ?)',
-    [phone, patientName, now]
+    [normalizedPhone, patientName, now]
   );
-  return (await dbGetPatientNote(phone))!;
+  return (await dbGetPatientNote(normalizedPhone))!;
 }
 
 export async function dbDeletePatientNote(phone: string): Promise<void> {
-  await executeQuery('DELETE FROM patient_notes WHERE phone = ?', [phone]);
+  const phoneValidation = validateAndNormalizePhone(phone);
+  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : phone.trim();
+  await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ?', [phone, normalizedPhone]);
 }
 
 // ─── Structured Patient EMR Helpers ──────────────────────────────────────────
@@ -804,7 +812,9 @@ export async function dbGetPatientById(id: string): Promise<PatientRecord | null
 }
 
 export async function dbGetPatientByPhone(phone: string): Promise<PatientRecord | null> {
-  const rows = await executeQuery<PatientRecord>('SELECT * FROM patients WHERE phone = ?', [phone]);
+  const phoneValidation = validateAndNormalizePhone(phone);
+  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : phone.trim();
+  const rows = await executeQuery<PatientRecord>('SELECT * FROM patients WHERE phone = ? OR phone = ?', [phone, normalizedPhone]);
   const patient = rows[0];
   if (!patient) return null;
 
@@ -891,7 +901,7 @@ export async function dbUpsertPatient(input: {
     );
   }
 
-  await dbUpsertPatientNote(input.phone, input.patientName, input.medicalHistory ?? '', input.pathologyTags ?? '');
+  await dbUpsertPatientNote(normalizedPhone, input.patientName, input.medicalHistory ?? '', input.pathologyTags ?? '');
   return (await dbGetPatientById(id))!;
 }
 
@@ -900,7 +910,11 @@ export async function dbDeletePatientRecord(idOrPhone: string): Promise<void> {
   if (p) {
     await executeQuery('DELETE FROM patient_sessions WHERE patientId = ?', [p.id]);
     await executeQuery('DELETE FROM patients WHERE id = ?', [p.id]);
-    await executeQuery('DELETE FROM patient_notes WHERE phone = ?', [p.phone]);
+    await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ?', [p.phone, idOrPhone]);
+  } else {
+    const phoneValidation = validateAndNormalizePhone(idOrPhone);
+    const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : idOrPhone.trim();
+    await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ?', [idOrPhone, normalizedPhone]);
   }
 }
 

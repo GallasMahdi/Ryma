@@ -19,6 +19,7 @@ import {
   formatLocalDate,
 } from '@/types/admin';
 import { playNotificationChime } from '@/lib/sound';
+import { phonesMatch } from '@/lib/phone';
 
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -522,7 +523,7 @@ export default function AdminPage() {
   };
 
   const openPatientNote = (appt: Appointment) => {
-    const existing = patientNotes.find(n => n.phone === appt.phone);
+    const existing = patientNotes.find(n => phonesMatch(n.phone, appt.phone));
     if (existing) {
       setSelectedNote(existing);
       setNoteForm({ content: existing.content, tags: existing.tags });
@@ -548,7 +549,7 @@ export default function AdminPage() {
         body: JSON.stringify({ phone, patientName, tags, content }),
       });
       setPatientNotes(prev => {
-        const filtered = prev.filter(n => n.phone !== phone);
+        const filtered = prev.filter(n => !phonesMatch(n.phone, phone));
         return [data.note, ...filtered];
       });
       addToast({
@@ -585,7 +586,7 @@ export default function AdminPage() {
         }),
       });
       setPatientNotes(prev => {
-        const filtered = prev.filter(n => n.phone !== selectedNote.phone);
+        const filtered = prev.filter(n => !phonesMatch(n.phone, selectedNote.phone));
         return [data.note, ...filtered];
       });
       setSelectedNote(data.note);
@@ -610,9 +611,9 @@ export default function AdminPage() {
     setIsGlobalBusy(true);
     try {
       await apiFetch(`/api/admin/patients?phone=${encodeURIComponent(phone)}`, { method: 'DELETE' });
-      setPatientNotes(prev => prev.filter(n => n.phone !== phone));
-      setPatientsList(prev => prev.filter(p => p.phone !== phone));
-      if (selectedNote?.phone === phone) setSelectedNote(null);
+      setPatientNotes(prev => prev.filter(n => !phonesMatch(n.phone, phone)));
+      setPatientsList(prev => prev.filter(p => !phonesMatch(p.phone, phone)));
+      if (selectedNote && phonesMatch(selectedNote.phone, phone)) setSelectedNote(null);
       addToast({
         type: 'success',
         title: lang === 'pt' ? 'Ficha Eliminada' : lang === 'en' ? 'File Deleted' : 'Dossier Supprimé',

@@ -102,3 +102,19 @@ export function formatPhoneDisplay(rawPhone: string): string {
   const res = validateAndNormalizePhone(rawPhone);
   return res.isValid ? res.formatted : rawPhone;
 }
+
+/**
+ * Compares two phone numbers for equality across different formats (e.g. spaces, dashes, +351 vs national prefix).
+ */
+export function phonesMatch(p1?: string | null, p2?: string | null): boolean {
+  if (!p1 || !p2) return false;
+  if (p1 === p2) return true;
+  const digits1 = p1.replace(/\D/g, '');
+  const digits2 = p2.replace(/\D/g, '');
+  if (!digits1 || !digits2) return false;
+  if (digits1 === digits2) return true;
+  if (digits1.endsWith(digits2) || digits2.endsWith(digits1)) {
+    return Math.abs(digits1.length - digits2.length) <= 4;
+  }
+  return false;
+}

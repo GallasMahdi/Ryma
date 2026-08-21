@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   IconSearch,
   IconPhoneCall,
@@ -26,6 +26,7 @@ import {
 } from '@/types/admin';
 import { SERVICES } from '@/data/services';
 import { Lang } from '@/lib/i18n';
+import { phonesMatch } from '@/lib/phone';
 import { ResponsiveModal } from './ResponsiveModal';
 
 interface PatientNotesTabProps {
@@ -82,6 +83,18 @@ export function PatientNotesTab({
   const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Sync selectedPatientId when selectedNote changes from outside (e.g. clicking Fiche patient on an appointment)
+  useEffect(() => {
+    if (selectedNote) {
+      const match = patientsList.find(p => phonesMatch(p.phone, selectedNote.phone));
+      if (match) {
+        setSelectedPatientId(match.id);
+      } else {
+        setSelectedPatientId('legacy_' + selectedNote.phone);
+      }
+    }
+  }, [selectedNote, patientsList]);
+
   const [newPatientForm, setNewPatientForm] = useState({
     patientName: '',
     phone: '',
@@ -136,7 +149,14 @@ export function PatientNotesTab({
     patientsList.forEach(p => map.set(p.phone, p));
 
     patientNotes.forEach(n => {
-      if (!map.has(n.phone)) {
+      let existingKey: string | null = null;
+      for (const key of map.keys()) {
+        if (phonesMatch(key, n.phone)) {
+          existingKey = key;
+          break;
+        }
+      }
+      if (!existingKey) {
         map.set(n.phone, {
           id: 'legacy_' + n.phone,
           patientName: n.patientName,
@@ -163,13 +183,20 @@ export function PatientNotesTab({
         ? selectedPatientId.replace('legacy_', '')
         : null;
       if (phoneFromLegacy) {
-        const foundByPhone = patientsList.find(p => p.phone === phoneFromLegacy);
+        const foundByPhone = patientsList.find(p => phonesMatch(p.phone, phoneFromLegacy));
         if (foundByPhone) return foundByPhone;
       }
+
+      const foundInAll = allPatientsList.find(p => p.id === selectedPatientId);
+      if (foundInAll) return foundInAll;
     }
+
     if (selectedNote) {
-      const foundByPhone = patientsList.find(p => p.phone === selectedNote.phone);
+      const foundByPhone = patientsList.find(p => phonesMatch(p.phone, selectedNote.phone));
       if (foundByPhone) return foundByPhone;
+
+      const foundInAll = allPatientsList.find(p => phonesMatch(p.phone, selectedNote.phone));
+      if (foundInAll) return foundInAll;
 
       return {
         id: 'legacy_' + selectedNote.phone,
@@ -183,6 +210,7 @@ export function PatientNotesTab({
         sessions: [],
       };
     }
+
     return allPatientsList[0] ?? null;
   }, [selectedPatientId, selectedNote, patientsList, allPatientsList]);
 
@@ -214,7 +242,7 @@ export function PatientNotesTab({
       practitioner?: string;
     }> = [];
 
-    const online = appointments.filter(a => a.phone === activePatient.phone);
+    const online = appointments.filter(a => phonesMatch(a.phone, activePatient.phone));
     online.forEach(a => {
       list.push({
         id: a.id,
@@ -262,7 +290,7 @@ export function PatientNotesTab({
   const handleSelectPatient = (p: PatientRecord) => {
     setSelectedPatientId(p.id);
     setIsMobileDetailOpen(true);
-    const foundNote = patientNotes.find(n => n.phone === p.phone);
+    const foundNote = patientNotes.find(n => phonesMatch(n.phone, p.phone));
     if (foundNote) {
       setSelectedNote(foundNote);
       setNoteForm({ content: foundNote.content, tags: foundNote.tags });
