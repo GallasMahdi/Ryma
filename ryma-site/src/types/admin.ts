@@ -68,6 +68,69 @@ export interface SlotInfo {
   appointmentId: string | null;
 }
 
+export type PaymentMethod = 'MULTIBANCO' | 'MBWAY' | 'CASH' | 'CARD' | 'TRANSFER';
+export type InvoicePaymentStatus = 'PAID' | 'PENDING' | 'CANCELLED' | 'REFUNDED';
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string; // e.g. "FR 2026/0001"
+  appointmentId?: string | null;
+  patientId?: string | null;
+  patientName: string;
+  patientNif: string; // e.g. "999999990" (Consumidor Final) or actual 9-digit NIF
+  patientEmail?: string | null;
+  patientPhone: string;
+  patientAddress?: string | null;
+  coverageType: CoverageType;
+  coverageProvider?: string | null;
+  coverageNumber?: string | null;
+  serviceSlug: string;
+  serviceName: string;
+  practitioner?: string | null;
+  amount: number;
+  vatRate: number; // 0 for health/physio (Art 9 CIVA), 23 for aesthetic
+  vatExemptionReason?: string | null; // e.g. "Isento de IVA - Artigo 9.º do CIVA"
+  paymentMethod: PaymentMethod;
+  paymentStatus: InvoicePaymentStatus;
+  paidAt?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInvoiceInput {
+  appointmentId?: string;
+  patientId?: string;
+  patientName: string;
+  patientNif?: string;
+  patientEmail?: string;
+  patientPhone: string;
+  patientAddress?: string;
+  coverageType?: CoverageType;
+  coverageProvider?: string;
+  coverageNumber?: string;
+  serviceSlug: string;
+  serviceName?: string;
+  practitioner?: string;
+  amount: number;
+  vatRate?: number;
+  vatExemptionReason?: string;
+  paymentMethod: PaymentMethod;
+  paymentStatus?: InvoicePaymentStatus;
+  notes?: string;
+}
+
+export interface InvoiceStats {
+  totalRevenue: number;
+  totalPaid: number;
+  totalPending: number;
+  countPaid: number;
+  countPending: number;
+  countTotal: number;
+  avgTicket: number;
+  insuranceShare: number; // percentage
+}
+
 export function getServiceName(slug: string, lang: Lang): string {
   const service = SERVICES.find(s => s.slug === slug);
   return service ? getLocalizedText(service.name, lang) : slug;

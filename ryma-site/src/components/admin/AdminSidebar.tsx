@@ -6,6 +6,7 @@ import {
   IconCalendarEvent,
   IconChartBar,
   IconNotes,
+  IconReceiptTax,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { AdminTab } from './AdminMobileNav';
@@ -16,6 +17,7 @@ interface AdminSidebarProps {
   lang: Lang;
   totalAppointments: number;
   totalNotes: number;
+  totalInvoices?: number;
 }
 
 export function AdminSidebar({
@@ -24,6 +26,7 @@ export function AdminSidebar({
   lang,
   totalAppointments,
   totalNotes,
+  totalInvoices,
 }: AdminSidebarProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
@@ -49,6 +52,13 @@ export function AdminSidebar({
       sublabel: txt('EMR & Suivi EVA', 'EMR & Pain Scale', 'Processos & EVA'),
       icon: IconNotes,
       badge: totalNotes,
+    },
+    {
+      id: 'invoices' as const,
+      label: txt('Facturation & Recibos', 'Invoicing & Receipts', 'Faturação & Recibos'),
+      sublabel: txt('NIF & Reçus Fiscaux', 'NIF & Tax Receipts', 'Recibos Fiscais & NIF'),
+      icon: IconReceiptTax,
+      badge: totalInvoices && totalInvoices > 0 ? totalInvoices : null,
     },
     {
       id: 'analytics' as const,

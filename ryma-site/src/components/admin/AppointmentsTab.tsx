@@ -24,6 +24,7 @@ import {
   IconCheck,
   IconFilter,
   IconCalendarEvent,
+  IconReceiptTax,
 } from '@tabler/icons-react';
 import {
   Appointment,
@@ -36,6 +37,7 @@ import {
 import { Lang } from '@/lib/i18n';
 import { DayAgendaView } from './DayAgendaView';
 import { FilterSheet } from './FilterSheet';
+import { CreateInvoiceModal } from './CreateInvoiceModal';
 
 // ─── Week Calendar View (Desktop / Tablet) ───────────────────────────────────
 
@@ -471,6 +473,8 @@ export function AppointmentsTab({
   const [viewMode, setViewMode] = useState<'agenda' | 'week' | 'cards' | 'table' | 'grouped'>('agenda');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'upcoming'>('all');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const [selectedApptForInvoice, setSelectedApptForInvoice] = useState<Appointment | null>(null);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -619,6 +623,17 @@ export function AppointmentsTab({
             title={txt('Dossier patient', 'Patient file', 'Ficha do doente')}
           >
             <IconNotes size={15} />
+          </button>
+
+          <button
+            onClick={() => {
+              setSelectedApptForInvoice(item);
+              setIsInvoiceModalOpen(true);
+            }}
+            className="p-2 rounded-lg border border-[#CBD5E1] bg-[#FAF8F5] text-[#9A7428] hover:bg-[#F5E9C8] transition-colors touch-target flex items-center justify-center shadow-xs"
+            title={txt('Émettre Fatura-Recibo', 'Issue Tax Invoice', 'Emitir Fatura-Recibo')}
+          >
+            <IconReceiptTax size={15} />
           </button>
 
           {item.status !== 'CONFIRMED' && item.status !== 'CANCELLED' && (
@@ -964,6 +979,16 @@ export function AppointmentsTab({
                               >
                                 <IconNotes size={16} />
                               </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedApptForInvoice(item);
+                                  setIsInvoiceModalOpen(true);
+                                }}
+                                className="p-1.5 rounded-lg text-[#9A7428] hover:bg-[#F5E9C8] transition-colors"
+                                title={txt('Émettre Fatura-Recibo', 'Issue Tax Invoice', 'Emitir Fatura-Recibo')}
+                              >
+                                <IconReceiptTax size={16} />
+                              </button>
                               {item.status !== 'CONFIRMED' && item.status !== 'CANCELLED' && (
                                 <button
                                   onClick={() => updateStatus(item.id, 'CONFIRMED')}
@@ -1118,6 +1143,35 @@ export function AppointmentsTab({
             </div>
           )}
         </>
+      )}
+
+      {/* Create Invoice Modal for Selected Appointment */}
+      {selectedApptForInvoice && (
+        <CreateInvoiceModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => {
+            setIsInvoiceModalOpen(false);
+            setSelectedApptForInvoice(null);
+          }}
+          onCreated={() => {
+            setIsInvoiceModalOpen(false);
+            setSelectedApptForInvoice(null);
+          }}
+          lang={lang}
+          patients={[]}
+          appointments={appointments}
+          prefilledData={{
+            appointmentId: selectedApptForInvoice.id,
+            patientName: selectedApptForInvoice.patientName,
+            patientPhone: selectedApptForInvoice.phone,
+            patientEmail: selectedApptForInvoice.email || undefined,
+            serviceSlug: selectedApptForInvoice.service,
+            amount: getServicePrice(selectedApptForInvoice.service),
+            coverageType: selectedApptForInvoice.coverageType || 'PARTICULAR',
+            coverageProvider: selectedApptForInvoice.coverageProvider || undefined,
+            coverageNumber: selectedApptForInvoice.coverageNumber || undefined,
+          }}
+        />
       )}
     </div>
   );

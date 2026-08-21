@@ -13,6 +13,9 @@ import {
   PatientNote,
   PatientRecord,
   SlotInfo,
+  Invoice,
+  InvoiceStats,
+  InvoicePaymentStatus,
   getServiceName,
   getServicePrice,
   getNext7Days,
@@ -29,6 +32,7 @@ import { AppointmentsTab } from '@/components/admin/AppointmentsTab';
 import { SlotsTab } from '@/components/admin/SlotsTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { PatientNotesTab } from '@/components/admin/PatientNotesTab';
+import { InvoicesTab } from '@/components/admin/InvoicesTab';
 import { AddAppointmentModal } from '@/components/admin/AddAppointmentModal';
 import { LuxuryToastContainer, LuxuryProgressBar, LuxuryToast } from '@/components/admin/LuxuryFeedback';
 
@@ -100,6 +104,11 @@ export default function AdminPage() {
   const [patientsList, setPatientsList] = useState<PatientRecord[]>([]);
   const [noShowCounts, setNoShowCounts] = useState<Record<string, number>>({});
   const [noteSearch, setNoteSearch] = useState('');
+
+  // Invoicing & Tax Receipts state
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoiceStats, setInvoiceStats] = useState<InvoiceStats | null>(null);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
 
   // ── Handle Newly Arrived Booking ───────────────────────────────────────────
   const handleNewIncomingAppointment = useCallback(
@@ -232,6 +241,72 @@ export default function AdminPage() {
     } catch { /* silent */ }
   }, []);
 
+  // ── Fetch invoices & tax receipts ──────────────────────────────────────────
+  const fetchInvoices = useCallback(async () => {
+    setLoadingInvoices(true);
+    try {
+      const data = await apiFetch<{ invoices: Invoice[]; stats: InvoiceStats }>('/api/admin/invoices');
+      setInvoices(data.invoices ?? []);
+      setInvoiceStats(data.stats ?? null);
+    } catch (err) {
+      console.warn('[Invoices Fetch Error]:', err);
+    } finally {
+      setLoadingInvoices(false);
+    }
+  }, []);
+
+  const handleInvoiceCreated = useCallback((newInv: Invoice) => {
+    setInvoices(prev => [newInv, ...prev]);
+    fetchInvoices();
+    addToast({
+      type: 'success',
+      title: lang === 'pt' ? 'Fatura-Recibo Emitida' : 'Invoice Created',
+      message: `${newInv.invoiceNumber} — ${newInv.patientName} (${newInv.amount.toFixed(2)} €)`,
+    });
+  }, [addToast, fetchInvoices, lang]);
+
+  const handleUpdateInvoiceStatus = useCallback(async (id: string, newStatus: InvoicePaymentStatus) => {
+    try {
+      const res = await apiFetch<{ invoice: Invoice }>(`/api/admin/invoices/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentStatus: newStatus }),
+      });
+      setInvoices(prev => prev.map(inv => (inv.id === id ? res.invoice : inv)));
+      fetchInvoices();
+      addToast({
+        type: 'success',
+        title: lang === 'pt' ? 'Estado Atualizado' : 'Status Updated',
+        message: `${res.invoice.invoiceNumber}: ${newStatus === 'PAID' ? 'Pago' : 'Pendente'}`,
+      });
+    } catch (err: any) {
+      addToast({
+        type: 'error',
+        title: 'Erro ao atualizar estado',
+        message: err.message,
+      });
+    }
+  }, [addToast, fetchInvoices, lang]);
+
+  const handleDeleteInvoice = useCallback(async (id: string) => {
+    try {
+      await apiFetch(`/api/admin/invoices/${id}`, { method: 'DELETE' });
+      setInvoices(prev => prev.filter(inv => inv.id !== id));
+      fetchInvoices();
+      addToast({
+        type: 'success',
+        title: lang === 'pt' ? 'Recibo Anulado' : 'Invoice Voided',
+        message: lang === 'pt' ? 'O documento foi anulado com sucesso.' : 'Invoice voided.',
+      });
+    } catch (err: any) {
+      addToast({
+        type: 'error',
+        title: 'Erro ao anular recibo',
+        message: err.message,
+      });
+    }
+  }, [addToast, fetchInvoices, lang]);
+
   // ── Server-Sent Events (SSE) Live Real-Time Stream ──────────────────────────
   useEffect(() => {
     let eventSource: EventSource | null = null;
@@ -315,7 +390,7 @@ export default function AdminPage() {
 
   // ── Auto-refresh & window focus sync ───────────────────────────────────────
   useEffect(() => {
-    Promise.all([fetchAppointments(false), fetchPatientNotes(), fetchAdminMetadata()]);
+    Promise.all([fetchAppointments(false), fetchPatientNotes(), fetchInvoices(), fetchAdminMetadata()]);
 
     const interval = setInterval(() => {
       if (!document.hidden) {
@@ -326,6 +401,7 @@ export default function AdminPage() {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         fetchAppointments(true);
+        fetchInvoices();
         fetchAdminMetadata();
       }
     };
@@ -760,6 +836,7 @@ export default function AdminPage() {
           lang={lang}
           totalAppointments={stats.total}
           totalNotes={Math.max(patientsList.length, patientNotes.length)}
+          totalInvoices={invoices.length}
         />
 
         <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8">
@@ -829,6 +906,21 @@ export default function AdminPage() {
               />
             )}
 
+            {activeTab === 'invoices' && (
+              <InvoicesTab
+                invoices={invoices}
+                stats={invoiceStats}
+                loading={loadingInvoices}
+                onRefresh={fetchInvoices}
+                onCreated={handleInvoiceCreated}
+                onUpdateStatus={handleUpdateInvoiceStatus}
+                onDelete={handleDeleteInvoice}
+                patients={patientsList}
+                appointments={appointments}
+                lang={lang}
+              />
+            )}
+
             {activeTab === 'analytics' && (
               <AnalyticsTab
                 lang={lang}
@@ -847,6 +939,7 @@ export default function AdminPage() {
         lang={lang}
         totalAppointments={stats.total}
         totalNotes={Math.max(patientsList.length, patientNotes.length)}
+        totalInvoices={invoices.length}
         onOpenAddModal={() => setIsAddModalOpen(true)}
       />
 

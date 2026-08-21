@@ -16,11 +16,17 @@ import {
   IconTag,
   IconArrowLeft,
   IconNotes,
+  IconReceiptTax,
+  IconPrinter,
+  IconCheck,
+  IconClock,
 } from '@tabler/icons-react';
 import {
   PatientNote,
   PatientRecord,
   Appointment,
+  Invoice,
+  CreateInvoiceInput,
   getServiceName,
   getServicePrice,
 } from '@/types/admin';
@@ -28,6 +34,8 @@ import { SERVICES } from '@/data/services';
 import { Lang } from '@/lib/i18n';
 import { phonesMatch } from '@/lib/phone';
 import { ResponsiveModal } from './ResponsiveModal';
+import { CreateInvoiceModal } from './CreateInvoiceModal';
+import { InvoiceDetailModal } from './InvoiceDetailModal';
 
 interface PatientNotesTabProps {
   lang: Lang;
@@ -75,13 +83,36 @@ export function PatientNotesTab({
   };
 
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [activeDossierTab, setActiveDossierTab] = useState<'overview' | 'timeline' | 'eva' | 'notes'>('overview');
+  const [activeDossierTab, setActiveDossierTab] = useState<'overview' | 'timeline' | 'eva' | 'invoices' | 'notes'>('overview');
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
 
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const [isAddSessionModalOpen, setIsAddSessionModalOpen] = useState(false);
   const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false);
+  const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
+  const [selectedInvoiceForModal, setSelectedInvoiceForModal] = useState<Invoice | null>(null);
+  const [isInvoiceDetailOpen, setIsInvoiceDetailOpen] = useState(false);
+  const [patientInvoices, setPatientInvoices] = useState<Invoice[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Fetch invoices for active patient
+  const fetchActivePatientInvoices = async (phone: string) => {
+    setLoadingInvoices(true);
+    try {
+      const res = await fetch(`/api/admin/invoices?patientPhone=${encodeURIComponent(phone)}`, {
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPatientInvoices(data.invoices || []);
+      }
+    } catch {
+      /* silent */
+    } finally {
+      setLoadingInvoices(false);
+    }
+  };
 
   // Sync selectedPatientId when selectedNote changes from outside (e.g. clicking Fiche patient on an appointment)
   useEffect(() => {
@@ -89,8 +120,10 @@ export function PatientNotesTab({
       const match = patientsList.find(p => phonesMatch(p.phone, selectedNote.phone));
       if (match) {
         setSelectedPatientId(match.id);
+        fetchActivePatientInvoices(match.phone);
       } else {
         setSelectedPatientId('legacy_' + selectedNote.phone);
+        fetchActivePatientInvoices(selectedNote.phone);
       }
     }
   }, [selectedNote, patientsList]);
@@ -298,22 +331,23 @@ export function PatientNotesTab({
     return { current, initial, diff };
   }, [activePatient]);
 
-  const handleSelectPatient = (p: PatientRecord) => {
-    setSelectedPatientId(p.id);
+  const handleSelectPatient = (patient: PatientRecord) => {
+    setSelectedPatientId(patient.id);
     setIsMobileDetailOpen(true);
-    const foundNote = patientNotes.find(n => phonesMatch(n.phone, p.phone));
-    if (foundNote) {
-      setSelectedNote(foundNote);
-      setNoteForm({ content: foundNote.content, tags: foundNote.tags });
+    fetchActivePatientInvoices(patient.phone);
+    const noteMatch = patientNotes.find(n => phonesMatch(n.phone, patient.phone));
+    if (noteMatch) {
+      setSelectedNote(noteMatch);
+      setNoteForm({ content: noteMatch.content, tags: noteMatch.tags });
     } else {
       setSelectedNote({
-        phone: p.phone,
-        patientName: p.patientName,
-        content: p.medicalHistory ?? '',
-        tags: p.pathologyTags ?? '',
-        updatedAt: p.updatedAt,
+        phone: patient.phone,
+        patientName: patient.patientName,
+        content: patient.medicalHistory || '',
+        tags: patient.pathologyTags || '',
+        updatedAt: patient.updatedAt,
       });
-      setNoteForm({ content: p.medicalHistory ?? '', tags: p.pathologyTags ?? '' });
+      setNoteForm({ content: patient.medicalHistory || '', tags: patient.pathologyTags || '' });
     }
   };
 
@@ -793,11 +827,17 @@ export function PatientNotesTab({
                   { id: 'overview', label: txt('Aperçu & Clinique', 'Overview & Clinic', 'Visão Geral') },
                   { id: 'timeline', label: txt(`Historique (${combinedTimeline.length})`, `History (${combinedTimeline.length})`, `Histórico (${combinedTimeline.length})`) },
                   { id: 'eva', label: txt('Échelle EVA & Douleur', 'EVA Pain Scale', 'Escala EVA') },
+                  { id: 'invoices', label: txt(`Recibos (${patientInvoices.length})`, `Invoices (${patientInvoices.length})`, `Faturação (${patientInvoices.length})`) },
                   { id: 'notes', label: txt('Notes Libres', 'Free Notes', 'Notas Clínicas') },
                 ].map(t => (
                   <button
                     key={t.id}
-                    onClick={() => setActiveDossierTab(t.id as typeof activeDossierTab)}
+                    onClick={() => {
+                      setActiveDossierTab(t.id as typeof activeDossierTab);
+                      if (t.id === 'invoices' && activePatient) {
+                        fetchActivePatientInvoices(activePatient.phone);
+                      }
+                    }}
                     className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap touch-target ${
                       activeDossierTab === t.id
                         ? 'bg-[#0F172A] text-white font-semibold'
@@ -979,6 +1019,116 @@ export function PatientNotesTab({
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {activeDossierTab === 'invoices' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-[#0F172A] text-sm">
+                          {txt('Historique de Facturation & Reçus', 'Billing & Tax Receipts History', 'Histórico de Faturação & Recibos')}
+                        </h4>
+                        <p className="text-[11px] text-[#64748B]">
+                          Documentos com NIF válidos para IRS e reembolso de seguros (ADSE, Médis, Multicare).
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsCreateInvoiceOpen(true)}
+                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#E8C97A] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 shadow-xs hover:brightness-105 transition-all"
+                      >
+                        <IconPlus size={14} />
+                        <span>{txt('Émettre Recibo', 'New Invoice', 'Emitir Recibo')}</span>
+                      </button>
+                    </div>
+
+                    {loadingInvoices ? (
+                      <div className="py-8 text-center text-xs text-[#94A3B8]">
+                        A carregar recibos...
+                      </div>
+                    ) : patientInvoices.length === 0 ? (
+                      <div className="p-8 text-center bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] space-y-2">
+                        <IconReceiptTax size={32} className="mx-auto text-[#CBD5E1]" />
+                        <p className="font-semibold text-xs text-[#475569]">Nenhum recibo emitido para este utente</p>
+                        <button
+                          type="button"
+                          onClick={() => setIsCreateInvoiceOpen(true)}
+                          className="px-3 py-1.5 rounded-lg bg-[#0F172A] text-white text-xs font-bold"
+                        >
+                          Emitir Primeiro Recibo
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {patientInvoices.map((inv) => (
+                          <div
+                            key={inv.id}
+                            className="p-3.5 bg-white border border-[#E2E8F0] rounded-xl hover:border-[#C49A3C] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-[#0F172A] text-xs">
+                                  {inv.invoiceNumber}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                                    inv.paymentStatus === 'PAID'
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                  }`}
+                                >
+                                  {inv.paymentStatus === 'PAID' ? 'Pago' : 'Pendente'}
+                                </span>
+                              </div>
+                              <p className="font-medium text-xs text-[#1E293B] mt-0.5">{inv.serviceName}</p>
+                              <p className="text-[10px] text-[#64748B] font-mono mt-0.5">
+                                Emissão: {inv.createdAt.split('T')[0]} • NIF: {inv.patientNif} • {inv.paymentMethod}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-3 justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-[#E2E8F0]">
+                              <span className="font-mono font-bold text-sm text-[#0F172A]">
+                                {inv.amount.toFixed(2)} €
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedInvoiceForModal(inv);
+                                    setIsInvoiceDetailOpen(true);
+                                  }}
+                                  className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors"
+                                  title="Ver / Imprimir PDF"
+                                >
+                                  <IconPrinter size={15} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const cleanPhone = inv.patientPhone.replace(/[^0-9]/g, '');
+                                    const msg = encodeURIComponent(
+                                      `Olá ${inv.patientName}! 👋\n` +
+                                      `Recibo da *Digital Clínica*:\n` +
+                                      `🧾 *Nº:* ${inv.invoiceNumber}\n` +
+                                      `🩺 *Tratamento:* ${inv.serviceName}\n` +
+                                      `💰 *Valor:* ${inv.amount.toFixed(2)} €\n` +
+                                      `📌 *NIF:* ${inv.patientNif}\n` +
+                                      `✅ *Estado:* ${inv.paymentStatus === 'PAID' ? 'PAGO / Quitado' : 'Pendente'}`
+                                    );
+                                    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+                                  }}
+                                  className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                  title="Enviar por WhatsApp"
+                                >
+                                  <IconBrandWhatsapp size={15} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1357,6 +1507,48 @@ export function PatientNotesTab({
           </div>
         </form>
       </ResponsiveModal>
+
+      {/* Direct Create Invoice Modal for Active Patient */}
+      {activePatient && (
+        <CreateInvoiceModal
+          isOpen={isCreateInvoiceOpen}
+          onClose={() => setIsCreateInvoiceOpen(false)}
+          onCreated={(newInv) => {
+            fetchActivePatientInvoices(activePatient.phone);
+            if (onRefreshPatients) onRefreshPatients();
+            if (onActionToast) {
+              onActionToast({
+                type: 'success',
+                title: 'Fatura-Recibo Emitida',
+                message: `${newInv.invoiceNumber} — ${newInv.amount.toFixed(2)} €`,
+              });
+            }
+          }}
+          lang={lang}
+          patients={patientsList}
+          appointments={appointments}
+          prefilledData={{
+            patientId: activePatient.id,
+            patientName: activePatient.patientName,
+            patientPhone: activePatient.phone,
+            patientEmail: activePatient.email || undefined,
+            coverageType: activePatient.coverageType || 'PARTICULAR',
+            coverageProvider: activePatient.coverageProvider || undefined,
+            coverageNumber: activePatient.coverageNumber || undefined,
+          }}
+        />
+      )}
+
+      {/* Invoice Detail Viewer / Print */}
+      <InvoiceDetailModal
+        invoice={selectedInvoiceForModal}
+        isOpen={isInvoiceDetailOpen}
+        onClose={() => {
+          setIsInvoiceDetailOpen(false);
+          setSelectedInvoiceForModal(null);
+        }}
+        lang={lang}
+      />
     </div>
   );
 }

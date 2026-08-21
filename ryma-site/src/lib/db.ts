@@ -4,7 +4,7 @@
 import { createClient, type Client as LibSqlClient } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
-import type { PatientRecord, PatientSession } from '@/types/admin';
+import type { PatientRecord, PatientSession, Invoice, CreateInvoiceInput, InvoiceStats } from '@/types/admin';
 
 // ─── Dual Storage Engine: Dynamic Turso (Cloud) with Local Fallback ───────────
 let _tursoClient: LibSqlClient | null = null;
@@ -86,11 +86,41 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
         createdAt    TEXT NOT NULL,
         FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE CASCADE
       )`,
+      `CREATE TABLE IF NOT EXISTS invoices (
+        id                  TEXT PRIMARY KEY,
+        invoiceNumber       TEXT NOT NULL UNIQUE,
+        appointmentId       TEXT,
+        patientId           TEXT,
+        patientName         TEXT NOT NULL,
+        patientNif          TEXT DEFAULT '999999990',
+        patientEmail        TEXT,
+        patientPhone        TEXT NOT NULL,
+        patientAddress      TEXT,
+        coverageType        TEXT DEFAULT 'PARTICULAR',
+        coverageProvider    TEXT,
+        coverageNumber      TEXT,
+        serviceSlug         TEXT NOT NULL,
+        serviceName         TEXT NOT NULL,
+        practitioner        TEXT,
+        amount              REAL NOT NULL,
+        vatRate             REAL NOT NULL DEFAULT 0,
+        vatExemptionReason  TEXT DEFAULT 'Artigo 9.º do CIVA',
+        paymentMethod       TEXT NOT NULL DEFAULT 'MULTIBANCO',
+        paymentStatus       TEXT NOT NULL DEFAULT 'PAID',
+        paidAt              TEXT,
+        notes               TEXT,
+        createdAt           TEXT NOT NULL,
+        updatedAt           TEXT NOT NULL
+      )`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
       `CREATE INDEX IF NOT EXISTS idx_rate_limit ON rate_limit_log(ip, action, timestamp)`,
       `CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone)`,
       `CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient ON patient_sessions(patientId)`,
+      `CREATE INDEX IF NOT EXISTS idx_invoices_number ON invoices(invoiceNumber)`,
+      `CREATE INDEX IF NOT EXISTS idx_invoices_patient ON invoices(patientPhone)`,
+      `CREATE INDEX IF NOT EXISTS idx_invoices_date ON invoices(createdAt)`,
+      `CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus)`,
     ]);
 
     // 2. Safe non-destructive column migrations on Turso
@@ -370,11 +400,42 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
       FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS invoices (
+      id                  TEXT PRIMARY KEY,
+      invoiceNumber       TEXT NOT NULL UNIQUE,
+      appointmentId       TEXT,
+      patientId           TEXT,
+      patientName         TEXT NOT NULL,
+      patientNif          TEXT DEFAULT '999999990',
+      patientEmail        TEXT,
+      patientPhone        TEXT NOT NULL,
+      patientAddress      TEXT,
+      coverageType        TEXT DEFAULT 'PARTICULAR',
+      coverageProvider    TEXT,
+      coverageNumber      TEXT,
+      serviceSlug         TEXT NOT NULL,
+      serviceName         TEXT NOT NULL,
+      practitioner        TEXT,
+      amount              REAL NOT NULL,
+      vatRate             REAL NOT NULL DEFAULT 0,
+      vatExemptionReason  TEXT DEFAULT 'Artigo 9.º do CIVA',
+      paymentMethod       TEXT NOT NULL DEFAULT 'MULTIBANCO',
+      paymentStatus       TEXT NOT NULL DEFAULT 'PAID',
+      paidAt              TEXT,
+      notes               TEXT,
+      createdAt           TEXT NOT NULL,
+      updatedAt           TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
     CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
     CREATE INDEX IF NOT EXISTS idx_rate_limit ON rate_limit_log(ip, action, timestamp);
     CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone);
     CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient ON patient_sessions(patientId);
+    CREATE INDEX IF NOT EXISTS idx_invoices_number ON invoices(invoiceNumber);
+    CREATE INDEX IF NOT EXISTS idx_invoices_patient ON invoices(patientPhone);
+    CREATE INDEX IF NOT EXISTS idx_invoices_date ON invoices(createdAt);
+    CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus);
   `);
 
   // Non-destructive migration for existing tables
@@ -1019,3 +1080,217 @@ export async function dbGetNoShowCounts(): Promise<Record<string, number>> {
   });
   return map;
 }
+
+// ─── Portuguese Medical Invoicing Helpers ─────────────────────────────────────
+
+export async function dbGenerateInvoiceNumber(): Promise<string> {
+  const currentYear = new Date().getFullYear();
+  const prefix = `FR ${currentYear}/`;
+  
+  const rows = await executeQuery<{ invoiceNumber: string }>(
+    `SELECT invoiceNumber FROM invoices WHERE invoiceNumber LIKE ? ORDER BY invoiceNumber DESC LIMIT 1`,
+    [`${prefix}%`]
+  );
+
+  let nextSequence = 1;
+  if (rows.length > 0 && rows[0]?.invoiceNumber) {
+    const parts = rows[0].invoiceNumber.split('/');
+    if (parts[1]) {
+      const parsed = parseInt(parts[1], 10);
+      if (!isNaN(parsed)) {
+        nextSequence = parsed + 1;
+      }
+    }
+  }
+
+  const padded = String(nextSequence).padStart(4, '0');
+  return `${prefix}${padded}`;
+}
+
+export async function dbCreateInvoice(input: CreateInvoiceInput): Promise<Invoice> {
+  const id = 'inv_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+  const now = new Date().toISOString();
+  const invoiceNumber = await dbGenerateInvoiceNumber();
+
+  const phoneValidation = validateAndNormalizePhone(input.patientPhone);
+  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.patientPhone.trim();
+
+  const isKineService = !input.serviceSlug.includes('minceur') &&
+                        !input.serviceSlug.includes('cryolipolyse') &&
+                        !input.serviceSlug.includes('cavitation') &&
+                        !input.serviceSlug.includes('radiofrequence');
+
+  const defaultVatRate = input.vatRate !== undefined ? input.vatRate : (isKineService ? 0 : 23);
+  const defaultExemption = defaultVatRate === 0
+    ? (input.vatExemptionReason || 'Isento de IVA - Artigo 9.º do CIVA')
+    : null;
+
+  const paymentStatus = input.paymentStatus || 'PAID';
+  const paidAt = paymentStatus === 'PAID' ? now : null;
+
+  await executeQuery(
+    `INSERT INTO invoices (
+      id, invoiceNumber, appointmentId, patientId, patientName, patientNif,
+      patientEmail, patientPhone, patientAddress, coverageType, coverageProvider, coverageNumber,
+      serviceSlug, serviceName, practitioner, amount, vatRate, vatExemptionReason,
+      paymentMethod, paymentStatus, paidAt, notes, createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      invoiceNumber,
+      input.appointmentId || null,
+      input.patientId || null,
+      input.patientName.trim(),
+      input.patientNif?.trim() || '999999990',
+      input.patientEmail?.trim() || null,
+      normalizedPhone,
+      input.patientAddress?.trim() || 'Lisboa, Portugal',
+      input.coverageType || 'PARTICULAR',
+      input.coverageProvider?.trim() || null,
+      input.coverageNumber?.trim() || null,
+      input.serviceSlug,
+      input.serviceName || input.serviceSlug,
+      input.practitioner || 'Equipa Digital Clínica (Licenciada)',
+      Number(input.amount),
+      defaultVatRate,
+      defaultExemption,
+      input.paymentMethod || 'MULTIBANCO',
+      paymentStatus,
+      paidAt,
+      input.notes || null,
+      now,
+      now,
+    ]
+  );
+
+  const created = await dbGetInvoiceById(id);
+  return created!;
+}
+
+export async function dbGetInvoices(filters?: {
+  status?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  patientPhone?: string;
+  paymentMethod?: string;
+}): Promise<Invoice[]> {
+  let sql = 'SELECT * FROM invoices WHERE 1=1';
+  const params: (string | number)[] = [];
+
+  if (filters?.status && filters.status !== 'all') {
+    sql += ' AND paymentStatus = ?';
+    params.push(filters.status.toUpperCase());
+  }
+  if (filters?.paymentMethod && filters.paymentMethod !== 'all') {
+    sql += ' AND paymentMethod = ?';
+    params.push(filters.paymentMethod.toUpperCase());
+  }
+  if (filters?.patientPhone) {
+    const phoneValidation = validateAndNormalizePhone(filters.patientPhone);
+    const norm = phoneValidation.isValid ? phoneValidation.normalized : filters.patientPhone.trim();
+    sql += ' AND (patientPhone = ? OR patientPhone = ?)';
+    params.push(filters.patientPhone, norm);
+  }
+  if (filters?.dateFrom) {
+    sql += ' AND createdAt >= ?';
+    params.push(filters.dateFrom);
+  }
+  if (filters?.dateTo) {
+    sql += ' AND createdAt <= ?';
+    params.push(filters.dateTo + 'T23:59:59.999Z');
+  }
+  if (filters?.search) {
+    sql += ' AND (patientName LIKE ? OR patientNif LIKE ? OR invoiceNumber LIKE ? OR serviceName LIKE ? OR patientPhone LIKE ?)';
+    const q = `%${filters.search}%`;
+    params.push(q, q, q, q, q);
+  }
+
+  sql += ' ORDER BY createdAt DESC';
+  return executeQuery<Invoice>(sql, params);
+}
+
+export async function dbGetInvoiceById(id: string): Promise<Invoice | null> {
+  const rows = await executeQuery<Invoice>('SELECT * FROM invoices WHERE id = ? OR invoiceNumber = ?', [id, id]);
+  return rows[0] ?? null;
+}
+
+export async function dbUpdateInvoice(
+  id: string,
+  fields: Partial<Pick<Invoice, 'patientName' | 'patientNif' | 'patientEmail' | 'patientAddress' | 'paymentMethod' | 'paymentStatus' | 'notes' | 'coverageType' | 'coverageProvider' | 'coverageNumber'>>
+): Promise<Invoice | null> {
+  const updates: string[] = [];
+  const params: (string | number)[] = [];
+
+  if (fields.patientName !== undefined)      { updates.push('patientName = ?');      params.push(fields.patientName); }
+  if (fields.patientNif !== undefined)       { updates.push('patientNif = ?');       params.push(fields.patientNif); }
+  if (fields.patientEmail !== undefined)     { updates.push('patientEmail = ?');     params.push(fields.patientEmail ?? ''); }
+  if (fields.patientAddress !== undefined)   { updates.push('patientAddress = ?');   params.push(fields.patientAddress ?? ''); }
+  if (fields.paymentMethod !== undefined)    { updates.push('paymentMethod = ?');    params.push(fields.paymentMethod); }
+  if (fields.paymentStatus !== undefined)    {
+    updates.push('paymentStatus = ?');
+    params.push(fields.paymentStatus);
+    if (fields.paymentStatus === 'PAID') {
+      updates.push('paidAt = ?');
+      params.push(new Date().toISOString());
+    }
+  }
+  if (fields.coverageType !== undefined)     { updates.push('coverageType = ?');     params.push(fields.coverageType); }
+  if (fields.coverageProvider !== undefined) { updates.push('coverageProvider = ?'); params.push(fields.coverageProvider ?? ''); }
+  if (fields.coverageNumber !== undefined)   { updates.push('coverageNumber = ?');   params.push(fields.coverageNumber ?? ''); }
+  if (fields.notes !== undefined)            { updates.push('notes = ?');            params.push(fields.notes ?? ''); }
+
+  if (updates.length === 0) return dbGetInvoiceById(id);
+
+  updates.push('updatedAt = ?');
+  params.push(new Date().toISOString());
+  params.push(id);
+
+  await executeQuery(`UPDATE invoices SET ${updates.join(', ')} WHERE id = ?`, params);
+  return dbGetInvoiceById(id);
+}
+
+export async function dbDeleteInvoice(id: string): Promise<void> {
+  await executeQuery('DELETE FROM invoices WHERE id = ?', [id]);
+}
+
+export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
+  const invoices = await executeQuery<Invoice>('SELECT * FROM invoices');
+  
+  let totalRevenue = 0;
+  let totalPaid = 0;
+  let totalPending = 0;
+  let countPaid = 0;
+  let countPending = 0;
+  let insuranceCount = 0;
+
+  for (const inv of invoices) {
+    totalRevenue += Number(inv.amount || 0);
+    if (inv.paymentStatus === 'PAID') {
+      totalPaid += Number(inv.amount || 0);
+      countPaid++;
+    } else if (inv.paymentStatus === 'PENDING') {
+      totalPending += Number(inv.amount || 0);
+      countPending++;
+    }
+    if (inv.coverageType === 'ADSE' || inv.coverageType === 'INSURANCE') {
+      insuranceCount++;
+    }
+  }
+
+  const countTotal = invoices.length;
+  const avgTicket = countTotal > 0 ? Math.round(totalRevenue / countTotal) : 0;
+  const insuranceShare = countTotal > 0 ? Math.round((insuranceCount / countTotal) * 100) : 0;
+
+  return {
+    totalRevenue,
+    totalPaid,
+    totalPending,
+    countPaid,
+    countPending,
+    countTotal,
+    avgTicket,
+    insuranceShare,
+  };
+}
+

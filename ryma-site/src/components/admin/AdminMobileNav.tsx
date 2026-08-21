@@ -6,10 +6,11 @@ import {
   IconListCheck,
   IconNotes,
   IconChartBar,
+  IconReceiptTax,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 
-export type AdminTab = 'appointments' | 'slots' | 'analytics' | 'patients';
+export type AdminTab = 'appointments' | 'slots' | 'patients' | 'invoices' | 'analytics';
 
 interface AdminMobileNavProps {
   activeTab: AdminTab;
@@ -17,6 +18,7 @@ interface AdminMobileNavProps {
   lang: Lang;
   totalAppointments: number;
   totalNotes: number;
+  totalInvoices?: number;
   onOpenAddModal: () => void;
 }
 
@@ -26,6 +28,7 @@ export function AdminMobileNav({
   lang,
   totalAppointments,
   totalNotes,
+  totalInvoices,
 }: AdminMobileNavProps) {
   const tabs = [
     {
@@ -45,6 +48,12 @@ export function AdminMobileNav({
       label: lang === 'pt' ? 'Doentes' : lang === 'en' ? 'Patients' : 'Patients',
       icon: IconNotes,
       badge: totalNotes > 0 ? totalNotes : null,
+    },
+    {
+      id: 'invoices' as const,
+      label: lang === 'pt' ? 'Recibos' : lang === 'en' ? 'Invoices' : 'Factures',
+      icon: IconReceiptTax,
+      badge: totalInvoices && totalInvoices > 0 ? totalInvoices : null,
     },
     {
       id: 'analytics' as const,
