@@ -131,6 +131,46 @@ export interface InvoiceStats {
   insuranceShare: number; // percentage
 }
 
+// ─── Prescription & Recommendations Types ────────────────────────────────────
+
+export type PrescriptionItemCategory = 'care_product' | 'ergonomic_equipment' | 'lifestyle_habit';
+
+export interface PrescriptionItem {
+  id: string;
+  category: PrescriptionItemCategory;
+  title: string;
+  instructions: string; // Frequency / Posology
+  productRef?: string;
+}
+
+export interface PatientPrescription {
+  id: string;
+  patientId?: string;
+  patientPhone: string;
+  patientName: string;
+  practitioner: string;
+  date: string;
+  diagnosisOrGoal?: string;
+  items: PrescriptionItem[];
+  generalNotes?: string;
+  createdAt: string;
+}
+
+export interface CreatePrescriptionInput {
+  patientId?: string;
+  patientPhone: string;
+  patientName: string;
+  practitioner?: string;
+  diagnosisOrGoal?: string;
+  items: Array<{
+    category: PrescriptionItemCategory;
+    title: string;
+    instructions: string;
+    productRef?: string;
+  }>;
+  generalNotes?: string;
+}
+
 export function getServiceName(slug: string, lang: Lang): string {
   const service = SERVICES.find(s => s.slug === slug);
   return service ? getLocalizedText(service.name, lang) : slug;

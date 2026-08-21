@@ -26,6 +26,7 @@ import {
   PatientRecord,
   Appointment,
   Invoice,
+  PatientPrescription,
   CreateInvoiceInput,
   getServiceName,
   getServicePrice,
@@ -36,6 +37,10 @@ import { phonesMatch } from '@/lib/phone';
 import { ResponsiveModal } from './ResponsiveModal';
 import { CreateInvoiceModal } from './CreateInvoiceModal';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
+import { CreatePrescriptionModal } from './CreatePrescriptionModal';
+import { PrescriptionDetailModal } from './PrescriptionDetailModal';
+import { formatPrescriptionWhatsAppMessage } from '@/lib/prescriptionPdf';
+import { SITE } from '@/lib/site';
 
 interface PatientNotesTabProps {
   lang: Lang;
@@ -83,7 +88,7 @@ export function PatientNotesTab({
   };
 
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [activeDossierTab, setActiveDossierTab] = useState<'overview' | 'timeline' | 'eva' | 'invoices' | 'notes'>('overview');
+  const [activeDossierTab, setActiveDossierTab] = useState<'overview' | 'timeline' | 'eva' | 'invoices' | 'prescriptions' | 'notes'>('overview');
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
 
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
@@ -94,6 +99,14 @@ export function PatientNotesTab({
   const [isInvoiceDetailOpen, setIsInvoiceDetailOpen] = useState(false);
   const [patientInvoices, setPatientInvoices] = useState<Invoice[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
+
+  // Prescriptions & Recommendations Pad state
+  const [isCreatePrescriptionOpen, setIsCreatePrescriptionOpen] = useState(false);
+  const [selectedPrescriptionForModal, setSelectedPrescriptionForModal] = useState<PatientPrescription | null>(null);
+  const [isPrescriptionDetailOpen, setIsPrescriptionDetailOpen] = useState(false);
+  const [patientPrescriptions, setPatientPrescriptions] = useState<PatientPrescription[]>([]);
+  const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
 
   // Fetch invoices for active patient
@@ -114,6 +127,24 @@ export function PatientNotesTab({
     }
   };
 
+  // Fetch prescriptions for active patient
+  const fetchActivePatientPrescriptions = async (phone: string) => {
+    setLoadingPrescriptions(true);
+    try {
+      const res = await fetch(`/api/admin/prescriptions?patientPhone=${encodeURIComponent(phone)}`, {
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPatientPrescriptions(data.prescriptions || []);
+      }
+    } catch {
+      /* silent */
+    } finally {
+      setLoadingPrescriptions(false);
+    }
+  };
+
   // Sync selectedPatientId when selectedNote changes from outside (e.g. clicking Fiche patient on an appointment)
   useEffect(() => {
     if (selectedNote) {
@@ -121,9 +152,11 @@ export function PatientNotesTab({
       if (match) {
         setSelectedPatientId(match.id);
         fetchActivePatientInvoices(match.phone);
+        fetchActivePatientPrescriptions(match.phone);
       } else {
         setSelectedPatientId('legacy_' + selectedNote.phone);
         fetchActivePatientInvoices(selectedNote.phone);
+        fetchActivePatientPrescriptions(selectedNote.phone);
       }
     }
   }, [selectedNote, patientsList]);
@@ -335,6 +368,7 @@ export function PatientNotesTab({
     setSelectedPatientId(patient.id);
     setIsMobileDetailOpen(true);
     fetchActivePatientInvoices(patient.phone);
+    fetchActivePatientPrescriptions(patient.phone);
     const noteMatch = patientNotes.find(n => phonesMatch(n.phone, patient.phone));
     if (noteMatch) {
       setSelectedNote(noteMatch);
@@ -543,6 +577,15 @@ export function PatientNotesTab({
       if (res.ok) {
         if (onRefreshPatients) onRefreshPatients();
         setIsAddSessionModalOpen(false);
+        setSessionForm({
+          date: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`,
+          time: '10:00',
+          serviceSlug: SERVICES[0]?.slug ?? 'kinesitherapie-generale',
+          evaPainScore: 5,
+          sessionType: 'MANUAL',
+          notes: '',
+          practitioner: SITE.professionalName,
+        });
         if (onActionToast) {
           onActionToast({
             type: 'success',
@@ -828,6 +871,7 @@ export function PatientNotesTab({
                   { id: 'timeline', label: txt(`Historique (${combinedTimeline.length})`, `History (${combinedTimeline.length})`, `Histórico (${combinedTimeline.length})`) },
                   { id: 'eva', label: txt('Échelle EVA & Douleur', 'EVA Pain Scale', 'Escala EVA') },
                   { id: 'invoices', label: txt(`Recibos (${patientInvoices.length})`, `Invoices (${patientInvoices.length})`, `Faturação (${patientInvoices.length})`) },
+                  { id: 'prescriptions', label: txt(`Conseils & Matériel (${patientPrescriptions.length})`, `Recommendations (${patientPrescriptions.length})`, `Recomendações (${patientPrescriptions.length})`) },
                   { id: 'notes', label: txt('Notes Libres', 'Free Notes', 'Notas Clínicas') },
                 ].map(t => (
                   <button
@@ -836,6 +880,9 @@ export function PatientNotesTab({
                       setActiveDossierTab(t.id as typeof activeDossierTab);
                       if (t.id === 'invoices' && activePatient) {
                         fetchActivePatientInvoices(activePatient.phone);
+                      }
+                      if (t.id === 'prescriptions' && activePatient) {
+                        fetchActivePatientPrescriptions(activePatient.phone);
                       }
                     }}
                     className={`px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap touch-target ${
@@ -1124,6 +1171,109 @@ export function PatientNotesTab({
                                   <IconBrandWhatsapp size={15} />
                                 </button>
                               </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeDossierTab === 'prescriptions' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-[#0F172A] text-sm">
+                          {txt('Ordonnances de Conseils & Matériel Recommandé', 'Clinical Recommendations & Equipment Pad', 'Fichas de Recomendações & Matériel')}
+                        </h4>
+                        <p className="text-[11px] text-[#64748B]">
+                          Orientações terapêuticas, produtos tópicos e ergonomia para acompanhamento ao domicílio.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsCreatePrescriptionOpen(true)}
+                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#E8C97A] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 shadow-xs hover:brightness-105 transition-all"
+                      >
+                        <IconPlus size={14} />
+                        <span>{txt('Nouvelle Recommandation', 'New Recommendation', 'Nova Ficha')}</span>
+                      </button>
+                    </div>
+
+                    {loadingPrescriptions ? (
+                      <div className="py-8 text-center text-xs text-[#94A3B8]">
+                        A carregar recomendações...
+                      </div>
+                    ) : patientPrescriptions.length === 0 ? (
+                      <div className="p-8 text-center bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] space-y-2">
+                        <IconNotes size={32} className="mx-auto text-[#CBD5E1]" />
+                        <p className="font-semibold text-xs text-[#475569]">Nenhuma ficha de recomendações emitida</p>
+                        <button
+                          type="button"
+                          onClick={() => setIsCreatePrescriptionOpen(true)}
+                          className="px-3 py-1.5 rounded-lg bg-[#0F172A] text-white text-xs font-bold"
+                        >
+                          Criar Primeira Recomendação
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {patientPrescriptions.map((rx) => (
+                          <div
+                            key={rx.id}
+                            className="p-3.5 bg-white border border-[#E2E8F0] rounded-xl hover:border-[#C49A3C] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-[#0F172A] text-xs">
+                                  {rx.date}
+                                </span>
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FAF8F5] text-[#9A7428] border border-[#E8E2D8]">
+                                  {rx.items.length} itens prescritos
+                                </span>
+                              </div>
+                              {rx.diagnosisOrGoal && (
+                                <p className="font-semibold text-xs text-[#1E293B]">{rx.diagnosisOrGoal}</p>
+                              )}
+                              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                {rx.items.slice(0, 3).map((it, i) => (
+                                  <span key={i} className="text-[10px] bg-[#F1F5F9] text-[#475569] px-2 py-0.5 rounded">
+                                    {it.title}
+                                  </span>
+                                ))}
+                                {rx.items.length > 3 && (
+                                  <span className="text-[10px] text-[#94A3B8] self-center">
+                                    +{rx.items.length - 3} mais
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-[#E2E8F0]">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPrescriptionForModal(rx);
+                                  setIsPrescriptionDetailOpen(true);
+                                }}
+                                className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors"
+                                title="Ver / Imprimir PDF"
+                              >
+                                <IconPrinter size={15} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const cleanPhone = rx.patientPhone.replace(/[^0-9]/g, '');
+                                  const { formatPrescriptionWhatsAppMessage } = require('@/lib/prescriptionPdf');
+                                  const msg = encodeURIComponent(formatPrescriptionWhatsAppMessage(rx));
+                                  window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+                                }}
+                                className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                title="Enviar por WhatsApp"
+                              >
+                                <IconBrandWhatsapp size={15} />
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -1546,6 +1696,43 @@ export function PatientNotesTab({
         onClose={() => {
           setIsInvoiceDetailOpen(false);
           setSelectedInvoiceForModal(null);
+        }}
+        lang={lang}
+      />
+
+      {/* Create Prescription Modal */}
+      {activePatient && (
+        <CreatePrescriptionModal
+          isOpen={isCreatePrescriptionOpen}
+          onClose={() => setIsCreatePrescriptionOpen(false)}
+          onCreated={(newRx) => {
+            fetchActivePatientPrescriptions(activePatient.phone);
+            if (onActionToast) {
+              onActionToast({
+                type: 'success',
+                title: 'Ficha de Recomendações Emitida',
+                message: `${newRx.items.length} itens prescritos para ${newRx.patientName}`,
+              });
+            }
+          }}
+          patientPhone={activePatient.phone}
+          patientName={activePatient.patientName}
+          patientId={activePatient.id}
+          lang={lang}
+        />
+      )}
+
+      {/* Prescription Detail Viewer / PDF / WhatsApp */}
+      <PrescriptionDetailModal
+        prescription={selectedPrescriptionForModal}
+        isOpen={isPrescriptionDetailOpen}
+        onClose={() => {
+          setIsPrescriptionDetailOpen(false);
+          setSelectedPrescriptionForModal(null);
+        }}
+        onDelete={async (id) => {
+          await fetch(`/api/admin/prescriptions/${id}`, { method: 'DELETE' });
+          if (activePatient) fetchActivePatientPrescriptions(activePatient.phone);
         }}
         lang={lang}
       />

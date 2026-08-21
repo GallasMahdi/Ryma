@@ -4,7 +4,9 @@
 import { createClient, type Client as LibSqlClient } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
-import type { PatientRecord, PatientSession, Invoice, CreateInvoiceInput, InvoiceStats } from '@/types/admin';
+import type { PatientRecord, PatientSession, Invoice, CreateInvoiceInput, InvoiceStats, PatientPrescription, PrescriptionItem } from '@/types/admin';
+import { SITE } from '@/lib/site';
+import { phonesMatch } from '@/lib/phone';
 
 // ─── Dual Storage Engine: Dynamic Turso (Cloud) with Local Fallback ───────────
 let _tursoClient: LibSqlClient | null = null;
@@ -112,6 +114,18 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
         createdAt           TEXT NOT NULL,
         updatedAt           TEXT NOT NULL
       )`,
+      `CREATE TABLE IF NOT EXISTS prescriptions (
+        id                TEXT PRIMARY KEY,
+        patientId         TEXT,
+        patientPhone      TEXT NOT NULL,
+        patientName       TEXT NOT NULL,
+        practitioner      TEXT NOT NULL,
+        date              TEXT NOT NULL,
+        diagnosisOrGoal   TEXT,
+        itemsJson         TEXT NOT NULL,
+        generalNotes      TEXT,
+        createdAt         TEXT NOT NULL
+      )`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
       `CREATE INDEX IF NOT EXISTS idx_rate_limit ON rate_limit_log(ip, action, timestamp)`,
@@ -121,6 +135,8 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
       `CREATE INDEX IF NOT EXISTS idx_invoices_patient ON invoices(patientPhone)`,
       `CREATE INDEX IF NOT EXISTS idx_invoices_date ON invoices(createdAt)`,
       `CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus)`,
+      `CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patientPhone)`,
+      `CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date)`,
     ]);
 
     // 2. Safe non-destructive column migrations on Turso
@@ -427,6 +443,19 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
       updatedAt           TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS prescriptions (
+      id                TEXT PRIMARY KEY,
+      patientId         TEXT,
+      patientPhone      TEXT NOT NULL,
+      patientName       TEXT NOT NULL,
+      practitioner      TEXT NOT NULL,
+      date              TEXT NOT NULL,
+      diagnosisOrGoal   TEXT,
+      itemsJson         TEXT NOT NULL,
+      generalNotes      TEXT,
+      createdAt         TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
     CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
     CREATE INDEX IF NOT EXISTS idx_rate_limit ON rate_limit_log(ip, action, timestamp);
@@ -436,6 +465,8 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
     CREATE INDEX IF NOT EXISTS idx_invoices_patient ON invoices(patientPhone);
     CREATE INDEX IF NOT EXISTS idx_invoices_date ON invoices(createdAt);
     CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus);
+    CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patientPhone);
+    CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date);
   `);
 
   // Non-destructive migration for existing tables
@@ -1293,4 +1324,110 @@ export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
     insuranceShare,
   };
 }
+
+// ─── Prescriptions & Recommendations Database Operations ─────────────────────
+
+export async function dbCreatePrescription(input: {
+  patientId?: string;
+  patientPhone: string;
+  patientName: string;
+  practitioner?: string;
+  diagnosisOrGoal?: string;
+  items: Array<{
+    category: string;
+    title: string;
+    instructions: string;
+    productRef?: string;
+  }>;
+  generalNotes?: string;
+}): Promise<PatientPrescription> {
+  const id = `rx_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const now = new Date().toISOString();
+  const dateStr = now.split('T')[0];
+
+  const itemsWithIds: PrescriptionItem[] = input.items.map((item, idx) => ({
+    id: `item_${Date.now()}_${idx}`,
+    category: item.category as any,
+    title: item.title,
+    instructions: item.instructions,
+    productRef: item.productRef,
+  }));
+
+  const itemsJson = JSON.stringify(itemsWithIds);
+
+  await executeQuery(
+    `INSERT INTO prescriptions (
+      id, patientId, patientPhone, patientName, practitioner, date,
+      diagnosisOrGoal, itemsJson, generalNotes, createdAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.patientId ?? null,
+      input.patientPhone.trim(),
+      input.patientName.trim(),
+      input.practitioner?.trim() || SITE.professionalName,
+      dateStr,
+      input.diagnosisOrGoal?.trim() || null,
+      itemsJson,
+      input.generalNotes?.trim() || null,
+      now,
+    ]
+  );
+
+  return {
+    id,
+    patientId: input.patientId,
+    patientPhone: input.patientPhone.trim(),
+    patientName: input.patientName.trim(),
+    practitioner: input.practitioner?.trim() || SITE.professionalName,
+    date: dateStr,
+    diagnosisOrGoal: input.diagnosisOrGoal?.trim(),
+    items: itemsWithIds,
+    generalNotes: input.generalNotes?.trim(),
+    createdAt: now,
+  };
+}
+
+export async function dbGetPrescriptionsByPatientPhone(patientPhone: string): Promise<PatientPrescription[]> {
+  const allRows = await executeQuery<{
+    id: string;
+    patientId?: string;
+    patientPhone: string;
+    patientName: string;
+    practitioner: string;
+    date: string;
+    diagnosisOrGoal?: string;
+    itemsJson: string;
+    generalNotes?: string;
+    createdAt: string;
+  }>('SELECT * FROM prescriptions ORDER BY createdAt DESC');
+
+  const filtered = allRows.filter(r => phonesMatch(r.patientPhone, patientPhone));
+
+  return filtered.map(r => {
+    let items: PrescriptionItem[] = [];
+    try {
+      items = JSON.parse(r.itemsJson || '[]');
+    } catch {
+      items = [];
+    }
+    return {
+      id: r.id,
+      patientId: r.patientId,
+      patientPhone: r.patientPhone,
+      patientName: r.patientName,
+      practitioner: r.practitioner,
+      date: r.date,
+      diagnosisOrGoal: r.diagnosisOrGoal,
+      items,
+      generalNotes: r.generalNotes,
+      createdAt: r.createdAt,
+    };
+  });
+}
+
+export async function dbDeletePrescription(id: string): Promise<void> {
+  await executeQuery('DELETE FROM prescriptions WHERE id = ?', [id]);
+}
+
 
