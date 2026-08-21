@@ -301,3 +301,13 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ======================== PREVENT MOBILE INPUT AUTO-ZOOM ======================== */
+/* iOS Safari & WebKit zoom in when font-size < 16px on inputs/textareas */
+@media screen and (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}

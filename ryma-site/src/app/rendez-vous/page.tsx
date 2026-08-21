@@ -567,7 +567,7 @@ export default function RendezVousPage() {
     }
   };
 
-  const inputClass = "w-full bg-white border text-[#1A1412] placeholder-[#8A8078] rounded-xl px-4 py-3.5 text-sm focus:outline-none transition-all shadow-sm";
+  const inputClass = "w-full bg-white border text-[#1A1412] placeholder-[#8A8078] rounded-xl px-4 py-3.5 text-base sm:text-sm focus:outline-none transition-all shadow-sm";
   const inputCls = (field: string) =>
     `${inputClass} ${
       fieldErrors[field]
@@ -668,7 +668,7 @@ export default function RendezVousPage() {
                         value={step1Search}
                         onChange={(e) => setStep1Search(e.target.value)}
                         placeholder={lang === 'pt' ? 'Pesquisar tratamento...' : lang === 'en' ? 'Search treatment...' : 'Rechercher un soin...'}
-                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#E8E2D8] rounded-full text-xs text-[#1A1412] focus:outline-none focus:border-[#C49A3C] transition-colors shadow-xs"
+                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#E8E2D8] rounded-full text-base sm:text-xs text-[#1A1412] focus:outline-none focus:border-[#C49A3C] transition-colors shadow-xs"
                       />
                     </div>
                   </div>
