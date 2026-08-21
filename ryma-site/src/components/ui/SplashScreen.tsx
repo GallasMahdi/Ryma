@@ -111,56 +111,75 @@ function LogoMark() {
         transition={{ opacity: { duration: 1, delay: 0.8 }, rotate: { duration: 25, repeat: Infinity, ease: 'linear' } }}
       />
 
-      {/* Spine / Posture curve */}
+      {/* Option 6 Continuous Line Art: Head Contour */}
       <motion.path
-        d="M33 24 C 33 24, 38 40, 36 52 C 34 64, 33 76, 33 76"
+        d="M 37.5 19 C 33 19, 30 22.5, 30 27 C 30 31.5, 33 34.5, 36.5 35.5"
         stroke="url(#splashGold)"
-        strokeWidth="3.5"
+        strokeWidth="3.2"
         strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1.0, delay: 0.6, ease: 'easeInOut' }}
+      />
+
+      {/* Feminine Spine & Posture Line */}
+      <motion.path
+        d="M 34.5 35.5 C 31.5 38.5, 27.5 44, 27.5 50 C 27.5 57, 31 63, 29.5 70 C 28 77, 26 80, 25 82"
+        stroke="url(#splashGold)"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
         transition={{ duration: 1.2, delay: 0.8, ease: 'easeInOut' }}
       />
-      <motion.path
-        d="M27 24 L39 24 M27 76 L39 76"
-        stroke="url(#splashGold)"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 1.2 }}
-      />
 
-      {/* Dynamic "D" Arc */}
+      {/* Central Hourglass / Figure Loop */}
       <motion.path
-        d="M35 24.5 C 56 24.5, 75 35, 75 50 C 75 65, 56 75.5, 35 75.5"
+        d="M 36.5 35.5 C 40 40, 42 47, 39 53 C 36 59, 33 66, 35 73 C 37 80, 42 82, 42 82 C 42 82, 33 82, 30 76 C 27 70, 31 61, 35 56 C 39 51, 39 42, 35.5 36.5"
         stroke="url(#splashGold)"
-        strokeWidth="3.5"
+        strokeWidth="3"
         strokeLinecap="round"
+        strokeLinejoin="round"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
-        transition={{ duration: 1.4, delay: 0.9, ease: 'easeInOut' }}
+        transition={{ duration: 1.4, delay: 1.0, ease: 'easeInOut' }}
       />
 
-      {/* Inner Contour */}
+      {/* The Expansive Capital 'D' Wing */}
       <motion.path
-        d="M36 34 C 48 34, 62 41, 62 50 C 62 59, 48 66, 36 66"
+        d="M 36 35.5 C 56 35.5, 75 42, 75 58.5 C 75 74.5, 56 82, 36 82"
+        stroke="url(#splashGold)"
+        strokeWidth="3.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1.4, delay: 1.1, ease: 'easeInOut' }}
+      />
+
+      {/* Inner Flow Arc */}
+      <motion.path
+        d="M 39 44 C 54 44, 64 49, 64 58.5 C 64 68, 54 73.5, 39 73.5"
         stroke="url(#splashGold)"
         strokeWidth="1.8"
         strokeOpacity="0.75"
         strokeLinecap="round"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
-        transition={{ duration: 1.2, delay: 1.1, ease: 'easeInOut' }}
+        transition={{ duration: 1.2, delay: 1.3, ease: 'easeInOut' }}
       />
 
       {/* Center Sparkle */}
-      <motion.path
-        d="M51 44 Q 51 50, 57 50 Q 51 50, 51 56 Q 51 50, 45 50 Q 51 50, 51 44 Z"
+      <motion.circle
+        cx="53"
+        cy="58.5"
+        r="1.5"
         fill="url(#splashGold)"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.8, delay: 1.4, ease: 'backOut' }}
+        transition={{ duration: 0.6, delay: 1.6, ease: 'backOut' }}
       />
     </motion.svg>
   );

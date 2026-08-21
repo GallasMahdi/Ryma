@@ -2,10 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 
+// Option 6: Continuous Single-Line Art Silhouette & Letter D Emblem
 const SVG_CONTENT = `<svg width="512" height="512" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Luxury Gold Gradient (Rich metallic luster) -->
-    <linearGradient id="goldGrad" x1="12%" y1="12%" x2="88%" y2="88%">
+    <!-- Luxury Gold Linear Gradient -->
+    <linearGradient id="goldLineGrad" x1="12%" y1="10%" x2="88%" y2="90%">
       <stop offset="0%" stop-color="#FFF5D6"/>
       <stop offset="25%" stop-color="#E8C97A"/>
       <stop offset="55%" stop-color="#C49A3C"/>
@@ -14,7 +15,7 @@ const SVG_CONTENT = `<svg width="512" height="512" viewBox="0 0 100 100" fill="n
     </linearGradient>
 
     <!-- Shimmer Highlight Gradient -->
-    <linearGradient id="shimmerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="shimmerLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
       <stop offset="45%" stop-color="#F5E3B8" stop-opacity="0.85"/>
       <stop offset="100%" stop-color="#C49A3C" stop-opacity="0.7"/>
@@ -23,7 +24,7 @@ const SVG_CONTENT = `<svg width="512" height="512" viewBox="0 0 100 100" fill="n
     <!-- Deep Luxury Obsidian Radial Gradient -->
     <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="#241B16"/>
-      <stop offset="65%" stop-color="#140F0D"/>
+      <stop offset="68%" stop-color="#140F0D"/>
       <stop offset="100%" stop-color="#0A0807"/>
     </radialGradient>
 
@@ -38,32 +39,34 @@ const SVG_CONTENT = `<svg width="512" height="512" viewBox="0 0 100 100" fill="n
   <circle cx="50" cy="50" r="48" fill="url(#bgGrad)"/>
   
   <!-- Outer Gold Concentric Rims -->
-  <circle cx="50" cy="50" r="47" stroke="url(#goldGrad)" stroke-width="2"/>
-  <circle cx="50" cy="50" r="42.5" stroke="url(#shimmerGrad)" stroke-width="0.8" stroke-dasharray="2 3.5" stroke-opacity="0.6"/>
+  <circle cx="50" cy="50" r="47" stroke="url(#goldLineGrad)" stroke-width="1.8"/>
+  <circle cx="50" cy="50" r="43" stroke="url(#shimmerLineGrad)" stroke-width="0.8" stroke-dasharray="2 3.5" stroke-opacity="0.5"/>
 
-  <!-- Compass/Luxury Cardinal Accents -->
-  <circle cx="50" cy="5.5" r="1.6" fill="url(#goldGrad)"/>
-  <circle cx="94.5" cy="50" r="1.6" fill="url(#goldGrad)"/>
-  <circle cx="50" cy="94.5" r="1.6" fill="url(#goldGrad)"/>
-  <circle cx="5.5" cy="50" r="1.6" fill="url(#goldGrad)"/>
+  <!-- Compass / Cardinal Luxury Accents -->
+  <circle cx="50" cy="5.5" r="1.5" fill="url(#goldLineGrad)"/>
+  <circle cx="94.5" cy="50" r="1.5" fill="url(#goldLineGrad)"/>
+  <circle cx="50" cy="94.5" r="1.5" fill="url(#goldLineGrad)"/>
+  <circle cx="5.5" cy="50" r="1.5" fill="url(#goldLineGrad)"/>
 
-  <!-- Central Therapeutic Monogram & Emblem: Posture Spine + Elegant "D" & Diamond -->
+  <!-- Option 6: Continuous Line Art (Silhouette & Letter D) -->
   <g filter="url(#softGlow)">
-    <!-- Spine Vertical Curve (Therapeutic Alignment) -->
-    <path d="M33 24 C 33 24, 38 40, 36 52 C 34 64, 33 76, 33 76" stroke="url(#goldGrad)" stroke-width="3.6" stroke-linecap="round"/>
+    <!-- Head Contour -->
+    <path d="M 37.5 19 C 33 19, 30 22.5, 30 27 C 30 31.5, 33 34.5, 36.5 35.5" stroke="url(#goldLineGrad)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <!-- Spine Serifs -->
-    <path d="M26.5 24 L39.5 24" stroke="url(#goldGrad)" stroke-width="2.6" stroke-linecap="round"/>
-    <path d="M26.5 76 L39.5 76" stroke="url(#goldGrad)" stroke-width="2.6" stroke-linecap="round"/>
+    <!-- Feminine Spine, Neck, Waist & Hip Contour (Left Side) -->
+    <path d="M 34.5 35.5 C 31.5 38.5, 27.5 44, 27.5 50 C 27.5 57, 31 63, 29.5 70 C 28 77, 26 80, 25 82" stroke="url(#goldLineGrad)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <!-- Outer Harmonic "D" Arc -->
-    <path d="M35 24.5 C 57 24.5, 76 35, 76 50 C 76 65, 57 75.5, 35 75.5" stroke="url(#goldGrad)" stroke-width="3.8" stroke-linecap="round"/>
+    <!-- Central Infinity / Hourglass Figure Curve -->
+    <path d="M 36.5 35.5 C 40 40, 42 47, 39 53 C 36 59, 33 66, 35 73 C 37 80, 42 82, 42 82 C 42 82, 33 82, 30 76 C 27 70, 31 61, 35 56 C 39 51, 39 42, 35.5 36.5" stroke="url(#goldLineGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <!-- Inner Beauty & Wellness Contour -->
-    <path d="M36 34.5 C 48 34.5, 62.5 41.5, 62.5 50 C 62.5 58.5, 48 65.5, 36 65.5" stroke="url(#shimmerGrad)" stroke-width="1.8" stroke-opacity="0.8" stroke-linecap="round"/>
+    <!-- The Expansive Capital 'D' Dynamic Outer Wing -->
+    <path d="M 36 35.5 C 56 35.5, 75 42, 75 58.5 C 75 74.5, 56 82, 36 82" stroke="url(#goldLineGrad)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <!-- Central Precision Diamond Star -->
-    <path d="M51.5 44 Q 51.5 50, 57.5 50 Q 51.5 50, 51.5 56 Q 51.5 50, 45.5 50 Q 51.5 50, 51.5 44 Z" fill="url(#shimmerGrad)"/>
+    <!-- Inner Aesthetic Light Flow Arc -->
+    <path d="M 39 44 C 54 44, 64 49, 64 58.5 C 64 68, 54 73.5, 39 73.5" stroke="url(#shimmerLineGrad)" stroke-width="1.8" stroke-opacity="0.75" stroke-linecap="round"/>
+
+    <!-- Precision Sparkle Dot -->
+    <circle cx="53" cy="58.5" r="1.5" fill="url(#shimmerLineGrad)"/>
   </g>
 </svg>`;
 
@@ -79,7 +82,7 @@ async function generate() {
   fs.writeFileSync(path.join(publicDir, 'favicon.svg'), SVG_CONTENT, 'utf8');
   fs.writeFileSync(path.join(appDir, 'icon.svg'), SVG_CONTENT, 'utf8');
 
-  console.log('Written SVG icons');
+  console.log('Written SVG icons (Option 6)');
 
   const svgBuffer = Buffer.from(SVG_CONTENT);
 
@@ -107,7 +110,7 @@ async function generate() {
     console.log(`Generated ${name} (${size}x${size})`);
   }
 
-  // 3. Generate favicon.ico (multi-resolution ICO or standard 32x32 / 48x48)
+  // 3. Generate favicon.ico
   const ico32Buffer = await sharp(svgBuffer).resize(32, 32).png().toBuffer();
   fs.writeFileSync(path.join(publicDir, 'favicon.ico'), ico32Buffer);
   fs.writeFileSync(path.join(appDir, 'favicon.ico'), ico32Buffer);
