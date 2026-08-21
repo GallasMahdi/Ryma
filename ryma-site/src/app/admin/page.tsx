@@ -841,26 +841,27 @@ export default function AdminPage() {
 
         <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-            <AdminKpiCards stats={stats} lang={lang} />
-
             {activeTab === 'appointments' && (
-              <AppointmentsTab
-                lang={lang}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                filter={filter}
-                setFilter={setFilter}
-                appointmentsError={appointmentsError}
-                loadingAppointments={loadingAppointments}
-                appointments={appointments}
-                filteredAppointments={filteredAppointments}
-                updateStatus={updateStatus}
-                setConfirmDialog={setConfirmDialog}
-                softDeleteAppointment={softDeleteAppointment}
-                openPatientNote={openPatientNote}
-                noShowCounts={noShowCounts}
-                recentNewIds={recentNewIds}
-              />
+              <>
+                <AdminKpiCards stats={stats} lang={lang} />
+                <AppointmentsTab
+                  lang={lang}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  filter={filter}
+                  setFilter={setFilter}
+                  appointmentsError={appointmentsError}
+                  loadingAppointments={loadingAppointments}
+                  appointments={appointments}
+                  filteredAppointments={filteredAppointments}
+                  updateStatus={updateStatus}
+                  setConfirmDialog={setConfirmDialog}
+                  softDeleteAppointment={softDeleteAppointment}
+                  openPatientNote={openPatientNote}
+                  noShowCounts={noShowCounts}
+                  recentNewIds={recentNewIds}
+                />
+              </>
             )}
 
             {activeTab === 'slots' && (

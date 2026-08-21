@@ -35,6 +35,12 @@ export function InvoiceDetailModal({
   onDelete,
   lang,
 }: InvoiceDetailModalProps) {
+  const txt = (frStr: string, enStr: string, ptStr: string) => {
+    if (lang === 'fr') return frStr;
+    if (lang === 'en') return enStr;
+    return ptStr;
+  };
+
   const [updating, setUpdating] = useState(false);
 
   if (!invoice) return null;
@@ -90,7 +96,7 @@ export function InvoiceDetailModal({
                     isPaid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                   }`}
                 >
-                  {isPaid ? '● Pago' : '○ Pendente'}
+                  {isPaid ? txt('● Payé', '● Paid', '● Pago') : txt('○ En Attente', '○ Pending', '○ Pendente')}
                 </span>
               </div>
 
@@ -99,7 +105,7 @@ export function InvoiceDetailModal({
                   type="button"
                   onClick={handleWhatsAppSend}
                   className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
-                  title="Enviar por WhatsApp"
+                  title={txt('Envoyer par WhatsApp', 'Send via WhatsApp', 'Enviar por WhatsApp')}
                 >
                   <IconBrandWhatsapp size={15} />
                   <span className="inline sm:inline">WhatsApp</span>
@@ -109,10 +115,10 @@ export function InvoiceDetailModal({
                   type="button"
                   onClick={handlePrint}
                   className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#C49A3C] hover:bg-[#D4AA4C] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
-                  title="Imprimir ou Salvar em PDF"
+                  title={txt('Imprimer ou Enregistrer en PDF', 'Print or Save as PDF', 'Imprimir ou Salvar em PDF')}
                 >
                   <IconPrinter size={15} />
-                  <span className="hidden sm:inline">Imprimir / PDF</span>
+                  <span className="hidden sm:inline">{txt('Imprimer / PDF', 'Print / PDF', 'Imprimir / PDF')}</span>
                 </button>
 
                 {onUpdateStatus && (
@@ -126,7 +132,7 @@ export function InvoiceDetailModal({
                     }}
                     className="px-2.5 py-1.5 rounded-xl border border-white/20 text-white/80 hover:text-white hover:bg-white/10 text-xs font-semibold transition-colors"
                   >
-                    {isPaid ? 'Pendente' : 'Pago'}
+                    {isPaid ? txt('Marquer En Attente', 'Mark Pending', 'Marcar Pendente') : txt('Marquer Payé', 'Mark Paid', 'Marcar Pago')}
                   </button>
                 )}
 
@@ -134,7 +140,7 @@ export function InvoiceDetailModal({
                   type="button"
                   onClick={onClose}
                   className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors ms-1 touch-target"
-                  title="Fechar"
+                  title={txt('Fermer', 'Close', 'Fechar')}
                 >
                   <IconX size={20} />
                 </button>
@@ -315,7 +321,15 @@ export function InvoiceDetailModal({
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm('Tem a certeza que deseja anular esta fatura/recibo?')) {
+                    if (
+                      confirm(
+                        txt(
+                          'Êtes-vous sûr de vouloir annuler ce reçu ?',
+                          'Are you sure you want to void this invoice?',
+                          'Tem a certeza que deseja anular esta fatura/recibo?'
+                        )
+                      )
+                    ) {
                       onDelete(invoice.id);
                       onClose();
                     }
@@ -323,7 +337,7 @@ export function InvoiceDetailModal({
                   className="text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 transition-colors"
                 >
                   <IconTrash size={14} />
-                  <span>Anular Documento</span>
+                  <span>{txt('Annuler le Reçu', 'Void Invoice', 'Anular Documento')}</span>
                 </button>
                 <span className="text-[11px] text-[#94A3B8]">
                   ID: {invoice.id}

@@ -123,6 +123,12 @@ export function InvoicesTab({
     return range;
   }, [totalPages, safeCurrentPage]);
 
+  const txt = (frStr: string, enStr: string, ptStr: string) => {
+    if (lang === 'fr') return frStr;
+    if (lang === 'en') return enStr;
+    return ptStr;
+  };
+
   const handleOpenDetail = (inv: Invoice) => {
     setSelectedInvoice(inv);
     setIsDetailOpen(true);
@@ -144,17 +150,19 @@ export function InvoicesTab({
         {/* Total Revenue */}
         <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-[#64748B] mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Faturação Total</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">
+              {txt('Facturation Totale', 'Total Revenue', 'Faturação Total')}
+            </span>
             <div className="p-1.5 rounded-lg bg-[#0F172A] text-[#C49A3C]">
               <IconTrendingUp size={15} />
             </div>
           </div>
           <div>
             <p className="text-xl sm:text-2xl font-bold font-mono text-[#0F172A]">
-              {(stats?.totalRevenue ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2 })} €
+              {(stats?.totalRevenue ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €
             </p>
             <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">
-              {stats?.countTotal ?? 0} documentos emitidos
+              {stats?.countTotal ?? 0} {txt('documents émis', 'issued invoices', 'documentos emitidos')}
             </p>
           </div>
         </div>
@@ -162,17 +170,19 @@ export function InvoicesTab({
         {/* Total Paid */}
         <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-[#64748B] mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Total Liquidado</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+              {txt('Total Encaissé', 'Total Collected', 'Total Liquidado')}
+            </span>
             <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700">
               <IconCheck size={15} />
             </div>
           </div>
           <div>
             <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-700">
-              {(stats?.totalPaid ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2 })} €
+              {(stats?.totalPaid ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €
             </p>
             <p className="text-[10px] text-emerald-600 mt-0.5 font-medium">
-              {stats?.countPaid ?? 0} recibos quitados
+              {stats?.countPaid ?? 0} {txt('reçus réglés', 'paid receipts', 'recibos quitados')}
             </p>
           </div>
         </div>
@@ -180,17 +190,19 @@ export function InvoicesTab({
         {/* Pending Amount */}
         <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-[#64748B] mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Em Aberto</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700">
+              {txt('En Attente', 'Pending Amount', 'Em Aberto')}
+            </span>
             <div className="p-1.5 rounded-lg bg-amber-50 text-amber-700">
               <IconClock size={15} />
             </div>
           </div>
           <div>
             <p className="text-xl sm:text-2xl font-bold font-mono text-amber-700">
-              {(stats?.totalPending ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2 })} €
+              {(stats?.totalPending ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €
             </p>
             <p className="text-[10px] text-amber-600 mt-0.5 font-medium">
-              {stats?.countPending ?? 0} faturas pendentes
+              {stats?.countPending ?? 0} {txt('factures en attente', 'pending invoices', 'faturas pendentes')}
             </p>
           </div>
         </div>
@@ -198,7 +210,9 @@ export function InvoicesTab({
         {/* Average Ticket */}
         <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-[#64748B] mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Ticket Médio</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">
+              {txt('Panier Moyen', 'Average Ticket', 'Ticket Médio')}
+            </span>
             <div className="p-1.5 rounded-lg bg-blue-50 text-blue-700">
               <IconReceiptTax size={15} />
             </div>
@@ -208,7 +222,7 @@ export function InvoicesTab({
               {(stats?.avgTicket ?? 0).toFixed(2)} €
             </p>
             <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">
-              por ato clínico
+              {txt('par acte clinique', 'per session', 'por ato clínico')}
             </p>
           </div>
         </div>
@@ -216,7 +230,9 @@ export function InvoicesTab({
         {/* Insurance Ratio */}
         <div className="col-span-2 lg:col-span-1 p-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-white/70 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#E8C97A]">Seguros & ADSE</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#E8C97A]">
+              {txt('Mutuelles & ADSE', 'Insurance & ADSE', 'Seguros & ADSE')}
+            </span>
             <div className="p-1.5 rounded-lg bg-white/10 text-[#E8C97A]">
               <IconBuildingHospital size={15} />
             </div>
@@ -226,7 +242,7 @@ export function InvoicesTab({
               {stats?.insuranceShare ?? 0} %
             </p>
             <p className="text-[10px] text-white/70 mt-0.5 font-medium">
-              dos tratamentos faturados
+              {txt('des soins facturés', 'of billed care', 'dos tratamentos faturados')}
             </p>
           </div>
         </div>
@@ -241,7 +257,11 @@ export function InvoicesTab({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Pesquisar por Utente, NIF, Nº Recibo (ex: FR 2026/0001) ou Telefone..."
+            placeholder={txt(
+              'Rechercher par patient, NIF, Nº reçu (ex: FR 2026/0001) ou téléphone...',
+              'Search by Patient, NIF, Invoice # (e.g. FR 2026/0001) or Phone...',
+              'Pesquisar por Utente, NIF, Nº Recibo (ex: FR 2026/0001) ou Telefone...'
+            )}
             className="w-full pl-9 pr-4 py-2 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none transition-all placeholder:text-[#94A3B8]"
           />
           {search && (
@@ -262,9 +282,9 @@ export function InvoicesTab({
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A] outline-none"
           >
-            <option value="all">Todos os Estados</option>
-            <option value="PAID">✓ Pagos / Quitados</option>
-            <option value="PENDING">⏱ Pendentes</option>
+            <option value="all">{txt('Tous les Statuts', 'All Statuses', 'Todos os Estados')}</option>
+            <option value="PAID">{txt('✓ Payés / Réglés', '✓ Paid / Settled', '✓ Pagos / Quitados')}</option>
+            <option value="PENDING">{txt('⏱ En Attente', '⏱ Pending', '⏱ Pendentes')}</option>
           </select>
 
           {/* Payment Method Filter */}
@@ -273,12 +293,12 @@ export function InvoicesTab({
             onChange={(e) => setMethodFilter(e.target.value as any)}
             className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A] outline-none"
           >
-            <option value="all">Todos os Meios</option>
+            <option value="all">{txt('Tous les Modes', 'All Payment Methods', 'Todos os Meios')}</option>
             <option value="MULTIBANCO">Multibanco (TPA)</option>
             <option value="MBWAY">MB Way</option>
-            <option value="CASH">Numerário</option>
-            <option value="CARD">Cartão</option>
-            <option value="TRANSFER">Transferência</option>
+            <option value="CASH">{txt('Espèces', 'Cash', 'Numerário')}</option>
+            <option value="CARD">{txt('Carte Bancaire', 'Card', 'Cartão')}</option>
+            <option value="TRANSFER">{txt('Virement', 'Bank Transfer', 'Transferência')}</option>
           </select>
 
           {/* Refresh button */}
@@ -286,7 +306,7 @@ export function InvoicesTab({
             type="button"
             onClick={onRefresh}
             className="p-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] text-[#475569] hover:bg-[#E2E8F0] transition-colors"
-            title="Atualizar lista"
+            title={txt('Actualiser la liste', 'Refresh list', 'Atualizar lista')}
           >
             <IconRefresh size={16} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -298,7 +318,7 @@ export function InvoicesTab({
             className="px-3.5 py-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] hover:bg-[#E2E8F0] text-[#0F172A] font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs"
           >
             <IconDownload size={15} />
-            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="hidden sm:inline">{txt('Exporter CSV', 'Export CSV', 'Exportar CSV')}</span>
           </button>
 
           {/* New Invoice Button */}
@@ -308,7 +328,7 @@ export function InvoicesTab({
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#E8C97A] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 shadow-md hover:brightness-105 transition-all"
           >
             <IconPlus size={16} />
-            <span>Emitir Recibo</span>
+            <span>{txt('Émettre un Reçu', 'Issue Receipt', 'Emitir Recibo')}</span>
           </button>
         </div>
       </div>
@@ -318,7 +338,7 @@ export function InvoicesTab({
         {loading && invoices.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#94A3B8] flex flex-col items-center gap-2">
             <div className="w-6 h-6 border-2 border-[#C49A3C] border-t-transparent rounded-full animate-spin" />
-            <span>A carregar documentos de faturação...</span>
+            <span>{txt('Chargement des documents de facturation...', 'Loading billing documents...', 'A carregar documentos de faturação...')}</span>
           </div>
         ) : filteredInvoices.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#94A3B8] flex flex-col items-center gap-3">
@@ -326,11 +346,13 @@ export function InvoicesTab({
               <IconReceiptTax size={26} />
             </div>
             <div>
-              <p className="font-bold text-[#475569]">Nenhuma fatura ou recibo encontrado</p>
+              <p className="font-bold text-[#475569]">
+                {txt('Aucune facture ou reçu trouvé', 'No invoices or receipts found', 'Nenhuma fatura ou recibo encontrado')}
+              </p>
               <p className="text-[11px] text-[#94A3B8] mt-0.5">
                 {search || statusFilter !== 'all' || methodFilter !== 'all'
-                  ? 'Experimente alterar os filtros de pesquisa.'
-                  : 'Clique no botão "+ Emitir Recibo" para gerar o primeiro recibo clínico.'}
+                  ? txt('Essayez de modifier les filtres de recherche.', 'Try modifying your search filters.', 'Experimente alterar os filtros de pesquisa.')
+                  : txt('Cliquez sur "+ Émettre un Reçu" pour générer votre premier reçu.', 'Click "+ Issue Receipt" to generate your first invoice.', 'Clique no botão "+ Emitir Recibo" para gerar o primeiro recibo clínico.')}
               </p>
             </div>
             {!search && (
@@ -339,7 +361,7 @@ export function InvoicesTab({
                 onClick={() => handleCreateNew()}
                 className="mt-2 px-4 py-2 rounded-xl bg-[#0F172A] text-white font-bold text-xs"
               >
-                + Emitir Primeiro Recibo
+                {txt('+ Émettre le Premier Reçu', '+ Issue First Receipt', '+ Emitir Primeiro Recibo')}
               </button>
             )}
           </div>
@@ -351,30 +373,32 @@ export function InvoicesTab({
                 <span className="font-semibold text-[11px]">
                   {totalItems > 0 ? (
                     <>
-                      {lang === 'fr' ? 'Affichage' : lang === 'en' ? 'Showing' : 'A mostrar'}{' '}
+                      {txt('Affichage', 'Showing', 'A mostrar')}{' '}
                       <strong className="text-[#0F172A] font-mono">{startIndex + 1}–{endIndex}</strong>{' '}
-                      {lang === 'fr' ? 'sur' : lang === 'en' ? 'of' : 'de'}{' '}
+                      {txt('sur', 'of', 'de')}{' '}
                       <strong className="text-[#0F172A] font-mono">{totalItems}</strong>{' '}
-                      {lang === 'fr' ? 'documents' : lang === 'en' ? 'invoices' : 'faturas e recibos'}
+                      {txt('factures et reçus', 'invoices & receipts', 'faturas e recibos')}
                     </>
                   ) : (
-                    '0 documentos encontrados'
+                    txt('0 document trouvé', '0 invoices found', '0 documentos encontrados')
                   )}
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-medium text-[#64748B]">Linhas por página:</span>
+                <span className="text-[11px] font-medium text-[#64748B]">
+                  {txt('Lignes par page :', 'Rows per page:', 'Linhas por página:')}
+                </span>
                 <select
                   value={pageSize}
                   onChange={(e) => setPageSize(Number(e.target.value))}
                   className="bg-white border border-[#CBD5E1] rounded-lg px-2 py-1 text-[11px] font-bold text-[#0F172A] outline-none cursor-pointer"
-                  title="Itens por página"
+                  title={txt('Lignes par page', 'Rows per page', 'Itens por página')}
                 >
-                  <option value={10}>10 / pág</option>
-                  <option value={25}>25 / pág</option>
-                  <option value={50}>50 / pág</option>
-                  <option value={100}>100 / pág</option>
+                  <option value={10}>10 / {txt('p.', 'p.', 'pág')}</option>
+                  <option value={25}>25 / {txt('p.', 'p.', 'pág')}</option>
+                  <option value={50}>50 / {txt('p.', 'p.', 'pág')}</option>
+                  <option value={100}>100 / {txt('p.', 'p.', 'pág')}</option>
                 </select>
               </div>
             </div>
@@ -383,14 +407,14 @@ export function InvoicesTab({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
-                    <th className="py-3 px-4">Documento</th>
-                    <th className="py-3 px-4">Utente & NIF</th>
-                    <th className="py-3 px-4">Tratamento / Serviço</th>
-                    <th className="py-3 px-4 text-center">Seguro / ADSE</th>
-                    <th className="py-3 px-4 text-center">Pagamento</th>
-                    <th className="py-3 px-4 text-right">Valor Total</th>
-                    <th className="py-3 px-4 text-center">Estado</th>
-                    <th className="py-3 px-4 text-right">Ações</th>
+                    <th className="py-3 px-4">{txt('Document', 'Document', 'Documento')}</th>
+                    <th className="py-3 px-4">{txt('Patient & NIF', 'Patient & NIF', 'Utente & NIF')}</th>
+                    <th className="py-3 px-4">{txt('Soin / Traitement', 'Treatment / Service', 'Tratamento / Serviço')}</th>
+                    <th className="py-3 px-4 text-center">{txt('Mutuelle / ADSE', 'Insurance / ADSE', 'Seguro / ADSE')}</th>
+                    <th className="py-3 px-4 text-center">{txt('Paiement', 'Payment', 'Pagamento')}</th>
+                    <th className="py-3 px-4 text-right">{txt('Montant Total', 'Total Amount', 'Valor Total')}</th>
+                    <th className="py-3 px-4 text-center">{txt('Statut', 'Status', 'Estado')}</th>
+                    <th className="py-3 px-4 text-right">{txt('Actions', 'Actions', 'Ações')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E2E8F0] text-xs">
@@ -428,7 +452,9 @@ export function InvoicesTab({
                         <td className="py-3 px-4">
                           <p className="font-medium text-[#1E293B] line-clamp-1">{inv.serviceName}</p>
                           <p className="text-[10px] text-[#C49A3C] font-semibold">
-                            {inv.vatRate === 0 ? 'Isento Art. 9º CIVA' : `IVA ${inv.vatRate}%`}
+                            {inv.vatRate === 0
+                              ? txt('Exonéré Art. 9 CIVA', 'Exempt Art. 9 CIVA', 'Isento Art. 9º CIVA')
+                              : `IVA ${inv.vatRate}%`}
                           </p>
                         </td>
 
@@ -444,7 +470,7 @@ export function InvoicesTab({
                               ADSE
                             </span>
                           ) : (
-                            <span className="text-[11px] text-[#94A3B8]">Particular</span>
+                            <span className="text-[11px] text-[#94A3B8]">{txt('Privé', 'Private', 'Particular')}</span>
                           )}
                         </td>
 
@@ -472,7 +498,7 @@ export function InvoicesTab({
                             }`}
                           >
                             {isPaid ? <IconCheck size={11} /> : <IconClock size={11} />}
-                            <span>{isPaid ? 'Pago' : 'Pendente'}</span>
+                            <span>{isPaid ? txt('Payé', 'Paid', 'Pago') : txt('En Attente', 'Pending', 'Pendente')}</span>
                           </span>
                         </td>
 
@@ -486,7 +512,7 @@ export function InvoicesTab({
                                 setIsDetailOpen(true);
                               }}
                               className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
-                              title="Ver / Imprimir Fatura-Recibo"
+                              title={txt('Voir / Imprimer le reçu', 'View / Print Invoice', 'Ver / Imprimir Fatura-Recibo')}
                             >
                               <IconPrinter size={16} />
                             </button>
@@ -507,7 +533,7 @@ export function InvoicesTab({
                                 window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
                               }}
                               className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
-                              title="Enviar por WhatsApp"
+                              title={txt('Envoyer par WhatsApp', 'Send via WhatsApp', 'Enviar por WhatsApp')}
                             >
                               <IconBrandWhatsapp size={16} />
                             </button>
@@ -524,7 +550,9 @@ export function InvoicesTab({
             {totalPages > 1 && (
               <div className="p-3 bg-white border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2">
                 <div className="text-xs text-[#64748B]">
-                  Página <strong className="text-[#0F172A] font-mono">{safeCurrentPage}</strong> de{' '}
+                  {txt('Page', 'Page', 'Página')}{' '}
+                  <strong className="text-[#0F172A] font-mono">{safeCurrentPage}</strong>{' '}
+                  {txt('sur', 'of', 'de')}{' '}
                   <strong className="text-[#0F172A] font-mono">{totalPages}</strong>
                 </div>
 
@@ -534,7 +562,7 @@ export function InvoicesTab({
                     onClick={() => setCurrentPage(1)}
                     disabled={safeCurrentPage === 1}
                     className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Primeira página"
+                    title={txt('Première page', 'First page', 'Primeira página')}
                   >
                     <IconChevronsLeft size={16} />
                   </button>
@@ -543,7 +571,7 @@ export function InvoicesTab({
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={safeCurrentPage === 1}
                     className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Página anterior"
+                    title={txt('Page précédente', 'Previous page', 'Página anterior')}
                   >
                     <IconChevronLeft size={16} />
                   </button>
@@ -580,7 +608,7 @@ export function InvoicesTab({
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={safeCurrentPage === totalPages}
                     className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Página seguinte"
+                    title={txt('Page suivante', 'Next page', 'Página seguinte')}
                   >
                     <IconChevronRight size={16} />
                   </button>
@@ -589,7 +617,7 @@ export function InvoicesTab({
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={safeCurrentPage === totalPages}
                     className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Última página"
+                    title={txt('Dernière page', 'Last page', 'Última página')}
                   >
                     <IconChevronsRight size={16} />
                   </button>

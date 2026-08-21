@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconX,
   IconReceiptTax,
   IconUser,
-  IconPhone,
   IconCreditCard,
-  IconNotes,
   IconBuildingHospital,
+  IconSearch,
+  IconCheck,
+  IconChevronDown,
 } from '@tabler/icons-react';
 import { SERVICES } from '@/data/services';
 import { Lang } from '@/lib/i18n';
@@ -43,6 +44,12 @@ export function CreateInvoiceModal({
   appointments,
   prefilledData,
 }: CreateInvoiceModalProps) {
+  const txt = (frStr: string, enStr: string, ptStr: string) => {
+    if (lang === 'fr') return frStr;
+    if (lang === 'en') return enStr;
+    return ptStr;
+  };
+
   const [patientName, setPatientName] = useState('');
   const [patientPhone, setPatientPhone] = useState('');
   const [patientEmail, setPatientEmail] = useState('');
@@ -62,6 +69,40 @@ export function CreateInvoiceModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Searchable Patient Combobox state
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
+  const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
+  const [selectedPatientObject, setSelectedPatientObject] = useState<PatientRecord | null>(null);
+  const patientDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter patients by query
+  const filteredPatients = useMemo(() => {
+    const q = patientSearchQuery.toLowerCase().trim();
+    if (!q) return patients.slice(0, 30);
+    return patients
+      .filter((p) => {
+        return (
+          p.patientName.toLowerCase().includes(q) ||
+          p.phone.includes(q) ||
+          (p.email && p.email.toLowerCase().includes(q)) ||
+          (p.coverageProvider && p.coverageProvider.toLowerCase().includes(q)) ||
+          (p.coverageNumber && p.coverageNumber.includes(q))
+        );
+      })
+      .slice(0, 30);
+  }, [patients, patientSearchQuery]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (patientDropdownRef.current && !patientDropdownRef.current.contains(e.target as Node)) {
+        setIsPatientDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Sync prefilled data whenever modal opens
   useEffect(() => {
     if (isOpen) {
@@ -74,19 +115,29 @@ export function CreateInvoiceModal({
         setCoverageType(prefilledData.coverageType || 'PARTICULAR');
         setCoverageProvider(prefilledData.coverageProvider || '');
         setCoverageNumber(prefilledData.coverageNumber || '');
-        
+
         const slug = prefilledData.serviceSlug || SERVICES[0]?.slug || 'reeducacao-postural';
         setServiceSlug(slug);
-        const srv = SERVICES.find(s => s.slug === slug);
+        const srv = SERVICES.find((s) => s.slug === slug);
         setServiceName(prefilledData.serviceName || srv?.name.pt || slug);
         setAmount(prefilledData.amount ?? srv?.price ?? 50);
-        
-        const isKine = !slug.includes('minceur') && !slug.includes('cryolipolyse') && !slug.includes('cavitation') && !slug.includes('radiofrequence');
+
+        const isKine =
+          !slug.includes('minceur') &&
+          !slug.includes('cryolipolyse') &&
+          !slug.includes('cavitation') &&
+          !slug.includes('radiofrequence');
         setVatRate(isKine ? 0 : 23);
         setVatExemptionReason(isKine ? 'Isento de IVA - Artigo 9.º do CIVA' : '');
         setPaymentMethod(prefilledData.paymentMethod || 'MULTIBANCO');
         setPaymentStatus(prefilledData.paymentStatus || 'PAID');
         setNotes(prefilledData.notes || '');
+
+        // Set matching patient if present
+        const matched = patients.find(
+          (p) => p.phone === prefilledData.patientPhone || p.id === prefilledData.patientId
+        );
+        setSelectedPatientObject(matched || null);
       } else {
         setPatientName('');
         setPatientPhone('');
@@ -104,15 +155,18 @@ export function CreateInvoiceModal({
         setPaymentMethod('MULTIBANCO');
         setPaymentStatus('PAID');
         setNotes('');
+        setSelectedPatientObject(null);
       }
+      setPatientSearchQuery('');
+      setIsPatientDropdownOpen(false);
       setError(null);
     }
-  }, [isOpen, prefilledData]);
+  }, [isOpen, prefilledData, patients]);
 
   // Handle service change to update price and VAT rate
   const handleServiceChange = (slug: string) => {
     setServiceSlug(slug);
-    const srv = SERVICES.find(s => s.slug === slug);
+    const srv = SERVICES.find((s) => s.slug === slug);
     if (srv) {
       setServiceName(srv.name.pt || srv.name.fr || slug);
       setAmount(srv.price);
@@ -128,22 +182,29 @@ export function CreateInvoiceModal({
   };
 
   // Autocomplete patient
-  const handlePatientSelect = (patId: string) => {
-    const pat = patients.find(p => p.id === patId);
-    if (pat) {
-      setPatientName(pat.patientName);
-      setPatientPhone(pat.phone);
-      setPatientEmail(pat.email || '');
-      setCoverageType(pat.coverageType || 'PARTICULAR');
-      setCoverageProvider(pat.coverageProvider || '');
-      setCoverageNumber(pat.coverageNumber || '');
-    }
+  const handlePatientSelect = (pat: PatientRecord) => {
+    setSelectedPatientObject(pat);
+    setPatientName(pat.patientName);
+    setPatientPhone(pat.phone);
+    setPatientEmail(pat.email || '');
+    setCoverageType(pat.coverageType || 'PARTICULAR');
+    setCoverageProvider(pat.coverageProvider || '');
+    setCoverageNumber(pat.coverageNumber || '');
+    setIsPatientDropdownOpen(false);
+    setPatientSearchQuery('');
+  };
+
+  const handleClearPatientSelection = () => {
+    setSelectedPatientObject(null);
+    setPatientSearchQuery('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!patientName.trim() || !patientPhone.trim()) {
-      setError(lang === 'fr' ? 'Nom et téléphone requis' : 'Nome e telefone são obrigatórios');
+      setError(
+        txt('Nom et téléphone requis', 'Name and phone are required', 'Nome e telefone são obrigatórios')
+      );
       return;
     }
 
@@ -156,7 +217,7 @@ export function CreateInvoiceModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           appointmentId: prefilledData?.appointmentId,
-          patientId: prefilledData?.patientId,
+          patientId: selectedPatientObject?.id || prefilledData?.patientId,
           patientName,
           patientPhone,
           patientEmail: patientEmail || undefined,
@@ -179,13 +240,13 @@ export function CreateInvoiceModal({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Erro ao criar fatura/recibo');
+        throw new Error(data.error || txt('Erreur de création du reçu', 'Error creating invoice', 'Erro ao criar fatura/recibo'));
       }
 
       onCreated(data.invoice);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Erro de comunicação');
+      setError(err.message || txt('Erreur de communication', 'Communication error', 'Erro de comunicação'));
     } finally {
       setSubmitting(false);
     }
@@ -210,7 +271,7 @@ export function CreateInvoiceModal({
                 </div>
                 <div>
                   <h3 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-white">
-                    {lang === 'fr' ? 'Émettre une Fatura-Recibo' : 'Emitir Fatura-Recibo / Recibo de Quitação'}
+                    {txt('Émettre une Facture-Reçu', 'Issue Invoice-Receipt', 'Emitir Fatura-Recibo / Recibo de Quitação')}
                   </h3>
                   <p className="text-xs text-[#94A3B8]">
                     {SITE.name} • ERS: {SITE.ersRegistration || 'E164321'} • NIF: {SITE.clinicNif || '518923456'}
@@ -221,6 +282,7 @@ export function CreateInvoiceModal({
                 type="button"
                 onClick={onClose}
                 className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                title={txt('Fermer', 'Close', 'Fechar')}
               >
                 <IconX size={20} />
               </button>
@@ -234,36 +296,122 @@ export function CreateInvoiceModal({
                 </div>
               )}
 
-              {/* Quick Patient Select */}
+              {/* ── Searchable Patient Combobox ─────────────────────────── */}
               {patients.length > 0 && !prefilledData?.patientName && (
-                <div className="bg-[#F8FAFC] p-3 rounded-2xl border border-[#E2E8F0]">
-                  <label className="block font-semibold text-[#475569] mb-1">
-                    {lang === 'fr' ? 'Sélectionner un patient existant' : 'Preencher a partir de Utente registado'}
-                  </label>
-                  <select
-                    onChange={(e) => handlePatientSelect(e.target.value)}
-                    defaultValue=""
-                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none"
-                  >
-                    <option value="" disabled>-- Selecionar utente --</option>
-                    {patients.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.patientName} ({p.phone}) {p.coverageProvider ? `• ${p.coverageProvider}` : ''}
-                      </option>
-                    ))}
-                  </select>
+                <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#E2E8F0] relative" ref={patientDropdownRef}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block font-bold text-[#0F172A] text-xs">
+                      {txt('Sélectionner un patient existant', 'Select registered patient', 'Preencher a partir de Utente registado')}
+                    </label>
+                    <span className="text-[10px] text-[#94A3B8]">
+                      {patients.length} {txt('patients enregistrés', 'registered patients', 'utentes registados')}
+                    </span>
+                  </div>
+
+                  {selectedPatientObject ? (
+                    <div className="flex items-center justify-between p-2.5 bg-white border border-[#CBD5E1] rounded-xl shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-[#0F172A] text-[#E8C97A] font-bold font-mono text-xs flex items-center justify-center">
+                          {selectedPatientObject.patientName.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#0F172A] text-xs leading-tight">
+                            {selectedPatientObject.patientName}
+                          </p>
+                          <p className="text-[11px] text-[#64748B] font-mono">
+                            {selectedPatientObject.phone} {selectedPatientObject.coverageProvider ? `• ${selectedPatientObject.coverageProvider}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleClearPatientSelection}
+                        className="px-2 py-1 text-[11px] font-semibold text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      >
+                        {txt('Changer', 'Change', 'Alterar')} ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <div className="relative flex items-center">
+                        <IconSearch size={15} className="absolute left-3 text-[#94A3B8]" />
+                        <input
+                          type="text"
+                          value={patientSearchQuery}
+                          onFocus={() => setIsPatientDropdownOpen(true)}
+                          onChange={(e) => {
+                            setPatientSearchQuery(e.target.value);
+                            setIsPatientDropdownOpen(true);
+                          }}
+                          placeholder={txt(
+                            'Rechercher par nom, téléphone, NIF...',
+                            'Search patient name, phone, NIF...',
+                            'Pesquisar nome, telefone, NIF...'
+                          )}
+                          className="w-full pl-8.5 pr-8 py-2 bg-white border border-[#CBD5E1] rounded-xl text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none font-medium placeholder:text-[#94A3B8]"
+                        />
+                        <IconChevronDown size={14} className="absolute right-3 text-[#94A3B8] pointer-events-none" />
+                      </div>
+
+                      {/* Dropdown Results List */}
+                      {isPatientDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#CBD5E1] rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-[#F1F5F9]">
+                          {filteredPatients.length === 0 ? (
+                            <div className="p-4 text-center text-xs text-[#94A3B8]">
+                              {txt('Aucun patient correspondant', 'No matching patient found', 'Nenhum utente encontrado')}
+                            </div>
+                          ) : (
+                            filteredPatients.map((pat) => (
+                              <button
+                                key={pat.id}
+                                type="button"
+                                onClick={() => handlePatientSelect(pat)}
+                                className="w-full px-3.5 py-2.5 text-left hover:bg-[#F8FAFC] flex items-center justify-between transition-colors group"
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-7 h-7 rounded-lg bg-[#F1F5F9] group-hover:bg-[#0F172A] group-hover:text-white text-[#475569] font-bold font-mono text-[10px] flex items-center justify-center transition-colors">
+                                    {pat.patientName.slice(0, 2).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-[#0F172A] text-xs">{pat.patientName}</p>
+                                    <p className="text-[10px] text-[#64748B] font-mono">
+                                      {pat.phone} {pat.coverageProvider ? `• ${pat.coverageProvider}` : ''}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {pat.coverageProvider ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                    {pat.coverageProvider}
+                                  </span>
+                                ) : pat.coverageType === 'ADSE' ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                    ADSE
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-[#94A3B8]">{txt('Privé', 'Private', 'Particular')}</span>
+                                )}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Patient Information Grid */}
+              {/* ── Patient Information Grid ────────────────────────────── */}
               <div>
                 <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-[11px] mb-3 flex items-center gap-1.5">
                   <IconUser size={15} className="text-[#C49A3C]" />
-                  <span>{lang === 'fr' ? 'Données du Patient / Destinataire' : 'Identificação do Utente'}</span>
+                  <span>{txt('Données du Patient / Destinataire', 'Patient & Billing Details', 'Identificação do Utente')}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">Nome Completo *</label>
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                      {txt('Nom Complet *', 'Full Name *', 'Nome Completo *')}
+                    </label>
                     <input
                       type="text"
                       required
@@ -274,7 +422,9 @@ export function CreateInvoiceModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">NIF Utente (Contribuinte)</label>
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                      {txt('NIF Patient (Fiscal)', 'Patient Tax ID / NIF', 'NIF Utente (Contribuinte)')}
+                    </label>
                     <input
                       type="text"
                       value={patientNif}
@@ -284,7 +434,9 @@ export function CreateInvoiceModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">Telefone / WhatsApp *</label>
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                      {txt('Téléphone / WhatsApp *', 'Phone / WhatsApp *', 'Telefone / WhatsApp *')}
+                    </label>
                     <input
                       type="tel"
                       required
@@ -295,7 +447,9 @@ export function CreateInvoiceModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">E-mail (Envio PDF)</label>
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                      {txt('E-mail (Envoi PDF)', 'Email (PDF Receipt)', 'E-mail (Envio PDF)')}
+                    </label>
                     <input
                       type="email"
                       value={patientEmail}
@@ -305,7 +459,9 @@ export function CreateInvoiceModal({
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">Morada Fiscal (Opcional)</label>
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                      {txt('Adresse Fiscale (Optionnel)', 'Billing Address (Optional)', 'Morada Fiscal (Opcional)')}
+                    </label>
                     <input
                       type="text"
                       value={patientAddress}
@@ -317,28 +473,32 @@ export function CreateInvoiceModal({
                 </div>
               </div>
 
-              {/* Insurance / Subsistema Block */}
+              {/* ── Insurance / Subsistema Block ─────────────────────────── */}
               <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#E2E8F0]">
                 <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-[11px] mb-2.5 flex items-center gap-1.5">
                   <IconBuildingHospital size={15} className="text-[#C49A3C]" />
-                  <span>Seguro de Saúde / Subsistema (p/ Reembolso)</span>
+                  <span>{txt('Mutuelle de Santé / Subsystème (p/ Remboursement)', 'Health Insurance / Health Subsystem (for Reimbursement)', 'Seguro de Saúde / Subsistema (p/ Reembolso)')}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">Regime</label>
+                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
+                      {txt('Régime', 'Plan Type', 'Regime')}
+                    </label>
                     <select
                       value={coverageType}
                       onChange={(e) => setCoverageType(e.target.value as CoverageType)}
-                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-2.5 py-1.5 text-xs outline-none"
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-2.5 py-1.5 text-xs outline-none font-semibold"
                     >
-                      <option value="PARTICULAR">Particular</option>
-                      <option value="INSURANCE">Seguro Privado</option>
+                      <option value="PARTICULAR">{txt('Privé', 'Private', 'Particular')}</option>
+                      <option value="INSURANCE">{txt('Assurance Privée', 'Private Insurance', 'Seguro Privado')}</option>
                       <option value="ADSE">ADSE</option>
-                      <option value="OTHER">Outro Subsistema</option>
+                      <option value="OTHER">{txt('Autre Subsystème', 'Other Subsystem', 'Outro Subsistema')}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">Seguradora / Entidade</label>
+                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
+                      {txt('Assurance / Entité', 'Insurer / Provider', 'Seguradora / Entidade')}
+                    </label>
                     <input
                       type="text"
                       value={coverageProvider}
@@ -348,7 +508,9 @@ export function CreateInvoiceModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">Nº Beneficiário / Cartão</label>
+                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
+                      {txt('Nº Adhérent / Carte', 'Policy / Card #', 'Nº Beneficiário / Cartão')}
+                    </label>
                     <input
                       type="text"
                       value={coverageNumber}
@@ -360,29 +522,37 @@ export function CreateInvoiceModal({
                 </div>
               </div>
 
-              {/* Service & Financial Block */}
+              {/* ── Service & Financial Block ───────────────────────────── */}
               <div>
                 <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-[11px] mb-3 flex items-center gap-1.5">
                   <IconReceiptTax size={15} className="text-[#C49A3C]" />
-                  <span>Serviço Clínico & Valores</span>
+                  <span>{txt('Soin Clinique & Tarifs', 'Clinical Service & Pricing', 'Serviço Clínico & Valores')}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-2">
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">Tratamento / Ato Médico *</label>
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                      {txt('Traitement / Acte Médical *', 'Treatment / Medical Service *', 'Tratamento / Ato Médico *')}
+                    </label>
                     <select
                       value={serviceSlug}
                       onChange={(e) => handleServiceChange(e.target.value)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none font-medium"
                     >
-                      {SERVICES.map(s => (
+                      {SERVICES.map((s) => (
                         <option key={s.slug} value={s.slug}>
-                          {s.name.pt} ({s.price} € - {s.pole === 'kinesitherapie' ? 'Fisioterapia' : 'Estética'})
+                          {s.name[lang] || s.name.pt} ({s.price} € -{' '}
+                          {s.pole === 'kinesitherapie'
+                            ? txt('Kinésithérapie', 'Physiotherapy', 'Fisioterapia')
+                            : txt('Esthétique', 'Aesthetics', 'Estética')}
+                          )
                         </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">Valor Total (€) *</label>
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                      {txt('Montant Total (€) *', 'Total Amount (€) *', 'Valor Total (€) *')}
+                    </label>
                     <input
                       type="number"
                       step="0.5"
@@ -398,7 +568,9 @@ export function CreateInvoiceModal({
                 {/* Tax / IVA Section */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                   <div>
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">Taxa de IVA</label>
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                      {txt('Taux de TVA', 'VAT Rate', 'Taxa de IVA')}
+                    </label>
                     <select
                       value={vatRate}
                       onChange={(e) => {
@@ -409,13 +581,15 @@ export function CreateInvoiceModal({
                       }}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs outline-none font-semibold"
                     >
-                      <option value={0}>0% — Isento de IVA (Artigo 9.º do CIVA)</option>
-                      <option value={23}>23% — Taxa Normal (Estética Não-Médica)</option>
-                      <option value={6}>6% — Taxa Reduzida</option>
+                      <option value={0}>{txt('0% — Exonéré de TVA (Art. 9 CIVA)', '0% — VAT Exempt (Art. 9 CIVA)', '0% — Isento de IVA (Artigo 9.º do CIVA)')}</option>
+                      <option value={23}>{txt('23% — Taux Normal (Esthétique)', '23% — Standard Rate (Aesthetics)', '23% — Taxa Normal (Estética Não-Médica)')}</option>
+                      <option value={6}>{txt('6% — Taux Réduit', '6% — Reduced Rate', '6% — Taxa Reduzida')}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">Motivo de Isenção</label>
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                      {txt('Motif d\'Exonération', 'Exemption Reason', 'Motivo de Isenção')}
+                    </label>
                     <input
                       type="text"
                       value={vatExemptionReason}
@@ -428,15 +602,17 @@ export function CreateInvoiceModal({
                 </div>
               </div>
 
-              {/* Payment Details */}
+              {/* ── Payment Details ─────────────────────────────────────── */}
               <div className="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#E8E2D8]">
                 <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-[11px] mb-2.5 flex items-center gap-1.5">
                   <IconCreditCard size={15} className="text-[#C49A3C]" />
-                  <span>Método de Pagamento & Estado</span>
+                  <span>{txt('Mode de Paiement & Statut', 'Payment Method & Status', 'Método de Pagamento & Estado')}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">Método de Liquidação</label>
+                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
+                      {txt('Mode de Règlement', 'Payment Method', 'Método de Liquidação')}
+                    </label>
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
@@ -444,45 +620,53 @@ export function CreateInvoiceModal({
                     >
                       <option value="MULTIBANCO">Multibanco (TPA)</option>
                       <option value="MBWAY">MB Way</option>
-                      <option value="CASH">Numerário / Dinheiro</option>
-                      <option value="CARD">Cartão de Crédito/Débito</option>
-                      <option value="TRANSFER">Transferência Bancária</option>
+                      <option value="CASH">{txt('Espèces / Cash', 'Cash', 'Numerário / Dinheiro')}</option>
+                      <option value="CARD">{txt('Carte Bancaire', 'Credit/Debit Card', 'Cartão de Crédito/Débito')}</option>
+                      <option value="TRANSFER">{txt('Virement Bancaire', 'Bank Transfer', 'Transferência Bancária')}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">Estado da Fatura</label>
+                    <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
+                      {txt('Statut du Reçu', 'Invoice Status', 'Estado da Fatura')}
+                    </label>
                     <select
                       value={paymentStatus}
                       onChange={(e) => setPaymentStatus(e.target.value as InvoicePaymentStatus)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs outline-none font-semibold"
                     >
-                      <option value="PAID">PAGO / Quitado (Fatura-Recibo)</option>
-                      <option value="PENDING">PENDENTE (Aguardar Liquidação)</option>
+                      <option value="PAID">{txt('PAYÉ / Réglé (Facture-Reçu)', 'PAID / Settled (Invoice-Receipt)', 'PAGO / Quitado (Fatura-Recibo)')}</option>
+                      <option value="PENDING">{txt('EN ATTENTE (En attente de règlement)', 'PENDING (Awaiting Settlement)', 'PENDENTE (Aguardar Liquidação)')}</option>
                     </select>
                   </div>
                 </div>
               </div>
 
-              {/* Notes */}
+              {/* ── Notes ────────────────────────────────────────────────── */}
               <div>
-                <label className="block text-[11px] font-medium text-[#64748B] mb-1">Observações Internas / Descrição Adicional</label>
+                <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                  {txt('Remarques Internes / Description', 'Internal Notes / Additional Info', 'Observações Internas / Descrição Adicional')}
+                </label>
                 <textarea
                   rows={2}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Ex: Sessão 1/10 prescrição ortopédica Dr. Silva..."
+                  placeholder={txt(
+                    'Ex: Séance 1/10 prescription orthopédique Dr. Silva...',
+                    'e.g. Session 1/10 orthopedic prescription Dr. Silva...',
+                    'Ex: Sessão 1/10 prescrição ortopédica Dr. Silva...'
+                  )}
                   className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none"
                 />
               </div>
 
-              {/* Submit Buttons */}
+              {/* ── Submit Buttons ───────────────────────────────────────── */}
               <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-end gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={onClose}
                   className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] transition-colors font-semibold text-xs"
                 >
-                  Cancelar
+                  {txt('Annuler', 'Cancel', 'Cancelar')}
                 </button>
                 <button
                   type="submit"
@@ -490,7 +674,11 @@ export function CreateInvoiceModal({
                   className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#E8C97A] text-[#1A1412] hover:brightness-105 shadow-md transition-all font-bold text-xs flex items-center gap-2 disabled:opacity-50"
                 >
                   <IconReceiptTax size={16} />
-                  <span>{submitting ? 'A emitir recibo...' : 'Emitir Fatura-Recibo'}</span>
+                  <span>
+                    {submitting
+                      ? txt('Émission en cours...', 'Issuing invoice...', 'A emitir recibo...')
+                      : txt('Émettre la Facture-Reçu', 'Issue Invoice-Receipt', 'Emitir Fatura-Recibo')}
+                  </span>
                 </button>
               </div>
             </form>
