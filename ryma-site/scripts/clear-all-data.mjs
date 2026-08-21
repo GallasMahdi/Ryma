@@ -14,6 +14,8 @@ const client = createClient({
 });
 
 const tables = [
+  'invoices',
+  'prescriptions',
   'appointments',
   'patient_sessions',
   'patient_notes',

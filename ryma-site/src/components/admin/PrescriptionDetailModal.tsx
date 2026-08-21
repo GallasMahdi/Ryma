@@ -60,8 +60,8 @@ export function PrescriptionDetailModal({
             className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-[#E2E8F0] overflow-hidden my-4 max-h-[96vh] flex flex-col"
           >
             {/* Top Action Bar */}
-            <div className="px-6 py-3.5 bg-[#0F172A] text-white flex items-center justify-between shrink-0 border-b border-white/10">
-              <div className="flex items-center gap-3">
+            <div className="px-3.5 sm:px-6 py-3 bg-[#0F172A] text-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 shrink-0 border-b border-white/10">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <span className="font-mono text-xs font-bold text-[#E8C97A] tracking-wider uppercase">
                   Recomendações Clínicas
                 </span>
@@ -70,21 +70,21 @@ export function PrescriptionDetailModal({
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={handleWhatsAppSend}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
                   title="Enviar por WhatsApp"
                 >
                   <IconBrandWhatsapp size={15} />
-                  <span className="hidden sm:inline">WhatsApp</span>
+                  <span className="inline sm:inline">WhatsApp</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handlePrint}
-                  className="px-3 py-1.5 rounded-xl bg-[#C49A3C] hover:bg-[#D4AA4C] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#C49A3C] hover:bg-[#D4AA4C] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
                   title="Imprimir ou Salvar PDF"
                 >
                   <IconPrinter size={15} />
@@ -94,7 +94,8 @@ export function PrescriptionDetailModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors ms-2"
+                  className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors ms-1 touch-target"
+                  title="Fechar"
                 >
                   <IconX size={20} />
                 </button>

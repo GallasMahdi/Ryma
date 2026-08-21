@@ -891,6 +891,93 @@ export async function dbGetAllPatients(): Promise<PatientRecord[]> {
   }));
 }
 
+export async function dbGetPatientsPaginated(options: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  coverageType?: string;
+}): Promise<{
+  patients: PatientRecord[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}> {
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(options.limit) || 10));
+  const offset = (page - 1) * limit;
+
+  const whereClauses: string[] = [];
+  const queryArgs: any[] = [];
+
+  if (options.search && options.search.trim()) {
+    const q = `%${options.search.trim()}%`;
+    whereClauses.push('(patientName LIKE ? OR phone LIKE ? OR pathologyTags LIKE ? OR coverageProvider LIKE ? OR referringDoctor LIKE ?)');
+    queryArgs.push(q, q, q, q, q);
+  }
+
+  if (options.coverageType && options.coverageType !== 'ALL') {
+    if (options.coverageType === 'INSURANCE_OR_ADSE') {
+      whereClauses.push('(coverageType = ? OR coverageType = ?)');
+      queryArgs.push('INSURANCE', 'ADSE');
+    } else {
+      whereClauses.push('coverageType = ?');
+      queryArgs.push(options.coverageType);
+    }
+  }
+
+  const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+  const countRows = await executeQuery<{ count: number }>(
+    `SELECT COUNT(*) as count FROM patients ${whereSql}`,
+    queryArgs
+  );
+  const total = Number(countRows[0]?.count ?? 0);
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  const patients = await executeQuery<PatientRecord>(
+    `SELECT * FROM patients ${whereSql} ORDER BY updatedAt DESC LIMIT ? OFFSET ?`,
+    [...queryArgs, limit, offset]
+  );
+
+  if (patients.length === 0) {
+    return {
+      patients: [],
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  // Load sessions specifically for these page patients only
+  const patientIds = patients.map(p => p.id);
+  const placeholders = patientIds.map(() => '?').join(',');
+  const sessions = await executeQuery<PatientSession>(
+    `SELECT * FROM patient_sessions WHERE patientId IN (${placeholders}) ORDER BY date DESC, createdAt DESC`,
+    patientIds
+  );
+
+  const sessionsByPatient: Record<string, PatientSession[]> = {};
+  for (const s of sessions) {
+    if (!sessionsByPatient[s.patientId]) sessionsByPatient[s.patientId] = [];
+    sessionsByPatient[s.patientId].push(s);
+  }
+
+  const enrichedPatients = patients.map(p => ({
+    ...p,
+    sessions: sessionsByPatient[p.id] ?? [],
+  }));
+
+  return {
+    patients: enrichedPatients,
+    total,
+    page,
+    limit,
+    totalPages,
+  };
+}
+
 export async function dbGetPatientById(id: string): Promise<PatientRecord | null> {
   const rows = await executeQuery<PatientRecord>('SELECT * FROM patients WHERE id = ?', [id]);
   const patient = rows[0];

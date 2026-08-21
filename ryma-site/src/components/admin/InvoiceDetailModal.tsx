@@ -80,35 +80,35 @@ export function InvoiceDetailModal({
             className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-[#E2E8F0] overflow-hidden my-4 max-h-[96vh] flex flex-col font-sans print:shadow-none print:border-none print:max-h-none print:m-0 print:rounded-none"
           >
             {/* Top Interactive Action Bar (Hidden on Print) */}
-            <div className="px-6 py-3.5 bg-[#0F172A] text-white flex items-center justify-between shrink-0 border-b border-white/10 print:hidden">
-              <div className="flex items-center gap-3">
+            <div className="px-3.5 sm:px-6 py-3 bg-[#0F172A] text-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 shrink-0 border-b border-white/10 print:hidden">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <span className="font-mono text-xs font-bold text-[#E8C97A] tracking-wider uppercase">
                   {invoice.invoiceNumber}
                 </span>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                     isPaid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                   }`}
                 >
-                  {isPaid ? '● Pago / Quitado' : '○ Aguarda Pagamento'}
+                  {isPaid ? '● Pago' : '○ Pendente'}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={handleWhatsAppSend}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
                   title="Enviar por WhatsApp"
                 >
                   <IconBrandWhatsapp size={15} />
-                  <span className="hidden sm:inline">WhatsApp</span>
+                  <span className="inline sm:inline">WhatsApp</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handlePrint}
-                  className="px-3 py-1.5 rounded-xl bg-[#C49A3C] hover:bg-[#D4AA4C] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#C49A3C] hover:bg-[#D4AA4C] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
                   title="Imprimir ou Salvar em PDF"
                 >
                   <IconPrinter size={15} />
@@ -124,16 +124,17 @@ export function InvoiceDetailModal({
                       onUpdateStatus(invoice.id, isPaid ? 'PENDING' : 'PAID');
                       setTimeout(() => setUpdating(false), 300);
                     }}
-                    className="px-3 py-1.5 rounded-xl border border-white/20 text-white/80 hover:text-white hover:bg-white/10 text-xs font-semibold transition-colors"
+                    className="px-2.5 py-1.5 rounded-xl border border-white/20 text-white/80 hover:text-white hover:bg-white/10 text-xs font-semibold transition-colors"
                   >
-                    {isPaid ? 'Marcar Pendente' : 'Marcar Pago'}
+                    {isPaid ? 'Pendente' : 'Pago'}
                   </button>
                 )}
 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors ms-2"
+                  className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors ms-1 touch-target"
+                  title="Fechar"
                 >
                   <IconX size={20} />
                 </button>

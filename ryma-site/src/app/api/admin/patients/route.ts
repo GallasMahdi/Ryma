@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import {
   dbGetAllPatients,
+  dbGetPatientsPaginated,
   dbGetAllPatientNotes,
   dbUpsertPatient,
   dbDeletePatientRecord,
@@ -12,15 +13,58 @@ export const revalidate = 0;
 
 import { validateAndNormalizePhone } from '@/lib/phone';
 
-// GET /api/admin/patients — list all structured patients & legacy notes
+// GET /api/admin/patients — list all or paginated patients & legacy notes
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if ('status' in auth) return auth;
 
+  const url = request.nextUrl;
+  const pageParam = url.searchParams.get('page');
+  const limitParam = url.searchParams.get('limit');
+  const searchParam = url.searchParams.get('search') || url.searchParams.get('q') || '';
+  const coverageParam = url.searchParams.get('coverage') || 'ALL';
+
+  if (pageParam !== null || limitParam !== null || searchParam || coverageParam !== 'ALL') {
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(limitParam || '10', 10)));
+
+    const result = await dbGetPatientsPaginated({
+      page,
+      limit,
+      search: searchParam,
+      coverageType: coverageParam,
+    });
+
+    const notes = await dbGetAllPatientNotes();
+
+    return NextResponse.json(
+      {
+        patients: result.patients,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+        notes,
+      },
+      {
+        status: 200,
+        headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
+      }
+    );
+  }
+
+  // Default: returns all patients (compatible with legacy callers)
   const patients = await dbGetAllPatients();
   const notes = await dbGetAllPatientNotes();
   return NextResponse.json(
-    { patients, notes },
+    {
+      patients,
+      total: patients.length,
+      page: 1,
+      limit: patients.length,
+      totalPages: 1,
+      notes,
+    },
     {
       status: 200,
       headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },

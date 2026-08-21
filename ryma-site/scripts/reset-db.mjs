@@ -33,6 +33,8 @@ const DB_PATH = process.env.DATABASE_PATH
 const BACKUP_DIR = path.join(process.cwd(), 'data', 'backups');
 
 const TABLES = [
+  'invoices',
+  'prescriptions',
   'appointments',
   'blocked_slots',
   'patient_notes',

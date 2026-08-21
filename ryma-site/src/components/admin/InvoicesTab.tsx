@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconReceiptTax,
@@ -19,6 +19,10 @@ import {
   IconUser,
   IconCalendar,
   IconRefresh,
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronsLeft,
+  IconChevronsRight,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import {
@@ -66,6 +70,10 @@ export function InvoicesTab({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [prefilledData, setPrefilledData] = useState<Partial<CreateInvoiceInput> | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Filtered invoices
   const filteredInvoices = useMemo(() => {
     return invoices.filter((inv) => {
@@ -84,6 +92,36 @@ export function InvoicesTab({
       return matchesStatus && matchesMethod && matchesSearch;
     });
   }, [invoices, statusFilter, methodFilter, search]);
+
+  // Reset to page 1 on filter/search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, methodFilter, pageSize]);
+
+  // Pagination bounds & slice
+  const totalItems = filteredInvoices.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = totalItems === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+
+  const paginatedInvoices = useMemo(() => {
+    return filteredInvoices.slice(startIndex, endIndex);
+  }, [filteredInvoices, startIndex, endIndex]);
+
+  // Smart page numbers generator (with ellipsis)
+  const paginationRange = useMemo(() => {
+    const range: (number | string)[] = [];
+    const delta = 1;
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= safeCurrentPage - delta && i <= safeCurrentPage + delta)) {
+        range.push(i);
+      } else if (range[range.length - 1] !== '...') {
+        range.push('...');
+      }
+    }
+    return range;
+  }, [totalPages, safeCurrentPage]);
 
   const handleOpenDetail = (inv: Invoice) => {
     setSelectedInvoice(inv);
@@ -306,145 +344,258 @@ export function InvoicesTab({
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
-                  <th className="py-3 px-4">Documento</th>
-                  <th className="py-3 px-4">Utente & NIF</th>
-                  <th className="py-3 px-4">Tratamento / Serviço</th>
-                  <th className="py-3 px-4 text-center">Seguro / ADSE</th>
-                  <th className="py-3 px-4 text-center">Pagamento</th>
-                  <th className="py-3 px-4 text-right">Valor Total</th>
-                  <th className="py-3 px-4 text-center">Estado</th>
-                  <th className="py-3 px-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E2E8F0] text-xs">
-                {filteredInvoices.map((inv) => {
-                  const isPaid = inv.paymentStatus === 'PAID';
-                  const dateStr = inv.createdAt.split('T')[0];
+          <div>
+            {/* Table Header Summary & Page Size */}
+            <div className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-[#F8FAFC] border-b border-[#E2E8F0] text-xs text-[#64748B]">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-[11px]">
+                  {totalItems > 0 ? (
+                    <>
+                      {lang === 'fr' ? 'Affichage' : lang === 'en' ? 'Showing' : 'A mostrar'}{' '}
+                      <strong className="text-[#0F172A] font-mono">{startIndex + 1}–{endIndex}</strong>{' '}
+                      {lang === 'fr' ? 'sur' : lang === 'en' ? 'of' : 'de'}{' '}
+                      <strong className="text-[#0F172A] font-mono">{totalItems}</strong>{' '}
+                      {lang === 'fr' ? 'documents' : lang === 'en' ? 'invoices' : 'faturas e recibos'}
+                    </>
+                  ) : (
+                    '0 documentos encontrados'
+                  )}
+                </span>
+              </div>
 
-                  return (
-                    <tr
-                      key={inv.id}
-                      onClick={() => handleOpenDetail(inv)}
-                      className="hover:bg-[#F8FAFC]/80 cursor-pointer transition-colors group"
-                    >
-                      {/* Document Number & Date */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <p className="font-mono font-bold text-[#0F172A] group-hover:text-[#C49A3C] transition-colors">
-                          {inv.invoiceNumber}
-                        </p>
-                        <p className="text-[10px] text-[#94A3B8] flex items-center gap-1 mt-0.5">
-                          <IconCalendar size={11} /> {dateStr}
-                        </p>
-                      </td>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-medium text-[#64748B]">Linhas por página:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="bg-white border border-[#CBD5E1] rounded-lg px-2 py-1 text-[11px] font-bold text-[#0F172A] outline-none cursor-pointer"
+                  title="Itens por página"
+                >
+                  <option value={10}>10 / pág</option>
+                  <option value={25}>25 / pág</option>
+                  <option value={50}>50 / pág</option>
+                  <option value={100}>100 / pág</option>
+                </select>
+              </div>
+            </div>
 
-                      {/* Patient Name & NIF */}
-                      <td className="py-3 px-4">
-                        <p className="font-bold text-[#0F172A] line-clamp-1">{inv.patientName}</p>
-                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#64748B] font-mono">
-                          <span>NIF: <strong>{inv.patientNif}</strong></span>
-                          <span>•</span>
-                          <span>{inv.patientPhone}</span>
-                        </div>
-                      </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
+                    <th className="py-3 px-4">Documento</th>
+                    <th className="py-3 px-4">Utente & NIF</th>
+                    <th className="py-3 px-4">Tratamento / Serviço</th>
+                    <th className="py-3 px-4 text-center">Seguro / ADSE</th>
+                    <th className="py-3 px-4 text-center">Pagamento</th>
+                    <th className="py-3 px-4 text-right">Valor Total</th>
+                    <th className="py-3 px-4 text-center">Estado</th>
+                    <th className="py-3 px-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0] text-xs">
+                  {paginatedInvoices.map((inv) => {
+                    const isPaid = inv.paymentStatus === 'PAID';
+                    const dateStr = inv.createdAt.split('T')[0];
 
-                      {/* Service Name */}
-                      <td className="py-3 px-4">
-                        <p className="font-medium text-[#1E293B] line-clamp-1">{inv.serviceName}</p>
-                        <p className="text-[10px] text-[#C49A3C] font-semibold">
-                          {inv.vatRate === 0 ? 'Isento Art. 9º CIVA' : `IVA ${inv.vatRate}%`}
-                        </p>
-                      </td>
+                    return (
+                      <tr
+                        key={inv.id}
+                        onClick={() => handleOpenDetail(inv)}
+                        className="hover:bg-[#F8FAFC]/80 cursor-pointer transition-colors group"
+                      >
+                        {/* Document Number & Date */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <p className="font-mono font-bold text-[#0F172A] group-hover:text-[#C49A3C] transition-colors">
+                            {inv.invoiceNumber}
+                          </p>
+                          <p className="text-[10px] text-[#94A3B8] flex items-center gap-1 mt-0.5">
+                            <IconCalendar size={11} /> {dateStr}
+                          </p>
+                        </td>
 
-                      {/* Insurance / Subsistema */}
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        {inv.coverageProvider ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                            <IconBuildingHospital size={12} />
-                            {inv.coverageProvider}
+                        {/* Patient Name & NIF */}
+                        <td className="py-3 px-4">
+                          <p className="font-bold text-[#0F172A] line-clamp-1">{inv.patientName}</p>
+                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#64748B] font-mono">
+                            <span>NIF: <strong>{inv.patientNif}</strong></span>
+                            <span>•</span>
+                            <span>{inv.patientPhone}</span>
+                          </div>
+                        </td>
+
+                        {/* Service Name */}
+                        <td className="py-3 px-4">
+                          <p className="font-medium text-[#1E293B] line-clamp-1">{inv.serviceName}</p>
+                          <p className="text-[10px] text-[#C49A3C] font-semibold">
+                            {inv.vatRate === 0 ? 'Isento Art. 9º CIVA' : `IVA ${inv.vatRate}%`}
+                          </p>
+                        </td>
+
+                        {/* Insurance / Subsistema */}
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                          {inv.coverageProvider ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                              <IconBuildingHospital size={12} />
+                              {inv.coverageProvider}
+                            </span>
+                          ) : inv.coverageType === 'ADSE' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                              ADSE
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-[#94A3B8]">Particular</span>
+                          )}
+                        </td>
+
+                        {/* Payment Method */}
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                          <span className="inline-block px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-[#F1F5F9] text-[#475569]">
+                            {inv.paymentMethod}
                           </span>
-                        ) : inv.coverageType === 'ADSE' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                            ADSE
+                        </td>
+
+                        {/* Amount */}
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <span className="font-mono font-bold text-sm text-[#0F172A]">
+                            {inv.amount.toFixed(2)} €
                           </span>
-                        ) : (
-                          <span className="text-[11px] text-[#94A3B8]">Particular</span>
-                        )}
-                      </td>
+                        </td>
 
-                      {/* Payment Method */}
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <span className="inline-block px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-[#F1F5F9] text-[#475569]">
-                          {inv.paymentMethod}
-                        </span>
-                      </td>
+                        {/* Status */}
+                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              isPaid
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}
+                          >
+                            {isPaid ? <IconCheck size={11} /> : <IconClock size={11} />}
+                            <span>{isPaid ? 'Pago' : 'Pendente'}</span>
+                          </span>
+                        </td>
 
-                      {/* Amount */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <span className="font-mono font-bold text-sm text-[#0F172A]">
-                          {inv.amount.toFixed(2)} €
-                        </span>
-                      </td>
+                        {/* Action Shortcuts */}
+                        <td className="py-3 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedInvoice(inv);
+                                setIsDetailOpen(true);
+                              }}
+                              className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+                              title="Ver / Imprimir Fatura-Recibo"
+                            >
+                              <IconPrinter size={16} />
+                            </button>
 
-                      {/* Status */}
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            isPaid
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const cleanPhone = inv.patientPhone.replace(/[^0-9]/g, '');
+                                const msg = encodeURIComponent(
+                                  `Olá ${inv.patientName}! 👋\n` +
+                                  `Recibo da *Digital Clínica*:\n` +
+                                  `🧾 *Nº:* ${inv.invoiceNumber}\n` +
+                                  `🩺 *Tratamento:* ${inv.serviceName}\n` +
+                                  `💰 *Valor:* ${inv.amount.toFixed(2)} €\n` +
+                                  `📌 *NIF:* ${inv.patientNif}\n` +
+                                  `✅ *Estado:* ${isPaid ? 'PAGO / Quitado' : 'Pendente'}`
+                                );
+                                window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+                              }}
+                              className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                              title="Enviar por WhatsApp"
+                            >
+                              <IconBrandWhatsapp size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Advanced Pagination Footer Bar */}
+            {totalPages > 1 && (
+              <div className="p-3 bg-white border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2">
+                <div className="text-xs text-[#64748B]">
+                  Página <strong className="text-[#0F172A] font-mono">{safeCurrentPage}</strong> de{' '}
+                  <strong className="text-[#0F172A] font-mono">{totalPages}</strong>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={safeCurrentPage === 1}
+                    className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title="Primeira página"
+                  >
+                    <IconChevronsLeft size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={safeCurrentPage === 1}
+                    className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title="Página anterior"
+                  >
+                    <IconChevronLeft size={16} />
+                  </button>
+
+                  <div className="flex items-center gap-1 mx-1">
+                    {paginationRange.map((num, idx) => {
+                      if (num === '...') {
+                        return (
+                          <span key={`dots-${idx}`} className="px-1 text-xs text-[#94A3B8] font-bold">
+                            …
+                          </span>
+                        );
+                      }
+                      const isCurrent = num === safeCurrentPage;
+                      return (
+                        <button
+                          key={`page-${num}`}
+                          type="button"
+                          onClick={() => setCurrentPage(Number(num))}
+                          className={`w-7 h-7 rounded-lg text-xs font-bold font-mono transition-all flex items-center justify-center ${
+                            isCurrent
+                              ? 'bg-[#0F172A] text-white shadow-2xs ring-1 ring-[#0F172A]'
+                              : 'bg-[#F8FAFC] border border-[#CBD5E1] text-[#475569] hover:bg-[#E2E8F0] hover:text-[#0F172A]'
                           }`}
                         >
-                          {isPaid ? <IconCheck size={11} /> : <IconClock size={11} />}
-                          <span>{isPaid ? 'Pago' : 'Pendente'}</span>
-                        </span>
-                      </td>
+                          {num}
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                      {/* Action Shortcuts */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedInvoice(inv);
-                              setIsDetailOpen(true);
-                            }}
-                            className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
-                            title="Ver / Imprimir Fatura-Recibo"
-                          >
-                            <IconPrinter size={16} />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const cleanPhone = inv.patientPhone.replace(/[^0-9]/g, '');
-                              const msg = encodeURIComponent(
-                                `Olá ${inv.patientName}! 👋\n` +
-                                `Recibo da *Digital Clínica*:\n` +
-                                `🧾 *Nº:* ${inv.invoiceNumber}\n` +
-                                `🩺 *Tratamento:* ${inv.serviceName}\n` +
-                                `💰 *Valor:* ${inv.amount.toFixed(2)} €\n` +
-                                `📌 *NIF:* ${inv.patientNif}\n` +
-                                `✅ *Estado:* ${isPaid ? 'PAGO / Quitado' : 'Pendente'}`
-                              );
-                              window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
-                            }}
-                            className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
-                            title="Enviar por WhatsApp"
-                          >
-                            <IconBrandWhatsapp size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safeCurrentPage === totalPages}
+                    className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title="Página seguinte"
+                  >
+                    <IconChevronRight size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={safeCurrentPage === totalPages}
+                    className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    title="Última página"
+                  >
+                    <IconChevronsRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
