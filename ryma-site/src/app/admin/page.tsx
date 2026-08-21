@@ -571,28 +571,56 @@ export default function AdminPage() {
 
   const toggleSlot = async (time: string) => {
     const prevList = slotList;
-    setSlotList(prev => prev.map(s => s.time === time ? { ...s, available: !s.available } : s));
+    const targetSlot = prevList.find(s => s.time === time);
+    if (!targetSlot) return;
+
+    const willBeBlocked = targetSlot.available || targetSlot.reason !== 'blocked';
+
+    // Immediate optimistic update with correct reason
+    setSlotList(prev => prev.map(s => {
+      if (s.time !== time) return s;
+      return {
+        ...s,
+        available: !willBeBlocked,
+        reason: willBeBlocked ? 'blocked' : null,
+      };
+    }));
     setIsGlobalBusy(true);
 
     try {
-      await apiFetch('/api/admin/slots', {
+      const res = await apiFetch<{ blocked: boolean; date: string; time: string }>('/api/admin/slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date: selectedDateForSlots, time }),
       });
       delete slotCacheRef.current[selectedDateForSlots];
+
+      // Sync exact server result
+      setSlotList(prev => prev.map(s => {
+        if (s.time !== time) return s;
+        return {
+          ...s,
+          available: !res.blocked,
+          reason: res.blocked ? 'blocked' : null,
+        };
+      }));
+
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Horário Atualizado' : lang === 'en' ? 'Slot Updated' : 'Créneau Modifié',
-        message: `${selectedDateForSlots} às ${time}`,
+        title: res.blocked
+          ? (lang === 'pt' ? 'Horário Bloqueado' : lang === 'fr' ? 'Créneau Bloqué' : 'Slot Blocked')
+          : (lang === 'pt' ? 'Horário Desbloqueado' : lang === 'fr' ? 'Créneau Débloqué' : 'Slot Unblocked'),
+        message: `${selectedDateForSlots} • ${time}`,
       });
+      return res.blocked;
     } catch (err) {
       setSlotList(prevList);
       addToast({
         type: 'error',
-        title: lang === 'pt' ? 'Erro ao Alterar Horário' : lang === 'en' ? 'Slot Error' : 'Erreur Créneau',
+        title: lang === 'pt' ? 'Erro ao Alterar Horário' : lang === 'fr' ? 'Erreur Créneau' : 'Slot Error',
         message: (err as Error).message,
       });
+      return undefined;
     } finally {
       setIsGlobalBusy(false);
     }
@@ -953,6 +981,7 @@ export default function AdminPage() {
                   delete slotCacheRef.current[date];
                   fetchSlots(date, true);
                 }}
+                onActionToast={addToast}
               />
             )}
 

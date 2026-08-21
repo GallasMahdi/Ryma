@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
   IconCalendarEvent,
   IconListCheck,
@@ -66,9 +67,9 @@ export function AdminMobileNav({
   return (
     <nav
       aria-label="Navigation mobile"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[9990] bg-white border-t border-[#E2E8F0] shadow-md px-2 pt-1 pb-safe font-sans"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-[9990] bg-[#FAF6EE]/95 backdrop-blur-xl border-t border-[#C49A3C]/25 shadow-[0_-4px_25px_rgba(196,154,60,0.1)] px-2 pt-1.5 pb-safe font-sans"
     >
-      <div className="flex items-center justify-around max-w-lg mx-auto">
+      <div className="flex items-center justify-around max-w-lg mx-auto gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -77,28 +78,39 @@ export function AdminMobileNav({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all relative min-h-[48px] touch-target ${
+              className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all relative min-h-[50px] touch-target select-none ${
                 isActive
-                  ? 'text-[#0F172A]'
-                  : 'text-[#64748B] hover:text-[#0F172A]'
+                  ? 'text-[#8A6A24] font-bold'
+                  : 'text-[#8A8078] hover:text-[#1A1412] font-medium'
               }`}
             >
+              {/* Animated Floating Luxury Gold Pill */}
               {isActive && (
-                <div className="absolute inset-x-2 top-1 bottom-1 bg-[#F1F5F9] rounded-lg -z-10" />
+                <motion.div
+                  layoutId="activeAdminMobilePill"
+                  className="absolute inset-x-1 top-0.5 bottom-0.5 rounded-xl border border-[#C49A3C]/60 bg-gradient-to-br from-[#F5E9C8] via-[#FAF5EC] to-[#EEDBB2] shadow-[0_2px_12px_rgba(196,154,60,0.25)] -z-10"
+                  transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                />
               )}
 
-              <div className="relative">
-                <Icon
-                  size={20}
-                  strokeWidth={isActive ? 2.2 : 1.75}
-                  className={isActive ? 'text-[#0F172A]' : 'text-[#64748B]'}
-                />
+              <div className="relative flex items-center justify-center">
+                <motion.div
+                  animate={isActive ? { scale: [1, 1.15, 1], y: -1 } : { scale: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                >
+                  <Icon
+                    size={21}
+                    strokeWidth={isActive ? 2.3 : 1.75}
+                    className={isActive ? 'text-[#8A6A24]' : 'text-[#8A8078]'}
+                  />
+                </motion.div>
+
                 {tab.badge !== null && (
                   <span
-                    className={`absolute -top-1.5 -right-2.5 text-[10px] font-semibold px-1.5 py-0.2 rounded-full leading-none ${
+                    className={`absolute -top-1.5 -right-3 text-[10px] font-black px-1.5 py-0.2 rounded-full leading-none transition-all ${
                       isActive
-                        ? 'bg-[#0F172A] text-white'
-                        : 'bg-[#E2E8F0] text-[#475569]'
+                        ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] border border-[#FFF8E7] shadow-[0_2px_8px_rgba(196,154,60,0.4)]'
+                        : 'bg-[#F5E9C8] text-[#8A6A24] border border-[#C49A3C]/30'
                     }`}
                   >
                     {tab.badge > 99 ? '99+' : tab.badge}
@@ -107,8 +119,8 @@ export function AdminMobileNav({
               </div>
 
               <span
-                className={`text-[11px] font-medium mt-0.5 tracking-tight ${
-                  isActive ? 'font-semibold text-[#0F172A]' : 'text-[#64748B]'
+                className={`text-[11px] mt-0.5 tracking-tight transition-colors ${
+                  isActive ? 'font-bold text-[#1A1412]' : 'font-medium text-[#7A6B5D]'
                 }`}
               >
                 {tab.label}

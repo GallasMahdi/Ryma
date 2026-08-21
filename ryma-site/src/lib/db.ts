@@ -762,7 +762,7 @@ export async function dbToggleBlockSlot(date: string, time: string): Promise<boo
     await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
     return false;
   } else {
-    const id = 'blk_' + Date.now().toString(36);
+    const id = 'blk_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
     await executeQuery('INSERT INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', [id, date, time]);
     return true;
   }
@@ -1144,10 +1144,9 @@ export async function dbDeletePatientSession(sessionId: string): Promise<void> {
 
 export async function dbBulkBlockSlots(date: string, times: string[], action: 'block' | 'unblock'): Promise<void> {
   for (const time of times) {
-    if (action === 'unblock') {
-      await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
-    } else {
-      const id = 'blk_' + Date.now().toString(36);
+    await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
+    if (action === 'block') {
+      const id = 'blk_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
       await executeQuery('INSERT INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', [id, date, time]);
     }
   }
