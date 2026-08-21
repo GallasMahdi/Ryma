@@ -43,7 +43,7 @@ interface InvoicesTabProps {
   loading: boolean;
   onRefresh: () => void;
   onCreated: (invoice: Invoice) => void;
-  onUpdateStatus: (id: string, newStatus: InvoicePaymentStatus) => void;
+  onUpdateStatus: (id: string, newStatus: InvoicePaymentStatus, newMethod?: PaymentMethod) => void;
   onDelete: (id: string) => void;
   patients: PatientRecord[];
   appointments: Appointment[];
@@ -488,18 +488,25 @@ export function InvoicesTab({
                           </span>
                         </td>
 
-                        {/* Status */}
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        {/* Status with Advanced Inline Quick-Action Toggle */}
+                        <td className="py-3 px-4 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => onUpdateStatus(inv.id, isPaid ? 'PENDING' : 'PAID')}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer ${
                               isPaid
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:border-amber-300'
                             }`}
+                            title={
+                              isPaid
+                                ? txt('Cliquez pour marquer comme EN ATTENTE', 'Click to mark as PENDING', 'Clique para marcar como PENDENTE')
+                                : txt('Cliquez pour marquer como PAYÉ', 'Click to mark as PAID', 'Clique para marcar como PAGO')
+                            }
                           >
-                            {isPaid ? <IconCheck size={11} /> : <IconClock size={11} />}
+                            {isPaid ? <IconCheck size={12} className="text-emerald-600" /> : <IconClock size={12} className="text-amber-600" />}
                             <span>{isPaid ? txt('Payé', 'Paid', 'Pago') : txt('En Attente', 'Pending', 'Pendente')}</span>
-                          </span>
+                          </button>
                         </td>
 
                         {/* Action Shortcuts */}

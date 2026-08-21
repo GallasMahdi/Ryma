@@ -118,9 +118,9 @@ async function runComprehensiveQA() {
 
   // Test 2.1: Double-booking prevention
   {
-    const randDay = 10 + Math.floor(Math.random() * 18);
+    const randDay = String(10 + Math.floor(Math.random() * 18)).padStart(2, '0');
     const randTime = ['09:00', '09:30', '10:30', '11:30', '14:30', '15:30', '16:30'][Math.floor(Math.random() * 7)];
-    const d = `2026-11-${randDay}`;
+    const d = `2027-04-${randDay}`;
     const t = randTime;
     const r1 = await request('/api/admin/appointments', {
       method: 'POST',

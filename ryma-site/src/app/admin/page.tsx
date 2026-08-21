@@ -16,6 +16,7 @@ import {
   Invoice,
   InvoiceStats,
   InvoicePaymentStatus,
+  PaymentMethod,
   getServiceName,
   getServicePrice,
   getNext7Days,
@@ -265,24 +266,36 @@ export default function AdminPage() {
     });
   }, [addToast, fetchInvoices, lang]);
 
-  const handleUpdateInvoiceStatus = useCallback(async (id: string, newStatus: InvoicePaymentStatus) => {
+  const handleUpdateInvoiceStatus = useCallback(async (id: string, newStatus: InvoicePaymentStatus, newMethod?: PaymentMethod) => {
+    // Optimistic instant UI update
+    setInvoices(prev => prev.map(inv => (inv.id === id ? {
+      ...inv,
+      paymentStatus: newStatus,
+      ...(newMethod ? { paymentMethod: newMethod } : {}),
+      paidAt: newStatus === 'PAID' ? new Date().toISOString() : inv.paidAt,
+    } : inv)));
+
     try {
       const res = await apiFetch<{ invoice: Invoice }>(`/api/admin/invoices/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentStatus: newStatus }),
+        body: JSON.stringify({
+          paymentStatus: newStatus,
+          ...(newMethod ? { paymentMethod: newMethod } : {}),
+        }),
       });
       setInvoices(prev => prev.map(inv => (inv.id === id ? res.invoice : inv)));
       fetchInvoices();
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Estado Atualizado' : 'Status Updated',
-        message: `${res.invoice.invoiceNumber}: ${newStatus === 'PAID' ? 'Pago' : 'Pendente'}`,
+        title: lang === 'pt' ? 'Estado Atualizado' : lang === 'fr' ? 'Statut mis à jour' : 'Status Updated',
+        message: `${res.invoice.invoiceNumber}: ${newStatus === 'PAID' ? (lang === 'fr' ? 'Payé' : lang === 'en' ? 'Paid' : 'Pago') : (lang === 'fr' ? 'En attente' : lang === 'en' ? 'Pending' : 'Pendente')}`,
       });
     } catch (err: any) {
+      fetchInvoices(); // rollback
       addToast({
         type: 'error',
-        title: 'Erro ao atualizar estado',
+        title: lang === 'pt' ? 'Erro ao atualizar estado' : 'Error updating status',
         message: err.message,
       });
     }

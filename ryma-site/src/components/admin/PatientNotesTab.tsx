@@ -2021,6 +2021,38 @@ export function PatientNotesTab({
           setIsInvoiceDetailOpen(false);
           setSelectedInvoiceForModal(null);
         }}
+        onUpdateStatus={async (id, newStatus, newMethod) => {
+          try {
+            await fetch(`/api/admin/invoices/${id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                paymentStatus: newStatus,
+                ...(newMethod ? { paymentMethod: newMethod } : {}),
+              }),
+            });
+            if (activePatient) {
+              fetchActivePatientInvoices(activePatient.phone, true);
+            }
+            if (selectedInvoiceForModal && selectedInvoiceForModal.id === id) {
+              setSelectedInvoiceForModal(prev => (prev ? {
+                ...prev,
+                paymentStatus: newStatus,
+                ...(newMethod ? { paymentMethod: newMethod } : {}),
+                paidAt: newStatus === 'PAID' ? new Date().toISOString() : prev.paidAt,
+              } : null));
+            }
+            if (onActionToast) {
+              onActionToast({
+                type: 'success',
+                title: lang === 'pt' ? 'Estado Atualizado' : lang === 'fr' ? 'Statut mis à jour' : 'Status Updated',
+                message: `${newStatus === 'PAID' ? (lang === 'fr' ? 'Payé' : lang === 'en' ? 'Paid' : 'Pago') : (lang === 'fr' ? 'En attente' : lang === 'en' ? 'Pending' : 'Pendente')}`,
+              });
+            }
+          } catch {
+            /* silent */
+          }
+        }}
         lang={lang}
       />
 

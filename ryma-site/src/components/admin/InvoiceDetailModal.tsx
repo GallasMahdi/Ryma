@@ -7,6 +7,7 @@ import {
   IconPrinter,
   IconBrandWhatsapp,
   IconCheck,
+  IconClock,
   IconAlertCircle,
   IconTrash,
   IconBuildingHospital,
@@ -22,7 +23,7 @@ interface InvoiceDetailModalProps {
   invoice: Invoice | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdateStatus?: (id: string, newStatus: InvoicePaymentStatus) => void;
+  onUpdateStatus?: (id: string, newStatus: InvoicePaymentStatus, newMethod?: PaymentMethod) => void;
   onDelete?: (id: string) => void;
   lang: Lang;
 }
@@ -92,11 +93,11 @@ export function InvoiceDetailModal({
                   {invoice.invoiceNumber}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                     isPaid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                   }`}
                 >
-                  {isPaid ? txt('● Payé', '● Paid', '● Pago') : txt('○ En Attente', '○ Pending', '○ Pendente')}
+                  {isPaid ? txt('● Payé / Quittancé', '● Paid / Settled', '● Pago / Quitado') : txt('○ En Attente', '○ Pending', '○ Pendente')}
                 </span>
               </div>
 
@@ -121,21 +122,6 @@ export function InvoiceDetailModal({
                   <span className="hidden sm:inline">{txt('Imprimer / PDF', 'Print / PDF', 'Imprimir / PDF')}</span>
                 </button>
 
-                {onUpdateStatus && (
-                  <button
-                    type="button"
-                    disabled={updating}
-                    onClick={() => {
-                      setUpdating(true);
-                      onUpdateStatus(invoice.id, isPaid ? 'PENDING' : 'PAID');
-                      setTimeout(() => setUpdating(false), 300);
-                    }}
-                    className="px-2.5 py-1.5 rounded-xl border border-white/20 text-white/80 hover:text-white hover:bg-white/10 text-xs font-semibold transition-colors"
-                  >
-                    {isPaid ? txt('Marquer En Attente', 'Mark Pending', 'Marcar Pendente') : txt('Marquer Payé', 'Mark Paid', 'Marcar Pago')}
-                  </button>
-                )}
-
                 <button
                   type="button"
                   onClick={onClose}
@@ -146,6 +132,82 @@ export function InvoiceDetailModal({
                 </button>
               </div>
             </div>
+
+            {/* ── ADVANCED INTERACTIVE STATUS & PAYMENT CONTROL PANEL ── */}
+            {onUpdateStatus && (
+              <div className="px-4 sm:px-6 py-2.5 bg-[#F8FAFC] border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-xs print:hidden">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-[#475569] text-[11px] uppercase tracking-wider">
+                    {txt('État :', 'Status:', 'Estado:')}
+                  </span>
+                  {/* Segmented Switch */}
+                  <div className="inline-flex rounded-xl p-0.5 bg-[#E2E8F0] border border-[#CBD5E1]">
+                    <button
+                      type="button"
+                      disabled={updating}
+                      onClick={() => {
+                        if (!isPaid) {
+                          setUpdating(true);
+                          onUpdateStatus(invoice.id, 'PAID', invoice.paymentMethod);
+                          setTimeout(() => setUpdating(false), 300);
+                        }
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                        isPaid
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-[#64748B] hover:text-[#0F172A]'
+                      }`}
+                    >
+                      <IconCheck size={13} />
+                      <span>{txt('Payé / Réglé', 'Paid / Settled', 'Pago / Quitado')}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={updating}
+                      onClick={() => {
+                        if (isPaid) {
+                          setUpdating(true);
+                          onUpdateStatus(invoice.id, 'PENDING');
+                          setTimeout(() => setUpdating(false), 300);
+                        }
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                        !isPaid
+                          ? 'bg-amber-500 text-white shadow-xs'
+                          : 'text-[#64748B] hover:text-[#0F172A]'
+                      }`}
+                    >
+                      <IconClock size={13} />
+                      <span>{txt('En Attente', 'Pending', 'Pendente')}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Payment Method Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-[#64748B] font-medium">
+                    {txt('Mode de règlement :', 'Payment method:', 'Meio de pagamento:')}
+                  </span>
+                  <select
+                    value={invoice.paymentMethod}
+                    disabled={updating}
+                    onChange={(e) => {
+                      setUpdating(true);
+                      onUpdateStatus(invoice.id, invoice.paymentStatus, e.target.value as PaymentMethod);
+                      setTimeout(() => setUpdating(false), 300);
+                    }}
+                    className="bg-white border border-[#CBD5E1] rounded-lg px-2.5 py-1 text-xs font-bold text-[#0F172A] outline-none cursor-pointer hover:border-[#94A3B8]"
+                  >
+                    <option value="MULTIBANCO">Multibanco (TPA)</option>
+                    <option value="MBWAY">MB Way</option>
+                    <option value="CASH">{txt('Espèces', 'Cash', 'Numerário')}</option>
+                    <option value="CARD">{txt('Carte', 'Card', 'Cartão')}</option>
+                    <option value="TRANSFER">{txt('Virement', 'Transfer', 'Transferência')}</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
             {/* ── PRINTABLE / VIEWABLE OFFICIAL INVOICE BODY ── */}
             <div
@@ -290,18 +352,30 @@ export function InvoiceDetailModal({
                 {/* Official Paid Stamp */}
                 <div>
                   {isPaid ? (
-                    <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 font-bold uppercase tracking-wider text-xs">
-                      <IconCheck size={18} className="text-emerald-600" />
+                    <button
+                      type="button"
+                      disabled={updating || !onUpdateStatus}
+                      onClick={() => onUpdateStatus && onUpdateStatus(invoice.id, 'PENDING')}
+                      className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 font-bold uppercase tracking-wider text-xs hover:bg-emerald-100 hover:scale-102 active:scale-98 transition-all cursor-pointer shadow-xs text-left"
+                      title={txt('Clique para alterar para Pendente', 'Click to switch to Pending', 'Clique para alterar para Pendente')}
+                    >
+                      <IconCheck size={18} className="text-emerald-600 shrink-0" />
                       <div>
                         <p className="leading-none text-[11px]">QUITADO / PAGO</p>
                         <p className="text-[9px] font-mono text-emerald-700 mt-0.5">{paidDate} • {invoice.paymentMethod}</p>
                       </div>
-                    </div>
+                    </button>
                   ) : (
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border-2 border-amber-500 bg-amber-50 text-amber-800 font-bold uppercase tracking-wider text-xs">
-                      <IconAlertCircle size={18} className="text-amber-600" />
+                    <button
+                      type="button"
+                      disabled={updating || !onUpdateStatus}
+                      onClick={() => onUpdateStatus && onUpdateStatus(invoice.id, 'PAID', invoice.paymentMethod)}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-amber-500 bg-amber-50 text-amber-800 font-bold uppercase tracking-wider text-xs hover:bg-amber-100 hover:scale-102 active:scale-98 transition-all cursor-pointer shadow-xs"
+                      title={txt('Clique para liquidar / marcar como Pago', 'Click to settle / mark as Paid', 'Clique para liquidar / marcar como Pago')}
+                    >
+                      <IconAlertCircle size={18} className="text-amber-600 shrink-0" />
                       <span>AGUARDA LIQUIDAÇÃO</span>
-                    </div>
+                    </button>
                   )}
                 </div>
 
