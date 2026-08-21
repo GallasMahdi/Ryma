@@ -456,7 +456,7 @@ export function PatientNotesTab({
   const updatePrescribedTarget = async (delta: number) => {
     if (!activePatient) return;
     const currentTarget = activePatient.totalPrescribedSessions || 10;
-    const newTarget = Math.max(1, currentTarget + delta);
+    const newTarget = Math.min(100, Math.max(1, currentTarget + delta));
     const cleanId = activePatient.id.startsWith('legacy_') ? undefined : activePatient.id;
 
     try {
@@ -782,15 +782,26 @@ export function PatientNotesTab({
                     <span>{txt('Modifier', 'Edit', 'Editar')}</span>
                   </button>
 
-                  <a
-                    href={`https://wa.me/${activePatient.phone.replace(/[^0-9]/g, '')}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-2 rounded-lg bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7] transition-colors border border-[#DCFCE7] touch-target flex items-center justify-center"
-                    title="WhatsApp"
-                  >
-                    <IconBrandWhatsapp size={16} />
-                  </a>
+                  {activePatient.phone.replace(/[^0-9]/g, '') ? (
+                    <a
+                      href={`https://wa.me/${activePatient.phone.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-2 rounded-lg bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7] transition-colors border border-[#DCFCE7] touch-target flex items-center justify-center"
+                      title="WhatsApp"
+                    >
+                      <IconBrandWhatsapp size={16} />
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="p-2 rounded-lg bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed flex items-center justify-center opacity-50"
+                      title="WhatsApp indisponível (sem número)"
+                    >
+                      <IconBrandWhatsapp size={16} />
+                    </button>
+                  )}
 
                   <a
                     href={`tel:${activePatient.phone}`}

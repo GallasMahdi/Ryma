@@ -1000,10 +1000,14 @@ export async function dbUpsertPatient(input: {
 export async function dbDeletePatientRecord(idOrPhone: string): Promise<void> {
   const p = (await dbGetPatientById(idOrPhone)) ?? (await dbGetPatientByPhone(idOrPhone));
   if (p) {
+    const phoneValidation = validateAndNormalizePhone(p.phone);
+    const normPhone = phoneValidation.isValid ? phoneValidation.normalized : p.phone.trim();
     await executeQuery('DELETE FROM patient_sessions WHERE patientId = ?', [p.id]);
-    await executeQuery("DELETE FROM appointments WHERE id LIKE 'apt_sess_%' AND phone = ?", [p.phone]);
+    await executeQuery("DELETE FROM appointments WHERE id LIKE 'apt_sess_%' AND (phone = ? OR phone = ?)", [p.phone, normPhone]);
+    await executeQuery("UPDATE appointments SET status = 'CANCELLED' WHERE (phone = ? OR phone = ?) AND status = 'PENDING'", [p.phone, normPhone]);
+    await executeQuery('UPDATE invoices SET patientId = NULL WHERE patientId = ? OR patientPhone = ? OR patientPhone = ?', [p.id, p.phone, normPhone]);
     await executeQuery('DELETE FROM patients WHERE id = ?', [p.id]);
-    await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ?', [p.phone, idOrPhone]);
+    await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ? OR phone = ?', [p.phone, normPhone, idOrPhone]);
   } else {
     const phoneValidation = validateAndNormalizePhone(idOrPhone);
     const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : idOrPhone.trim();
@@ -1139,10 +1143,6 @@ export async function dbGenerateInvoiceNumber(): Promise<string> {
 }
 
 export async function dbCreateInvoice(input: CreateInvoiceInput): Promise<Invoice> {
-  const id = 'inv_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
-  const now = new Date().toISOString();
-  const invoiceNumber = await dbGenerateInvoiceNumber();
-
   const phoneValidation = validateAndNormalizePhone(input.patientPhone);
   const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.patientPhone.trim();
 
@@ -1157,45 +1157,63 @@ export async function dbCreateInvoice(input: CreateInvoiceInput): Promise<Invoic
     : null;
 
   const paymentStatus = input.paymentStatus || 'PAID';
-  const paidAt = paymentStatus === 'PAID' ? now : null;
 
-  await executeQuery(
-    `INSERT INTO invoices (
-      id, invoiceNumber, appointmentId, patientId, patientName, patientNif,
-      patientEmail, patientPhone, patientAddress, coverageType, coverageProvider, coverageNumber,
-      serviceSlug, serviceName, practitioner, amount, vatRate, vatExemptionReason,
-      paymentMethod, paymentStatus, paidAt, notes, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      invoiceNumber,
-      input.appointmentId || null,
-      input.patientId || null,
-      input.patientName.trim(),
-      input.patientNif?.trim() || '999999990',
-      input.patientEmail?.trim() || null,
-      normalizedPhone,
-      input.patientAddress?.trim() || 'Lisboa, Portugal',
-      input.coverageType || 'PARTICULAR',
-      input.coverageProvider?.trim() || null,
-      input.coverageNumber?.trim() || null,
-      input.serviceSlug,
-      input.serviceName || input.serviceSlug,
-      input.practitioner || 'Equipa Digital Clínica (Licenciada)',
-      Number(input.amount),
-      defaultVatRate,
-      defaultExemption,
-      input.paymentMethod || 'MULTIBANCO',
-      paymentStatus,
-      paidAt,
-      input.notes || null,
-      now,
-      now,
-    ]
-  );
+  let lastError: any = null;
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    const id = 'inv_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+    const now = new Date().toISOString();
+    const paidAt = paymentStatus === 'PAID' ? now : null;
+    const invoiceNumber = await dbGenerateInvoiceNumber();
 
-  const created = await dbGetInvoiceById(id);
-  return created!;
+    try {
+      await executeQuery(
+        `INSERT INTO invoices (
+          id, invoiceNumber, appointmentId, patientId, patientName, patientNif,
+          patientEmail, patientPhone, patientAddress, coverageType, coverageProvider, coverageNumber,
+          serviceSlug, serviceName, practitioner, amount, vatRate, vatExemptionReason,
+          paymentMethod, paymentStatus, paidAt, notes, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          invoiceNumber,
+          input.appointmentId || null,
+          input.patientId || null,
+          input.patientName.trim(),
+          input.patientNif?.trim() || '999999990',
+          input.patientEmail?.trim() || null,
+          normalizedPhone,
+          input.patientAddress?.trim() || 'Lisboa, Portugal',
+          input.coverageType || 'PARTICULAR',
+          input.coverageProvider?.trim() || null,
+          input.coverageNumber?.trim() || null,
+          input.serviceSlug,
+          input.serviceName || input.serviceSlug,
+          input.practitioner || 'Equipa Digital Clínica (Licenciada)',
+          Number(input.amount),
+          defaultVatRate,
+          defaultExemption,
+          input.paymentMethod || 'MULTIBANCO',
+          paymentStatus,
+          paidAt,
+          input.notes || null,
+          now,
+          now,
+        ]
+      );
+
+      const created = await dbGetInvoiceById(id);
+      if (created) return created;
+    } catch (err: any) {
+      lastError = err;
+      if (err?.message?.includes('UNIQUE') || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        // Small backoff before retrying to let concurrent insert finish and increment sequence
+        await new Promise(r => setTimeout(r, 25 * attempt + Math.floor(Math.random() * 25)));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError || new Error('Não foi possível gerar um número de fatura único.');
 }
 
 export async function dbGetInvoices(filters?: {

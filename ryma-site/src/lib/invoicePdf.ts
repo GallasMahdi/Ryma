@@ -1,20 +1,36 @@
 import { Invoice } from '@/types/admin';
 import { SITE } from '@/lib/site';
 
+function escapeHtml(str: unknown): string {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Generate a standalone, pristine HTML document for an official Portuguese Medical Invoice / Receipt.
  * Designed for perfect A4 vector rendering with zero background bleed-through.
  */
 export function generateInvoiceHtml(invoice: Invoice): string {
   const isPaid = invoice.paymentStatus === 'PAID';
-  const issueDate = invoice.createdAt.split('T')[0];
+  const issueDate = invoice.createdAt ? invoice.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
   const paidDate = invoice.paidAt ? invoice.paidAt.split('T')[0] : issueDate;
+
+  const vatRate = typeof invoice.vatRate === 'number' ? invoice.vatRate : 0;
+  const isVatExempt = vatRate === 0;
+  const totalAmount = Number(invoice.amount) || 0;
+  const vatAmount = isVatExempt ? 0 : (totalAmount * (vatRate / (100 + vatRate)));
+  const incidenceAmount = totalAmount - vatAmount;
 
   return `<!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="utf-8">
-  <title>${invoice.invoiceNumber} - ${invoice.patientName} - Digital Clínica</title>
+  <title>${escapeHtml(invoice.invoiceNumber)} - ${escapeHtml(invoice.patientName)} - Digital Clínica</title>
   <style>
     @page {
       size: A4 portrait;
@@ -287,24 +303,24 @@ export function generateInvoiceHtml(invoice: Invoice): string {
       <div>
         <div class="clinic-logo">
           <div class="logo-badge">R</div>
-          <span class="clinic-title">${SITE.name}</span>
+          <span class="clinic-title">${escapeHtml(SITE.name)}</span>
         </div>
         <p class="clinic-subtitle">Clínica de Fisioterapia & Estética Médica Avançada</p>
         <p class="clinic-address">Avenida da Liberdade 120, 1250-146 Lisboa, Portugal</p>
         <div class="clinic-identifiers">
-          <span><strong>NIF:</strong> ${SITE.clinicNif || '518 923 456'}</span>
-          <span><strong>Registo ERS:</strong> ${SITE.ersRegistration || 'E164321'}</span>
-          <span><strong>Ordem Fisio:</strong> ${SITE.professionalLicense || 'C-054321'}</span>
+          <span><strong>NIF:</strong> ${escapeHtml(SITE.clinicNif || '518 923 456')}</span>
+          <span><strong>Registo ERS:</strong> ${escapeHtml(SITE.ersRegistration || 'E164321')}</span>
+          <span><strong>Ordem Fisio:</strong> ${escapeHtml(SITE.professionalLicense || 'C-054321')}</span>
         </div>
       </div>
 
       <div class="doc-meta">
-        <div class="doc-badge">${invoice.invoiceNumber}</div>
+        <div class="doc-badge">${escapeHtml(invoice.invoiceNumber)}</div>
         <div class="doc-type">${isPaid ? 'Fatura-Recibo de Quitação' : 'Fatura / Aviso de Cobrança'}</div>
         <div class="doc-dates">
-          <div><strong>Emissão:</strong> ${issueDate}</div>
-          <div><strong>Liquidação:</strong> ${paidDate}</div>
-          <div><strong>Meio:</strong> ${invoice.paymentMethod}</div>
+          <div><strong>Emissão:</strong> ${escapeHtml(issueDate)}</div>
+          <div><strong>Liquidação:</strong> ${escapeHtml(paidDate)}</div>
+          <div><strong>Meio:</strong> ${escapeHtml(invoice.paymentMethod)}</div>
         </div>
       </div>
     </div>
@@ -313,20 +329,20 @@ export function generateInvoiceHtml(invoice: Invoice): string {
     <div class="recipient-box">
       <div>
         <div class="recipient-label">Exmo.(a) Senhor(a) (Destinatário):</div>
-        <div class="recipient-name">${invoice.patientName}</div>
-        <div class="recipient-detail">${invoice.patientAddress || 'Lisboa, Portugal'}</div>
-        <div class="recipient-detail" style="font-family: monospace;">Tel: ${invoice.patientPhone}</div>
+        <div class="recipient-name">${escapeHtml(invoice.patientName)}</div>
+        <div class="recipient-detail">${escapeHtml(invoice.patientAddress || 'Lisboa, Portugal')}</div>
+        <div class="recipient-detail" style="font-family: monospace;">Tel: ${escapeHtml(invoice.patientPhone)}</div>
       </div>
 
       <div style="text-align: right;">
         <div style="font-size: 11px; font-weight: bold;">
-          NIF: <span class="nif-pill">${invoice.patientNif}</span>
+          NIF: <span class="nif-pill">${escapeHtml(invoice.patientNif || '999999990')}</span>
         </div>
         ${
           invoice.coverageProvider
             ? `<div style="font-size: 10px; color: #475569; margin-top: 6px;">
-                <strong>Seguro / Subsistema:</strong> ${invoice.coverageProvider}
-                ${invoice.coverageNumber ? `<br><span style="font-family: monospace;">Nº Beneficiário: ${invoice.coverageNumber}</span>` : ''}
+                <strong>Seguro / Subsistema:</strong> ${escapeHtml(invoice.coverageProvider)}
+                ${invoice.coverageNumber ? `<br><span style="font-family: monospace;">Nº Beneficiário: ${escapeHtml(invoice.coverageNumber)}</span>` : ''}
               </div>`
             : ''
         }
@@ -347,18 +363,18 @@ export function generateInvoiceHtml(invoice: Invoice): string {
       <tbody>
         <tr>
           <td>
-            <div class="service-title">${invoice.serviceName}</div>
-            <div class="service-sub">Praticante: ${invoice.practitioner || SITE.professionalName}</div>
+            <div class="service-title">${escapeHtml(invoice.serviceName)}</div>
+            <div class="service-sub">Praticante: ${escapeHtml(invoice.practitioner || SITE.professionalName)}</div>
             ${
               invoice.vatExemptionReason
-                ? `<div class="service-exemption">* ${invoice.vatExemptionReason}</div>`
+                ? `<div class="service-exemption">* ${escapeHtml(invoice.vatExemptionReason)}</div>`
                 : ''
             }
           </td>
           <td style="text-align: center; font-family: monospace; font-weight: bold;">1</td>
-          <td style="text-align: right; font-family: monospace;">${invoice.amount.toFixed(2)} €</td>
-          <td style="text-align: center; font-family: monospace;">${invoice.vatRate}%</td>
-          <td style="text-align: right; font-family: monospace; font-weight: bold;">${invoice.amount.toFixed(2)} €</td>
+          <td style="text-align: right; font-family: monospace;">${totalAmount.toFixed(2)} €</td>
+          <td style="text-align: center; font-family: monospace;">${vatRate}%</td>
+          <td style="text-align: right; font-family: monospace; font-weight: bold;">${totalAmount.toFixed(2)} €</td>
         </tr>
       </tbody>
     </table>
@@ -368,9 +384,9 @@ export function generateInvoiceHtml(invoice: Invoice): string {
       <div class="legal-notice">
         <strong>Enquadramento Legal & Fiscal</strong><br>
         ${
-          invoice.vatRate === 0
+          isVatExempt
             ? 'Serviço de saúde e fisioterapia isento de IVA nos termos do Artigo 9.º do Código do IVA (CIVA).'
-            : 'Taxa normal de IVA a 23% incluída.'
+            : `Taxa normal de IVA a ${vatRate}% incluída.`
         }<br>
         Documento processado por programa certificado. Válido para efeitos de dedução em IRS e reembolso junto de seguradoras de saúde e subsistemas (ADSE, Médis, Multicare, AdvanceCare).
       </div>
@@ -378,15 +394,15 @@ export function generateInvoiceHtml(invoice: Invoice): string {
       <div class="totals-box">
         <div class="totals-row">
           <span>Incidência:</span>
-          <span style="font-family: monospace;">${invoice.amount.toFixed(2)} €</span>
+          <span style="font-family: monospace;">${incidenceAmount.toFixed(2)} €</span>
         </div>
         <div class="totals-row">
-          <span>IVA (${invoice.vatRate}%):</span>
-          <span style="font-family: monospace;">0.00 €</span>
+          <span>IVA (${vatRate}%):</span>
+          <span style="font-family: monospace;">${vatAmount.toFixed(2)} €</span>
         </div>
         <div class="totals-row grand-total">
           <span>TOTAL:</span>
-          <span style="font-family: monospace;">${invoice.amount.toFixed(2)} €</span>
+          <span style="font-family: monospace;">${totalAmount.toFixed(2)} €</span>
         </div>
       </div>
     </div>
@@ -397,7 +413,7 @@ export function generateInvoiceHtml(invoice: Invoice): string {
         ${
           isPaid
             ? `<div class="stamp-paid">
-                ✓ QUITADO / PAGO &nbsp;•&nbsp; ${paidDate}
+                ✓ QUITADO / PAGO &nbsp;•&nbsp; ${escapeHtml(paidDate)}
               </div>`
             : `<div class="stamp-pending">
                 ⏱ AGUARDA LIQUIDAÇÃO
@@ -406,7 +422,7 @@ export function generateInvoiceHtml(invoice: Invoice): string {
       </div>
 
       <div class="signature-block">
-        <div class="signature-name">${SITE.professionalName}</div>
+        <div class="signature-name">${escapeHtml(SITE.professionalName)}</div>
         <div class="signature-sub">Fisioterapeuta Licenciado</div>
       </div>
     </div>

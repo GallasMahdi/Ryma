@@ -10,6 +10,8 @@ import {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+import { validateAndNormalizePhone } from '@/lib/phone';
+
 // GET /api/admin/patients — list all structured patients & legacy notes
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
@@ -38,21 +40,41 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const phone = String(body.phone ?? '').trim().slice(0, 30);
+  const rawPhone = String(body.phone ?? '').trim().slice(0, 30);
   const patientName = String(body.patientName ?? '').trim().slice(0, 100);
 
-  if (!phone || !patientName) {
-    return NextResponse.json({ error: 'Nom et téléphone requis' }, { status: 422 });
+  if (!rawPhone || !patientName) {
+    return NextResponse.json({ error: 'Nome e telefone são obrigatórios' }, { status: 422 });
+  }
+
+  const phoneValidation = validateAndNormalizePhone(rawPhone);
+  const phone = phoneValidation.isValid ? phoneValidation.normalized : rawPhone.replace(/[^\d+]/g, '');
+
+  if (!phone || phone.replace(/\D/g, '').length < 6) {
+    return NextResponse.json({ error: 'Número de telefone inválido.' }, { status: 422 });
+  }
+
+  // Validate optional email
+  let email: string | null = null;
+  if (body.email && typeof body.email === 'string' && body.email.trim().length > 0) {
+    const trimmedEmail = body.email.trim();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      email = trimmedEmail;
+    } else {
+      return NextResponse.json({ error: 'Endereço de email inválido.' }, { status: 422 });
+    }
   }
 
   const parsedSessions = Number(body.totalPrescribedSessions);
-  const totalPrescribedSessions = !isNaN(parsedSessions) && parsedSessions > 0 ? parsedSessions : 10;
+  const totalPrescribedSessions = !isNaN(parsedSessions) && parsedSessions > 0
+    ? Math.min(100, Math.max(1, Math.round(parsedSessions)))
+    : 10;
 
   const patient = await dbUpsertPatient({
     id: body.id ? String(body.id) : undefined,
     patientName,
     phone,
-    email: body.email ? String(body.email).trim() : null,
+    email,
     gender: body.gender ? String(body.gender) : null,
     dob: body.dob ? String(body.dob) : null,
     coverageType: body.coverageType ? String(body.coverageType) : (body.cnamStatus ? (body.cnamStatus === 'OUI' ? 'INSURANCE' : body.cnamStatus === 'EN_COURS' ? 'ADSE' : 'PARTICULAR') : 'PARTICULAR'),

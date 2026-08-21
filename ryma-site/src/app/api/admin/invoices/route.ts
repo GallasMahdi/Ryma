@@ -58,14 +58,36 @@ export async function POST(request: NextRequest) {
 
   const service = SERVICES.find(s => s.slug === body.serviceSlug);
   const serviceName = body.serviceName || (service ? (service.name.pt || service.name.fr) : body.serviceSlug);
-  const amount = Number(body.amount) || service?.price || 0;
+  
+  // Validate Amount strictly > 0
+  const rawAmount = body.amount !== undefined ? Number(body.amount) : (service?.price || 0);
+  if (isNaN(rawAmount) || rawAmount <= 0) {
+    return NextResponse.json(
+      { error: 'O montante da fatura deve ser um valor estritamente positivo (> 0 €).' },
+      { status: 422 }
+    );
+  }
+  const amount = rawAmount;
+
+  // Validate NIF (9 digits or fallback 999999990)
+  let cleanNif = '999999990';
+  if (body.patientNif && String(body.patientNif).trim().length > 0) {
+    const candidate = String(body.patientNif).replace(/\s/g, '').trim();
+    if (!/^\d{9}$/.test(candidate)) {
+      return NextResponse.json(
+        { error: 'NIF inválido. O NIF deve conter exatamente 9 dígitos numéricos.' },
+        { status: 422 }
+      );
+    }
+    cleanNif = candidate;
+  }
 
   try {
     const invoice = await dbCreateInvoice({
       appointmentId: body.appointmentId,
       patientId: body.patientId,
       patientName: String(body.patientName).trim().slice(0, 100),
-      patientNif: body.patientNif ? String(body.patientNif).trim().slice(0, 20) : '999999990',
+      patientNif: cleanNif,
       patientEmail: body.patientEmail ? String(body.patientEmail).trim().slice(0, 254) : undefined,
       patientPhone: String(body.patientPhone).trim().slice(0, 30),
       patientAddress: body.patientAddress ? String(body.patientAddress).trim().slice(0, 250) : undefined,

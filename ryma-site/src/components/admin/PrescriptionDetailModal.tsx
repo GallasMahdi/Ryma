@@ -36,7 +36,11 @@ export function PrescriptionDetailModal({
   };
 
   const handleWhatsAppSend = () => {
-    const cleanPhone = prescription.patientPhone.replace(/[^0-9]/g, '');
+    const cleanPhone = (prescription.patientPhone || '').replace(/[^0-9]/g, '');
+    if (!cleanPhone) {
+      alert(lang === 'pt' ? 'Número de telefone do utente não disponível.' : 'Patient phone number is not available.');
+      return;
+    }
     const msg = encodeURIComponent(formatPrescriptionWhatsAppMessage(prescription));
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
   };

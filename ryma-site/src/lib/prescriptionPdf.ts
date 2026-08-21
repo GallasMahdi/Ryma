@@ -1,6 +1,16 @@
 import { PatientPrescription } from '@/types/admin';
 import { SITE } from '@/lib/site';
 
+function escapeHtml(str: unknown): string {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Generate a standalone, pristine HTML document for an official Recommendation / Prescription Pad.
  * Formatted for A4 portrait printing without any background app bleed-through.
@@ -14,7 +24,7 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
 <html lang="pt">
 <head>
   <meta charset="utf-8">
-  <title>Recomendações Clínicas - ${prescription.patientName} - Digital Clínica</title>
+  <title>Recomendações Clínicas - ${escapeHtml(prescription.patientName)} - Digital Clínica</title>
   <style>
     @page {
       size: A4 portrait;
@@ -213,21 +223,21 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
       <div>
         <div class="clinic-logo">
           <div class="logo-badge">R</div>
-          <span class="clinic-title">${SITE.name}</span>
+          <span class="clinic-title">${escapeHtml(SITE.name)}</span>
         </div>
         <p class="clinic-subtitle">Clínica de Fisioterapia & Estética Médica Avançada</p>
         <p class="clinic-address">Avenida da Liberdade 120, 1250-146 Lisboa, Portugal</p>
         <div class="clinic-identifiers">
-          <span><strong>NIF:</strong> ${SITE.clinicNif || '518 923 456'}</span>
-          <span><strong>Registo ERS:</strong> ${SITE.ersRegistration || 'E164321'}</span>
-          <span><strong>Ordem Fisio:</strong> ${SITE.professionalLicense || 'C-054321'}</span>
+          <span><strong>NIF:</strong> ${escapeHtml(SITE.clinicNif || '518 923 456')}</span>
+          <span><strong>Registo ERS:</strong> ${escapeHtml(SITE.ersRegistration || 'E164321')}</span>
+          <span><strong>Ordem Fisio:</strong> ${escapeHtml(SITE.professionalLicense || 'C-054321')}</span>
         </div>
       </div>
 
       <div class="doc-meta">
         <div class="doc-title">Recomendações Clínicas</div>
         <div class="doc-subtitle">Cuidados & Material Domiciliário</div>
-        <div class="doc-date">Data: <strong>${prescription.date}</strong></div>
+        <div class="doc-date">Data: <strong>${escapeHtml(prescription.date)}</strong></div>
       </div>
     </div>
 
@@ -235,18 +245,18 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
     <div class="patient-box">
       <div>
         <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94A3B8;">Utente:</div>
-        <div class="patient-name">${prescription.patientName}</div>
+        <div class="patient-name">${escapeHtml(prescription.patientName)}</div>
       </div>
       <div style="text-align: right;">
         <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94A3B8;">Contacto:</div>
-        <div class="patient-phone">${prescription.patientPhone}</div>
+        <div class="patient-phone">${escapeHtml(prescription.patientPhone)}</div>
       </div>
     </div>
 
     ${
       prescription.diagnosisOrGoal
         ? `<div style="margin-bottom: 14px; font-size: 10.5px; color: #334155;">
-            <strong>Objetivo Clínico / Enquadramento:</strong> ${prescription.diagnosisOrGoal}
+            <strong>Objetivo Clínico / Enquadramento:</strong> ${escapeHtml(prescription.diagnosisOrGoal)}
           </div>`
         : ''
     }
@@ -260,8 +270,8 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
               .map(
                 it => `
               <div class="item-card">
-                <div class="item-title">${it.title}</div>
-                <div class="item-instructions"><strong>Posologia / Aplicação:</strong> ${it.instructions}</div>
+                <div class="item-title">${escapeHtml(it.title)}</div>
+                <div class="item-instructions"><strong>Posologia / Aplicação:</strong> ${escapeHtml(it.instructions)}</div>
               </div>`
               )
               .join('')}
@@ -278,8 +288,8 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
               .map(
                 it => `
               <div class="item-card">
-                <div class="item-title">${it.title}</div>
-                <div class="item-instructions"><strong>Utilização Recomendada:</strong> ${it.instructions}</div>
+                <div class="item-title">${escapeHtml(it.title)}</div>
+                <div class="item-instructions"><strong>Utilização Recomendada:</strong> ${escapeHtml(it.instructions)}</div>
               </div>`
               )
               .join('')}
@@ -296,8 +306,8 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
               .map(
                 it => `
               <div class="item-card">
-                <div class="item-title">${it.title}</div>
-                <div class="item-instructions"><strong>Conselho Clínico:</strong> ${it.instructions}</div>
+                <div class="item-title">${escapeHtml(it.title)}</div>
+                <div class="item-instructions"><strong>Conselho Clínico:</strong> ${escapeHtml(it.instructions)}</div>
               </div>`
               )
               .join('')}
@@ -310,7 +320,7 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
       prescription.generalNotes
         ? `<div class="notes-box">
             <strong>Observações Adicionais do Fisioterapeuta:</strong><br>
-            ${prescription.generalNotes}
+            ${escapeHtml(prescription.generalNotes).replace(/\n/g, '<br>')}
           </div>`
         : ''
     }
@@ -321,7 +331,7 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
         Este documento contém orientações terapêuticas personalizadas para apoio e continuidade do plano de tratamento em domicílio. Em caso de dor persistente ou dúvida, contacte a equipa clínica.
       </div>
       <div class="signature-block">
-        <div class="signature-name">${prescription.practitioner || SITE.professionalName}</div>
+        <div class="signature-name">${escapeHtml(prescription.practitioner || SITE.professionalName)}</div>
         <div class="signature-sub">Fisioterapeuta Licenciado / Assinatura</div>
       </div>
     </div>
