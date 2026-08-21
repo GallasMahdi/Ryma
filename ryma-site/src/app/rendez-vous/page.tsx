@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Script from 'next/script';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES, Service } from '@/data/services';
@@ -16,6 +17,7 @@ import {
   IconRipple, IconShieldCheck,
 } from '@tabler/icons-react';
 import { playSoftClick } from '@/lib/sound';
+import { getRecaptchaToken } from '@/lib/recaptcha-client';
 
 function getBookingServiceIcon(iconKey: string, size = 18) {
   switch (iconKey) {
@@ -463,6 +465,9 @@ export default function RendezVousPage() {
     });
 
     try {
+      // Execute invisible Google reCAPTCHA v3 verification
+      const recaptchaToken = await getRecaptchaToken('booking');
+
       const res = await fetch('/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -476,6 +481,7 @@ export default function RendezVousPage() {
           service: selectedService.slug,
           date: selectedDate,
           startTime: selectedSlot,
+          recaptchaToken: recaptchaToken || undefined,
         }),
       });
 
@@ -577,6 +583,14 @@ export default function RendezVousPage() {
 
   return (
     <>
+      {/* ── Google reCAPTCHA v3 Script ─────────────────────────────────────── */}
+      {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
+          strategy="lazyOnload"
+        />
+      )}
+
       {/* ── Enterprise Toast Banner ────────────────────────────────────────── */}
       <BookingToastBanner toasts={toasts} onDismiss={dismissToast} />
       {/* ── Hero ─────────────────────────────────────── */}
@@ -1083,6 +1097,15 @@ export default function RendezVousPage() {
                       {loading ? '...' : t.booking.confirmBooking}
                     </Button>
                   </div>
+
+                  {/* Google reCAPTCHA subtle notice */}
+                  <p className="text-[10px] text-center text-[#8A8078] leading-tight pt-1">
+                    {lang === 'pt'
+                      ? 'Este site é protegido pelo reCAPTCHA e aplicam-se a Política de Privacidade e os Termos de Serviço da Google.'
+                      : lang === 'en'
+                      ? 'This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.'
+                      : 'Ce site est protégé par reCAPTCHA et les Règles de confidentialité et Conditions d\'utilisation de Google s\'appliquent.'}
+                  </p>
                 </form>
               </motion.div>
             )}

@@ -56,67 +56,112 @@ function AmbientParticles() {
   );
 }
 
-// Animated logo mark (stylized "R" monogram)
+// Animated logo mark (stylized luxury emblem)
 function LogoMark() {
   return (
     <motion.svg
-      width="60"
-      height="60"
-      viewBox="0 0 60 60"
+      width="72"
+      height="72"
+      viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
+      initial={{ opacity: 0, scale: 0.6, rotate: -15 }}
       animate={{ opacity: 1, scale: 1, rotate: 0 }}
-      transition={{ duration: 1.2, ease: [0.34, 1.56, 0.64, 1], delay: 0.3 }}
+      transition={{ duration: 1.2, ease: [0.34, 1.56, 0.64, 1], delay: 0.2 }}
     >
+      <defs>
+        <linearGradient id="splashGold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFF2D1" />
+          <stop offset="35%" stopColor="#E9CA7E" />
+          <stop offset="70%" stopColor="#C49A3C" />
+          <stop offset="100%" stopColor="#966F21" />
+        </linearGradient>
+        <radialGradient id="splashBg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#251C17" />
+          <stop offset="100%" stopColor="#0F0C0A" />
+        </radialGradient>
+      </defs>
+
+      {/* Base Medallion */}
+      <circle cx="50" cy="50" r="47" fill="url(#splashBg)" />
+
       {/* Outer circle */}
       <motion.circle
-        cx="30"
-        cy="30"
-        r="28"
-        stroke="url(#goldGradient)"
-        strokeWidth="0.8"
+        cx="50"
+        cy="50"
+        r="47"
+        stroke="url(#splashGold)"
+        strokeWidth="1.6"
         fill="none"
         initial={{ pathLength: 0, opacity: 0 }}
         animate={{ pathLength: 1, opacity: 1 }}
-        transition={{ duration: 1.8, delay: 0.5, ease: 'easeInOut' }}
+        transition={{ duration: 1.6, delay: 0.4, ease: 'easeInOut' }}
       />
-      {/* Inner circle */}
+      {/* Inner dotted ring */}
       <motion.circle
-        cx="30"
-        cy="30"
-        r="22"
-        stroke="url(#goldGradient)"
-        strokeWidth="0.4"
+        cx="50"
+        cy="50"
+        r="43"
+        stroke="url(#splashGold)"
+        strokeWidth="0.8"
         fill="none"
-        strokeDasharray="3 6"
+        strokeDasharray="3 5"
         initial={{ opacity: 0, rotate: 0 }}
-        animate={{ opacity: 0.5, rotate: 360 }}
-        transition={{ opacity: { duration: 1, delay: 1 }, rotate: { duration: 20, repeat: Infinity, ease: 'linear' } }}
+        animate={{ opacity: 0.6, rotate: 360 }}
+        transition={{ opacity: { duration: 1, delay: 0.8 }, rotate: { duration: 25, repeat: Infinity, ease: 'linear' } }}
       />
-      {/* Stylized "R" */}
-      <motion.text
-        x="30"
-        y="38"
-        textAnchor="middle"
-        fill="url(#goldGradient)"
-        fontSize="26"
-        fontFamily="serif"
-        fontStyle="italic"
-        fontWeight="300"
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 1.2 }}
-      >
-        R
-      </motion.text>
-      <defs>
-        <linearGradient id="goldGradient" x1="0" y1="0" x2="60" y2="60">
-          <stop offset="0%" stopColor="#F5E9C8" />
-          <stop offset="50%" stopColor="#C49A3C" />
-          <stop offset="100%" stopColor="#F5E9C8" />
-        </linearGradient>
-      </defs>
+
+      {/* Spine / Posture curve */}
+      <motion.path
+        d="M33 24 C 33 24, 38 40, 36 52 C 34 64, 33 76, 33 76"
+        stroke="url(#splashGold)"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1.2, delay: 0.8, ease: 'easeInOut' }}
+      />
+      <motion.path
+        d="M27 24 L39 24 M27 76 L39 76"
+        stroke="url(#splashGold)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 1.2 }}
+      />
+
+      {/* Dynamic "D" Arc */}
+      <motion.path
+        d="M35 24.5 C 56 24.5, 75 35, 75 50 C 75 65, 56 75.5, 35 75.5"
+        stroke="url(#splashGold)"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1.4, delay: 0.9, ease: 'easeInOut' }}
+      />
+
+      {/* Inner Contour */}
+      <motion.path
+        d="M36 34 C 48 34, 62 41, 62 50 C 62 59, 48 66, 36 66"
+        stroke="url(#splashGold)"
+        strokeWidth="1.8"
+        strokeOpacity="0.75"
+        strokeLinecap="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1.2, delay: 1.1, ease: 'easeInOut' }}
+      />
+
+      {/* Center Sparkle */}
+      <motion.path
+        d="M51 44 Q 51 50, 57 50 Q 51 50, 51 56 Q 51 50, 45 50 Q 51 50, 51 44 Z"
+        fill="url(#splashGold)"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 1.4, ease: 'backOut' }}
+      />
     </motion.svg>
   );
 }

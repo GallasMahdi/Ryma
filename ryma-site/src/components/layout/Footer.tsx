@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES, getLocalizedText } from '@/data/services';
+import { LogoIcon } from '@/components/ui/Logo';
 import { playSoftClick } from '@/lib/sound';
 import {
   IconPhone,
@@ -62,8 +63,8 @@ export function Footer() {
           <div className="lg:col-span-1">
             <Link href="/" onClick={playSoftClick} className="group inline-block mb-4 sm:mb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F5E9C8] via-[#FAF3E0] to-[#E8C97A] flex items-center justify-center shadow-[0_2px_16px_rgba(196,154,60,0.35)] border border-[#C49A3C]/40">
-                  <span className="font-bold text-lg text-[#8A6A24]">D</span>
+                <div className="relative group-hover:scale-105 transition-transform duration-300">
+                  <LogoIcon size={44} className="drop-shadow-[0_4px_16px_rgba(196,154,60,0.45)]" />
                 </div>
                 <div>
                   <div className="font-serif text-lg sm:text-xl font-bold text-white group-hover:text-[#E8C97A] transition-colors">

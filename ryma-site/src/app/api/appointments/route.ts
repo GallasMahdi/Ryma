@@ -3,6 +3,7 @@ import { dbCreateAppointment, dbCheckRateLimit, dbRecordRateLimitAttempt } from 
 import { validateAppointmentInput, getClientIp } from '@/lib/validation';
 import { broadcastAppointmentCreated } from '@/lib/events';
 import { sendAppointmentConfirmationEmail, sendAdminNewBookingNotification } from '@/lib/email';
+import { verifyRecaptchaToken } from '@/lib/recaptcha';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,6 +13,7 @@ export const revalidate = 0;
  * Public endpoint — creates a patient-facing appointment request.
  *
  * Protected by:
+ *  - Google reCAPTCHA v3 bot scoring
  *  - Per-phone rate limiting (3 bookings per phone number per hour)
  *  - IP rate limiting (20 bookings per IP per hour — generous to handle Vercel shared IPs)
  *  - Server-side input validation
@@ -37,6 +39,16 @@ export async function POST(request: NextRequest) {
       body = await request.json();
     } catch {
       return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
+    }
+
+    // Google reCAPTCHA v3 bot verification
+    const recaptchaToken = typeof body.recaptchaToken === 'string' ? body.recaptchaToken : null;
+    const recaptchaResult = await verifyRecaptchaToken(recaptchaToken);
+    if (!recaptchaResult.valid) {
+      return NextResponse.json(
+        { error: 'Validation de sécurité échouée (activité automatisée détectée). Veuillez rafraîchir la page.' },
+        { status: 403 }
+      );
     }
 
     // Server-side validation — never trust client values

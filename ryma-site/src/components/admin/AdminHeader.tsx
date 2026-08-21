@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Lang } from '@/lib/i18n';
+import { LogoIcon } from '@/components/ui/Logo';
 import {
   IconPlus,
   IconRefresh,
@@ -37,9 +38,9 @@ export function AdminHeader({
     <header className="h-14 md:h-16 bg-white border-b border-[#E2E8F0] px-3.5 sm:px-5 md:px-6 flex items-center justify-between shrink-0 z-30 sticky top-0 font-sans">
       {/* Brand & Status */}
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-        <div className="w-8 h-8 rounded-lg bg-[#0F172A] flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
-          R
-        </div>
+        <Link href="/" className="shrink-0 hover:opacity-85 transition-opacity" title={txt('Aller au site public', 'Go to public website', 'Ir para o site público')}>
+          <LogoIcon size={32} />
+        </Link>
 
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <span className="font-semibold text-sm sm:text-base text-[#0F172A] tracking-tight truncate">
