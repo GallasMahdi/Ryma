@@ -145,7 +145,7 @@ export function Navbar() {
               {/* ── Brand / Logo ── */}
               <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0 whitespace-nowrap">
                 <div className="relative group-hover:scale-105 transition-transform duration-300">
-                  <LogoIcon size={38} className="drop-shadow-[0_2px_12px_rgba(196,154,60,0.35)]" />
+                  <LogoIcon size={48} className="drop-shadow-[0_2px_12px_rgba(196,154,60,0.35)]" />
                 </div>
 
                 <div className="flex flex-col justify-center leading-none">
@@ -377,11 +377,11 @@ export function Navbar() {
               <div className="relative flex items-center justify-between px-5 py-4 border-b border-[#C49A3C]/20 bg-white/75 backdrop-blur-md shrink-0">
                 <Link
                   href="/"
-                  className="flex items-center gap-2.5 group"
+                  className="flex items-center gap-3 group"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] p-0.5 shadow-[0_2px_12px_rgba(196,154,60,0.4)] flex items-center justify-center">
-                    <span className="font-serif text-base font-bold text-[#1A1412]">R</span>
+                  <div className="relative group-hover:scale-105 transition-transform duration-300 shrink-0">
+                    <LogoIcon size={44} className="drop-shadow-[0_2px_10px_rgba(196,154,60,0.3)]" />
                   </div>
                   <div className="flex flex-col">
                     <span className="font-serif text-base font-bold text-[#1A1412] leading-tight">

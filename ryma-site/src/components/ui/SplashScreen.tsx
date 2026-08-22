@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Particle system for luxury ambient particles
+// Subtle minimalist white starlight particles
 interface Particle {
   id: number;
   x: number;
@@ -20,43 +21,39 @@ function AmbientParticles() {
 
   useEffect(() => {
     setParticles(
-      Array.from({ length: 12 }, (_, i) => ({
+      Array.from({ length: 8 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: Math.random() * 2 + 1,
-        duration: Math.random() * 3 + 3,
+        size: Math.random() * 1.5 + 1,
+        duration: Math.random() * 3 + 3.5,
         delay: Math.random() * 1.5,
-        opacity: Math.random() * 0.3 + 0.1,
+        opacity: Math.random() * 0.2 + 0.1,
       }))
     );
   }, []);
 
-  if (particles.length === 0) return null;
-
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contain: 'strict' }}>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {particles.map((p) => (
         <motion.div
           key={p.id}
-          className="absolute rounded-full bg-[#C49A3C]"
+          className="absolute rounded-full bg-white"
           style={{
             left: `${p.x}%`,
             top: `${p.y}%`,
             width: p.size,
             height: p.size,
             opacity: p.opacity,
-            willChange: 'transform, opacity',
           }}
           animate={{
             y: [0, -25, 0],
-            opacity: [p.opacity, p.opacity * 0.3, p.opacity],
-            scale: [1, 1.3, 1],
+            opacity: [p.opacity, p.opacity * 1.8, p.opacity],
           }}
           transition={{
             duration: p.duration,
-            delay: p.delay,
             repeat: Infinity,
+            delay: p.delay,
             ease: 'easeInOut',
           }}
         />
@@ -65,136 +62,37 @@ function AmbientParticles() {
   );
 }
 
-// Animated logo mark (stylized luxury emblem)
+// Ultra-Minimalist Crisp White Brand Emblem
 function LogoMark() {
   return (
-    <motion.svg
-      width="72"
-      height="72"
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8, ease: [0.34, 1.56, 0.64, 1], delay: 0.1 }}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
+      animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+      className="relative flex items-center justify-center mb-4"
     >
-      <defs>
-        <linearGradient id="splashGold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FFF2D1" />
-          <stop offset="35%" stopColor="#E9CA7E" />
-          <stop offset="70%" stopColor="#C49A3C" />
-          <stop offset="100%" stopColor="#966F21" />
-        </linearGradient>
-        <radialGradient id="splashBg" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#251C17" />
-          <stop offset="100%" stopColor="#0F0C0A" />
-        </radialGradient>
-      </defs>
+      {/* Soft White Ambient Aura */}
+      <div className="absolute w-36 h-36 rounded-full bg-white/[0.08] blur-3xl pointer-events-none" />
 
-      {/* Base Medallion */}
-      <circle cx="50" cy="50" r="47" fill="url(#splashBg)" />
-
-      {/* Outer circle */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="47"
-        stroke="url(#splashGold)"
-        strokeWidth="1.6"
-        fill="none"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: 1 }}
-        transition={{ duration: 1.2, delay: 0.2, ease: 'easeInOut' }}
-      />
-      {/* Inner dotted ring */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="43"
-        stroke="url(#splashGold)"
-        strokeWidth="0.8"
-        fill="none"
-        strokeDasharray="3 5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.6 }}
-        transition={{ opacity: { duration: 0.8, delay: 0.4 } }}
-      />
-
-      {/* Head Contour */}
-      <motion.path
-        d="M 37.5 19 C 33 19, 30 22.5, 30 27 C 30 31.5, 33 34.5, 36.5 35.5"
-        stroke="url(#splashGold)"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 0.8, delay: 0.3, ease: 'easeInOut' }}
-      />
-
-      {/* Spine & Posture Line */}
-      <motion.path
-        d="M 34.5 35.5 C 31.5 38.5, 27.5 44, 27.5 50 C 27.5 57, 31 63, 29.5 70 C 28 77, 26 80, 25 82"
-        stroke="url(#splashGold)"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 0.9, delay: 0.4, ease: 'easeInOut' }}
-      />
-
-      {/* Central Hourglass */}
-      <motion.path
-        d="M 36.5 35.5 C 40 40, 42 47, 39 53 C 36 59, 33 66, 35 73 C 37 80, 42 82, 42 82 C 42 82, 33 82, 30 76 C 27 70, 31 61, 35 56 C 39 51, 39 42, 35.5 36.5"
-        stroke="url(#splashGold)"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1.0, delay: 0.5, ease: 'easeInOut' }}
-      />
-
-      {/* Capital 'D' Wing */}
-      <motion.path
-        d="M 36 35.5 C 56 35.5, 75 42, 75 58.5 C 75 74.5, 56 82, 36 82"
-        stroke="url(#splashGold)"
-        strokeWidth="3.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1.0, delay: 0.6, ease: 'easeInOut' }}
-      />
-
-      {/* Inner Flow Arc */}
-      <motion.path
-        d="M 39 44 C 54 44, 64 49, 64 58.5 C 64 68, 54 73.5, 39 73.5"
-        stroke="url(#splashGold)"
-        strokeWidth="1.8"
-        strokeOpacity="0.75"
-        strokeLinecap="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 0.9, delay: 0.7, ease: 'easeInOut' }}
-      />
-
-      {/* Center Sparkle */}
-      <motion.circle
-        cx="53"
-        cy="58.5"
-        r="1.5"
-        fill="url(#splashGold)"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.9, ease: 'backOut' }}
-      />
-    </motion.svg>
+      <motion.div
+        whileHover={{ scale: 1.03 }}
+        transition={{ duration: 0.3 }}
+        className="relative w-20 h-20 sm:w-24 sm:h-24 p-3 rounded-2xl bg-white/[0.05] border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.8),_0_0_30px_rgba(255,255,255,0.06)] flex items-center justify-center backdrop-blur-2xl"
+      >
+        <Image
+          src="/logo-mark-light.png"
+          alt="Digital Clínica"
+          width={84}
+          height={84}
+          className="w-full h-full object-contain brightness-110 drop-shadow-[0_2px_16px_rgba(255,255,255,0.4)]"
+          priority
+        />
+      </motion.div>
+    </motion.div>
   );
 }
 
-// Letter-by-letter animation for the main title
+// Pure Minimalist White Title Animation
 function AnimatedTitle() {
   const name = 'DIGITAL CLÍNICA';
   const letters = name.split('');
@@ -204,19 +102,18 @@ function AnimatedTitle() {
       {letters.map((letter, i) => (
         <motion.span
           key={i}
-          initial={{ y: 40, opacity: 0 }}
+          initial={{ y: 35, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{
-            duration: 0.4,
-            delay: 0.2 + i * 0.02,
+            duration: 0.7,
+            delay: 0.35 + i * 0.035,
             ease: [0.33, 1, 0.68, 1],
           }}
-          className={`inline-block text-4xl md:text-6xl lg:text-7xl font-light tracking-[0.18em] ${
-            letter === ' ' ? 'w-4 md:w-6' : ''
+          className={`inline-block text-3xl md:text-5xl lg:text-6xl font-light tracking-[0.24em] text-white ${
+            letter === ' ' ? 'w-3 md:w-5' : ''
           }`}
           style={{
             fontFamily: 'var(--font-fraunces)',
-            color: '#F5E9C8',
           }}
         >
           {letter === ' ' ? '\u00A0' : letter}
@@ -226,15 +123,15 @@ function AnimatedTitle() {
   );
 }
 
-// Progress line
+// 4-Second Timing Progress Line
 function ProgressLine({ onComplete }: { onComplete: () => void }) {
   return (
-    <div className="relative w-48 h-[1px] bg-white/10 mt-8 overflow-hidden">
+    <div className="relative w-48 h-[1px] bg-white/15 mt-9 overflow-hidden rounded-full">
       <motion.div
-        className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-transparent via-[#C49A3C] to-[#F5E9C8]"
+        className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-transparent via-white to-white"
         initial={{ x: '-100%' }}
         animate={{ x: '0%' }}
-        transition={{ duration: 0.9, delay: 0.3, ease: 'easeInOut' }}
+        transition={{ duration: 3.3, delay: 0.3, ease: 'easeInOut' }}
         onAnimationComplete={onComplete}
       />
     </div>
@@ -247,14 +144,13 @@ export function SplashScreen() {
   const [exitReady, setExitReady] = useState(false);
 
   useEffect(() => {
-    // Skip splash for Lighthouse, headless browsers, bots, reduced motion, or if already seen
     if (typeof window === 'undefined') return;
 
     const isBotOrLighthouse =
       /Lighthouse|PageSpeed|Googlebot|HeadlessChrome|Chrome-Lighthouse|Mediapartners-Google/i.test(navigator.userAgent) ||
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const hasSeenSplash = sessionStorage.getItem('ryma_splash_v2') === 'true';
+    const hasSeenSplash = sessionStorage.getItem('ryma_splash_v5') === 'true';
 
     if (isBotOrLighthouse || hasSeenSplash) {
       setShowSplash(false);
@@ -270,18 +166,18 @@ export function SplashScreen() {
     setExitReady(true);
     setTimeout(() => {
       setShowSplash(false);
-      sessionStorage.setItem('ryma_splash_v2', 'true');
+      sessionStorage.setItem('ryma_splash_v5', 'true');
       document.documentElement.classList.add('skip-splash');
-    }, 450);
+    }, 400);
   };
 
   const handleSkip = () => {
     setExitReady(true);
     setTimeout(() => {
       setShowSplash(false);
-      sessionStorage.setItem('ryma_splash_v2', 'true');
+      sessionStorage.setItem('ryma_splash_v5', 'true');
       document.documentElement.classList.add('skip-splash');
-    }, 300);
+    }, 250);
   };
 
   return (
@@ -290,36 +186,35 @@ export function SplashScreen() {
         <motion.div
           id="splash-screen-root"
           key="splash"
-          className="fixed inset-0 z-[9999] overflow-hidden cursor-pointer bg-[#1A1412]"
+          className="fixed inset-0 z-[9999] overflow-hidden cursor-pointer bg-[#090A0C]"
           style={{ contain: 'strict', willChange: 'opacity' }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.35, ease: 'easeInOut' }}
+          transition={{ duration: 0.45, ease: 'easeInOut' }}
           onClick={handleSkip}
         >
-          {/* Curtain panels that slide out on exit */}
+          {/* Minimalist Top & Bottom Curtains */}
           <AnimatePresence>
             {!exitReady ? (
               <motion.div key="curtain" className="absolute inset-0 flex flex-col pointer-events-none">
                 {/* Top curtain */}
                 <motion.div
-                  className="flex-1 bg-[#120E0D] relative overflow-hidden"
-                  exit={{ y: '-100%', transition: { duration: 0.5, ease: [0.76, 0, 0.24, 1] } }}
+                  className="flex-1 bg-[#060708] relative overflow-hidden"
+                  exit={{ y: '-100%', transition: { duration: 0.55, ease: [0.76, 0, 0.24, 1] } }}
                   style={{ willChange: 'transform' }}
                 >
-                  {/* Diagonal shimmer line using pure GPU transform (x) to prevent layout shifts */}
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <motion.div
-                      className="absolute h-[1px] w-[200%] bg-gradient-to-r from-transparent via-[#C49A3C]/30 to-transparent"
-                      style={{ top: '50%', left: 0, transform: 'rotate(-12deg)', willChange: 'transform' }}
+                      className="absolute h-[1px] w-[200%] bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                      style={{ top: '50%', left: 0, transform: 'rotate(-10deg)', willChange: 'transform' }}
                       animate={{ x: ['-50%', '50%'] }}
-                      transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
+                      transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
                     />
                   </div>
                 </motion.div>
                 {/* Bottom curtain */}
                 <motion.div
-                  className="flex-1 bg-[#120E0D] relative"
-                  exit={{ y: '100%', transition: { duration: 0.5, ease: [0.76, 0, 0.24, 1], delay: 0.05 } }}
+                  className="flex-1 bg-[#060708] relative"
+                  exit={{ y: '100%', transition: { duration: 0.55, ease: [0.76, 0, 0.24, 1], delay: 0.05 } }}
                   style={{ willChange: 'transform' }}
                 />
               </motion.div>
@@ -327,100 +222,89 @@ export function SplashScreen() {
           </AnimatePresence>
 
           {/* Main content layer */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1A1412]">
-            {/* Radial glow background */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#090A0C]">
+            {/* Pure Ambient Radial Vignette */}
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(196,154,60,0.08) 0%, transparent 70%)',
+                  'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(255,255,255,0.04) 0%, transparent 75%)',
               }}
             />
 
-            {/* Ambient particles */}
+            {/* Ambient starlight */}
             <AmbientParticles />
 
-            {/* Top decorative line */}
+            {/* Top Minimal Hairline */}
             <motion.div
-              className="absolute top-0 left-0 right-0 h-[2px]"
-              style={{ background: 'linear-gradient(90deg, transparent, #C49A3C, transparent)' }}
+              className="absolute top-0 left-0 right-0 h-[1px]"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }}
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: 1.0, delay: 0.1, ease: 'easeInOut' }}
+              transition={{ duration: 1.4, delay: 0.1, ease: 'easeInOut' }}
             />
 
-            {/* Bottom decorative line */}
+            {/* Bottom Minimal Hairline */}
             <motion.div
-              className="absolute bottom-0 left-0 right-0 h-[2px]"
-              style={{ background: 'linear-gradient(90deg, transparent, #C49A3C, transparent)' }}
+              className="absolute bottom-0 left-0 right-0 h-[1px]"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }}
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: 1.0, delay: 0.1, ease: 'easeInOut' }}
+              transition={{ duration: 1.4, delay: 0.1, ease: 'easeInOut' }}
             />
 
-            {/* Center content */}
+            {/* Center Content */}
             <div className="relative z-10 flex flex-col items-center px-8 text-center">
-              {/* Logo mark */}
+              {/* Logo Mark */}
               <LogoMark />
 
-              {/* Separator */}
+              {/* Minimal White Separator */}
               <motion.div
-                className="flex items-center gap-4 my-6 w-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
+                className="flex items-center gap-3 my-5 w-44"
+                initial={{ opacity: 0, scaleX: 0.6 }}
+                animate={{ opacity: 1, scaleX: 1 }}
+                transition={{ delay: 0.6, duration: 0.7 }}
               >
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent to-[#C49A3C]/50" />
-                <div className="w-1 h-1 rounded-full bg-[#C49A3C]" />
-                <div className="flex-1 h-px bg-gradient-to-l from-transparent to-[#C49A3C]/50" />
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent to-white/30" />
+                <div className="w-1 h-1 rounded-full bg-white/70 shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                <div className="flex-1 h-px bg-gradient-to-l from-transparent to-white/30" />
               </motion.div>
 
-              {/* Animated name */}
+              {/* Pure White Brand Title */}
               <div className="overflow-hidden">
                 <AnimatedTitle />
               </div>
 
-              {/* Subtitle */}
+              {/* Subtitle in Clean Pure Light Silver */}
               <motion.div
-                className="mt-4 flex flex-col items-center gap-2"
-                initial={{ opacity: 0, y: 8 }}
+                className="mt-3.5 flex flex-col items-center gap-1.5"
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
+                transition={{ delay: 1.0, duration: 0.6 }}
               >
                 <span
-                  className="text-xs md:text-sm tracking-[0.35em] uppercase text-[#C49A3C]"
+                  className="text-[11px] sm:text-xs tracking-[0.34em] uppercase text-white/75 font-medium"
                   style={{ fontFamily: 'var(--font-inter)' }}
                 >
-                  Kinésithérapie
-                </span>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-px bg-[#C49A3C]/40" />
-                  <span className="text-[#F5E9C8]/30 text-xs">✦</span>
-                  <div className="w-8 h-px bg-[#C49A3C]/40" />
-                </div>
-                <span
-                  className="text-xs md:text-sm tracking-[0.35em] uppercase text-[#C49A3C]"
-                  style={{ fontFamily: 'var(--font-inter)' }}
-                >
-                  Soins Minceur
+                  Fisioterapia & Estética Médica
                 </span>
               </motion.div>
 
-              {/* Location */}
+              {/* Location in Soft Pure White */}
               <motion.p
-                className="mt-5 text-[10px] md:text-xs tracking-[0.4em] uppercase text-[#F5E9C8]/30"
+                className="mt-3 text-[9px] sm:text-[10px] tracking-[0.38em] uppercase text-white/40"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.0, duration: 0.5 }}
+                transition={{ delay: 1.2, duration: 0.5 }}
               >
                 Lisboa — Portugal
               </motion.p>
 
-              {/* Progress line */}
+              {/* 4-Second Progress line */}
               <ProgressLine onComplete={handleProgressComplete} />
             </div>
 
-            {/* Corner accents */}
+            {/* Pure Minimal Corner Hairlines */}
             {[
               'top-6 left-6 border-t border-l',
               'top-6 right-6 border-t border-r',
@@ -429,10 +313,10 @@ export function SplashScreen() {
             ].map((pos, i) => (
               <motion.div
                 key={i}
-                className={`absolute w-8 h-8 border-[#C49A3C]/40 ${pos}`}
+                className={`absolute w-5 h-5 border-white/20 ${pos}`}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 + i * 0.05, duration: 0.4, ease: 'easeOut' }}
+                transition={{ delay: 0.4 + i * 0.05, duration: 0.5, ease: 'easeOut' }}
               />
             ))}
           </div>
@@ -441,3 +325,5 @@ export function SplashScreen() {
     </AnimatePresence>
   );
 }
+
+

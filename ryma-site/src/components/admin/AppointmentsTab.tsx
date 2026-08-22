@@ -38,6 +38,7 @@ import { Lang } from '@/lib/i18n';
 import { DayAgendaView } from './DayAgendaView';
 import { FilterSheet } from './FilterSheet';
 import { CreateInvoiceModal } from './CreateInvoiceModal';
+import { WhatsAppCommunicationModal } from './WhatsAppCommunicationModal';
 
 // ─── Week Calendar View (Desktop / Tablet) ───────────────────────────────────
 
@@ -98,6 +99,7 @@ interface WeekCalendarViewProps {
   openPatientNote: (appt: Appointment) => void;
   setConfirmDialog: (dlg: { title: string; onConfirm: () => void } | null) => void;
   recentNewIds?: Set<string>;
+  openWhatsAppModal?: (appt: Appointment) => void;
 }
 
 function WeekCalendarView({
@@ -108,6 +110,7 @@ function WeekCalendarView({
   openPatientNote,
   setConfirmDialog,
   recentNewIds,
+  openWhatsAppModal,
 }: WeekCalendarViewProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
@@ -367,15 +370,26 @@ function WeekCalendarView({
 
             {/* Actions */}
             <div className="flex flex-wrap gap-2">
-              <a
-                href={`https://wa.me/${selectedAppt.phone.replace(/[^0-9]/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] text-xs font-medium hover:bg-[#DCFCE7] transition-colors"
-              >
-                <IconBrandWhatsapp size={14} />
-                WhatsApp
-              </a>
+              {openWhatsAppModal ? (
+                <button
+                  type="button"
+                  onClick={() => { openWhatsAppModal(selectedAppt); setSelectedAppt(null); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] text-xs font-medium hover:bg-[#DCFCE7] transition-colors"
+                >
+                  <IconBrandWhatsapp size={14} />
+                  WhatsApp
+                </button>
+              ) : (
+                <a
+                  href={`https://wa.me/${selectedAppt.phone.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] text-xs font-medium hover:bg-[#DCFCE7] transition-colors"
+                >
+                  <IconBrandWhatsapp size={14} />
+                  WhatsApp
+                </a>
+              )}
 
               <button
                 onClick={() => { openPatientNote(selectedAppt); setSelectedAppt(null); }}
@@ -475,6 +489,13 @@ export function AppointmentsTab({
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [selectedApptForInvoice, setSelectedApptForInvoice] = useState<Appointment | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [selectedApptForWhatsApp, setSelectedApptForWhatsApp] = useState<Appointment | null>(null);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+
+  const handleOpenWhatsAppHub = (appt: Appointment) => {
+    setSelectedApptForWhatsApp(appt);
+    setIsWhatsAppModalOpen(true);
+  };
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -601,21 +622,14 @@ export function AppointmentsTab({
 
         {/* Status Actions */}
         <div className="flex flex-wrap items-center gap-1.5 shrink-0 self-end md:self-center pt-2.5 md:pt-0 border-t md:border-t-0 border-[#E2E8F0] w-full md:w-auto justify-end">
-          <a
-            href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-              lang === 'fr'
-                ? `Bonjour ${item.patientName}, rappel de votre séance pour ${getServiceName(item.service, 'fr')} le ${item.date} à ${item.startTime} à la Digital Clínica.`
-                : lang === 'en'
-                ? `Hello ${item.patientName}, reminder for your appointment for ${getServiceName(item.service, 'en')} on ${item.date} at ${item.startTime} at Digital Clinic.`
-                : `Olá ${item.patientName}, lembramos a sua consulta de ${getServiceName(item.service, 'pt')} no dia ${item.date} às ${item.startTime} na Digital Clínica.`
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] hover:bg-[#DCFCE7] transition-colors touch-target flex items-center justify-center"
-            title="WhatsApp"
+          <button
+            type="button"
+            onClick={() => handleOpenWhatsAppHub(item)}
+            className="p-2 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] hover:bg-[#DCFCE7] transition-colors touch-target flex items-center justify-center shadow-2xs"
+            title="WhatsApp Hub (Lembretes & Pós-Tratamento)"
           >
             <IconBrandWhatsapp size={15} />
-          </a>
+          </button>
 
           <button
             onClick={() => openPatientNote(item)}
@@ -889,6 +903,7 @@ export function AppointmentsTab({
               setConfirmDialog={setConfirmDialog}
               noShowCounts={noShowCounts}
               recentNewIds={recentNewIds}
+              openWhatsAppModal={handleOpenWhatsAppHub}
             />
           ) : viewMode === 'week' ? (
             <WeekCalendarView
@@ -899,6 +914,7 @@ export function AppointmentsTab({
               openPatientNote={openPatientNote}
               setConfirmDialog={setConfirmDialog}
               recentNewIds={recentNewIds}
+              openWhatsAppModal={handleOpenWhatsAppHub}
             />
           ) : viewMode === 'cards' ? (
             <div className="grid grid-cols-1 gap-2.5">
@@ -963,15 +979,14 @@ export function AppointmentsTab({
                           </td>
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <a
-                                href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                type="button"
+                                onClick={() => handleOpenWhatsAppHub(item)}
                                 className="p-1.5 rounded-lg text-[#166534] hover:bg-[#DCFCE7] transition-colors"
-                                title="WhatsApp"
+                                title="WhatsApp Hub"
                               >
                                 <IconBrandWhatsapp size={16} />
-                              </a>
+                              </button>
                               <button
                                 onClick={() => openPatientNote(item)}
                                 className="p-1.5 rounded-lg text-[#475569] hover:bg-[#F1F5F9] transition-colors"
@@ -1171,6 +1186,19 @@ export function AppointmentsTab({
             coverageProvider: selectedApptForInvoice.coverageProvider || undefined,
             coverageNumber: selectedApptForInvoice.coverageNumber || undefined,
           }}
+        />
+      )}
+
+      {/* WhatsApp Communication Hub Modal */}
+      {selectedApptForWhatsApp && (
+        <WhatsAppCommunicationModal
+          isOpen={isWhatsAppModalOpen}
+          onClose={() => {
+            setIsWhatsAppModalOpen(false);
+            setSelectedApptForWhatsApp(null);
+          }}
+          appointment={selectedApptForWhatsApp}
+          lang={lang}
         />
       )}
     </div>

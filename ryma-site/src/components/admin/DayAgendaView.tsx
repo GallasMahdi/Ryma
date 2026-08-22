@@ -34,6 +34,7 @@ interface DayAgendaViewProps {
   setConfirmDialog: (dlg: { title: string; onConfirm: () => void } | null) => void;
   noShowCounts?: Record<string, number>;
   recentNewIds?: Set<string>;
+  openWhatsAppModal?: (appt: Appointment) => void;
 }
 
 function getInitials(name: string): string {
@@ -52,6 +53,7 @@ export function DayAgendaView({
   setConfirmDialog,
   noShowCounts,
   recentNewIds,
+  openWhatsAppModal,
 }: DayAgendaViewProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
@@ -275,21 +277,26 @@ export function DayAgendaView({
 
                   {/* Actions Bar */}
                   <div className="flex items-center gap-1.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E2E8F0] justify-end shrink-0 flex-wrap">
-                    <a
-                      href={`https://wa.me/${appt.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                        lang === 'fr'
-                          ? `Bonjour ${appt.patientName}, rappel de votre séance pour ${getServiceName(appt.service, 'fr')} le ${appt.date} à ${appt.startTime} à la Digital Clínica.`
-                          : lang === 'en'
-                          ? `Hello ${appt.patientName}, reminder for your appointment for ${getServiceName(appt.service, 'en')} on ${appt.date} at ${appt.startTime} at Digital Clinic.`
-                          : `Olá ${appt.patientName}, lembramos a sua consulta de ${getServiceName(appt.service, 'pt')} no dia ${appt.date} às ${appt.startTime} na Digital Clínica.`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] hover:bg-[#DCFCE7] transition-colors touch-target flex items-center justify-center"
-                      title="WhatsApp"
-                    >
-                      <IconBrandWhatsapp size={16} />
-                    </a>
+                    {openWhatsAppModal ? (
+                      <button
+                        type="button"
+                        onClick={() => openWhatsAppModal(appt)}
+                        className="p-2 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] hover:bg-[#DCFCE7] transition-colors touch-target flex items-center justify-center"
+                        title="WhatsApp Hub"
+                      >
+                        <IconBrandWhatsapp size={16} />
+                      </button>
+                    ) : (
+                      <a
+                        href={`https://wa.me/${appt.phone.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] hover:bg-[#DCFCE7] transition-colors touch-target flex items-center justify-center"
+                        title="WhatsApp"
+                      >
+                        <IconBrandWhatsapp size={16} />
+                      </a>
+                    )}
 
                     <button
                       onClick={() => openPatientNote(appt)}

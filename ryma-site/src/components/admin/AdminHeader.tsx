@@ -14,6 +14,7 @@ import {
   IconLayoutSidebarLeftExpand,
   IconSearch,
   IconCommand,
+  IconLifebuoy,
 } from '@tabler/icons-react';
 
 interface AdminHeaderProps {
@@ -27,6 +28,7 @@ interface AdminHeaderProps {
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
   onOpenCommandPalette?: () => void;
+  onOpenHelpdesk?: () => void;
 }
 
 export function AdminHeader({
@@ -40,6 +42,7 @@ export function AdminHeader({
   isSidebarCollapsed = false,
   onToggleSidebar,
   onOpenCommandPalette,
+  onOpenHelpdesk,
 }: AdminHeaderProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
@@ -69,7 +72,7 @@ export function AdminHeader({
         )}
 
         <div className="shrink-0 flex items-center justify-center select-none">
-          <LogoIcon size={32} />
+          <LogoIcon size={36} />
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
@@ -148,6 +151,19 @@ export function AdminHeader({
           <IconFileSpreadsheet size={15} className="text-[#64748B]" />
           <span>CSV</span>
         </a>
+
+        {/* Clinic Tech Support / Helpdesk Button */}
+        {onOpenHelpdesk && (
+          <button
+            type="button"
+            onClick={onOpenHelpdesk}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-[#C49A3C]/40 bg-[#FAFAF8] text-[#9A7428] hover:bg-[#C49A3C]/10 hover:text-[#1A1412] transition-colors shadow-2xs"
+            title={txt('Assistance & Helpdesk Clinique', 'Clinic Support & Helpdesk', 'Suporte Técnico & Helpdesk')}
+          >
+            <IconLifebuoy size={15} className="text-[#C49A3C]" />
+            <span className="hidden xl:inline">{txt('Support', 'Helpdesk', 'Ajuda')}</span>
+          </button>
+        )}
 
         {/* Refresh button */}
         <button

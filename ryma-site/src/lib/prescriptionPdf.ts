@@ -222,7 +222,7 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
     <div class="header">
       <div>
         <div class="clinic-logo">
-          <div class="logo-badge">R</div>
+          <div class="logo-badge">DC</div>
           <span class="clinic-title">${escapeHtml(SITE.name)}</span>
         </div>
         <p class="clinic-subtitle">Clínica de Fisioterapia & Estética Médica Avançada</p>

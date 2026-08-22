@@ -21,6 +21,8 @@ import {
   IconArrowRight,
   IconCornerDownLeft,
   IconShieldCheck,
+  IconLifebuoy,
+  IconWifi,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { AdminTab } from './AdminMobileNav';
@@ -44,6 +46,7 @@ export interface AdminCommandPaletteProps {
   onRefresh: () => void;
   toggleLang: () => void;
   onLogout: () => void;
+  onOpenHelpdesk?: () => void;
 }
 
 type PaletteCategory = 'all' | 'actions' | 'patients' | 'appointments' | 'invoices';
@@ -76,6 +79,7 @@ export function AdminCommandPalette({
   onRefresh,
   toggleLang,
   onLogout,
+  onOpenHelpdesk,
 }: AdminCommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PaletteCategory>('all');
@@ -209,6 +213,23 @@ export function AdminCommandPalette({
           toggleLang();
         },
       },
+      ...(onOpenHelpdesk
+        ? [
+            {
+              id: 'action-helpdesk',
+              category: 'action',
+              title: txt('Assistance & Support Technique Clinique', 'Clinic Support & Tech Helpdesk', 'Suporte Técnico & Helpdesk'),
+              subtitle: txt('Urgences, diagnostic et cheatsheet réception', 'Emergencies, diagnostic & reception cheatsheet', 'Canais de emergência, diagnóstico e Wi-Fi'),
+              badge: txt('Support', 'Helpdesk', 'Ajuda'),
+              badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
+              icon: IconLifebuoy,
+              onSelect: () => {
+                onClose();
+                onOpenHelpdesk();
+              },
+            } as PaletteItem,
+          ]
+        : []),
       {
         id: 'action-logout',
         category: 'action',

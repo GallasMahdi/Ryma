@@ -37,6 +37,7 @@ import { InvoicesTab } from '@/components/admin/InvoicesTab';
 import { AddAppointmentModal } from '@/components/admin/AddAppointmentModal';
 import { CreateInvoiceModal } from '@/components/admin/CreateInvoiceModal';
 import { AdminCommandPalette } from '@/components/admin/AdminCommandPalette';
+import { ClinicHelpdeskDrawer } from '@/components/admin/ClinicHelpdeskDrawer';
 import { LuxuryToastContainer, LuxuryProgressBar, LuxuryToast } from '@/components/admin/LuxuryFeedback';
 
 async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
@@ -112,6 +113,9 @@ export default function AdminPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoiceStats, setInvoiceStats] = useState<InvoiceStats | null>(null);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
+
+  // Clinic Support & Helpdesk state
+  const [isHelpdeskOpen, setIsHelpdeskOpen] = useState(false);
 
   // ── Handle Newly Arrived Booking ───────────────────────────────────────────
   const handleNewIncomingAppointment = useCallback(
@@ -926,6 +930,7 @@ export default function AdminPage() {
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={handleToggleSidebar}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onOpenHelpdesk={() => setIsHelpdeskOpen(true)}
       />
 
       {/* Main Body */}
@@ -939,6 +944,7 @@ export default function AdminPage() {
           totalInvoices={invoices.length}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebar}
+          onOpenHelpdesk={() => setIsHelpdeskOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8">
@@ -1102,6 +1108,7 @@ export default function AdminPage() {
         }}
         toggleLang={toggleLang}
         onLogout={handleLogout}
+        onOpenHelpdesk={() => setIsHelpdeskOpen(true)}
       />
 
       {/* Direct Create Invoice Modal triggered from Command Palette */}
@@ -1115,6 +1122,15 @@ export default function AdminPage() {
         lang={lang}
         patients={patientsList}
         appointments={appointments}
+      />
+
+      {/* Clinic Tech Support & Emergency Helpdesk Drawer */}
+      <ClinicHelpdeskDrawer
+        isOpen={isHelpdeskOpen}
+        onClose={() => setIsHelpdeskOpen(false)}
+        lang={lang}
+        activeTab={activeTab}
+        isLiveConnected={isLiveConnected}
       />
     </div>
   );

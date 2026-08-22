@@ -63,8 +63,8 @@ export function Footer() {
           <div className="lg:col-span-1">
             <Link href="/" onClick={playSoftClick} className="group inline-block mb-4 sm:mb-5">
               <div className="flex items-center gap-3">
-                <div className="relative group-hover:scale-105 transition-transform duration-300">
-                  <LogoIcon size={44} className="drop-shadow-[0_4px_16px_rgba(196,154,60,0.45)]" />
+                <div className="relative group-hover:scale-105 transition-transform duration-300 shrink-0">
+                  <LogoIcon size={48} variant="light" className="drop-shadow-[0_4px_16px_rgba(196,154,60,0.45)]" />
                 </div>
                 <div>
                   <div className="font-serif text-lg sm:text-xl font-bold text-white group-hover:text-[#E8C97A] transition-colors">

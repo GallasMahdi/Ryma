@@ -9,6 +9,7 @@ import {
   IconReceiptTax,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
+  IconLifebuoy,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { AdminTab } from './AdminMobileNav';
@@ -22,6 +23,7 @@ interface AdminSidebarProps {
   totalInvoices?: number;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  onOpenHelpdesk?: () => void;
 }
 
 export function AdminSidebar({
@@ -33,6 +35,7 @@ export function AdminSidebar({
   totalInvoices,
   isCollapsed = false,
   onToggleCollapse,
+  onOpenHelpdesk,
 }: AdminSidebarProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
@@ -175,6 +178,20 @@ export function AdminSidebar({
 
       {/* Bottom Footer Section */}
       <div className="space-y-2 pt-2 border-t border-[#E2E8F0]/80">
+        {onOpenHelpdesk && (
+          <button
+            type="button"
+            onClick={onOpenHelpdesk}
+            className={`w-full flex items-center ${
+              isCollapsed ? 'justify-center p-2' : 'gap-2.5 px-3 py-2'
+            } rounded-xl text-xs font-medium text-[#9A7428] hover:text-[#1A1412] bg-[#FAFAF8] hover:bg-[#C49A3C]/10 border border-[#C49A3C]/30 transition-colors shadow-2xs`}
+            title={txt('Support Technique & Helpdesk', 'Clinic Support & Helpdesk', 'Suporte Técnico & Ajuda')}
+          >
+            <IconLifebuoy size={18} className="text-[#C49A3C] shrink-0" />
+            {!isCollapsed && <span>{txt('Support & Aide', 'Support & Help', 'Suporte & Ajuda')}</span>}
+          </button>
+        )}
+
         {/* System Status Card */}
         {isCollapsed ? (
           <div
