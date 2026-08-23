@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES, ServicePole } from '@/data/services';
@@ -43,22 +44,67 @@ export default function TarifsPage() {
   return (
     <div className="bg-[#FAFAF8] min-h-screen text-[#1A1412] select-none">
       
-      {/* ── Minimalist Luxury Hero ─────────────────────────────────── */}
-      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-16 overflow-hidden text-center bg-gradient-to-b from-[#FDF9F2] via-[#FAF6EE] to-[#FAFAF8]">
-        {/* Ambient Gold Halo */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse 75% 50% at 50% 0%, rgba(245,233,200,0.55) 0%, transparent 70%)',
-          }}
-        />
+      {/* ── Cinematic Luxury Hero with Background Image & Ambient Animation ── */}
+      <section className="relative pt-28 sm:pt-36 pb-16 sm:pb-20 overflow-hidden text-center bg-[#1A1412] text-white">
+        {/* Photographic Background Layer with Smooth Zoom */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/hero/clinic.jpg"
+            alt="Digital Clínica Lisboa"
+            fill
+            priority
+            className="object-cover object-center opacity-30 scale-105 transform transition-transform duration-1000"
+          />
+          {/* Opulent Obsidian & Champagne Gold Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1A1412]/90 via-[#1A1412]/75 to-[#1A1412]" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(ellipse 75% 60% at 50% 20%, rgba(196,154,60,0.3) 0%, transparent 75%)',
+            }}
+          />
+        </div>
 
-        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 md:px-12">
+        {/* Ambient Floating Gold Particles */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
+          {[
+            { top: '15%', left: '12%', size: 4, dur: 4, delay: 0 },
+            { top: '25%', left: '85%', size: 3, dur: 5, delay: 1 },
+            { top: '65%', left: '8%', size: 3.5, dur: 4.5, delay: 0.5 },
+            { top: '55%', left: '90%', size: 4.5, dur: 6, delay: 1.5 },
+            { top: '80%', left: '50%', size: 3, dur: 5.2, delay: 2 },
+          ].map((p, idx) => (
+            <motion.div
+              key={idx}
+              className="absolute rounded-full bg-[#E8C97A] opacity-60"
+              style={{
+                top: p.top,
+                left: p.left,
+                width: p.size,
+                height: p.size,
+                boxShadow: '0 0 12px 2px rgba(232, 201, 122, 0.8)',
+              }}
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0.3, 0.9, 0.3],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: p.dur,
+                repeat: Infinity,
+                delay: p.delay,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 md:px-12">
           <ScrollReveal>
-            <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md border border-[#C49A3C]/35 px-4 py-1.5 rounded-full mb-4 sm:mb-5 shadow-xs">
-              <IconSparkles size={14} className="text-[#C49A3C]" />
-              <span className="font-mono text-[11px] tracking-[0.24em] text-[#9A7428] uppercase font-bold">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-[#C49A3C]/40 px-4 py-1.5 rounded-full mb-4 sm:mb-5 shadow-[0_2px_12px_rgba(196,154,60,0.25)]">
+              <IconSparkles size={14} className="text-[#E8C97A]" />
+              <span className="font-mono text-[11px] tracking-[0.24em] text-[#F5E9C8] uppercase font-bold">
                 {lang === 'pt'
                   ? 'Transparência & Excelência Clínica'
                   : lang === 'en'
@@ -67,7 +113,7 @@ export default function TarifsPage() {
               </span>
             </div>
 
-            <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-[#1A1412] mb-3 sm:mb-4 tracking-tight">
+            <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-3 sm:mb-4 tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.6)]">
               {lang === 'pt'
                 ? 'Tabela de Valores & Protocolos'
                 : lang === 'en'
@@ -75,7 +121,7 @@ export default function TarifsPage() {
                 : 'Nos Tarifs & Forfaits'}
             </h1>
 
-            <p className="text-[#6B6058] text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
+            <p className="text-[#E8E2D8] text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
               {lang === 'pt'
                 ? 'Valores claros por sessão individual ou programas estruturados com descontos exclusivos. Emitimos recibos com cédula profissional para comparticipação pelo seu seguro de saúde.'
                 : lang === 'en'
@@ -83,14 +129,30 @@ export default function TarifsPage() {
                 : 'Tarifs à la séance ou forfaits avantageux avec suivi personnalisé. Factures certifiées délivrées pour vos remboursements mutuelle et assurance santé.'}
             </p>
 
+            {/* Trust Badges Ribbon */}
+            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 mt-6 text-xs text-[#F5E9C8] font-medium">
+              <span className="inline-flex items-center gap-1.5 bg-[#2A221E]/80 backdrop-blur-sm px-3 py-1 rounded-full border border-[#C49A3C]/30 shadow-xs">
+                <IconShieldCheck size={14} className="text-[#E8C97A]" />
+                {lang === 'pt' ? 'Recibos p/ Seguros' : lang === 'en' ? 'Insurance Receipts' : 'Reçus Mutuelles'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-[#2A221E]/80 backdrop-blur-sm px-3 py-1 rounded-full border border-[#C49A3C]/30 shadow-xs">
+                <IconSparkles size={14} className="text-[#E8C97A]" />
+                {lang === 'pt' ? 'Equipamentos Médicos Certificados' : lang === 'en' ? 'Certified Equipment' : 'Matériel Certifié'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-[#2A221E]/80 backdrop-blur-sm px-3 py-1 rounded-full border border-[#C49A3C]/30 shadow-xs">
+                <IconStar size={14} className="text-[#E8C97A]" fill="#E8C97A" />
+                5.0 ★ (500+ Pacientes)
+              </span>
+            </div>
+
             {/* Quick Filter View Switcher */}
-            <div className="flex items-center justify-center gap-1.5 sm:gap-2 p-1.5 bg-white/80 backdrop-blur-xl rounded-full border border-[#C49A3C]/30 max-w-sm sm:max-w-md mx-auto mt-8 sm:mt-10 shadow-xs">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 p-1.5 bg-[#241C19]/90 backdrop-blur-xl rounded-full border border-[#C49A3C]/40 max-w-sm sm:max-w-md mx-auto mt-8 sm:mt-10 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
               <button
                 onClick={() => { setActiveCategory('all'); playSoftClick(); }}
                 className={`flex-1 py-2 px-3 rounded-full text-xs font-semibold transition-all duration-200 ${
                   activeCategory === 'all'
-                    ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                    : 'text-[#554C42] hover:text-[#9A7428]'
+                    ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#9A7428] text-[#1A1412] font-bold shadow-[0_2px_8px_rgba(196,154,60,0.4)]'
+                    : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                 }`}
               >
                 {lang === 'pt' ? 'Tudo' : lang === 'en' ? 'All' : 'Tout'}
@@ -99,8 +161,8 @@ export default function TarifsPage() {
                 onClick={() => { setActiveCategory('packages'); playSoftClick(); }}
                 className={`flex-1 py-2 px-3 rounded-full text-xs font-semibold transition-all duration-200 ${
                   activeCategory === 'packages'
-                    ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                    : 'text-[#554C42] hover:text-[#9A7428]'
+                    ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#9A7428] text-[#1A1412] font-bold shadow-[0_2px_8px_rgba(196,154,60,0.4)]'
+                    : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                 }`}
               >
                 {lang === 'pt' ? 'Pacotes' : lang === 'en' ? 'Packages' : 'Forfaits'}
@@ -109,8 +171,8 @@ export default function TarifsPage() {
                 onClick={() => { setActiveCategory('single'); playSoftClick(); }}
                 className={`flex-1 py-2 px-3 rounded-full text-xs font-semibold transition-all duration-200 ${
                   activeCategory === 'single'
-                    ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                    : 'text-[#554C42] hover:text-[#9A7428]'
+                    ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#9A7428] text-[#1A1412] font-bold shadow-[0_2px_8px_rgba(196,154,60,0.4)]'
+                    : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                 }`}
               >
                 {lang === 'pt' ? 'Sessões' : lang === 'en' ? 'Single' : 'Séances'}

@@ -83,8 +83,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-PT" dir="ltr" className={`${fraunces.variable} ${inter.variable} ${ibmPlexMono.variable}`}>
+    <html
+      lang="pt-PT"
+      dir="ltr"
+      translate="no"
+      className={`notranslate ${fraunces.variable} ${inter.variable} ${ibmPlexMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
+        <meta name="google" content="notranslate" />
         {/* Schema.org LocalBusiness / MedicalBusiness */}
         <script
           type="application/ld+json"
@@ -128,7 +135,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               (function() {
                 try {
                   var isBot = /Lighthouse|PageSpeed|Googlebot|HeadlessChrome|Chrome-Lighthouse|Mediapartners-Google/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-                  var hasSeen = sessionStorage.getItem('ryma_splash_v2') === 'true';
+                  var hasSeen = sessionStorage.getItem('ryma_splash_v6') === 'true';
                   var isAdmin = window.location.pathname.indexOf('/admin') === 0;
                   if (isBot || hasSeen || isAdmin) {
                     document.documentElement.classList.add('skip-splash');
@@ -142,6 +149,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* TODO: Add your GA4 script here: G-XXXXXXXXXX */}
       </head>
       <body
+        suppressHydrationWarning
         className="bg-[#FAFAF8] text-[#1A1412] antialiased"
         style={{
           fontFamily: 'var(--font-inter), system-ui, sans-serif',

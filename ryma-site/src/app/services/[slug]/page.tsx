@@ -2,6 +2,8 @@
 
 import React, { use } from 'react';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { getServiceBySlug, SERVICES, getLocalizedText, getLocalizedList } from '@/data/services';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
@@ -17,6 +19,7 @@ import {
   IconArrowLeft,
   IconCalendarEvent,
   IconBrandWhatsapp,
+  IconSparkles,
 } from '@tabler/icons-react';
 
 interface Props {
@@ -29,6 +32,13 @@ export default function ServiceDetailPage({ params }: Props) {
   const service = getServiceBySlug(slug);
 
   if (!service) notFound();
+
+  const heroImage =
+    service.pole === 'minceur'
+      ? '/hero/slimming.jpg'
+      : service.pole === 'kinesitherapie'
+      ? '/hero/therapy.jpg'
+      : '/hero/consultation.jpg';
 
   const poleBadge = {
     kinesitherapie: { label: { fr: 'Kinésithérapie', pt: 'Fisioterapia', en: 'Physiotherapy' }, variant: 'teal' as const },
@@ -51,52 +61,122 @@ export default function ServiceDetailPage({ params }: Props) {
 
   return (
     <>
-      {/* ── Hero Section ────────────────────────────── */}
-      <section className="relative pt-28 pb-14 overflow-hidden bg-gradient-to-b from-[#FDF9F2] to-[#FAFAF8]">
-        {/* Subtle gold radial */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(245,233,200,0.5) 0%, transparent 70%)',
-          }}
-        />
+      {/* ── Cinematic Hero with Photographic Background & Gold Particles ── */}
+      <section className="relative pt-28 sm:pt-36 pb-16 sm:pb-20 overflow-hidden bg-[#1A1412] text-white">
+        {/* Context-Aware Photographic Background */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={heroImage}
+            alt={getLocalizedText(service.name, lang)}
+            fill
+            priority
+            className="object-cover object-center opacity-30 scale-105 transform transition-transform duration-1000"
+          />
+          {/* Obsidian & Gold Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1A1412]/90 via-[#1A1412]/75 to-[#1A1412]" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(ellipse 75% 60% at 50% 20%, rgba(196,154,60,0.3) 0%, transparent 75%)',
+            }}
+          />
+        </div>
 
-        <div className="relative mx-auto max-w-5xl px-6 md:px-12">
+        {/* Ambient Floating Gold Particles */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
+          {[
+            { top: '22%', left: '16%', size: 4, dur: 4.2, delay: 0 },
+            { top: '32%', left: '78%', size: 3.5, dur: 5.4, delay: 0.9 },
+            { top: '65%', left: '12%', size: 3, dur: 4.6, delay: 0.5 },
+            { top: '60%', left: '85%', size: 4, dur: 5.9, delay: 1.3 },
+          ].map((p, idx) => (
+            <motion.div
+              key={idx}
+              className="absolute rounded-full bg-[#E8C97A] opacity-60"
+              style={{
+                top: p.top,
+                left: p.left,
+                width: p.size,
+                height: p.size,
+                boxShadow: '0 0 12px 2px rgba(232, 201, 122, 0.8)',
+              }}
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0.3, 0.9, 0.3],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: p.dur,
+                repeat: Infinity,
+                delay: p.delay,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-5xl px-6 md:px-12">
           <ScrollReveal>
             {/* Back link */}
             <Link
               href="/services"
-              className="inline-flex items-center gap-2 text-sm text-[#8A8078] hover:text-[#9A7428] transition-colors mb-8 group"
+              className="inline-flex items-center gap-2 text-sm text-[#E8C97A] hover:text-white transition-colors mb-6 group bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#C49A3C]/30 shadow-xs"
             >
               <IconArrowLeft
                 size={15}
-                className="group-hover:-translate-x-0.5 transition-transform"
+                className="group-hover:-translate-x-1 transition-transform text-[#E8C97A]"
               />
-              {t.servicePage.backToServices}
+              <span>{t.servicePage.backToServices}</span>
             </Link>
 
             {/* Meta row */}
             <div className="flex flex-wrap items-center gap-3 mb-5">
               <Badge variant={poleBadge.variant}>{getLocalizedText(poleBadge.label, lang)}</Badge>
-              <div className="flex items-center gap-1.5 text-xs text-[#8A8078] font-mono bg-[#F4F2EE] px-2.5 py-1 rounded-full">
-                <IconClock size={13} />
+              <div className="flex items-center gap-1.5 text-xs text-[#F5E9C8] font-mono bg-[#2A221E]/90 border border-[#C49A3C]/40 px-3 py-1 rounded-full shadow-xs">
+                <IconClock size={13} className="text-[#E8C97A]" />
                 {service.duration}
               </div>
-              <div className="font-mono text-xl font-bold text-[#C49A3C]">
+              <div className="font-mono text-2xl font-black text-[#E8C97A] drop-shadow-[0_2px_8px_rgba(196,154,60,0.5)]">
                 {service.price} {t.common.currency}
               </div>
             </div>
 
             {/* Title */}
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-5 leading-tight">
+            <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-4 leading-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.6)]">
               {getLocalizedText(service.name, lang)}
             </h1>
 
             {/* Short desc */}
-            <p className="text-[#6B6058] text-lg md:text-xl max-w-2xl leading-relaxed">
+            <p className="text-[#E8E2D8] text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed font-normal mb-8">
               {getLocalizedText(service.shortDesc, lang)}
             </p>
+
+            {/* Direct CTAs in Hero */}
+            <div className="flex flex-wrap items-center gap-3.5">
+              <Button
+                href="/rendez-vous"
+                variant="primary"
+                size="md"
+                className="shadow-[0_4px_20px_rgba(196,154,60,0.4)]"
+              >
+                <IconCalendarEvent size={18} className="me-2" />
+                <span>{t.common.bookAppointment}</span>
+              </Button>
+              <a
+                href={`https://wa.me/351912345678?text=${encodeURIComponent(
+                  lang === 'pt'
+                    ? `Olá! Gostaria de saber mais sobre o tratamento: ${getLocalizedText(service.name, lang)}`
+                    : `Hello! I would like to know more about: ${getLocalizedText(service.name, lang)}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center font-medium rounded-full transition-all duration-300 px-6 py-3 text-sm tracking-wide bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <IconBrandWhatsapp size={18} className="me-2 text-[#25D366]" />
+                <span>WhatsApp</span>
+              </a>
+            </div>
           </ScrollReveal>
         </div>
       </section>

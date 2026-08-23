@@ -24,9 +24,10 @@ import {
   IconTag,
   IconStar,
   IconChevronRight,
-  IconMapPin,
-  IconShieldCheck,
 } from '@tabler/icons-react';
+
+const kineServices = SERVICES.filter((s) => s.pole === 'kinesitherapie').slice(0, 4);
+const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4);
 
 export function Navbar() {
   const { lang, t, toggleLang, setLang } = useLanguage();
@@ -69,9 +70,6 @@ export function Navbar() {
   if (pathname?.startsWith('/admin')) {
     return null;
   }
-
-  const kineServices = SERVICES.filter((s) => s.pole === 'kinesitherapie').slice(0, 4);
-  const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4);
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -325,63 +323,59 @@ export function Navbar() {
               {/* ── Mobile & Tablet Menu Controls ── */}
               <div className="flex xl:hidden items-center gap-2 shrink-0">
                 <button
+                  type="button"
                   onClick={toggleLang}
                   aria-label={lang === 'pt' ? 'Mudar idioma' : lang === 'en' ? 'Change language' : 'Changer de langue'}
-                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-xs font-mono font-extrabold text-[#9A7428] bg-[#F5E9C8] border border-[#C49A3C]/30 px-3 py-1.5 rounded-full uppercase transition-transform active:scale-95"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-xs font-mono font-extrabold text-[#9A7428] bg-[#F5E9C8] border border-[#C49A3C]/30 px-3 py-1.5 rounded-full uppercase transition-transform active:scale-95 touch-manipulation"
                 >
                   {lang}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setMobileOpen(!mobileOpen)}
-                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl text-[#1A1412] hover:bg-[#F5E9C8] transition-colors"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl text-[#1A1412] hover:bg-[#F5E9C8] active:scale-95 transition-all touch-manipulation"
                   aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
                 >
                   {mobileOpen ? <IconX size={24} /> : <IconMenu2 size={24} />}
                 </button>
               </div>
 
-
             </div>
           </div>
         </div>
       </motion.header>
 
-      {/* ── Mobile Drawer Menu ─────────────────────────────────── */}
+      {/* ── Mobile Drawer Menu (Ultra-Optimized 60/120 FPS) ─────── */}
       <AnimatePresence>
         {mobileOpen && (
           <>
-            {/* Backdrop with soft blur */}
+            {/* GPU-Accelerated Crisp Backdrop (Zero Frame Drops) */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm xl:hidden"
+              transition={{ duration: 0.2, ease: 'linear' }}
+              className="fixed inset-0 z-40 bg-black/60 xl:hidden transform-gpu will-change-[opacity]"
               onClick={() => setMobileOpen(false)}
             />
 
-            {/* Slide-in Luxury Drawer */}
+            {/* Hardware-Accelerated Slide-in Luxury Drawer */}
             <motion.div
-              initial={{ opacity: 0, x: '100%' }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: '100%' }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed right-0 top-0 bottom-0 z-50 w-[88vw] max-w-[380px] bg-gradient-to-b from-[#FAF5EC] via-[#FFFDF9] to-[#F5ECE0] shadow-[-12px_0_50px_rgba(26,20,18,0.22)] xl:hidden flex flex-col border-l border-[#C49A3C]/30 overflow-hidden font-sans"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed right-0 top-0 bottom-0 z-50 w-[88vw] max-w-[380px] bg-[#FAF5EC] shadow-[-12px_0_40px_rgba(26,20,18,0.25)] xl:hidden flex flex-col border-l border-[#C49A3C]/35 overflow-hidden font-sans transform-gpu will-change-transform contain-paint"
             >
-              {/* Ambient Decorative Lighting - Pure Warm Gold */}
-              <div className="absolute -top-16 -right-16 w-52 h-52 rounded-full bg-gradient-to-br from-[#C49A3C]/25 to-[#E8C97A]/10 blur-2xl pointer-events-none" />
-              <div className="absolute top-1/2 -left-20 w-48 h-48 rounded-full bg-gradient-to-br from-[#D4AF37]/20 to-[#FAF5EC]/5 blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-16 -right-12 w-52 h-52 rounded-full bg-gradient-to-br from-[#C49A3C]/20 to-[#E8C97A]/10 blur-2xl pointer-events-none" />
-
               {/* ── Drawer Header ──────────────────────── */}
-              <div className="relative flex items-center justify-between px-5 py-4 border-b border-[#C49A3C]/20 bg-white/75 backdrop-blur-md shrink-0">
+              <div className="relative flex items-center justify-between px-5 py-4 border-b border-[#C49A3C]/20 bg-[#FCF9F3] shrink-0">
                 <Link
                   href="/"
-                  className="flex items-center gap-3 group"
+                  className="flex items-center gap-3 group touch-manipulation"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <div className="relative group-hover:scale-105 transition-transform duration-300 shrink-0">
-                    <LogoIcon size={44} className="drop-shadow-[0_2px_10px_rgba(196,154,60,0.3)]" />
+                  <div className="relative group-hover:scale-105 transition-transform duration-200 shrink-0">
+                    <LogoIcon size={40} className="drop-shadow-[0_2px_8px_rgba(196,154,60,0.3)]" />
                   </div>
                   <div className="flex flex-col">
                     <span className="font-serif text-base font-bold text-[#1A1412] leading-tight">
@@ -393,19 +387,19 @@ export function Navbar() {
                   </div>
                 </Link>
 
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
+                <button
+                  type="button"
                   onClick={() => setMobileOpen(false)}
-                  className="p-2 rounded-xl text-[#8A6A24] hover:text-[#1A1412] bg-[#F5E9C8]/70 hover:bg-[#F5E9C8] border border-[#C49A3C]/30 transition-colors flex items-center justify-center shadow-2xs"
+                  className="p-2 rounded-xl text-[#8A6A24] active:scale-90 bg-[#F5E9C8] hover:bg-[#EEDBB2] border border-[#C49A3C]/30 transition-transform flex items-center justify-center shadow-2xs touch-manipulation"
                   aria-label="Fermer le menu"
                 >
                   <IconX size={20} />
-                </motion.button>
+                </button>
               </div>
 
               {/* ── Live Status & Language Quick Bar ───── */}
-              <div className="px-5 py-2.5 bg-[#FAF5EC]/90 border-b border-[#C49A3C]/20 flex items-center justify-between gap-2 shrink-0">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#8A6A24] bg-[#F5E9C8]/80 px-2.5 py-1 rounded-full border border-[#C49A3C]/30 shadow-2xs">
+              <div className="px-5 py-2.5 bg-[#FAF5EC] border-b border-[#C49A3C]/20 flex items-center justify-between gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#8A6A24] bg-[#F5E9C8] px-2.5 py-1 rounded-full border border-[#C49A3C]/30 shadow-2xs">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C49A3C] opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C49A3C]" />
@@ -413,12 +407,13 @@ export function Navbar() {
                   <span>{lang === 'pt' ? 'Clínica Aberta' : lang === 'en' ? 'Clinic Open' : 'Cabinet Ouvert'}</span>
                 </div>
 
-                <div className="inline-flex items-center gap-1 bg-white/90 p-0.5 rounded-full border border-[#C49A3C]/30 shadow-2xs">
+                <div className="inline-flex items-center gap-1 bg-white p-0.5 rounded-full border border-[#C49A3C]/30 shadow-2xs">
                   {(['pt', 'en', 'fr'] as const).map((l) => (
                     <button
                       key={l}
+                      type="button"
                       onClick={() => setLang(l)}
-                      className={`px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase transition-all ${
+                      className={`px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase transition-all touch-manipulation ${
                         lang === l
                           ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] shadow-xs font-black'
                           : 'text-[#8A6A24] hover:text-[#1A1412]'
@@ -430,8 +425,8 @@ export function Navbar() {
                 </div>
               </div>
 
-              {/* ── Navigation Tabs (Exclusively Luxury Gold) ── */}
-              <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-2.5">
+              {/* ── Navigation Tabs (Smooth & Instant Scroll) ── */}
+              <nav className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-2.5">
                 {[
                   {
                     href: '/',
@@ -465,38 +460,28 @@ export function Navbar() {
                     icon: IconStar,
                     badge: '5.0 ★',
                   },
-                ].map((tab, idx) => {
+                ].map((tab) => {
                   const Icon = tab.icon;
                   const active = isActive(tab.href);
 
                   return (
-                    <motion.div
-                      key={tab.href}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        delay: 0.04 + idx * 0.05,
-                        type: 'spring',
-                        stiffness: 300,
-                        damping: 24,
-                      }}
-                    >
+                    <div key={tab.href}>
                       <Link
                         href={tab.href}
                         onClick={() => setMobileOpen(false)}
-                        className={`group relative flex items-center justify-between p-3 rounded-2xl border transition-all duration-200 ${
+                        className={`group relative flex items-center justify-between p-3 rounded-2xl border transition-all duration-150 active:scale-[0.98] touch-manipulation ${
                           active
-                            ? 'bg-gradient-to-r from-[#F5E9C8] via-[#FAF3E0] to-[#EEDBB2] border-[#C49A3C]/70 shadow-[0_4px_20px_rgba(196,154,60,0.22)]'
-                            : 'bg-white/85 hover:bg-[#FAF5EC] border-[#C49A3C]/20 hover:border-[#C49A3C]/45 shadow-2xs'
+                            ? 'bg-gradient-to-r from-[#F5E9C8] via-[#FAF3E0] to-[#EEDBB2] border-[#C49A3C]/70 shadow-[0_4px_16px_rgba(196,154,60,0.18)]'
+                            : 'bg-white hover:bg-[#FAF5EC] border-[#C49A3C]/20 hover:border-[#C49A3C]/45 shadow-2xs'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           {/* Luxury Gold Icon Pill */}
                           <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 group-active:scale-95 ${
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-150 ${
                               active
-                                ? 'bg-gradient-to-br from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] shadow-[0_2px_10px_rgba(196,154,60,0.4)] border border-[#FFF8E7]'
-                                : 'bg-[#F5E9C8]/80 text-[#8A6A24] border border-[#C49A3C]/30'
+                                ? 'bg-gradient-to-br from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] shadow-[0_2px_8px_rgba(196,154,60,0.35)] border border-[#FFF8E7]'
+                                : 'bg-[#F5E9C8] text-[#8A6A24] border border-[#C49A3C]/30'
                             }`}
                           >
                             <Icon size={20} strokeWidth={active ? 2.3 : 1.8} />
@@ -508,7 +493,7 @@ export function Navbar() {
                                 {tab.label}
                               </span>
                               {tab.badge && (
-                                <span className="bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] font-black text-[10px] px-2 py-0.5 rounded-full border border-[#FFF8E7] shadow-[0_2px_8px_rgba(196,154,60,0.35)]">
+                                <span className="bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] font-black text-[10px] px-2 py-0.5 rounded-full border border-[#FFF8E7] shadow-xs">
                                   {tab.badge}
                                 </span>
                               )}
@@ -524,23 +509,18 @@ export function Navbar() {
                           className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                             active
                               ? 'bg-gradient-to-br from-[#C49A3C] to-[#E8C97A] text-[#1A1412] shadow-2xs translate-x-0.5'
-                              : 'text-[#9A7428] group-hover:text-[#1A1412] group-hover:translate-x-1'
+                              : 'text-[#9A7428] group-hover:text-[#1A1412]'
                           }`}
                         >
                           <IconChevronRight size={16} strokeWidth={active ? 2.5 : 2} />
                         </div>
                       </Link>
-                    </motion.div>
+                    </div>
                   );
                 })}
 
-                {/* ── Treatment Quick Jump Cards (Luxury Gold) ──────────── */}
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35, type: 'spring', damping: 20 }}
-                  className="pt-2"
-                >
+                {/* ── Treatment Quick Jump Cards ──────────── */}
+                <div className="pt-2">
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#8A6A24] px-1 mb-2">
                     {lang === 'pt' ? 'Acesso Direto aos Cuidados' : lang === 'en' ? 'Direct Care Access' : 'Accès Direct aux Soins'}
                   </div>
@@ -549,7 +529,7 @@ export function Navbar() {
                     <Link
                       href="/services#kinesitherapie"
                       onClick={() => setMobileOpen(false)}
-                      className="flex flex-col p-2.5 rounded-xl bg-gradient-to-br from-[#FAF5EC] via-[#FDF9F2] to-[#F5E9C8]/70 border border-[#C49A3C]/35 hover:border-[#C49A3C]/70 transition-all group active:scale-95 shadow-2xs"
+                      className="flex flex-col p-2.5 rounded-xl bg-gradient-to-br from-[#FAF5EC] via-[#FDF9F2] to-[#F5E9C8] border border-[#C49A3C]/35 active:scale-95 transition-transform touch-manipulation shadow-2xs"
                     >
                       <div className="flex items-center gap-1.5 text-[#1A1412] font-bold text-xs">
                         <div className="w-5 h-5 rounded-md bg-[#F5E9C8] flex items-center justify-center border border-[#C49A3C]/30 text-[#8A6A24]">
@@ -565,7 +545,7 @@ export function Navbar() {
                     <Link
                       href="/services#minceur"
                       onClick={() => setMobileOpen(false)}
-                      className="flex flex-col p-2.5 rounded-xl bg-gradient-to-br from-[#FAF5EC] via-[#FDF9F2] to-[#F5E9C8]/70 border border-[#C49A3C]/35 hover:border-[#C49A3C]/70 transition-all group active:scale-95 shadow-2xs"
+                      className="flex flex-col p-2.5 rounded-xl bg-gradient-to-br from-[#FAF5EC] via-[#FDF9F2] to-[#F5E9C8] border border-[#C49A3C]/35 active:scale-95 transition-transform touch-manipulation shadow-2xs"
                     >
                       <div className="flex items-center gap-1.5 text-[#1A1412] font-bold text-xs">
                         <div className="w-5 h-5 rounded-md bg-[#F5E9C8] flex items-center justify-center border border-[#C49A3C]/30 text-[#8A6A24]">
@@ -578,27 +558,25 @@ export function Navbar() {
                       </span>
                     </Link>
                   </div>
-                </motion.div>
+                </div>
               </nav>
 
               {/* ── Drawer Footer / Quick Actions ──────── */}
-              <div className="p-4 bg-white/90 backdrop-blur-md border-t border-[#C49A3C]/20 space-y-2.5 shrink-0">
+              <div className="p-4 bg-[#FCF9F3] border-t border-[#C49A3C]/20 space-y-2.5 shrink-0">
                 {/* Primary Booking CTA */}
-                <motion.div whileTap={{ scale: 0.98 }}>
-                  <Link
-                    href="/rendez-vous"
-                    onClick={() => setMobileOpen(false)}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#AA771C] text-[#1A1412] font-bold text-sm shadow-[0_4px_18px_rgba(196,154,60,0.4)] border border-[#F5E9C8] transition-transform active:scale-95"
-                  >
-                    <IconCalendarEvent size={19} className="text-[#1A1412]" />
-                    <span>{t.common.bookAppointment}</span>
-                  </Link>
-                </motion.div>
+                <Link
+                  href="/rendez-vous"
+                  onClick={() => setMobileOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#AA771C] text-[#1A1412] font-bold text-sm shadow-[0_4px_16px_rgba(196,154,60,0.35)] border border-[#F5E9C8] active:scale-[0.98] transition-transform touch-manipulation"
+                >
+                  <IconCalendarEvent size={19} className="text-[#1A1412]" />
+                  <span>{t.common.bookAppointment}</span>
+                </Link>
 
                 {/* Direct Call Button */}
                 <a
                   href={`tel:${t.common.phone}`}
-                  className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#FAF5EC] hover:bg-[#F5E9C8] text-[#8A6A24] hover:text-[#1A1412] border border-[#C49A3C]/25 text-xs font-semibold font-mono transition-colors"
+                  className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#FAF5EC] hover:bg-[#F5E9C8] text-[#8A6A24] hover:text-[#1A1412] border border-[#C49A3C]/25 text-xs font-semibold font-mono active:scale-[0.98] transition-all touch-manipulation"
                 >
                   <IconPhoneCall size={14} className="text-[#C49A3C]" />
                   <span>{t.common.phone}</span>

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES, ServicePole } from '@/data/services';
@@ -59,26 +60,72 @@ export default function ServicesPage() {
   return (
     <div className="bg-[#FAFAF8] min-h-screen text-[#1A1412] select-none">
       
-      {/* ── Minimalist Luxury Hero ─────────────────────────────────── */}
-      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-16 overflow-hidden text-center bg-gradient-to-b from-[#FDF9F2] via-[#FAF6EE] to-[#FAFAF8]">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse 75% 55% at 50% 0%, rgba(245,233,200,0.55) 0%, transparent 70%)',
-          }}
-        />
+      {/* ── Cinematic Hero with Background Image & Ambient Animation ── */}
+      <section className="relative pt-28 sm:pt-36 pb-16 sm:pb-20 overflow-hidden text-center bg-[#1A1412] text-white">
+        {/* Photographic Background Layer with Smooth Zoom */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/hero/therapy.jpg"
+            alt="Tratamentos de Fisioterapia e Estética Digital Clínica"
+            fill
+            priority
+            className="object-cover object-center opacity-30 scale-105 transform transition-transform duration-1000"
+          />
+          {/* Obsidian & Gold Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1A1412]/90 via-[#1A1412]/75 to-[#1A1412]" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(ellipse 75% 60% at 50% 20%, rgba(196,154,60,0.3) 0%, transparent 75%)',
+            }}
+          />
+        </div>
 
-        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 md:px-12">
+        {/* Ambient Floating Gold Particles */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
+          {[
+            { top: '18%', left: '14%', size: 4, dur: 4.5, delay: 0 },
+            { top: '28%', left: '82%', size: 3.5, dur: 5.2, delay: 0.8 },
+            { top: '62%', left: '12%', size: 3, dur: 4.2, delay: 0.4 },
+            { top: '58%', left: '86%', size: 4.5, dur: 6.0, delay: 1.4 },
+            { top: '78%', left: '48%', size: 3.2, dur: 5.0, delay: 1.8 },
+          ].map((p, idx) => (
+            <motion.div
+              key={idx}
+              className="absolute rounded-full bg-[#E8C97A] opacity-60"
+              style={{
+                top: p.top,
+                left: p.left,
+                width: p.size,
+                height: p.size,
+                boxShadow: '0 0 12px 2px rgba(232, 201, 122, 0.8)',
+              }}
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0.3, 0.9, 0.3],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: p.dur,
+                repeat: Infinity,
+                delay: p.delay,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 md:px-12">
           <ScrollReveal>
-            <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md border border-[#C49A3C]/35 px-4 py-1.5 rounded-full mb-4 sm:mb-5 shadow-xs">
-              <IconSparkles size={14} className="text-[#C49A3C]" />
-              <span className="font-mono text-[11px] tracking-[0.24em] text-[#9A7428] uppercase font-bold">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-[#C49A3C]/40 px-4 py-1.5 rounded-full mb-4 sm:mb-5 shadow-[0_2px_12px_rgba(196,154,60,0.25)]">
+              <IconSparkles size={14} className="text-[#E8C97A]" />
+              <span className="font-mono text-[11px] tracking-[0.24em] text-[#F5E9C8] uppercase font-bold">
                 {lang === 'pt' ? 'Catálogo Clínico & Estético' : lang === 'en' ? 'Clinical & Aesthetic Catalog' : 'Catalogue Médical & Minceur'}
               </span>
             </div>
 
-            <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-[#1A1412] mb-3 sm:mb-4 tracking-tight">
+            <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-3 sm:mb-4 tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.6)]">
               {lang === 'pt'
                 ? '13 Tratamentos de Vanguarda'
                 : lang === 'en'
@@ -86,7 +133,7 @@ export default function ServicesPage() {
                 : '13 Soins Spécialisés'}
             </h1>
 
-            <p className="text-[#6B6058] text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal mb-8">
+            <p className="text-[#E8E2D8] text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal mb-8">
               {lang === 'pt'
                 ? 'Da fisioterapia avançada e RPG ao emagrecimento com criolipólise e radiofrequência multipolar, explore todos os protocolos certificados da Digital Clínica.'
                 : lang === 'en'
@@ -98,13 +145,13 @@ export default function ServicesPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xl mx-auto">
               
               {/* Segment Switcher */}
-              <div className="inline-flex p-1 bg-white border border-[#C49A3C]/30 rounded-full shadow-xs w-full sm:w-auto">
+              <div className="inline-flex p-1 bg-[#241C19]/90 backdrop-blur-xl border border-[#C49A3C]/40 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.5)] w-full sm:w-auto">
                 <button
                   onClick={() => { setActivePole('all'); playSoftClick(); }}
                   className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
                     activePole === 'all'
-                      ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                      : 'text-[#6B6058] hover:text-[#1A1412]'
+                      ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#9A7428] text-[#1A1412] font-bold shadow-[0_2px_8px_rgba(196,154,60,0.4)]'
+                      : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                   }`}
                 >
                   {lang === 'pt' ? 'Todos (13)' : lang === 'en' ? 'All (13)' : 'Tous (13)'}
@@ -113,8 +160,8 @@ export default function ServicesPage() {
                   onClick={() => { setActivePole('kinesitherapie'); playSoftClick(); }}
                   className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
                     activePole === 'kinesitherapie'
-                      ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                      : 'text-[#6B6058] hover:text-[#1A1412]'
+                      ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#9A7428] text-[#1A1412] font-bold shadow-[0_2px_8px_rgba(196,154,60,0.4)]'
+                      : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                   }`}
                 >
                   {lang === 'pt' ? `Fisioterapia (${kineCount})` : lang === 'en' ? `Physio (${kineCount})` : `Kiné (${kineCount})`}
@@ -123,8 +170,8 @@ export default function ServicesPage() {
                   onClick={() => { setActivePole('minceur'); playSoftClick(); }}
                   className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
                     activePole === 'minceur'
-                      ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                      : 'text-[#6B6058] hover:text-[#1A1412]'
+                      ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#9A7428] text-[#1A1412] font-bold shadow-[0_2px_8px_rgba(196,154,60,0.4)]'
+                      : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                   }`}
                 >
                   {lang === 'pt' ? `Minceur (${minceurCount})` : lang === 'en' ? `Slimming (${minceurCount})` : `Minceur (${minceurCount})`}
@@ -133,13 +180,13 @@ export default function ServicesPage() {
 
               {/* Search input */}
               <div className="relative w-full sm:w-56">
-                <IconSearch size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8078]" />
+                <IconSearch size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C49A3C]" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={lang === 'pt' ? 'Pesquisar tratamento...' : lang === 'en' ? 'Search treatment...' : 'Rechercher un soin...'}
-                  className="w-full pl-9 pr-3.5 py-1.5 bg-white border border-[#E8E2D8] rounded-full text-xs text-[#1A1412] focus:outline-none focus:border-[#C49A3C] transition-colors shadow-xs"
+                  placeholder={lang === 'pt' ? 'Pesquisar cuidado...' : lang === 'en' ? 'Search care...' : 'Rechercher un soin...'}
+                  className="w-full pl-9 pr-4 py-2 text-xs bg-[#241C19]/90 backdrop-blur-xl border border-[#C49A3C]/40 rounded-full focus:outline-none focus:border-[#E8C97A] focus:ring-1 focus:ring-[#E8C97A] text-white placeholder-[#8A8078] transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
                 />
               </div>
             </div>

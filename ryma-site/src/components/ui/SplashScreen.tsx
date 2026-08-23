@@ -66,9 +66,9 @@ function AmbientParticles() {
 function LogoMark() {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
-      animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
       className="relative flex items-center justify-center mb-4"
     >
       {/* Soft White Ambient Aura */}
@@ -84,7 +84,7 @@ function LogoMark() {
           alt="Digital Clínica"
           width={84}
           height={84}
-          className="w-full h-full object-contain brightness-110 drop-shadow-[0_2px_16px_rgba(255,255,255,0.4)]"
+          className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] sm:drop-shadow-[0_2px_16px_rgba(255,255,255,0.4)] brightness-105"
           priority
         />
       </motion.div>
@@ -98,7 +98,7 @@ function AnimatedTitle() {
   const letters = name.split('');
 
   return (
-    <div className="flex items-center overflow-hidden" aria-label="Digital Clínica">
+    <div className="flex items-center justify-center overflow-hidden flex-nowrap" aria-label="Digital Clínica">
       {letters.map((letter, i) => (
         <motion.span
           key={i}
@@ -109,8 +109,8 @@ function AnimatedTitle() {
             delay: 0.35 + i * 0.035,
             ease: [0.33, 1, 0.68, 1],
           }}
-          className={`inline-block text-3xl md:text-5xl lg:text-6xl font-light tracking-[0.24em] text-white ${
-            letter === ' ' ? 'w-3 md:w-5' : ''
+          className={`inline-block text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-light tracking-[0.16em] sm:tracking-[0.24em] text-white ${
+            letter === ' ' ? 'w-2.5 sm:w-3 md:w-5' : ''
           }`}
           style={{
             fontFamily: 'var(--font-fraunces)',
@@ -126,7 +126,7 @@ function AnimatedTitle() {
 // 4-Second Timing Progress Line
 function ProgressLine({ onComplete }: { onComplete: () => void }) {
   return (
-    <div className="relative w-48 h-[1px] bg-white/15 mt-9 overflow-hidden rounded-full">
+    <div className="relative w-44 sm:w-48 h-[1px] bg-white/15 mt-8 sm:mt-9 overflow-hidden rounded-full">
       <motion.div
         className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-transparent via-white to-white"
         initial={{ x: '-100%' }}
@@ -150,7 +150,7 @@ export function SplashScreen() {
       /Lighthouse|PageSpeed|Googlebot|HeadlessChrome|Chrome-Lighthouse|Mediapartners-Google/i.test(navigator.userAgent) ||
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const hasSeenSplash = sessionStorage.getItem('ryma_splash_v5') === 'true';
+    const hasSeenSplash = sessionStorage.getItem('ryma_splash_v6') === 'true';
 
     if (isBotOrLighthouse || hasSeenSplash) {
       setShowSplash(false);
@@ -166,7 +166,7 @@ export function SplashScreen() {
     setExitReady(true);
     setTimeout(() => {
       setShowSplash(false);
-      sessionStorage.setItem('ryma_splash_v5', 'true');
+      sessionStorage.setItem('ryma_splash_v6', 'true');
       document.documentElement.classList.add('skip-splash');
     }, 400);
   };
@@ -175,7 +175,7 @@ export function SplashScreen() {
     setExitReady(true);
     setTimeout(() => {
       setShowSplash(false);
-      sessionStorage.setItem('ryma_splash_v5', 'true');
+      sessionStorage.setItem('ryma_splash_v6', 'true');
       document.documentElement.classList.add('skip-splash');
     }, 250);
   };
