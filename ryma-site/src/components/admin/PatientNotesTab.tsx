@@ -25,6 +25,7 @@ import {
   IconClock,
   IconX,
   IconCalendarEvent,
+  IconCalendarRepeat,
   IconSparkles,
   IconFilter,
   IconUsers,
@@ -47,6 +48,7 @@ import { CreateInvoiceModal } from './CreateInvoiceModal';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
 import { CreatePrescriptionModal } from './CreatePrescriptionModal';
 import { PrescriptionDetailModal } from './PrescriptionDetailModal';
+import { MultipleSessionsModal } from './MultipleSessionsModal';
 import { formatPrescriptionWhatsAppMessage } from '@/lib/prescriptionPdf';
 import { SITE } from '@/lib/site';
 
@@ -101,6 +103,7 @@ export function PatientNotesTab({
 
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const [isAddSessionModalOpen, setIsAddSessionModalOpen] = useState(false);
+  const [isMultipleSessionsModalOpen, setIsMultipleSessionsModalOpen] = useState(false);
   const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false);
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
   const [selectedInvoiceForModal, setSelectedInvoiceForModal] = useState<Invoice | null>(null);
@@ -1122,13 +1125,23 @@ export function PatientNotesTab({
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setIsAddSessionModalOpen(true)}
-                  className="px-4 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] active:scale-[0.98] text-white text-xs font-bold transition-all shadow-sm touch-target flex items-center justify-center gap-2 w-full sm:w-auto"
-                >
-                  <IconPlus size={16} />
-                  <span>{txt('Enregistrer Séance', 'Log Session', 'Registar Sessão')}</span>
-                </button>
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={() => setIsMultipleSessionsModalOpen(true)}
+                    className="px-3.5 py-2.5 rounded-xl bg-white border border-[#CBD5E1] hover:bg-[#F1F5F9] active:scale-[0.98] text-[#0F172A] text-xs font-bold transition-all shadow-2xs touch-target flex items-center justify-center gap-1.5 w-full sm:w-auto"
+                  >
+                    <IconCalendarRepeat size={16} className="text-[#0F172A]" />
+                    <span>{txt('Plano de Séances', 'Multiple Sessions', 'Plano de Sessões')}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsAddSessionModalOpen(true)}
+                    className="px-4 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] active:scale-[0.98] text-white text-xs font-bold transition-all shadow-sm touch-target flex items-center justify-center gap-2 w-full sm:w-auto"
+                  >
+                    <IconPlus size={16} />
+                    <span>{txt('Enregistrer Séance', 'Log Session', 'Registar Sessão')}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Dossier Tabs (Horizontal Scrollable Rail with distinct pills) */}
@@ -2077,6 +2090,19 @@ export function PatientNotesTab({
           lang={lang}
         />
       )}
+
+      {/* Multiple Sessions Scheduling Modal */}
+      <MultipleSessionsModal
+        isOpen={isMultipleSessionsModalOpen}
+        onClose={() => setIsMultipleSessionsModalOpen(false)}
+        lang={lang}
+        patientsList={unifiedPatients}
+        initialPatient={activePatient}
+        onActionToast={onActionToast}
+        onSuccess={() => {
+          if (onRefreshPatients) onRefreshPatients();
+        }}
+      />
 
       {/* Prescription Detail Viewer / PDF / WhatsApp */}
       <PrescriptionDetailModal

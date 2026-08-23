@@ -7,6 +7,8 @@ import fs from 'fs';
 import type { PatientRecord, PatientSession, Invoice, CreateInvoiceInput, InvoiceStats, PatientPrescription, PrescriptionItem } from '@/types/admin';
 import { SITE } from '@/lib/site';
 import { phonesMatch } from '@/lib/phone';
+import { broadcastAppointmentCreated } from '@/lib/events';
+import { VALID_TIME_SLOTS } from '@/lib/validation';
 
 // ─── Dual Storage Engine: Dynamic Turso (Cloud) with Local Fallback ───────────
 let _tursoClient: LibSqlClient | null = null;
@@ -601,6 +603,7 @@ export interface CreateAppointmentInput {
   service: string;
   date: string;
   startTime: string;
+  status?: AppointmentStatus;
   notes?: string;
   coverageType?: string;
   coverageProvider?: string;
@@ -611,6 +614,135 @@ export type AddAppointmentResult =
   | { success: true; appointment: Appointment }
   | { success: false; error: 'slot_taken' | 'invalid_data' | 'slot_blocked' };
 
+// ─── Slot Availability Checker (Unified Single Source of Truth) ───────────────
+export interface SlotAvailabilityResult {
+  available: boolean;
+  reason?: 'sunday' | 'past' | 'booked' | 'blocked' | 'invalid_time' | 'invalid_date';
+}
+
+/**
+ * Authoritative availability check used by ALL booking flows:
+ * Client booking, Admin single booking, and Multiple Sessions scheduler.
+ */
+export async function dbCheckSlotAvailability(date: string, startTime: string): Promise<SlotAvailabilityResult> {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { available: false, reason: 'invalid_date' };
+  }
+  if (!startTime) {
+    return { available: false, reason: 'invalid_time' };
+  }
+
+  // 1. Sunday check
+  const dayOfWeek = new Date(date + 'T12:00:00').getDay();
+  if (dayOfWeek === 0) {
+    return { available: false, reason: 'sunday' };
+  }
+
+  // 2. Past slot check
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (date < todayStr) {
+    return { available: false, reason: 'past' };
+  }
+  if (date === todayStr) {
+    const now = new Date();
+    const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    if (startTime <= currentHHMM) {
+      return { available: false, reason: 'past' };
+    }
+  }
+
+  // 3. Blocked slots check (manual admin blocks)
+  const blockedRows = await executeTursoDirectly(
+    'SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?',
+    [date, startTime]
+  );
+  if (blockedRows.length > 0) {
+    return { available: false, reason: 'blocked' };
+  }
+
+  // 4. Existing active appointments check (status != CANCELLED)
+  const conflictRows = await executeTursoDirectly(
+    "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'",
+    [date, startTime]
+  );
+  if (conflictRows.length > 0) {
+    return { available: false, reason: 'booked' };
+  }
+
+  return { available: true };
+}
+
+/**
+ * High-performance batched availability checker across multiple dates.
+ * Executes in a single parallel query batch instead of hundreds of sequential roundtrips.
+ */
+export async function dbCheckMultipleDatesAvailability(
+  dates: string[],
+  timeSlots: readonly string[] | string[] = VALID_TIME_SLOTS
+): Promise<Map<string, { time: string; available: boolean; reason?: 'sunday' | 'past' | 'booked' | 'blocked' }[]>> {
+  const uniqueDates = Array.from(new Set(dates.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d))));
+  const resultMap = new Map<string, { time: string; available: boolean; reason?: 'sunday' | 'past' | 'booked' | 'blocked' }[]>();
+
+  if (uniqueDates.length === 0) {
+    return resultMap;
+  }
+
+  const placeholders = uniqueDates.map(() => '?').join(',');
+
+  // Query booked and blocked slots for all dates in parallel
+  const [bookedRows, blockedRows] = await Promise.all([
+    executeTursoDirectly<{ date: string; startTime: string }>(
+      `SELECT date, startTime FROM appointments WHERE date IN (${placeholders}) AND status != 'CANCELLED'`,
+      uniqueDates
+    ),
+    executeTursoDirectly<{ date: string; time: string }>(
+      `SELECT date, time FROM blocked_slots WHERE date IN (${placeholders})`,
+      uniqueDates
+    ),
+  ]);
+
+  const bookedSet = new Set(bookedRows.map(r => `${r.date}_${r.startTime}`));
+  const blockedSet = new Set(blockedRows.map(r => `${r.date}_${r.time}`));
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  for (const date of uniqueDates) {
+    const dayOfWeek = new Date(date + 'T12:00:00').getDay();
+    const isSunday = dayOfWeek === 0;
+    const isPastDate = date < todayStr;
+    const isToday = date === todayStr;
+
+    const daySlots: { time: string; available: boolean; reason?: 'sunday' | 'past' | 'booked' | 'blocked' }[] = [];
+
+    for (const time of timeSlots) {
+      if (isSunday) {
+        daySlots.push({ time, available: false, reason: 'sunday' });
+        continue;
+      }
+      if (isPastDate || (isToday && time <= currentHHMM)) {
+        daySlots.push({ time, available: false, reason: 'past' });
+        continue;
+      }
+      if (blockedSet.has(`${date}_${time}`)) {
+        daySlots.push({ time, available: false, reason: 'blocked' });
+        continue;
+      }
+      if (bookedSet.has(`${date}_${time}`)) {
+        daySlots.push({ time, available: false, reason: 'booked' });
+        continue;
+      }
+
+      daySlots.push({ time, available: true });
+    }
+
+    resultMap.set(date, daySlots);
+  }
+
+  return resultMap;
+}
+
 // ─── Appointment Helpers ──────────────────────────────────────────────────────
 export async function dbCreateAppointment(input: CreateAppointmentInput): Promise<AddAppointmentResult> {
   const id = 'apt_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
@@ -620,27 +752,20 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
   const phoneValidation = validateAndNormalizePhone(input.phone);
   const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.phone.trim();
 
-  // Use executeTursoDirectly for ALL booking-critical reads/writes.
-  // This guarantees we always query the authoritative Turso database and never
-  // a stale or empty local SQLite (which would cause false 'slot_taken' errors
-  // in Vercel serverless where local SQLite is ephemeral and empty).
-  const blockedRows = await executeTursoDirectly('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [
-    input.date,
-    input.startTime,
-  ]);
-  if (blockedRows.length > 0) return { success: false, error: 'slot_blocked' };
+  // Use authoritative single source of truth availability check
+  const availability = await dbCheckSlotAvailability(input.date, input.startTime);
+  if (!availability.available) {
+    if (availability.reason === 'blocked') return { success: false, error: 'slot_blocked' };
+    return { success: false, error: 'slot_taken' };
+  }
 
-  const conflictRows = await executeTursoDirectly(
-    "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'",
-    [input.date, input.startTime]
-  );
-  if (conflictRows.length > 0) return { success: false, error: 'slot_taken' };
+  const initialStatus = input.status ?? 'PENDING';
 
   try {
     await executeTursoDirectly(
       `INSERT INTO appointments
         (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         input.patientName,
@@ -649,6 +774,7 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
         input.service,
         input.date,
         input.startTime,
+        initialStatus,
         input.notes ?? null,
         input.coverageType ?? 'PARTICULAR',
         input.coverageProvider ?? null,
@@ -667,8 +793,8 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
         executeSqliteQuery(
           `INSERT OR REPLACE INTO appointments
             (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, ?)`,
-          [id, input.patientName, input.email ?? null, normalizedPhone, input.service, input.date, input.startTime, input.notes ?? null, input.coverageType ?? 'PARTICULAR', input.coverageProvider ?? null, input.coverageNumber ?? null, now, now]
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, input.patientName, input.email ?? null, normalizedPhone, input.service, input.date, input.startTime, initialStatus, input.notes ?? null, input.coverageType ?? 'PARTICULAR', input.coverageProvider ?? null, input.coverageNumber ?? null, now, now]
         );
       } catch { /* silent — local SQLite is only a mirror */ }
     }
@@ -693,6 +819,251 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
     }
     throw err;
   }
+}
+
+// ─── Multiple Sessions Creation (Atomic & Concurrency-Protected) ─────────────
+export interface CreateMultipleAppointmentsInput {
+  patientName: string;
+  phone: string;
+  email?: string;
+  service: string;
+  patientId?: string;
+  coverageType?: string;
+  coverageProvider?: string;
+  coverageNumber?: string;
+  practitioner?: string;
+  sessions: {
+    date: string;
+    startTime: string;
+    notes?: string;
+    evaPainScore?: number;
+  }[];
+}
+
+export interface SessionConflictItem {
+  date: string;
+  startTime: string;
+  reason: string;
+  sessionIndex: number;
+}
+
+export type CreateMultipleAppointmentsResult =
+  | {
+      success: true;
+      appointments: Appointment[];
+      patientSessions: PatientSession[];
+      patientId: string;
+    }
+  | {
+      success: false;
+      error: 'slot_conflict' | 'empty_sessions' | 'invalid_input' | 'slot_taken';
+      message: string;
+      conflicts?: SessionConflictItem[];
+    };
+
+export async function dbCreateMultipleAppointments(
+  input: CreateMultipleAppointmentsInput
+): Promise<CreateMultipleAppointmentsResult> {
+  if (!input.sessions || input.sessions.length === 0) {
+    return { success: false, error: 'empty_sessions', message: 'Nenhuma sessão fornecida para marcação.' };
+  }
+
+  const phoneValidation = validateAndNormalizePhone(input.phone);
+  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.phone.trim();
+
+  // 1. Check for duplicates inside the requested batch itself
+  const seenSlots = new Set<string>();
+  const conflicts: SessionConflictItem[] = [];
+
+  for (let i = 0; i < input.sessions.length; i++) {
+    const s = input.sessions[i];
+    const key = `${s.date}_${s.startTime}`;
+    if (seenSlots.has(key)) {
+      conflicts.push({
+        date: s.date,
+        startTime: s.startTime,
+        reason: 'duplicate_in_request',
+        sessionIndex: i + 1,
+      });
+    }
+    seenSlots.add(key);
+  }
+
+  // 2. Validate EVERY session slot using high-performance batched availability engine
+  const uniqueDates = Array.from(new Set(input.sessions.map(s => s.date)));
+  const dayAvailabilityMap = await dbCheckMultipleDatesAvailability(uniqueDates);
+
+  for (let i = 0; i < input.sessions.length; i++) {
+    const s = input.sessions[i];
+    const daySlots = dayAvailabilityMap.get(s.date) || [];
+    const targetSlot = daySlots.find(slot => slot.time === s.startTime);
+    const isAvailable = targetSlot ? targetSlot.available : false;
+    const reason: string = (targetSlot && !targetSlot.available ? targetSlot.reason : 'booked') || 'booked';
+
+    if (!isAvailable) {
+      conflicts.push({
+        date: s.date,
+        startTime: s.startTime,
+        reason,
+        sessionIndex: i + 1,
+      });
+    }
+  }
+
+  // 3. If any conflict exists, abort immediately with full conflict report
+  if (conflicts.length > 0) {
+    return {
+      success: false,
+      error: 'slot_conflict',
+      message: 'Foram detetados conflitos de horários em algumas sessões solicitadas.',
+      conflicts,
+    };
+  }
+
+  // 4. Ensure patient record exists
+  const upsertRes = await dbUpsertPatient({
+    patientName: input.patientName,
+    phone: normalizedPhone,
+    email: input.email ?? null,
+    coverageType: (input.coverageType as any) ?? 'PARTICULAR',
+    coverageProvider: input.coverageProvider ?? null,
+    coverageNumber: input.coverageNumber ?? null,
+  });
+
+  const patientId = input.patientId || upsertRes.id || ('pat_' + Date.now().toString(36));
+  const now = new Date().toISOString();
+  const createdAppointments: Appointment[] = [];
+  const createdSessions: PatientSession[] = [];
+
+  const isServerless = Boolean(
+    process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
+  );
+
+  // 5. Atomic creation: create Appointment + PatientSession for each session
+  try {
+    for (let i = 0; i < input.sessions.length; i++) {
+      const s = input.sessions[i];
+      const aptId = 'apt_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+      const sessId = 'sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+      const evaScore = typeof s.evaPainScore === 'number' ? s.evaPainScore : 5;
+      const sessionNote = s.notes || `Sessão #${i + 1} • Plano de Tratamento`;
+
+      // A) Insert Appointment (status: CONFIRMED so it blocks slot immediately)
+      await executeTursoDirectly(
+        `INSERT INTO appointments
+          (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'CONFIRMED', ?, ?, ?, ?, ?, ?)`,
+        [
+          aptId,
+          input.patientName,
+          input.email ?? null,
+          normalizedPhone,
+          input.service,
+          s.date,
+          s.startTime,
+          sessionNote,
+          input.coverageType ?? 'PARTICULAR',
+          input.coverageProvider ?? null,
+          input.coverageNumber ?? null,
+          now,
+          now,
+        ]
+      );
+
+      if (!isServerless) {
+        try {
+          executeSqliteQuery(
+            `INSERT OR REPLACE INTO appointments
+              (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'CONFIRMED', ?, ?, ?, ?, ?, ?)`,
+            [aptId, input.patientName, input.email ?? null, normalizedPhone, input.service, s.date, s.startTime, sessionNote, input.coverageType ?? 'PARTICULAR', input.coverageProvider ?? null, input.coverageNumber ?? null, now, now]
+          );
+        } catch { /* silent mirror */ }
+      }
+
+      const apptRows = await executeTursoDirectly<Appointment>('SELECT * FROM appointments WHERE id = ?', [aptId]);
+      const createdAppt = apptRows[0];
+      if (createdAppt) {
+        createdAppointments.push(createdAppt);
+        // Broadcast real-time event to update admin calendar tabs instantly
+        try {
+          broadcastAppointmentCreated(createdAppt);
+        } catch { /* silent */ }
+      }
+
+      // B) Insert PatientSession record for clinical dossier
+      await executeTursoDirectly(
+        `INSERT INTO patient_sessions
+          (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?, ?)`,
+        [
+          sessId,
+          patientId,
+          s.date,
+          s.startTime,
+          input.service,
+          evaScore,
+          sessionNote,
+          input.practitioner ?? null,
+          now,
+        ]
+      );
+
+      if (!isServerless) {
+        try {
+          executeSqliteQuery(
+            `INSERT OR REPLACE INTO patient_sessions
+              (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?, ?)`,
+            [sessId, patientId, s.date, s.startTime, input.service, evaScore, sessionNote, input.practitioner ?? null, now]
+          );
+        } catch { /* silent mirror */ }
+      }
+
+      const sessRows = await executeTursoDirectly<PatientSession>('SELECT * FROM patient_sessions WHERE id = ?', [sessId]);
+      if (sessRows[0]) {
+        createdSessions.push(sessRows[0]);
+      }
+    }
+  } catch (err: any) {
+    // Rollback any partially created records in this batch
+    for (const ca of createdAppointments) {
+      try {
+        await executeTursoDirectly('DELETE FROM appointments WHERE id = ?', [ca.id]);
+        if (!isServerless) executeSqliteQuery('DELETE FROM appointments WHERE id = ?', [ca.id]);
+      } catch { /* silent cleanup */ }
+    }
+    for (const cs of createdSessions) {
+      try {
+        await executeTursoDirectly('DELETE FROM patient_sessions WHERE id = ?', [cs.id]);
+        if (!isServerless) executeSqliteQuery('DELETE FROM patient_sessions WHERE id = ?', [cs.id]);
+      } catch { /* silent cleanup */ }
+    }
+
+    if (err?.message?.includes('UNIQUE') || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      return {
+        success: false,
+        error: 'slot_taken',
+        message: 'Um dos horários foi ocupado em simultâneo por outra marcação.',
+      };
+    }
+    throw err;
+  }
+
+  // Update patient total prescribed sessions to reflect total planned sessions
+  try {
+    await executeTursoDirectly(
+      `UPDATE patients SET totalPrescribedSessions = MAX(totalPrescribedSessions, ?), updatedAt = ? WHERE id = ?`,
+      [input.sessions.length, now, patientId]
+    );
+  } catch { /* silent */ }
+
+  return {
+    success: true,
+    appointments: createdAppointments,
+    patientSessions: createdSessions,
+    patientId,
+  };
 }
 
 export async function dbGetAppointments(filters?: {
@@ -769,14 +1140,8 @@ export async function dbToggleBlockSlot(date: string, time: string): Promise<boo
 }
 
 export async function dbIsSlotAvailable(date: string, time: string): Promise<boolean> {
-  const isBlocked = await executeQuery('SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
-  if (isBlocked.length > 0) return false;
-
-  const isBooked = await executeQuery(
-    "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'",
-    [date, time]
-  );
-  return isBooked.length === 0;
+  const res = await dbCheckSlotAvailability(date, time);
+  return res.available;
 }
 
 // ─── Rate Limiting Helpers ────────────────────────────────────────────────────

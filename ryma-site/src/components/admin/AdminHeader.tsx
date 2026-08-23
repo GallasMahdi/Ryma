@@ -6,6 +6,7 @@ import { Lang } from '@/lib/i18n';
 import { LogoIcon } from '@/components/ui/Logo';
 import {
   IconPlus,
+  IconCalendarRepeat,
   IconRefresh,
   IconExternalLink,
   IconLock,
@@ -24,6 +25,7 @@ interface AdminHeaderProps {
   isLive?: boolean;
   onRefresh: () => void;
   onOpenAddModal: () => void;
+  onOpenMultipleSessions?: () => void;
   onLogout: () => void;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
@@ -38,6 +40,7 @@ export function AdminHeader({
   isLive = true,
   onRefresh,
   onOpenAddModal,
+  onOpenMultipleSessions,
   onLogout,
   isSidebarCollapsed = false,
   onToggleSidebar,
@@ -177,6 +180,20 @@ export function AdminHeader({
             className={loadingAppointments ? 'animate-spin text-[#2563EB]' : ''}
           />
         </button>
+
+        {/* Multiple Sessions Recurring Plan Button */}
+        {onOpenMultipleSessions && (
+          <button
+            onClick={onOpenMultipleSessions}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3 sm:py-2 rounded-lg bg-white border border-[#CBD5E1] hover:bg-[#F1F5F9] text-[#0F172A] font-medium text-xs shadow-2xs transition-all touch-target"
+            title={txt('Planifier des séances multiples récurrentes', 'Schedule multiple recurring sessions', 'Marcar múltiplas sessões recorrentes')}
+          >
+            <IconCalendarRepeat size={15} className="text-[#0F172A]" />
+            <span className="hidden md:inline">
+              {txt('Séances Multiples', 'Multiple Sessions', 'Múltiplas Sessões')}
+            </span>
+          </button>
+        )}
 
         {/* New Appointment Primary Button */}
         <button

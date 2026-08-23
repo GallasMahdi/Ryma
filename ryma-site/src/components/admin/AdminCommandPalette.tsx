@@ -11,6 +11,7 @@ import {
   IconReceiptTax,
   IconChartBar,
   IconPlus,
+  IconCalendarRepeat,
   IconRefresh,
   IconFileSpreadsheet,
   IconLanguage,
@@ -39,6 +40,7 @@ export interface AdminCommandPaletteProps {
   patientNotes: PatientNote[];
   invoices: Invoice[];
   onOpenNewAppointment: () => void;
+  onOpenMultipleSessions?: () => void;
   onOpenCreateInvoice: () => void;
   onOpenCreatePrescription?: () => void;
   onSelectPatient: (patient: PatientRecord) => void;
@@ -72,6 +74,7 @@ export function AdminCommandPalette({
   patientNotes,
   invoices,
   onOpenNewAppointment,
+  onOpenMultipleSessions,
   onOpenCreateInvoice,
   onOpenCreatePrescription,
   onSelectPatient,
@@ -145,6 +148,23 @@ export function AdminCommandPalette({
           onOpenNewAppointment();
         },
       },
+      ...(onOpenMultipleSessions
+        ? [
+            {
+              id: 'action-multiple-sessions',
+              category: 'action',
+              title: txt('Planifier Séances Multiples', 'Multiple Sessions / Treatment Plan', 'Marcar Múltiplas Sessões (Plano)'),
+              subtitle: txt('Créer un forfait récurrent avec validation des créneaux', 'Book recurring plan with real-time slot blocking', 'Agendamento recorrente com validação e bloqueio'),
+              badge: txt('Forfait', 'Plan', 'Pacote'),
+              badgeColor: 'bg-purple-100 text-purple-800 border-purple-200',
+              icon: IconCalendarRepeat,
+              onSelect: () => {
+                onClose();
+                onOpenMultipleSessions();
+              },
+            } as PaletteItem,
+          ]
+        : []),
       {
         id: 'action-new-invoice',
         category: 'action',

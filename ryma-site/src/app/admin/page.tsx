@@ -35,6 +35,7 @@ import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { PatientNotesTab } from '@/components/admin/PatientNotesTab';
 import { InvoicesTab } from '@/components/admin/InvoicesTab';
 import { AddAppointmentModal } from '@/components/admin/AddAppointmentModal';
+import { MultipleSessionsModal } from '@/components/admin/MultipleSessionsModal';
 import { CreateInvoiceModal } from '@/components/admin/CreateInvoiceModal';
 import { AdminCommandPalette } from '@/components/admin/AdminCommandPalette';
 import { ClinicHelpdeskDrawer } from '@/components/admin/ClinicHelpdeskDrawer';
@@ -238,6 +239,7 @@ export default function AdminPage() {
   }, [handleToggleSidebar]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isMultipleSessionsModalOpen, setIsMultipleSessionsModalOpen] = useState(false);
   const [newForm, setNewForm] = useState({
     patientName: '',
     phone: '',
@@ -926,6 +928,7 @@ export default function AdminPage() {
         isLive={isLiveConnected}
         onRefresh={() => fetchAppointments(false)}
         onOpenAddModal={() => setIsAddModalOpen(true)}
+        onOpenMultipleSessions={() => setIsMultipleSessionsModalOpen(true)}
         onLogout={handleLogout}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={handleToggleSidebar}
@@ -1065,6 +1068,20 @@ export default function AdminPage() {
         onSubmit={handleCreateAppointment}
       />
 
+      {/* Multiple Sessions Scheduling Modal */}
+      <MultipleSessionsModal
+        isOpen={isMultipleSessionsModalOpen}
+        onClose={() => setIsMultipleSessionsModalOpen(false)}
+        lang={lang}
+        patientsList={patientsList}
+        onActionToast={addToast}
+        onSuccess={(created) => {
+          fetchAppointments(true);
+          fetchPatientNotes();
+          slotCacheRef.current = {};
+        }}
+      />
+
       {/* Global Command Palette (Ctrl+K / Cmd+K) */}
       <AdminCommandPalette
         isOpen={isCommandPaletteOpen}
@@ -1077,6 +1094,7 @@ export default function AdminPage() {
         patientNotes={patientNotes}
         invoices={invoices}
         onOpenNewAppointment={() => setIsAddModalOpen(true)}
+        onOpenMultipleSessions={() => setIsMultipleSessionsModalOpen(true)}
         onOpenCreateInvoice={() => setIsCreateInvoiceFromPaletteOpen(true)}
         onSelectPatient={(patient) => {
           setActiveTab('patients');

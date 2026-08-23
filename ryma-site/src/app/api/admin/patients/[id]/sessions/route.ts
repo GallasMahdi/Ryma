@@ -5,6 +5,7 @@ import {
   dbDeletePatientSession,
   dbGetPatientById,
   dbGetAppointmentById,
+  dbCheckSlotAvailability,
   executeQuery,
 } from '@/lib/db';
 import { broadcastAppointmentCreated, broadcastAppointmentDeleted } from '@/lib/events';
@@ -39,6 +40,24 @@ export async function POST(
   const notes = body.notes ? String(body.notes).trim().slice(0, 2000) : null;
   const practitioner = body.practitioner ? String(body.practitioner).trim() : null;
 
+  // If time is specified, validate slot availability against authoritative booking engine
+  if (time) {
+    const check = await dbCheckSlotAvailability(date, time);
+    if (!check.available) {
+      return NextResponse.json(
+        {
+          error: 'slot_taken',
+          message: check.reason === 'blocked'
+            ? 'Este horário está bloqueado na agenda.'
+            : check.reason === 'sunday'
+            ? 'A clínica encontra-se encerrada aos domingos.'
+            : 'Este horário já se encontra ocupado por outra consulta.',
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const session = await dbAddPatientSession({
     patientId,
     date,
@@ -61,7 +80,7 @@ export async function POST(
 
     try {
       await executeQuery(
-        `INSERT OR REPLACE INTO appointments
+        `INSERT INTO appointments
           (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
          VALUES (?, ?, ?, ?, ?, ?, ?, 'CONFIRMED', ?, ?, ?, ?, ?, ?)`,
         [
