@@ -1151,6 +1151,14 @@ export async function dbUpdateAppointment(
   return dbGetAppointmentById(id);
 }
 
+export async function dbDeleteAppointment(id: string): Promise<boolean> {
+  const existing = await dbGetAppointmentById(id);
+  if (!existing) return false;
+
+  await executeQuery('DELETE FROM appointments WHERE id = ?', [id]);
+  return true;
+}
+
 // ─── Blocked Slots Helpers ────────────────────────────────────────────────────
 export async function dbGetBlockedSlots(): Promise<{ date: string; time: string }[]> {
   return executeQuery<{ date: string; time: string }>('SELECT date, time FROM blocked_slots');
@@ -1484,8 +1492,7 @@ export async function dbDeletePatientRecord(idOrPhone: string): Promise<void> {
     const phoneValidation = validateAndNormalizePhone(p.phone);
     const normPhone = phoneValidation.isValid ? phoneValidation.normalized : p.phone.trim();
     await executeQuery('DELETE FROM patient_sessions WHERE patientId = ?', [p.id]);
-    await executeQuery("DELETE FROM appointments WHERE id LIKE 'apt_sess_%' AND (phone = ? OR phone = ?)", [p.phone, normPhone]);
-    await executeQuery("UPDATE appointments SET status = 'CANCELLED' WHERE (phone = ? OR phone = ?) AND status = 'PENDING'", [p.phone, normPhone]);
+    await executeQuery('DELETE FROM appointments WHERE phone = ? OR phone = ?', [p.phone, normPhone]);
     await executeQuery('UPDATE invoices SET patientId = NULL WHERE patientId = ? OR patientPhone = ? OR patientPhone = ?', [p.id, p.phone, normPhone]);
     await executeQuery('DELETE FROM patients WHERE id = ?', [p.id]);
     await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ? OR phone = ?', [p.phone, normPhone, idOrPhone]);

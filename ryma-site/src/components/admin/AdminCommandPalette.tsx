@@ -386,6 +386,7 @@ export function AdminCommandPalette({
     if (selectedCategory === 'all' || selectedCategory === 'appointments') {
       const apptItems: PaletteItem[] = appointments
         .filter((a) => {
+          if (a.status === 'CANCELLED') return false;
           if (!q) return selectedCategory === 'appointments';
           const svcName = getServiceName(a.service, lang).toLowerCase();
           return (

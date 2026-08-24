@@ -3,12 +3,13 @@ import { requireAdmin } from '@/lib/requireAdmin';
 import {
   dbGetAppointmentById,
   dbUpdateAppointment,
+  dbDeleteAppointment,
   dbGetAppointments,
   dbGetBlockedSlots,
   AppointmentStatus,
 } from '@/lib/db';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
-import { broadcastAppointmentUpdated } from '@/lib/events';
+import { broadcastAppointmentUpdated, broadcastAppointmentDeleted } from '@/lib/events';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -54,6 +55,13 @@ export async function PATCH(
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  // If status is being updated to CANCELLED, permanently remove the appointment
+  if (body.status === 'CANCELLED') {
+    await dbDeleteAppointment(id);
+    broadcastAppointmentDeleted(id);
+    return NextResponse.json({ deleted: true, id, message: 'Rendez-vous annulé et supprimé' });
   }
 
   const updates: Partial<{
@@ -107,7 +115,7 @@ export async function PATCH(
   return NextResponse.json({ appointment: updated });
 }
 
-// ─── DELETE /api/admin/appointments/:id — Soft delete ───────────────────────
+// ─── DELETE /api/admin/appointments/:id — Permanent Removal ─────────────────
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -122,9 +130,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 });
   }
 
-  const updated = await dbUpdateAppointment(id, { status: 'CANCELLED' });
-  if (updated) {
-    broadcastAppointmentUpdated(updated);
-  }
-  return NextResponse.json({ appointment: updated });
+  await dbDeleteAppointment(id);
+  broadcastAppointmentDeleted(id);
+  return NextResponse.json({ deleted: true, id, message: 'Rendez-vous supprimé' });
 }

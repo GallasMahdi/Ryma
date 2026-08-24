@@ -809,7 +809,7 @@ export function AppointmentsTab({
               { id: 'CONFIRMED' as const, label: txt('Confirmés', 'Confirmed', 'Confirmados'), count: appointments.filter(a => a.status === 'CONFIRMED').length },
               { id: 'PENDING' as const, label: txt('En attente', 'Pending', 'Pendentes'), count: appointments.filter(a => a.status === 'PENDING').length },
               { id: 'COMPLETED' as const, label: txt('Terminés', 'Completed', 'Concluídos'), count: appointments.filter(a => a.status === 'COMPLETED').length },
-              { id: 'CANCELLED' as const, label: txt('Annulés', 'Cancelled', 'Cancelados'), count: appointments.filter(a => a.status === 'CANCELLED').length },
+              ...(appointments.some(a => a.status === 'CANCELLED') ? [{ id: 'CANCELLED' as const, label: txt('Annulés', 'Cancelled', 'Cancelados'), count: appointments.filter(a => a.status === 'CANCELLED').length }] : []),
             ].map(p => (
               <button
                 key={p.id}

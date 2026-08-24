@@ -602,6 +602,10 @@ export default function AdminPage() {
 
   // ── Action helpers ─────────────────────────────────────────────────────────
   const updateStatus = async (id: string, status: AppointmentStatus) => {
+    if (status === 'CANCELLED') {
+      return softDeleteAppointment(id);
+    }
+
     const prevList = appointments;
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status, updatedAt: new Date().toISOString() } : a));
     setIsGlobalBusy(true);
@@ -697,8 +701,8 @@ export default function AdminPage() {
       slotCacheRef.current = {};
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Consulta Eliminada' : lang === 'en' ? 'Appointment Deleted' : 'Rendez-vous Supprimé',
-        message: lang === 'pt' ? 'O registo foi removido.' : lang === 'en' ? 'Record deleted.' : 'Enregistrement supprimé.',
+        title: lang === 'pt' ? 'Consulta Cancelada & Removida' : lang === 'en' ? 'Appointment Canceled & Removed' : 'Rendez-vous Annulé & Supprimé',
+        message: lang === 'pt' ? 'O horário foi libertado e o registo removido.' : lang === 'en' ? 'Slot released and record removed.' : 'Créneau libéré et enregistrement supprimé.',
       });
     } catch (err) {
       setAppointments(prevList);
