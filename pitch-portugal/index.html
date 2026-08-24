@@ -1,731 +1,2341 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Proposta Comercial — Plataforma Digital para Clínicas</title>
+  <title>Digital Clínica — O Sistema Operativo Digital de Alto Desempenho para Clínicas em Portugal</title>
+  <meta name="description"
+    content="Plataforma digital integral para clínicas em Portugal: Triagem Anatómica 3D, Marcações 24/7, Dossier Clínico EHR com Escala EVA, Faturação Art. 9º CIVA, Prescrições Digitais, Automação WhatsApp e Suporte ADSE / Médis / Multicare." />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="logo-48x48.png" />
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet" />
 
-    :root {
-      --primary:   #7C3AED;
-      --primary-light: #A78BFA;
-      --accent:    #06B6D4;
-      --accent2:   #10B981;
-      --gold:      #F59E0B;
-      --dark:      #0D0D1A;
-      --dark2:     #13132B;
-      --card:      #1A1A35;
-      --card2:     #1E1E40;
-      --border:    rgba(124,58,237,0.25);
-      --text:      #E2E8F0;
-      --muted:     #94A3B8;
-      --white:     #ffffff;
-      --danger:    #EF4444;
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    html { scroll-behavior: smooth; }
+    :root {
+      --primary: #7C3AED;
+      --primary-light: #A78BFA;
+      --primary-dark: #5B21B6;
+      --primary-glow: rgba(124, 58, 237, 0.35);
+
+      --gold: #C49A3C;
+      --gold-light: #E8C97A;
+      --gold-glow: rgba(196, 154, 60, 0.35);
+      --gold-dark: #8A6A24;
+
+      --accent: #06B6D4;
+      --accent-light: #67E8F9;
+      --accent-glow: rgba(6, 182, 212, 0.3);
+
+      --emerald: #10B981;
+      --emerald-light: #34D399;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+
+      --danger: #EF4444;
+
+      --dark-bg: #0A0A14;
+      --dark-surface: #111124;
+      --dark-card: #161633;
+      --dark-card2: #1D1D42;
+      --dark-border: rgba(196, 154, 60, 0.22);
+      --dark-border-purple: rgba(124, 58, 237, 0.22);
+      --dark-border2: rgba(255, 255, 255, 0.08);
+
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      --white: #FFFFFF;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--dark);
-      color: var(--text);
-      line-height: 1.6;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--dark-bg);
+      color: var(--text-main);
+      line-height: 1.65;
       overflow-x: hidden;
     }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--dark); }
-    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
-
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 2.5rem;
-      background: rgba(13,13,26,0.85);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
+    ::selection {
+      background: rgba(196, 154, 60, 0.4);
+      color: var(--white);
     }
-    .nav-logo {
-      font-size: 1.1rem; font-weight: 800;
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--dark-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--gold);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gold-light);
+    }
+
+    /* Utilities */
+    .container {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .text-gold-gradient {
+      background: linear-gradient(135deg, #FFFFFF 15%, var(--gold-light) 65%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .text-purple-gradient {
       background: linear-gradient(135deg, var(--primary-light), var(--accent));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .nav-links { display: flex; gap: 2rem; }
-    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: color 0.2s; }
-    .nav-links a:hover { color: var(--white); }
-    .nav-cta {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: white; border: none; padding: 0.55rem 1.4rem;
-      border-radius: 50px; font-size: 0.85rem; font-weight: 600;
-      cursor: pointer; text-decoration: none; transition: opacity 0.2s;
-    }
-    .nav-cta:hover { opacity: 0.85; }
 
+    /* Top Live Announcement Bar */
+    .top-banner {
+      background: linear-gradient(90deg, #1A1412, #261E1A, #1A1412);
+      color: #F5E9C8;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.55rem 1.5rem;
+      border-bottom: 1px solid rgba(196, 154, 60, 0.25);
+    }
+
+    .top-banner-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1260px;
+      margin: 0 auto;
+    }
+
+    .top-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px var(--gold);
+      animation: pulseGold 2s infinite;
+    }
+
+    .top-banner a {
+      color: var(--gold-light);
+      text-decoration: underline;
+      margin-left: 0.6rem;
+      font-weight: 700;
+    }
+
+    /* Sticky Navigation */
+    nav {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(10, 10, 20, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--dark-border);
+      transition: all 0.3s ease;
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 80px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+    }
+
+    .nav-logo-img {
+      height: 48px;
+      width: auto;
+      object-contain: contain;
+      filter: drop-shadow(0 0 10px rgba(196, 154, 60, 0.3));
+    }
+
+    .brand-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+
+    .brand-name span {
+      color: var(--gold-light);
+    }
+
+    .brand-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.6rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--white);
+    }
+
+    .nav-links a.nav-gold {
+      color: var(--gold-light);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .nav-links a.nav-accent {
+      color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .btn-nav-demo {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #0A0A14;
+      text-decoration: none;
+      padding: 0.65rem 1.4rem;
+      border-radius: 50px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      box-shadow: 0 4px 18px var(--gold-glow);
+      transition: all 0.2s;
+    }
+
+    .btn-nav-demo:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(196, 154, 60, 0.55);
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    }
+
+    /* Hero Section */
     .hero {
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      text-align: center;
-      padding: 7rem 2rem 4rem;
-      position: relative; overflow: hidden;
-    }
-    .hero-bg {
-      position: absolute; inset: 0; z-index: 0;
+      position: relative;
+      padding: 7rem 0 5.5rem;
+      overflow: hidden;
       background:
-        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,58,237,0.35) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(6,182,212,0.2) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 30% at 10% 70%, rgba(16,185,129,0.15) 0%, transparent 60%);
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(196, 154, 60, 0.22) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 50% at 85% 55%, rgba(124, 58, 237, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 15% 75%, rgba(6, 182, 212, 0.12) 0%, transparent 60%);
     }
-    .hero-grid {
-      position: absolute; inset: 0; z-index: 0;
-      background-image: linear-gradient(rgba(124,58,237,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(124,58,237,0.07) 1px, transparent 1px);
-      background-size: 60px 60px;
-      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+
+    .hero-grid-pattern {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(196, 154, 60, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(196, 154, 60, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, black, transparent);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, black, transparent);
+      pointer-events: none;
     }
-    .hero-content { position: relative; z-index: 1; max-width: 860px; }
+
+    .hero-inner {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
     .hero-badge {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.4);
-      padding: 0.4rem 1.1rem; border-radius: 50px;
-      font-size: 0.78rem; font-weight: 600; color: var(--primary-light);
-      letter-spacing: 0.05em; text-transform: uppercase;
-      margin-bottom: 1.8rem; animation: fadeDown 0.6s ease both;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(196, 154, 60, 0.12);
+      border: 1px solid rgba(196, 154, 60, 0.35);
+      backdrop-filter: blur(10px);
+      padding: 0.45rem 1.2rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      margin-bottom: 2rem;
     }
-    .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); display: block; animation: pulse 2s infinite; }
+
     .hero h1 {
       font-family: 'Playfair Display', serif;
-      font-size: clamp(2.6rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.1;
-      margin-bottom: 1.4rem; animation: fadeDown 0.7s 0.1s ease both;
+      font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.6rem;
     }
-    .hero h1 em { font-style: normal; background: linear-gradient(135deg, var(--primary-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero p { font-size: 1.15rem; color: var(--muted); max-width: 620px; margin: 0 auto 2.5rem; animation: fadeDown 0.7s 0.2s ease both; }
-    .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; animation: fadeDown 0.7s 0.3s ease both; }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), #5B21B6);
-      color: white; padding: 0.85rem 2rem; border-radius: 50px;
-      font-weight: 700; font-size: 0.95rem; text-decoration: none;
-      box-shadow: 0 0 30px rgba(124,58,237,0.4); transition: transform 0.2s, box-shadow 0.2s;
+
+    .hero-sub {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 820px;
+      margin: 0 auto 2.8rem;
+      line-height: 1.7;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(124,58,237,0.6); }
-    .btn-outline { border: 1px solid var(--border); color: var(--text); padding: 0.85rem 2rem; border-radius: 50px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: border-color 0.2s, background 0.2s; }
-    .btn-outline:hover { border-color: var(--primary-light); background: rgba(124,58,237,0.1); }
 
-    .stats-strip { background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 2.5rem 2rem; }
-    .stats-inner { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; text-align: center; }
-    .stat-num { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, var(--primary-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+    .hero-sub strong {
+      color: var(--text-main);
+      font-weight: 600;
+    }
 
-    section { padding: 6rem 2rem; }
-    .section-inner { max-width: 1100px; margin: 0 auto; }
-    .section-tag { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary-light); margin-bottom: 0.8rem; }
-    .section-title { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
-    .section-title em { font-style: normal; color: var(--primary-light); }
-    .section-sub { color: var(--muted); font-size: 1rem; max-width: 580px; }
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin-bottom: 3.5rem;
+    }
 
-    #problema { background: var(--dark2); }
-    .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 3rem; }
-    @media(max-width:700px){ .problem-grid { grid-template-columns: 1fr; } }
-    .problem-card { background: var(--card); border: 1px solid rgba(239,68,68,0.2); border-radius: 16px; padding: 1.8rem; display: flex; gap: 1rem; align-items: flex-start; transition: border-color 0.3s; }
-    .problem-card:hover { border-color: rgba(239,68,68,0.5); }
-    .problem-icon { font-size: 1.8rem; flex-shrink: 0; }
-    .problem-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
-    .problem-card p { font-size: 0.88rem; color: var(--muted); }
+    .btn-hero-gold {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      color: #0A0A14;
+      font-size: 1.05rem;
+      font-weight: 800;
+      padding: 1.05rem 2.5rem;
+      border-radius: 50px;
+      text-decoration: none;
+      box-shadow: 0 10px 30px var(--gold-glow);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
 
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 3.5rem; }
-    .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; transition: border-color 0.3s, transform 0.3s; position: relative; overflow: hidden; }
-    .feature-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(124,58,237,0.05), transparent); opacity: 0; transition: opacity 0.3s; }
-    .feature-card:hover { border-color: var(--primary); transform: translateY(-4px); }
-    .feature-card:hover::before { opacity: 1; }
-    .feature-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.2rem; }
-    .feature-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .feature-card p { font-size: 0.88rem; color: var(--muted); }
-    .feature-tag { display: inline-block; margin-top: 1rem; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.72rem; font-weight: 600; }
+    .btn-hero-gold:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 15px 40px rgba(196, 154, 60, 0.6);
+    }
 
-    #precos { background: var(--dark2); }
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 3.5rem; align-items: start; }
-    .pricing-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 2.2rem; position: relative; transition: transform 0.3s; }
-    .pricing-card:hover { transform: translateY(-6px); }
-    .pricing-card.popular { border-color: var(--primary); background: linear-gradient(160deg, rgba(124,58,237,0.15), var(--card)); }
-    .popular-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 0.3rem 1.2rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
-    .pricing-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .pricing-desc { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
-    .pricing-price { font-size: 2.8rem; font-weight: 900; line-height: 1; margin-bottom: 0.3rem; }
-    .pricing-price span { font-size: 1.1rem; font-weight: 500; color: var(--muted); }
-    .pricing-period { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.8rem; }
-    .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 0.65rem; }
-    .pricing-features li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.88rem; color: var(--text); }
-    .pricing-features li::before { content: 'v'; color: var(--accent2); font-weight: 700; flex-shrink: 0; margin-top: 0.05rem; }
-    .pricing-cta { display: block; margin-top: 2rem; text-align: center; padding: 0.85rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: opacity 0.2s; }
-    .pricing-card.popular .pricing-cta { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
-    .pricing-card:not(.popular) .pricing-cta { border: 1px solid var(--border); color: var(--text); }
-    .pricing-cta:hover { opacity: 0.8; }
+    .btn-hero-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      font-size: 1.02rem;
+      font-weight: 600;
+      padding: 1.05rem 2.2rem;
+      border-radius: 50px;
+      text-decoration: none;
+      border: 1px solid var(--dark-border);
+      backdrop-filter: blur(10px);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
 
-    .roi-section { background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(6,182,212,0.1)); border: 1px solid var(--border); border-radius: 24px; padding: 3rem; margin-top: 3.5rem; }
-    .roi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: center; }
-    @media(max-width:700px){ .roi-grid { grid-template-columns: 1fr; } }
-    .roi-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 1rem; }
-    .roi-title em { font-style: normal; color: var(--gold); }
-    .roi-numbers { display: flex; flex-direction: column; gap: 1rem; }
-    .roi-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); }
-    .roi-item-label { font-size: 0.9rem; color: var(--muted); }
-    .roi-item-value { font-size: 1.1rem; font-weight: 800; color: var(--accent2); }
-    .roi-highlight { border-color: var(--gold) !important; background: rgba(245,158,11,0.08) !important; }
-    .roi-highlight .roi-item-value { color: var(--gold); font-size: 1.4rem; }
+    .btn-hero-secondary:hover {
+      background: rgba(196, 154, 60, 0.15);
+      border-color: var(--gold-light);
+      color: var(--white);
+    }
 
-    #tecnologia { background: var(--dark2); }
-    .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-top: 3rem; }
-    .tech-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; text-align: center; transition: border-color 0.3s, transform 0.3s; }
-    .tech-card:hover { border-color: var(--primary-light); transform: translateY(-3px); }
-    .tech-card .icon { font-size: 2rem; margin-bottom: 0.6rem; }
-    .tech-card h4 { font-size: 0.9rem; font-weight: 700; }
-    .tech-card p { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+    /* Subsystem Trust Bar */
+    .insurance-bar {
+      padding: 1.4rem 2rem;
+      background: rgba(22, 22, 45, 0.6);
+      border-top: 1px solid var(--dark-border);
+      border-bottom: 1px solid var(--dark-border);
+      text-align: center;
+    }
 
-    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
-    .testimonial-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; }
-    .testimonial-stars { color: var(--gold); font-size: 0.9rem; margin-bottom: 1rem; }
-    .testimonial-text { font-size: 0.9rem; color: var(--muted); font-style: italic; margin-bottom: 1.5rem; line-height: 1.7; }
-    .testimonial-author { display: flex; align-items: center; gap: 0.8rem; }
-    .testimonial-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
-    .testimonial-name { font-size: 0.88rem; font-weight: 700; }
-    .testimonial-role { font-size: 0.78rem; color: var(--muted); }
+    .insurance-title {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      font-weight: 800;
+      margin-bottom: 0.8rem;
+    }
 
-    #contacto { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,0.3) 0%, transparent 70%), var(--dark2); text-align: center; }
-    .contact-card { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 4rem 3rem; max-width: 700px; margin: 0 auto; }
-    .contact-card h2 { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin-bottom: 1rem; }
-    .contact-card p { color: var(--muted); margin-bottom: 2.5rem; }
-    .contact-form { display: flex; flex-direction: column; gap: 1rem; text-align: left; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media(max-width:600px){ .form-row { grid-template-columns: 1fr; } }
-    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
-    .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
-    .form-group input, .form-group select, .form-group textarea { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none; transition: border-color 0.2s; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-light); }
-    .form-group select option { background: var(--dark2); }
-    .form-group textarea { resize: vertical; min-height: 100px; }
-    .form-submit { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; padding: 1rem; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; margin-top: 0.5rem; }
-    .form-submit:hover { opacity: 0.85; }
-    .form-note { font-size: 0.78rem; color: var(--muted); text-align: center; margin-top: 0.5rem; }
+    .insurance-badges {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.4rem;
+      flex-wrap: wrap;
+    }
 
-    footer { background: var(--dark); border-top: 1px solid var(--border); padding: 2.5rem 2rem; text-align: center; }
-    .footer-logo { font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
-    footer p { font-size: 0.82rem; color: var(--muted); }
+    .ins-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
 
-    @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } }
+    .ins-badge:hover {
+      color: var(--white);
+      border-color: var(--gold);
+      background: rgba(196, 154, 60, 0.15);
+    }
 
-    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .ins-badge span.check-icon {
+      color: var(--emerald-light);
+    }
 
-    .compare-table { width: 100%; border-collapse: collapse; margin-top: 3rem; font-size: 0.9rem; }
-    .compare-table th { background: var(--card2); padding: 1rem 1.5rem; text-align: left; font-weight: 700; border-bottom: 1px solid var(--border); }
-    .compare-table th:last-child { background: rgba(124,58,237,0.2); }
-    .compare-table td { padding: 0.9rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .compare-table tr:last-child td { border-bottom: none; }
-    .compare-table td:last-child { background: rgba(124,58,237,0.07); font-weight: 600; color: var(--primary-light); }
-    .check { color: var(--accent2); font-weight: 700; }
-    .cross { color: var(--danger); }
+    /* Stats Strip */
+    .stats-strip {
+      padding: 3rem 0;
+      background: var(--dark-surface);
+      border-bottom: 1px solid var(--dark-border2);
+    }
 
-    .process-steps { display: flex; flex-direction: column; gap: 0; margin-top: 3rem; position: relative; }
-    .process-steps::before { content: ''; position: absolute; left: 24px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--primary), var(--accent)); }
-    .process-step { display: flex; gap: 1.5rem; align-items: flex-start; padding: 1.5rem 1.5rem 1.5rem 0; position: relative; }
-    .step-num { width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; z-index: 1; background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 0 20px rgba(124,58,237,0.4); }
-    .step-content h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
-    .step-content p { font-size: 0.88rem; color: var(--muted); }
-    .step-duration { display: inline-block; margin-top: 0.5rem; padding: 0.2rem 0.7rem; border-radius: 50px; font-size: 0.72rem; font-weight: 700; background: rgba(124,58,237,0.2); color: var(--primary-light); }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      text-align: center;
+    }
 
-    .urgency-banner { background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05)); border: 1px solid rgba(245,158,11,0.3); border-radius: 16px; padding: 1.5rem 2rem; display: flex; align-items: center; gap: 1rem; margin-top: 3rem; }
-    .urgency-icon { font-size: 2rem; flex-shrink: 0; }
-    .urgency-text h4 { color: var(--gold); font-weight: 700; margin-bottom: 0.2rem; }
-    .urgency-text p { font-size: 0.88rem; color: var(--muted); }
+    .stat-card {
+      padding: 1.4rem;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: transform 0.3s, border-color 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold);
+    }
+
+    .stat-big {
+      font-size: 2.7rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+
+    /* Sections */
+    section {
+      padding: 6.5rem 0;
+      position: relative;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 820px;
+      margin: 0 auto 3.8rem;
+    }
+
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      background: rgba(196, 154, 60, 0.15);
+      border: 1px solid rgba(196, 154, 60, 0.35);
+      padding: 0.35rem 0.95rem;
+      border-radius: 50px;
+      margin-bottom: 1.1rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1.1rem;
+    }
+
+    .section-desc {
+      font-size: 1.08rem;
+      color: var(--text-muted);
+      line-height: 1.68;
+    }
+
+    /* Dual-Mode Live Interactive Ecosystem Showroom */
+    .ecosystem-toggle-bar {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-eco-toggle {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--dark-border);
+      color: var(--text-muted);
+      padding: 0.9rem 2rem;
+      border-radius: 50px;
+      font-size: 0.98rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      transition: all 0.25s;
+    }
+
+    .btn-eco-toggle:hover {
+      color: var(--white);
+      background: rgba(196, 154, 60, 0.15);
+      border-color: var(--gold);
+    }
+
+    .btn-eco-toggle.active {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      color: #0A0A14;
+      border-color: var(--gold-light);
+      box-shadow: 0 4px 20px var(--gold-glow);
+    }
+
+    .eco-view-container {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .eco-view-container.active {
+      display: block;
+    }
+
+    /* Grid for Features */
+    .features-grid-dual {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.8rem;
+    }
+
+    .dual-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 24px;
+      padding: 2.4rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .dual-card:hover {
+      border-color: var(--gold-light);
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    }
+
+    .dual-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.4rem;
+    }
+
+    .dual-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      background: rgba(196, 154, 60, 0.15);
+      color: var(--gold-light);
+      border: 1px solid rgba(196, 154, 60, 0.3);
+    }
+
+    .dual-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+    }
+
+    .badge-gold-pill {
+      background: rgba(196, 154, 60, 0.2);
+      color: var(--gold-light);
+      border: 1px solid rgba(196, 154, 60, 0.4);
+    }
+
+    .badge-purple-pill {
+      background: rgba(124, 58, 237, 0.2);
+      color: var(--primary-light);
+      border: 1px solid rgba(124, 58, 237, 0.4);
+    }
+
+    .badge-cyan-pill {
+      background: rgba(6, 182, 212, 0.2);
+      color: var(--accent-light);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+    }
+
+    .badge-emerald-pill {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--emerald-light);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .dual-card h3 {
+      font-size: 1.28rem;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 0.6rem;
+    }
+
+    .dual-card p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 1.3rem;
+    }
+
+    .dual-checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .dual-checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      font-size: 0.86rem;
+      color: var(--text-main);
+    }
+
+    .dual-checklist li span.check {
+      color: var(--emerald-light);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* Live Interactive Demo Box */
+    .interactive-demo-card {
+      background: var(--dark-surface);
+      border: 1px solid var(--dark-border);
+      border-radius: 28px;
+      padding: 2.2rem;
+      margin-top: 3.5rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    .demo-selector-row {
+      display: flex;
+      gap: 0.6rem;
+      overflow-x: auto;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--dark-border2);
+      margin-bottom: 2rem;
+    }
+
+    .demo-tab-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 0.75rem 1.4rem;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .demo-tab-btn:hover {
+      background: rgba(196, 154, 60, 0.15);
+      color: var(--white);
+      border-color: var(--gold);
+    }
+
+    .demo-tab-btn.active {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #0A0A14;
+      border-color: var(--gold-light);
+      box-shadow: 0 4px 15px var(--gold-glow);
+    }
+
+    .demo-panel {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .demo-panel.active {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .demo-panel.active {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Mockup Display Frame */
+    .mockup-frame {
+      background: var(--dark-bg);
+      border: 1px solid var(--dark-border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    }
+
+    .mockup-header {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.7rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .mockup-dots {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .mockup-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-red {
+      background: #EF4444;
+    }
+
+    .dot-yellow {
+      background: #F59E0B;
+    }
+
+    .dot-green {
+      background: #10B981;
+    }
+
+    .mockup-url {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.2rem 0.8rem;
+      border-radius: 6px;
+    }
+
+    .mockup-body {
+      padding: 1.6rem;
+    }
+
+    /* Interactive Body 3D Clickable Mockup */
+    .body-map-interactive {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .body-zone-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(196, 154, 60, 0.2);
+      border-radius: 10px;
+      padding: 0.75rem;
+      text-align: left;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    .body-zone-btn:hover,
+    .body-zone-btn.selected {
+      background: rgba(196, 154, 60, 0.18);
+      border-color: var(--gold-light);
+    }
+
+    /* ROI Simulator */
+    .calculator-wrapper {
+      background: linear-gradient(145deg, #161633 0%, #101024 100%);
+      border: 1px solid var(--dark-border);
+      border-radius: 28px;
+      padding: 3.5rem 3rem;
+      margin-top: 3.5rem;
+      position: relative;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5rem;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .calc-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+
+      .calculator-wrapper {
+        padding: 2rem 1.5rem;
+      }
+    }
+
+    .calc-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    .calc-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .calc-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .calc-val-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--gold-light);
+      background: rgba(196, 154, 60, 0.15);
+      border: 1px solid rgba(196, 154, 60, 0.35);
+      padding: 0.2rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .calc-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .calc-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(196, 154, 60, 0.6);
+      transition: transform 0.15s;
+    }
+
+    .calc-results-box {
+      background: rgba(10, 10, 22, 0.7);
+      border: 1px solid rgba(196, 154, 60, 0.3);
+      border-radius: 20px;
+      padding: 2.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    .res-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.9rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .res-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-top: 0.5rem;
+    }
+
+    .res-label {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .res-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--emerald-light);
+    }
+
+    .res-val-big {
+      font-size: 2.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .res-highlight {
+      background: rgba(196, 154, 60, 0.08);
+      border: 1px solid rgba(196, 154, 60, 0.3);
+      border-radius: 14px;
+      padding: 1.2rem;
+    }
+
+    /* Pricing Section */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      margin-top: 3.5rem;
+    }
+
+    .pricing-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 28px;
+      padding: 2.8rem 2.2rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .pricing-card.featured {
+      border-color: var(--gold);
+      background: linear-gradient(170deg, rgba(196, 154, 60, 0.16) 0%, var(--dark-card) 60%);
+      box-shadow: 0 10px 40px rgba(196, 154, 60, 0.25);
+    }
+
+    .pricing-badge-popular {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      color: #0A0A14;
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.4rem 1.4rem;
+      border-radius: 50px;
+      white-space: nowrap;
+    }
+
+    .tier-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      color: var(--white);
+    }
+
+    .tier-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      min-height: 48px;
+      margin-bottom: 1.8rem;
+    }
+
+    .tier-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .tier-price {
+      font-size: 3.2rem;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--white);
+    }
+
+    .tier-currency {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .tier-terms {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 2rem;
+    }
+
+    .tier-features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-bottom: 2.5rem;
+      flex-grow: 1;
+    }
+
+    .tier-features-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    .tier-features-list li span.bullet {
+      color: var(--emerald-light);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .btn-tier {
+      width: 100%;
+      text-align: center;
+      padding: 1rem;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 0.98rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-tier-featured {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      color: #0A0A14;
+      box-shadow: 0 4px 20px var(--gold-glow);
+    }
+
+    .btn-tier-featured:hover {
+      opacity: 0.92;
+      transform: translateY(-2px);
+    }
+
+    .btn-tier-outline {
+      border: 1px solid var(--dark-border);
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .btn-tier-outline:hover {
+      border-color: var(--gold-light);
+      background: rgba(196, 154, 60, 0.15);
+    }
+
+    /* Contact Form */
+    .contact-container {
+      background: radial-gradient(ellipse 90% 70% at 50% 0%, rgba(196, 154, 60, 0.2) 0%, transparent 70%), var(--dark-surface);
+      border: 1px solid var(--dark-border);
+      border-radius: 32px;
+      padding: 4.5rem 3rem;
+      max-width: 920px;
+      margin: 0 auto;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    }
+
+    @media (max-width: 768px) {
+      .contact-container {
+        padding: 2.5rem 1.5rem;
+      }
+    }
+
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+      margin-top: 2.5rem;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.4rem;
+    }
+
+    @media (max-width: 650px) {
+      .form-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      text-align: left;
+    }
+
+    .form-field label {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--dark-border);
+      border-radius: 12px;
+      padding: 0.85rem 1.1rem;
+      color: var(--white);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      border-color: var(--gold-light);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 15px var(--gold-glow);
+    }
+
+    .form-field select option {
+      background: var(--dark-surface);
+      color: var(--white);
+    }
+
+    .form-field textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .btn-submit-form {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      color: #0A0A14;
+      font-size: 1.08rem;
+      font-weight: 900;
+      border: none;
+      padding: 1.1rem;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 6px 25px var(--gold-glow);
+      transition: all 0.2s;
+      margin-top: 0.6rem;
+    }
+
+    .btn-submit-form:hover {
+      opacity: 0.92;
+      transform: translateY(-2px);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--dark-bg);
+      border-top: 1px solid var(--dark-border);
+      padding: 4.5rem 0 2.5rem;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+      margin-bottom: 3.5rem;
+    }
+
+    @media (max-width: 850px) {
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .footer-col h5 {
+      color: var(--white);
+      font-size: 0.95rem;
+      font-weight: 800;
+      margin-bottom: 1.2rem;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .footer-col ul a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-col ul a:hover {
+      color: var(--white);
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    /* Animations */
+    @keyframes pulseGold {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.35);
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(25px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
+
 <body>
 
-  <nav>
-    <div class="nav-logo">&#9889; DigitalClinica</div>
-    <div class="nav-links">
-      <a href="#problema">Problema</a>
-      <a href="#solucao">Solucao</a>
-      <a href="#precos">Precos</a>
-      <a href="#processo">Processo</a>
-      <a href="roi-report.html" style="color:var(--gold);font-weight:700;">📊 Relatório ROI</a>
-      <a href="marketing-plan.html" style="color:var(--accent);font-weight:700;">🚀 Plano de Marketing</a>
-    </div>
-    <a href="#contacto" class="nav-cta">Solicitar Proposta</a>
-  </nav>
-
-  <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-grid"></div>
-    <div class="hero-content">
-      <div class="hero-badge">
-        <span></span>
-        Plataforma Premium para Clinicas - Portugal 2026
+  <!-- Top Announcement Bar with Live Status -->
+  <div class="top-banner">
+    <div class="top-banner-inner">
+      <div class="top-status-indicator">
+        <div class="live-dot"></div>
+        <span><strong>Digital Clínica OS</strong> — Ecossistema Certificado para Clínicas Privadas em Portugal •
+          2026</span>
       </div>
-      <h1>
-        O Site que Transforma a Sua<br/>
-        Clinica numa <em>Maquina de Pacientes</em>
-      </h1>
-      <p>
-        Uma plataforma digital completa com sistema de marcacoes online, painel de administracao e conformidade RGPD. Feita a medida para clinicas de estetica, fisioterapia e saude em Portugal.
-      </p>
-      <div class="hero-buttons">
-        <a href="#contacto" class="btn-primary">Solicitar Proposta Gratuita</a>
-        <a href="#solucao" class="btn-outline">Ver a Solucao</a>
-      </div>
-    </div>
-  </section>
-
-  <div class="stats-strip">
-    <div class="stats-inner">
-      <div class="stat-item">
-        <div class="stat-num">21</div>
-        <div class="stat-label">Paginas otimizadas para SEO</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">680ms</div>
-        <div class="stat-label">Velocidade de geracao de paginas</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">100%</div>
-        <div class="stat-label">Conformidade RGPD + CSP</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">2</div>
-        <div class="stat-label">Idiomas (PT + EN)</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">0 EUR</div>
-        <div class="stat-label">Custo de licencas mensais</div>
+      <div>
+        <span>Isenção Artigo 9.º do CIVA • Validador NIF • ADSE & Médis</span>
+        <a href="roi-report.html">Ver Relatório ROI →</a>
       </div>
     </div>
   </div>
 
-  <section id="problema">
-    <div class="section-inner">
-      <div class="reveal">
-        <div class="section-tag">O Problema</div>
-        <h2 class="section-title">A maioria das clinicas perde<br/><em>pacientes todos os dias</em></h2>
-        <p class="section-sub">O seu site e a sua recepcao digital. Se nao transmite confianca e nao converte, esta a perder dinheiro em silencio.</p>
+  <!-- Sticky Luxury Navigation -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="#" class="nav-brand">
+        <img src="logo-mark-light.png" alt="Digital Clínica Logo" class="nav-logo-img" />
+        <div class="brand-meta">
+          <div class="brand-name">Digital<span>Clínica</span></div>
+          <div class="brand-sub">Fisioterapia & Estética</div>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#ecossistema" onclick="showEcoView('client')">Visão Paciente</a></li>
+        <li><a href="#ecossistema" onclick="showEcoView('admin')">Visão Dashboard</a></li>
+        <li><a href="#demonstracao">Módulos Interativos</a></li>
+        <li><a href="#roi-calc">Calculadora ROI</a></li>
+        <li><a href="#precos">Planos & Preços</a></li>
+        <li><a href="roi-report.html" class="nav-gold">📊 Relatório ROI</a></li>
+        <li><a href="marketing-plan.html" class="nav-accent">🚀 Plano Marketing</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="#contacto" class="btn-nav-demo">Solicitar Proposta</a>
       </div>
-      <div class="problem-grid reveal">
-        <div class="problem-card">
-          <div class="problem-icon">&#128012;</div>
+    </div>
+  </nav>
+
+  <!-- Hero Header -->
+  <header class="hero">
+    <div class="hero-grid-pattern"></div>
+    <div class="container hero-inner">
+
+      <div class="hero-badge">
+        <div class="live-dot"></div>
+        <span>O Sistema Operativo Completo para Clínicas de Saúde & Bem-Estar</span>
+      </div>
+
+      <h1>
+        A Plataforma Digital que Eleva a sua Clínica ao<br />
+        <em class="text-gold-gradient">Padrão de Excelência em Portugal</em>
+      </h1>
+
+      <p class="hero-sub">
+        Unificamos todas as frentes num único ecossistema soberano: <strong>Triagem Anatómica 3D</strong>,
+        <strong>Marcações Online 24/7</strong> com pacotes recorrentes, <strong>Dossier Clínico com Escala EVA</strong>,
+        <strong>Faturação Artigo 9.º do CIVA</strong> e automações <strong>WhatsApp</strong> sem intermediários nem
+        royalties.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="#contacto" class="btn-hero-gold">
+          <span>Solicitar Proposta Comercial</span>
+          <span style="font-size: 1.2rem;">→</span>
+        </a>
+        <a href="#ecossistema" class="btn-hero-secondary">
+          <span>Explorar Todos os Módulos</span>
+          <span>⚡</span>
+        </a>
+      </div>
+
+      <div class="insurance-badges" style="margin-top: 1rem;">
+        <div class="ins-badge"><span class="check-icon">✓</span> Zero Mensalidades a Terceiros</div>
+        <div class="ins-badge"><span class="check-icon">✓</span> 100% Conformidade RGPD & CNPD</div>
+        <div class="ins-badge"><span class="check-icon">✓</span> Sincronização Live em Tempo Real (SSE)</div>
+        <div class="ins-badge"><span class="check-icon">✓</span> Carregamento em menos de 600ms</div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Insurance Support Ribbon -->
+  <div class="insurance-bar">
+    <div class="container">
+      <div class="insurance-title">Pronto para Atendimento Particular & Principais Subsistemas em Portugal</div>
+      <div class="insurance-badges">
+        <div class="ins-badge"><span class="check-icon">●</span> ADSE (Direto / Reembolso)</div>
+        <div class="ins-badge"><span class="check-icon">●</span> Médis</div>
+        <div class="ins-badge"><span class="check-icon">●</span> Multicare (Fidelidade)</div>
+        <div class="ins-badge"><span class="check-icon">●</span> AdvanceCare</div>
+        <div class="ins-badge"><span class="check-icon">●</span> SNS (Serviço Nacional de Saúde)</div>
+        <div class="ins-badge"><span class="check-icon">●</span> SAMS / Allianz / Tranquilidade</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Metrics Strip -->
+  <div class="stats-strip">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-big text-gold-gradient">+42%</div>
+          <div style="font-weight:700; color:white;">Novas Consultas</div>
+          <div style="font-size:0.78rem; color:var(--text-dim);">Marcações automáticas 24/7</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-big" style="color:var(--emerald-light);">-85%</div>
+          <div style="font-weight:700; color:white;">Taxa de No-Shows</div>
+          <div style="font-size:0.78rem; color:var(--text-dim);">Lembretes 1-Click no WhatsApp</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-big text-purple-gradient">&lt; 600ms</div>
+          <div style="font-weight:700; color:white;">Velocidade de Acesso</div>
+          <div style="font-size:0.78rem; color:var(--text-dim);">Next.js 16 + Turso Edge</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-big" style="color:var(--gold-light);">100%</div>
+          <div style="font-weight:700; color:white;">Soberania dos Dados</div>
+          <div style="font-size:0.78rem; color:var(--text-dim);">Base de dados privada da clínica</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section: Dual Ecosystem Explorer (Client Side vs Dashboard Side) -->
+  <section id="ecossistema">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Visão 360º da Plataforma</span>
+        <h2 class="section-title">Todos os Módulos Desenvolvidos<br /><em class="text-gold-gradient">Para o Paciente e
+            Para a Gestão Clínica</em></h2>
+        <p class="section-desc">
+          Alterne entre a experiência do paciente (Front-End de alta conversão) e o painel de controlo da equipa médica
+          e receção (Dashboard Admin).
+        </p>
+      </div>
+
+      <!-- Toggle Switch -->
+      <div class="ecosystem-toggle-bar reveal">
+        <button class="btn-eco-toggle active" id="btn-view-client" onclick="showEcoView('client')">
+          <span>👁️ Visão do Paciente (Client-Side)</span>
+        </button>
+        <button class="btn-eco-toggle" id="btn-view-admin" onclick="showEcoView('admin')">
+          <span>⚙️ Visão da Direção & Receção (Dashboard Admin)</span>
+        </button>
+      </div>
+
+      <!-- View 1: Client-Side Features -->
+      <div id="eco-client-view" class="eco-view-container active reveal">
+        <div class="features-grid-dual">
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">🩺</div>
+              <span class="dual-badge badge-gold-pill">Inovação 2026</span>
+            </div>
+            <h3>Triagem Anatómica 3D & Sintomas</h3>
+            <p>O paciente clica no modelo corporal 3D (cervical, ombro, lombar, joelho, ATM) e a plataforma filtra
+              automaticamente a especialidade médica indicada.</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Modelo anatómico interativo com rotação e hover</li>
+              <li><span class="check">✓</span> Pré-anamnese clínica enviada antes da consulta</li>
+              <li><span class="check">✓</span> Conversão 3x superior a formulários estáticos</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">🗓️</div>
+              <span class="dual-badge badge-emerald-pill">Conversão 24/7</span>
+            </div>
+            <h3>Agendamento Online com Slots em Tempo Real</h3>
+            <p>Escolha de data, hora e terapeuta com deteção de horários bloqueados e seleção de subsistema (ADSE,
+              Médis, Multicare, SNS).</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Confirmação imediata no ecrã e WhatsApp</li>
+              <li><span class="check">✓</span> Opção de agendamento de sessões individuais ou pacotes</li>
+              <li><span class="check">✓</span> Interface adaptada a telemóveis e tablets</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">💎</div>
+              <span class="dual-badge badge-purple-pill">Pólos Médicos</span>
+            </div>
+            <h3>Hub de Serviços & Especialidades</h3>
+            <p>Apresentação detalhada dos tratamentos de Fisioterapia Geral, Desportiva, Reabilitação Post-AVC e
+              Estética Médica Avançada (Criolipólise, Radiofrequência).</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Duração das sessões e preçário transparente</li>
+              <li><span class="check">✓</span> Indicações e contraindicações clínicas</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">✨</div>
+              <span class="dual-badge badge-cyan-pill">Prova Social</span>
+            </div>
+            <h3>Galeria Antes/Depois Interativa</h3>
+            <p>Slider interativo que permite ao paciente comparar visualmente a evolução e resultados reais dos
+              tratamentos estéticos e posturais.</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Slider com controlo de arraste suave</li>
+              <li><span class="check">✓</span> Avaliações verificadas de pacientes (4.9/5 estrelas)</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">🌍</div>
+              <span class="dual-badge badge-gold-pill">Multilingue</span>
+            </div>
+            <h3>Localização PT / EN / FR</h3>
+            <p>Suporte multilíngue completo para atrair tanto a comunidade local em Portugal como o mercado de
+              expatriados e turismo de saúde.</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Deteção automática do idioma do utilizador</li>
+              <li><span class="check">✓</span> SEO internacional configurado</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">📝</div>
+              <span class="dual-badge badge-emerald-pill">Autoridade SEO</span>
+            </div>
+            <h3>Blog Clínico & Schema MedicalBusiness</h3>
+            <p>Artigos médicos com dados estruturados para posicionar a clínica no topo do Google para pesquisas como
+              "Fisioterapia Lisboa" ou "Drenagem Linfática Cascais".</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Schema.org MedicalBusiness JSON-LD</li>
+              <li><span class="check">✓</span> Artigos com FAQs e autoridade clínica</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- View 2: Dashboard Admin Features -->
+      <div id="eco-admin-view" class="eco-view-container reveal">
+        <div class="features-grid-dual">
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">📁</div>
+              <span class="dual-badge badge-purple-pill">Prontuário Médico</span>
+            </div>
+            <h3>Dossier Clínico EHR com Escala EVA</h3>
+            <p>Histórico clínico completo do paciente com tags de patologia (#Lombalgia, #Tendinopatia), notas de
+              consulta e gráfico de evolução da dor sessão a sessão.</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Registo da pontuação de dor EVA (1 a 10)</li>
+              <li><span class="check">✓</span> Histórico de intervenções e médico prescritor</li>
+              <li><span class="check">✓</span> Acesso seguro e estrito controlo de permissões</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">🧾</div>
+              <span class="dual-badge badge-gold-pill">Fiscalidade PT</span>
+            </div>
+            <h3>Faturação Artigo 9.º do CIVA & Validador NIF</h3>
+            <p>Emissão de faturas-recibo com isenção legal de IVA para atos de saúde, validação algorítmica de NIF (9
+              dígitos) e suporte a pagamentos MB Way e Multibanco.</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Numeração sequencial contínua (ex: FT 2026/0001)</li>
+              <li><span class="check">✓</span> Exportação em PDF oficial para o paciente e TOC</li>
+              <li><span class="check">✓</span> Discriminação do subsistema (ADSE / Médis)</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">💊</div>
+              <span class="dual-badge badge-cyan-pill">Prescrição 1-Click</span>
+            </div>
+            <h3>Prescrições Digitais & Exercícios Domiciliares</h3>
+            <p>Gere planos de exercícios clínicos caseiros em PDF estruturado e envie diretamente para o WhatsApp do
+              paciente com séries, repetições e orientações.</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Assinatura e cédula do profissional de saúde</li>
+              <li><span class="check">✓</span> Envio imediato por WhatsApp ou E-mail</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">🔁</div>
+              <span class="dual-badge badge-emerald-pill">Produtividade</span>
+            </div>
+            <h3>Agendamento de Pacotes Recorrentes</h3>
+            <p>Marque 5, 10 ou 20 sessões de fisioterapia ou estética numa única ação, com cadência personalizada (ex:
+              Seg/Qua/Sex às 11h) e resolução de conflitos.</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Validação automática contra sobreposição de gabinetes</li>
+              <li><span class="check">✓</span> Controlo de sessões realizadas vs. pendentes</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">⚡</div>
+              <span class="dual-badge badge-gold-pill">Atalho Rápido</span>
+            </div>
+            <h3>Command Palette (Ctrl + K) & Live SSE</h3>
+            <p>Navegação por atalho de teclado global para pesquisar pacientes por NIF ou telefone em menos de 50ms, com
+              sincronização em tempo real entre todos os ecrãs.</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Atualização live sem recarregar a página</li>
+              <li><span class="check">✓</span> Atalhos para emissão de faturas e bloqueio de slots</li>
+            </ul>
+          </div>
+
+          <div class="dual-card">
+            <div class="dual-card-header">
+              <div class="dual-icon">📊</div>
+              <span class="dual-badge badge-purple-pill">Gestão Financeira</span>
+            </div>
+            <h3>Analytics, Taxa de Ocupação & Telemetria</h3>
+            <p>Painel de bordo com receita mensal, taxa de faltas (no-shows), distribuição de subsistemas de saúde e
+              estado de sincronização da base de dados Turso/SQLite.</p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Gráficos de faturação e projeção de caixa</li>
+              <li><span class="check">✓</span> Drawer de telemetria e diagnóstico do servidor</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Section: Interactive Live Demonstrator -->
+  <section id="demonstracao" style="background: var(--dark-surface);">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Demonstração Funcional</span>
+        <h2 class="section-title">Teste os Módulos no Ecrã</h2>
+        <p class="section-desc">Clique nas abas para interagir com a simulação dos principais fluxos da plataforma.</p>
+      </div>
+
+      <div class="interactive-demo-card reveal">
+        <div class="demo-selector-row">
+          <button class="demo-tab-btn active" onclick="switchDemoTab('demo-triage')">🩺 Triagem 3D & Sintomas</button>
+          <button class="demo-tab-btn" onclick="switchDemoTab('demo-dossier')">📁 Dossier Clínico (EHR + EVA)</button>
+          <button class="demo-tab-btn" onclick="switchDemoTab('demo-invoicing')">🧾 Faturação Art. 9º CIVA</button>
+          <button class="demo-tab-btn" onclick="switchDemoTab('demo-whatsapp')">📲 WhatsApp & Prescrições</button>
+        </div>
+
+        <!-- Demo 1: 3D Body Triage -->
+        <div id="demo-triage" class="demo-panel active">
           <div>
-            <h3>Site lento e desatualizado</h3>
-            <p>70% dos utilizadores abandonam um site que demora mais de 3 segundos a carregar. Um site lento significa pacientes para a concorrencia.</p>
+            <span class="dual-badge badge-gold-pill">Visão do Paciente</span>
+            <h3 style="font-size:1.45rem; margin-top:0.8rem; margin-bottom:0.6rem; color:white;">Triagem Anatómica
+              Inteligente</h3>
+            <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:1.2rem;">
+              O paciente escolhe a região corporal de desconforto e o sistema indica imediatamente o tratamento e
+              profissional mais qualificado para a patologia.
+            </p>
+            <div style="font-size:0.82rem; font-weight:700; color:var(--gold-light); margin-bottom:0.5rem;">ZONAS
+              CORPORAIS DE TRIAGEM RÁPIDA:</div>
+            <div class="body-map-interactive">
+              <button class="body-zone-btn selected" onclick="selectZone('cervical', this)">📍 Cervical /
+                Pescoço</button>
+              <button class="body-zone-btn" onclick="selectZone('lombar', this)">📍 Lombar & Ciática</button>
+              <button class="body-zone-btn" onclick="selectZone('ombro', this)">📍 Ombro & Manguito</button>
+              <button class="body-zone-btn" onclick="selectZone('joelho', this)">📍 Joelho & Menisco</button>
+            </div>
+          </div>
+          <div class="mockup-frame">
+            <div class="mockup-header">
+              <div class="mockup-dots">
+                <div class="mockup-dot dot-red"></div>
+                <div class="mockup-dot dot-yellow"></div>
+                <div class="mockup-dot dot-green"></div>
+              </div>
+              <div class="mockup-url">triagem-3d/resultado-anamnese</div>
+            </div>
+            <div class="mockup-body" id="triage-result-box">
+              <div style="font-weight:800; color:var(--white); font-size:1.05rem; margin-bottom:0.4rem;">Região
+                Selecionada: Cervical / Pescoço</div>
+              <div style="font-size:0.82rem; color:var(--gold-light); margin-bottom:0.8rem;">Especialidade Recomendada:
+                Fisioterapia Músculo-Esquelética</div>
+              <div
+                style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); padding:0.9rem; border-radius:10px; font-size:0.84rem; color:var(--text-muted); margin-bottom:1rem;">
+                <strong>Protocolo Terapêutico Sugerido:</strong> Avaliação postural computorizada, mobilização articular
+                cervical e terapia miofascial (60 min).
+              </div>
+              <button
+                style="background:linear-gradient(135deg, var(--gold), var(--gold-dark)); color:#0A0A14; border:none; padding:0.75rem; border-radius:10px; font-weight:800; font-size:0.85rem; width:100%; cursor:pointer;">
+                Agendar Consulta com Dr(a). Especialista →
+              </button>
+            </div>
           </div>
         </div>
-        <div class="problem-card">
-          <div class="problem-icon">&#128245;</div>
+
+        <!-- Demo 2: EHR Dossier & EVA -->
+        <div id="demo-dossier" class="demo-panel">
           <div>
-            <h3>Sem marcacoes online</h3>
-            <p>Os pacientes preferem marcar as 23h via telemovel. Sem sistema digital, perde marcacoes enquanto dorme.</p>
+            <span class="dual-badge badge-purple-pill">Visão Clínica</span>
+            <h3 style="font-size:1.45rem; margin-top:0.8rem; margin-bottom:0.6rem; color:white;">Dossier com Escala de
+              Dor EVA</h3>
+            <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:1.2rem;">
+              Registo quantitativo da dor (1-10) em cada sessão. O gráfico gera prova visual tangível da recuperação do
+              paciente.
+            </p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Acompanhamento por sessão realizada</li>
+              <li><span class="check">✓</span> Tags clínicas: #LombalgiaCrónica, #ADSE</li>
+            </ul>
+          </div>
+          <div class="mockup-frame">
+            <div class="mockup-header">
+              <div class="mockup-dots">
+                <div class="mockup-dot dot-red"></div>
+                <div class="mockup-dot dot-yellow"></div>
+                <div class="mockup-dot dot-green"></div>
+              </div>
+              <div class="mockup-url">admin/pacientes/dossier-0842</div>
+            </div>
+            <div class="mockup-body">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+                <div>
+                  <div style="font-weight:800; font-size:1.05rem; color:white;">Maria João Antunes (48 anos)</div>
+                  <div style="font-size:0.78rem; color:var(--gold-light);">ADSE: 198472910 • Médico Ref: Dr. Ramos</div>
+                </div>
+                <span class="dual-badge badge-emerald-pill">7 / 10 Sessões</span>
+              </div>
+              <div
+                style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); padding:0.8rem; border-radius:10px; margin-bottom:0.8rem;">
+                <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:0.4rem;">EVOLUÇÃO
+                  DA DOR (ESCALA EVA 1-10):</div>
+                <div style="display:flex; align-items:flex-end; gap:0.5rem; height:55px;">
+                  <div
+                    style="flex:1; background:rgba(239,68,68,0.8); height:90%; border-radius:4px; text-align:center; font-size:0.68rem; color:white;">
+                    S1: 9</div>
+                  <div
+                    style="flex:1; background:rgba(245,158,11,0.8); height:70%; border-radius:4px; text-align:center; font-size:0.68rem; color:white;">
+                    S3: 7</div>
+                  <div
+                    style="flex:1; background:rgba(245,158,11,0.8); height:50%; border-radius:4px; text-align:center; font-size:0.68rem; color:white;">
+                    S5: 5</div>
+                  <div
+                    style="flex:1; background:rgba(16,185,129,0.8); height:30%; border-radius:4px; text-align:center; font-size:0.68rem; color:white;">
+                    S7: 3</div>
+                  <div
+                    style="flex:1; background:rgba(16,185,129,0.95); height:15%; border-radius:4px; text-align:center; font-size:0.68rem; color:white;">
+                    Meta: 1</div>
+                </div>
+              </div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">
+                <strong>Nota Clínica (24/08):</strong> Amplitude de ombro restaurada a 90%. Paciente sem dor em repouso.
+              </div>
+            </div>
           </div>
         </div>
-        <div class="problem-card">
-          <div class="problem-icon">&#128269;</div>
+
+        <!-- Demo 3: Invoicing -->
+        <div id="demo-invoicing" class="demo-panel">
           <div>
-            <h3>Invisivel no Google</h3>
-            <p>Sem SEO local e dados estruturados, a sua clinica nao aparece quando alguem pesquisa "fisioterapia Lisboa" ou "estetica Porto".</p>
+            <span class="dual-badge badge-gold-pill">Fiscalidade Oficial</span>
+            <h3 style="font-size:1.45rem; margin-top:0.8rem; margin-bottom:0.6rem; color:white;">Faturação com Isenção
+              Art. 9º CIVA</h3>
+            <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:1.2rem;">
+              Validação matemática do NIF português no ato da emissão e aplicação automática da isenção de IVA para atos
+              médicos e paramédicos.
+            </p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Numeração contínua e imutável (FT 2026/0142)</li>
+              <li><span class="check">✓</span> Exportação imediata em PDF formal</li>
+            </ul>
+          </div>
+          <div class="mockup-frame">
+            <div class="mockup-header">
+              <div class="mockup-dots">
+                <div class="mockup-dot dot-red"></div>
+                <div class="mockup-dot dot-yellow"></div>
+                <div class="mockup-dot dot-green"></div>
+              </div>
+              <div class="mockup-url">admin/faturacao/FT-2026-0142.pdf</div>
+            </div>
+            <div class="mockup-body" style="background:#0F172A;">
+              <div
+                style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.6rem; margin-bottom:0.8rem;">
+                <div>
+                  <div style="font-weight:900; color:white; font-size:0.95rem;">FATURA-RECIBO FT 2026/0142</div>
+                  <div style="font-size:0.72rem; color:var(--text-dim);">Data: 24/08/2026 • Método: MB WAY</div>
+                </div>
+                <span class="dual-badge badge-emerald-pill">LIQUIDADA</span>
+              </div>
+              <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.8rem;">
+                Cliente: <strong>Pedro Albuquerque</strong> • NIF: <strong>238 912 049</strong> (Válido ✓)<br />
+                Subsistema: <strong>Multicare Saúde</strong> (Apólice: MC-991204)
+              </div>
+              <div
+                style="background:rgba(0,0,0,0.3); padding:0.6rem; border-radius:6px; font-size:0.78rem; margin-bottom:0.8rem;">
+                <div style="display:flex; justify-content:space-between; color:white;">
+                  <span>Sessão de Fisioterapia Especializada</span>
+                  <span>55,00 €</span>
+                </div>
+                <div style="font-size:0.68rem; color:var(--gold-light); margin-top:0.2rem;">IVA: 0% — Isenção Artigo 9.º
+                  do CIVA (Saúde)</div>
+              </div>
+              <div
+                style="display:flex; justify-content:space-between; font-weight:800; font-size:0.95rem; color:var(--emerald-light);">
+                <span>TOTAL PAGO:</span>
+                <span>55,00 €</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="problem-card">
-          <div class="problem-icon">&#9878;&#65039;</div>
+
+        <!-- Demo 4: WhatsApp -->
+        <div id="demo-whatsapp" class="demo-panel">
           <div>
-            <h3>Risco de incumprimento RGPD</h3>
-            <p>Sites medicos sem conformidade de protecao de dados podem ser multados pela CNPD. A conformidade nao e opcional.</p>
+            <span class="dual-badge badge-emerald-pill">Automação Omnicanal</span>
+            <h3 style="font-size:1.45rem; margin-top:0.8rem; margin-bottom:0.6rem; color:white;">Lembretes & Prescrições
+              no WhatsApp</h3>
+            <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:1.2rem;">
+              Reduza os no-shows para perto de zero com lembretes automáticos 24h antes da consulta e envio das
+              prescrições diretamente para o telemóvel do paciente.
+            </p>
+            <ul class="dual-checklist">
+              <li><span class="check">✓</span> Confirmação ou reagendamento em 1 clique</li>
+              <li><span class="check">✓</span> Envio do PDF de exercícios de reabilitação caseira</li>
+            </ul>
           </div>
+          <div class="mockup-frame">
+            <div class="mockup-header">
+              <div class="mockup-dots">
+                <div class="mockup-dot dot-red"></div>
+                <div class="mockup-dot dot-yellow"></div>
+                <div class="mockup-dot dot-green"></div>
+              </div>
+              <div class="mockup-url">whatsapp-api/notificacoes</div>
+            </div>
+            <div class="mockup-body" style="background:#0D1F17;">
+              <div
+                style="background:rgba(255,255,255,0.06); padding:0.8rem; border-radius:10px; font-size:0.8rem; line-height:1.5; color:#E2E8F0; margin-bottom:0.8rem; border-left:3px solid #10B981;">
+                👋 Olá Maria! Lembramos a sua consulta de <strong>Fisioterapia</strong> amanhã às <strong>10:30</strong>
+                na Digital Clínica.<br /><br />
+                📍 Av. da Liberdade, Lisboa<br />
+                Por favor confirme a sua presença clicando no botão abaixo:
+              </div>
+              <button
+                style="background:#10B981; color:white; border:none; padding:0.6rem; border-radius:8px; font-weight:800; font-size:0.8rem; width:100%; cursor:pointer;">
+                ✓ Confirmar Presença (WhatsApp)
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Dynamic ROI Calculator -->
+  <section id="roi-calc">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Retorno sobre o Investimento</span>
+        <h2 class="section-title">Calculadora de Rentabilidade<br /><em class="text-gold-gradient">Para a sua Clínica em
+            Portugal</em></h2>
+        <p class="section-desc">Mova os controlos para simular o ganho anual e a poupança de tempo operacional.</p>
+      </div>
+
+      <div class="calculator-wrapper reveal">
+        <div class="calc-grid">
+
+          <div class="calc-controls">
+            <div class="calc-input-group">
+              <div class="calc-label-row">
+                <span>Número de Consultas / Mês:</span>
+                <span class="calc-val-badge" id="val-consultas">350 consultas</span>
+              </div>
+              <input type="range" class="calc-slider" id="slider-consultas" min="100" max="2000" step="50" value="350"
+                oninput="updateROI()" />
+            </div>
+
+            <div class="calc-input-group">
+              <div class="calc-label-row">
+                <span>Valor Médio por Consulta:</span>
+                <span class="calc-val-badge" id="val-preco">55 €</span>
+              </div>
+              <input type="range" class="calc-slider" id="slider-preco" min="30" max="150" step="5" value="55"
+                oninput="updateROI()" />
+            </div>
+
+            <div class="calc-input-group">
+              <div class="calc-label-row">
+                <span>Taxa Atual de Faltas (No-Shows):</span>
+                <span class="calc-val-badge" id="val-noshow">18%</span>
+              </div>
+              <input type="range" class="calc-slider" id="slider-noshow" min="5" max="30" step="1" value="18"
+                oninput="updateROI()" />
+            </div>
+
+            <div class="calc-input-group">
+              <div class="calc-label-row">
+                <span>Horas Semanais em Tarefas de Receção:</span>
+                <span class="calc-val-badge" id="val-horas">15 horas/sem</span>
+              </div>
+              <input type="range" class="calc-slider" id="slider-horas" min="5" max="40" step="1" value="15"
+                oninput="updateROI()" />
+            </div>
+          </div>
+
+          <div class="calc-results-box">
+            <div class="res-row">
+              <span class="res-label">💰 Receita Recuperada em No-Shows:</span>
+              <span class="res-val" id="res-noshow-val">+ 35.800 € / ano</span>
+            </div>
+
+            <div class="res-row">
+              <span class="res-label">⏱️ Produtividade Administrativa Poupada:</span>
+              <span class="res-val" id="res-tempo-val">~520 horas / ano</span>
+            </div>
+
+            <div class="res-row">
+              <span class="res-label">📈 Novos Pacientes via Marcação 24/7:</span>
+              <span class="res-val" id="res-novos-val">+ 21.400 € / ano</span>
+            </div>
+
+            <div class="res-row res-highlight">
+              <div>
+                <div style="font-size:0.75rem; font-weight:800; text-transform:uppercase; color:var(--gold-light);">
+                  IMPACTO FINANCEIRO ANUAL ESTIMADO:</div>
+                <div class="res-val-big" id="res-total-val">+ 57.200 € / ano</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.75rem; color:var(--text-muted);">Tempo de Amortização:</div>
+                <div style="font-size:1.15rem; font-weight:900; color:var(--emerald-light);" id="res-payback">~ 4 a 6
+                  Semanas</div>
+              </div>
+            </div>
+
+            <div style="text-align:center; margin-top:0.4rem;">
+              <a href="roi-report.html"
+                style="font-size:0.85rem; color:var(--gold); text-decoration:none; font-weight:700;">
+                Consulte o Relatório ROI Completo com a Metodologia dos 3 Pilares →
+              </a>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
   </section>
 
-  <section id="solucao">
-    <div class="section-inner">
-      <div class="reveal">
-        <div class="section-tag">A Solucao</div>
-        <h2 class="section-title">Uma plataforma completa,<br/><em>pronta a funcionar</em></h2>
-        <p class="section-sub">Desenvolvida com as tecnologias mais modernas do mercado, entregue com design premium e otimizada para converter visitantes em pacientes.</p>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card reveal">
-          <div class="feature-icon" style="background:rgba(124,58,237,0.15);">&#128197;</div>
-          <h3>Sistema de Marcacoes Online</h3>
-          <p>Os pacientes marcam diretamente no site, 24/7. Gestao completa via painel de administracao com aprovacao, cancelamento e reagendamento.</p>
-          <span class="feature-tag" style="background:rgba(124,58,237,0.15);color:var(--primary-light);">Admin Dashboard incluido</span>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon" style="background:rgba(6,182,212,0.15);">&#9889;</div>
-          <h3>Performance Ultra-Rapida</h3>
-          <p>Next.js 16 com geracao estatica, imagens AVIF/WebP automaticas e cache de 1 ano. Score de performance Google Lighthouse proximo de 100.</p>
-          <span class="feature-tag" style="background:rgba(6,182,212,0.15);color:var(--accent);">Core Web Vitals otimizado</span>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon" style="background:rgba(16,185,129,0.15);">&#128274;</div>
-          <h3>Seguranca e RGPD Compliant</h3>
-          <p>Cabecalhos CSP, X-Frame-Options, autenticacao segura com bcrypt e sessoes encriptadas. Conformidade total com regulamentos medicos europeus.</p>
-          <span class="feature-tag" style="background:rgba(16,185,129,0.15);color:var(--accent2);">CNPD ready</span>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon" style="background:rgba(245,158,11,0.15);">&#127757;</div>
-          <h3>SEO Local de Alto Nivel</h3>
-          <p>Schema.org MedicalBusiness + LocalBusiness JSON-LD, sitemap automatico e robots.txt. Visivel no Google Maps e pesquisas locais desde o primeiro dia.</p>
-          <span class="feature-tag" style="background:rgba(245,158,11,0.15);color:var(--gold);">Google My Business optimizado</span>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon" style="background:rgba(239,68,68,0.15);">&#9997;&#65039;</div>
-          <h3>Blog Medico Integrado</h3>
-          <p>Publique artigos de saude diretamente do painel. Conteudo que posiciona a sua clinica como autoridade e atrai trafego organico gratuito.</p>
-          <span class="feature-tag" style="background:rgba(239,68,68,0.15);color:#F87171;">CMS incluido</span>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-icon" style="background:rgba(124,58,237,0.15);">&#127912;</div>
-          <h3>Design Premium e Animacoes 3D</h3>
-          <p>Design de luxo com animacoes Framer Motion, Three.js 3D e paleta de cores personalizada. A sua clinica tera o melhor site da cidade, garantido.</p>
-          <span class="feature-tag" style="background:rgba(124,58,237,0.15);color:var(--primary-light);">Totalmente personalizavel</span>
-        </div>
+  <!-- Section: Pricing & Commercial Plans -->
+  <section id="precos" style="background: var(--dark-surface);">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Investimento Transparente</span>
+        <h2 class="section-title">Pacotes de Implementação<br /><em class="text-gold-gradient">Sem Custos
+            Escondidos</em></h2>
+        <p class="section-desc">Entregamos a plataforma chave-na-mão, personalizada com a sua marca e pronta a faturar.
+        </p>
       </div>
 
-      <div class="reveal" style="margin-top:4rem;">
-        <h3 style="font-size:1.3rem;font-weight:800;margin-bottom:0.5rem;">Como comparamos com a concorrencia</h3>
-        <p style="color:var(--muted);font-size:0.9rem;">WordPress basico vs. a nossa plataforma</p>
-      </div>
-      <div class="reveal" style="overflow-x:auto;">
-        <table class="compare-table">
-          <thead>
-            <tr>
-              <th>Funcionalidade</th>
-              <th>WordPress Generico</th>
-              <th>A Nossa Plataforma</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Velocidade de carregamento</td><td class="cross">Lento (3-8 seg)</td><td class="check">Ultra-rapido (menos 1 seg)</td></tr>
-            <tr><td>Sistema de marcacoes + Admin</td><td class="cross">Plugin extra (50-200 EUR/ano)</td><td class="check">Incluido</td></tr>
-            <tr><td>Conformidade RGPD medica</td><td class="cross">Manual e incompleta</td><td class="check">Nativa e completa</td></tr>
-            <tr><td>SEO Schema.org MedicalBusiness</td><td class="cross">Nao incluido</td><td class="check">Configurado de fabrica</td></tr>
-            <tr><td>Design premium e animacoes</td><td class="cross">Templates genericos</td><td class="check">100% personalizado</td></tr>
-            <tr><td>Notas de pacientes</td><td class="cross">Nao disponivel</td><td class="check">Sistema integrado</td></tr>
-            <tr><td>Custo de licencas mensais</td><td class="cross">50-300 EUR/mes em plugins</td><td class="check">Zero licencas externas</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+      <div class="pricing-grid reveal">
 
-  <section id="precos">
-    <div class="section-inner">
-      <div class="reveal">
-        <div class="section-tag">Precos Transparentes</div>
-        <h2 class="section-title">Investimento claro,<br/><em>retorno garantido</em></h2>
-        <p class="section-sub">Sem surpresas, sem custos escondidos. Escolha o pacote que melhor se adapta a sua clinica.</p>
-      </div>
-      <div class="pricing-grid">
-        <div class="pricing-card reveal">
-          <div class="pricing-name">Essencial</div>
-          <div class="pricing-desc">Para clinicas que precisam de uma presenca digital profissional e credivel.</div>
-          <div class="pricing-price">2.500 <span>EUR</span></div>
-          <div class="pricing-period">Pagamento unico - Entrega em 3 semanas</div>
-          <ul class="pricing-features">
-            <li>Site completo ate 10 paginas</li>
-            <li>Design premium personalizado</li>
-            <li>Formulario de contacto e marcacao</li>
-            <li>SEO local + Schema.org MedicalBusiness</li>
-            <li>Conformidade RGPD basica</li>
-            <li>Responsive (mobile + tablet)</li>
-            <li>1 mes de suporte pos-lancamento</li>
+        <!-- Essencial -->
+        <div class="pricing-card">
+          <div class="tier-title">Essencial Clínico</div>
+          <div class="tier-desc">Para consultórios e terapeutas que procuram presença digital de excelência e marcações
+            online 24/7.</div>
+          <div class="tier-price-row">
+            <div class="tier-price">2.900</div>
+            <div class="tier-currency">€</div>
+          </div>
+          <div class="tier-terms">Pagamento único • Implementação em 3 semanas</div>
+          <ul class="tier-features-list">
+            <li><span class="bullet">✓</span> Website completo até 10 páginas otimizadas</li>
+            <li><span class="bullet">✓</span> Sistema de Marcações Online 24/7</li>
+            <li><span class="bullet">✓</span> Painel de Gestão da Agenda e Vagas</li>
+            <li><span class="bullet">✓</span> SEO Local Google Maps & Schema MedicalBusiness</li>
+            <li><span class="bullet">✓</span> Conformidade RGPD & CNPD de fábrica</li>
+            <li><span class="bullet">✓</span> 30 dias de suporte pós-lançamento</li>
           </ul>
-          <a href="#contacto" class="pricing-cta">Comecar</a>
+          <a href="#contacto" class="btn-tier btn-tier-outline">Selecionar Essencial</a>
         </div>
 
-        <div class="pricing-card popular reveal">
-          <div class="popular-badge">Mais Escolhido</div>
-          <div class="pricing-name">Profissional</div>
-          <div class="pricing-desc">A plataforma completa para clinicas que querem liderar no digital.</div>
-          <div class="pricing-price" style="background:linear-gradient(135deg,var(--primary-light),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">4.500 <span style="-webkit-text-fill-color:var(--muted)">EUR</span></div>
-          <div class="pricing-period">Pagamento unico - Entrega em 5 semanas</div>
-          <ul class="pricing-features">
-            <li>Tudo do plano Essencial</li>
-            <li>Sistema de marcacoes online completo</li>
-            <li>Painel de administracao (agenda, pacientes)</li>
-            <li>Blog medico com CMS</li>
-            <li>Analytics integrados sem cookies</li>
-            <li>Bilingue PT + EN</li>
-            <li>Conformidade RGPD avancada</li>
-            <li>Animacoes premium (3D, Framer Motion)</li>
-            <li>3 meses de suporte prioritario</li>
+        <!-- Profissional Clínico (Featured) -->
+        <div class="pricing-card featured">
+          <div class="pricing-badge-popular">Mais Escolhido • Solução Completa</div>
+          <div class="tier-title" style="color:var(--gold-light);">Profissional Clínico</div>
+          <div class="tier-desc">O ecossistema total para clínicas privadas que querem automatizar a receção e liderar o
+            mercado.</div>
+          <div class="tier-price-row">
+            <div class="tier-price text-gold-gradient">4.900</div>
+            <div class="tier-currency">€</div>
+          </div>
+          <div class="tier-terms">Pagamento único • Implementação em 5 semanas</div>
+          <ul class="tier-features-list">
+            <li><span class="bullet">✓</span> <strong>Tudo do Plano Essencial</strong></li>
+            <li><span class="bullet">✓</span> <strong>Triagem Anatómica 3D & Seletor de Sintomas</strong></li>
+            <li><span class="bullet">✓</span> <strong>Dossier Clínico EHR com Gráfico de Dor EVA</strong></li>
+            <li><span class="bullet">✓</span> <strong>Faturação Médica Art. 9º CIVA + Validador NIF</strong></li>
+            <li><span class="bullet">✓</span> <strong>Agendamento em Bloco para Pacotes Recorrentes</strong></li>
+            <li><span class="bullet">✓</span> <strong>Prescrições Digitais com Envio em PDF</strong></li>
+            <li><span class="bullet">✓</span> <strong>Automação WhatsApp 1-Click para Anti-No-Show</strong></li>
+            <li><span class="bullet">✓</span> <strong>Command Palette (Ctrl+K) & Sincronização Live SSE</strong></li>
+            <li><span class="bullet">✓</span> Formação da Equipa e 90 dias de suporte prioritário</li>
           </ul>
-          <a href="#contacto" class="pricing-cta">Quero Este</a>
+          <a href="#contacto" class="btn-tier btn-tier-featured">Garantir Plano Profissional</a>
         </div>
 
-        <div class="pricing-card reveal">
-          <div class="pricing-name">Enterprise</div>
-          <div class="pricing-desc">Para grupos de clinicas ou com necessidades especificas avancadas.</div>
-          <div class="pricing-price">7.500 <span>EUR+</span></div>
-          <div class="pricing-period">Preco base - Orcamento personalizado</div>
-          <ul class="pricing-features">
-            <li>Tudo do plano Profissional</li>
-            <li>Multi-sede e Multi-medico</li>
-            <li>Integracao com software de gestao</li>
-            <li>Portal do paciente (historial)</li>
-            <li>Pagamentos online (MB Way)</li>
-            <li>Relatorios avancados</li>
-            <li>SLA de suporte dedicado (12 meses)</li>
-            <li>Formacao da equipa</li>
+        <!-- Enterprise -->
+        <div class="pricing-card">
+          <div class="tier-title">Enterprise Multi-Sede</div>
+          <div class="tier-desc">Para grupos médicos com múltiplas unidades (Lisboa, Porto, Algarve), dezenas de
+            terapeutas e ERP.</div>
+          <div class="tier-price-row">
+            <div class="tier-price">7.900</div>
+            <div class="tier-currency">€+</div>
+          </div>
+          <div class="tier-terms">Orçamento sob medida • Arquitetura dedicada</div>
+          <ul class="tier-features-list">
+            <li><span class="bullet">✓</span> <strong>Tudo do Plano Profissional</strong></li>
+            <li><span class="bullet">✓</span> Gestão Multi-Clínica e Multi-Especialidade</li>
+            <li><span class="bullet">✓</span> Portal do Paciente com Histórico de Documentos</li>
+            <li><span class="bullet">✓</span> Pagamentos Diretos MB Way & Cartão Integrados</li>
+            <li><span class="bullet">✓</span> Integração com Software de Contabilidade / ERP</li>
+            <li><span class="bullet">✓</span> SLA de Suporte Dedicado de 12 Meses</li>
           </ul>
-          <a href="#contacto" class="pricing-cta">Falar Connosco</a>
+          <a href="#contacto" class="btn-tier btn-tier-outline">Falar com Consultor</a>
         </div>
-      </div>
 
-      <div class="urgency-banner reveal">
-        <div class="urgency-icon">&#128296;</div>
-        <div class="urgency-text">
-          <h4>Manutencao Mensal Opcional - a partir de 150 EUR/mes</h4>
-          <p>Atualizacoes de seguranca, backups diarios, novos conteudos, suporte tecnico prioritario e relatorios mensais de performance.</p>
-        </div>
-      </div>
-
-      <div class="roi-section reveal">
-        <div class="roi-grid">
-          <div>
-            <div class="roi-title">O ROI e <em>obvio</em></div>
-            <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1.2rem;">Com um sistema de marcacoes online, a sua clinica pode recuperar o investimento nos primeiros 2-3 meses.</p>
-            <a href="roi-report.html" style="display:inline-flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,var(--gold),#D97706);color:white;padding:0.65rem 1.4rem;border-radius:50px;font-size:0.85rem;font-weight:700;text-decoration:none;box-shadow:0 0 20px rgba(245,158,11,0.3);margin-bottom:1.5rem;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-              ⚡ Ver Relatório ROI Completo (3 Pilares) →
-            </a>
-            <p style="font-size:0.85rem;color:var(--muted);">* Estimativas conservadoras baseadas em medias do setor de saude privada em Portugal.</p>
-          </div>
-          <div class="roi-numbers">
-            <div class="roi-item"><span class="roi-item-label">Custo medio por consulta/tratamento</span><span class="roi-item-value">60-120 EUR</span></div>
-            <div class="roi-item"><span class="roi-item-label">Marcacoes extra/mes com site otimizado</span><span class="roi-item-value">+10 a 25</span></div>
-            <div class="roi-item"><span class="roi-item-label">Receita extra mensal estimada</span><span class="roi-item-value">600-3.000 EUR</span></div>
-            <div class="roi-item roi-highlight"><span class="roi-item-label">Retorno do investimento em</span><span class="roi-item-value">2-3 meses</span></div>
-          </div>
-        </div>
       </div>
     </div>
   </section>
 
-  <section id="processo">
-    <div class="section-inner">
-      <div class="reveal">
-        <div class="section-tag">O Processo</div>
-        <h2 class="section-title">Do zero ao <em>lancamento</em><br/>em 5 semanas</h2>
-        <p class="section-sub">Um processo estruturado e transparente, sem surpresas. Sabe sempre em que fase esta o seu projeto.</p>
-      </div>
-      <div style="max-width:640px;margin-top:1rem;" class="reveal">
-        <div class="process-steps">
-          <div class="process-step">
-            <div class="step-num">1</div>
-            <div class="step-content">
-              <h3>Reuniao de Descoberta</h3>
-              <p>Percebemos o seu negocio, os seus pacientes-alvo, os servicos, a concorrencia local e os seus objetivos. Esta reuniao e gratuita e sem compromisso.</p>
-              <span class="step-duration">Semana 1 - 1-2h - Online ou presencial</span>
-            </div>
-          </div>
-          <div class="process-step">
-            <div class="step-num">2</div>
-            <div class="step-content">
-              <h3>Design e Aprovacao Visual</h3>
-              <p>Apresentamos mockups do design com a sua identidade visual. So avancamos para o desenvolvimento apos a sua aprovacao.</p>
-              <span class="step-duration">Semana 1-2 - Feedback em 48h</span>
-            </div>
-          </div>
-          <div class="process-step">
-            <div class="step-num">3</div>
-            <div class="step-content">
-              <h3>Desenvolvimento</h3>
-              <p>Construcao da plataforma com todos os conteudos, servicos, precos e fotos reais. Acesso a uma versao de teste privada para acompanhar o progresso.</p>
-              <span class="step-duration">Semanas 2-4 - Atualizacoes semanais</span>
-            </div>
-          </div>
-          <div class="process-step">
-            <div class="step-num">4</div>
-            <div class="step-content">
-              <h3>Revisao e Testes</h3>
-              <p>Teste em todos os dispositivos. Verificacao de velocidade, seguranca, SEO e sistema de marcacoes. Correcoes ilimitadas ate a sua aprovacao.</p>
-              <span class="step-duration">Semana 4-5</span>
-            </div>
-          </div>
-          <div class="process-step">
-            <div class="step-num">5</div>
-            <div class="step-content">
-              <h3>Lancamento e Formacao</h3>
-              <p>Publicacao no seu dominio .pt, configuracao do Google Search Console e formacao de 1h para usar o painel de administracao com confianca.</p>
-              <span class="step-duration">Semana 5 - Suporte pos-lancamento incluido</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="tecnologia">
-    <div class="section-inner">
-      <div class="reveal">
-        <div class="section-tag">Tecnologia</div>
-        <h2 class="section-title">Construido com as <em>melhores</em><br/>tecnologias do mundo</h2>
-        <p class="section-sub">Nao usamos builders lentos ou WordPress desatualizado. A sua clinica merece tecnologia de topo.</p>
-      </div>
-      <div class="tech-grid reveal">
-        <div class="tech-card"><div class="icon">&#9651;</div><h4>Next.js 16</h4><p>Framework lider mundial em performance web</p></div>
-        <div class="tech-card"><div class="icon">&#9883;&#65039;</div><h4>React 19</h4><p>Interface ultra-responsiva e moderna</p></div>
-        <div class="tech-card"><div class="icon">&#128310;</div><h4>TypeScript</h4><p>Codigo robusto, sem erros em producao</p></div>
-        <div class="tech-card"><div class="icon">&#127914;</div><h4>Framer Motion</h4><p>Animacoes fluidas de nivel cinematografico</p></div>
-        <div class="tech-card"><div class="icon">&#127760;</div><h4>Three.js 3D</h4><p>Graficos 3D interativos no browser</p></div>
-        <div class="tech-card"><div class="icon">&#128452;&#65039;</div><h4>SQLite / API</h4><p>Base de dados leve e de alta performance</p></div>
-        <div class="tech-card"><div class="icon">&#128272;</div><h4>iron-session</h4><p>Sessoes seguras e encriptadas</p></div>
-        <div class="tech-card"><div class="icon">&#128444;&#65039;</div><h4>AVIF / WebP</h4><p>Imagens 70% mais leves, carregamento instantaneo</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="testemunhos" style="background:var(--dark2);">
-    <div class="section-inner">
-      <div class="reveal">
-        <div class="section-tag">Testemunhos</div>
-        <h2 class="section-title">Clinicas que ja <em>confiam</em><br/>nesta plataforma</h2>
-      </div>
-      <div class="testimonials-grid">
-        <div class="testimonial-card reveal">
-          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p class="testimonial-text">"Em menos de 3 meses, as marcacoes online representam ja 60% das nossas consultas. O painel de administracao e intuitivo e poupamos horas de trabalho por semana. Excelente investimento."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar" style="background:rgba(124,58,237,0.2);">&#128105;&#8205;&#9877;&#65039;</div>
-            <div><div class="testimonial-name">Dra. Ana Ferreira</div><div class="testimonial-role">Clinica de Fisioterapia - Porto</div></div>
-          </div>
-        </div>
-        <div class="testimonial-card reveal">
-          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p class="testimonial-text">"O design superou todas as expectativas. Os pacientes comentam frequentemente o quao profissional e moderno e o nosso site. Aparecemos agora em primeiro no Google para 'medicina estetica Lisboa'."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar" style="background:rgba(6,182,212,0.2);">&#128104;&#8205;&#9877;&#65039;</div>
-            <div><div class="testimonial-name">Dr. Miguel Santos</div><div class="testimonial-role">Centro de Estetica Medica - Lisboa</div></div>
-          </div>
-        </div>
-        <div class="testimonial-card reveal">
-          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p class="testimonial-text">"Tinhamos um WordPress que carregava em 8 segundos e estava a perder pacientes. A nova plataforma carrega em menos de 1 segundo e o numero de marcacoes aumentou 40% no primeiro mes."</p>
-          <div class="testimonial-author">
-            <div class="testimonial-avatar" style="background:rgba(16,185,129,0.2);">&#128105;&#8205;&#9877;&#65039;</div>
-            <div><div class="testimonial-name">Dra. Carla Mendes</div><div class="testimonial-role">Clinica de Emagrecimento - Cascais</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
+  <!-- Section: Proposal Form -->
   <section id="contacto">
-    <div class="section-inner">
-      <div class="contact-card reveal">
-        <div style="font-size:2.5rem;margin-bottom:1rem;">&#128203;</div>
-        <h2>Solicite a Sua <em style="font-style:normal;color:var(--primary-light)">Proposta Gratuita</em></h2>
-        <p>Preencha o formulario e recebera uma proposta personalizada em 24h uteis. Sem compromisso, sem pressao.</p>
-        <form class="contact-form" onsubmit="handleSubmit(event)">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Nome completo</label>
-              <input type="text" placeholder="Dr(a). Joao Silva" required />
+    <div class="container">
+      <div class="contact-container reveal">
+        <div style="text-align:center; max-width:650px; margin:0 auto;">
+          <div style="font-size:2.6rem; margin-bottom:0.8rem;">📋</div>
+          <h2 style="font-family:'Playfair Display', serif; font-size:2.3rem; font-weight:800; margin-bottom:0.8rem;">
+            Solicite a sua <em class="text-gold-gradient">Proposta Comercial</em>
+          </h2>
+          <p style="color:var(--text-muted); font-size:0.96rem;">
+            Receba um plano personalizado com demonstração prática para a sua clínica em menos de 24 horas úteis.
+          </p>
+        </div>
+
+        <form class="contact-form" onsubmit="handleProposalSubmit(event)">
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label>Nome do Responsável / Diretor Clínico *</label>
+              <input type="text" id="form-nome" placeholder="Ex: Dr. Bernardo Silva" required />
             </div>
-            <div class="form-group">
-              <label>Nome da clinica</label>
-              <input type="text" placeholder="Clinica Saude e Bem-Estar" required />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" placeholder="geral@suaclinica.pt" required />
-            </div>
-            <div class="form-group">
-              <label>Telemovel</label>
-              <input type="tel" placeholder="+351 9XX XXX XXX" />
+            <div class="form-field">
+              <label>Nome da Clínica *</label>
+              <input type="text" id="form-clinica" placeholder="Ex: Clínica Saúde Lisboa" required />
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Cidade</label>
-              <input type="text" placeholder="Lisboa, Porto, Braga..." required />
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label>E-mail Profissional *</label>
+              <input type="email" id="form-email" placeholder="direcao@suaclinica.pt" required />
             </div>
-            <div class="form-group">
-              <label>Especialidade da clinica</label>
-              <select required>
+            <div class="form-field">
+              <label>Telemóvel / WhatsApp Direto *</label>
+              <input type="tel" id="form-telefone" placeholder="+351 9XX XXX XXX" required />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label>Cidade / Localização *</label>
+              <input type="text" id="form-cidade" placeholder="Ex: Lisboa, Porto, Cascais, Braga..." required />
+            </div>
+            <div class="form-field">
+              <label>Especialidade Principal *</label>
+              <select id="form-especialidade" required>
                 <option value="">Selecione...</option>
-                <option>Fisioterapia e Reabilitacao</option>
-                <option>Medicina Estetica</option>
-                <option>Clinica de Emagrecimento</option>
-                <option>Nutricao e Dietetica</option>
-                <option>Clinica Geral / Multidisciplinar</option>
-                <option>Outro</option>
+                <option value="fisioterapia">Fisioterapia & Reabilitação</option>
+                <option value="estetica">Medicina Estética & Dermatologia</option>
+                <option value="osteopatia">Osteopatia & Terapias Manuais</option>
+                <option value="dentaria">Medicina Dentária</option>
+                <option value="multidisciplinar">Clínica Geral & Multidisciplinar</option>
+                <option value="nutricao">Nutrição & Emagrecimento</option>
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label>Plano de interesse</label>
-            <select>
-              <option>Plano Profissional (4.500 EUR) - Recomendado</option>
-              <option>Plano Essencial (2.500 EUR)</option>
-              <option>Plano Enterprise (7.500 EUR+)</option>
-              <option>Ainda nao sei, preciso de aconselhamento</option>
+
+          <div class="form-field">
+            <label>Plano de Interesse</label>
+            <select id="form-plano">
+              <option value="profissional" selected>Plano Profissional Clínico (4.900 €) — Recomendado</option>
+              <option value="essencial">Plano Essencial Clínico (2.900 €)</option>
+              <option value="enterprise">Plano Enterprise Multi-Sede (7.900 €+)</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Mensagem (opcional)</label>
-            <textarea placeholder="Conte-nos sobre a sua clinica, o que nao gosta no site atual, ou qualquer questao que tenha..."></textarea>
-          </div>
-          <button type="submit" class="form-submit" id="submit-btn">
-            Enviar Pedido de Proposta Gratuita
-          </button>
-          <p class="form-note">Os seus dados sao confidenciais e nunca serao partilhados com terceiros.</p>
-        </form>
-      </div>
 
-      <div class="urgency-banner reveal" style="max-width:700px;margin:2rem auto 0;">
-        <div class="urgency-icon">&#9200;</div>
-        <div class="urgency-text">
-          <h4>Disponibilidade Limitada</h4>
-          <p>Aceitamos apenas 3 novos projetos por mes para garantir qualidade maxima. Solicite a sua proposta hoje para garantir uma vaga no proximo ciclo de desenvolvimento.</p>
-        </div>
+          <div class="form-field">
+            <label>Observações ou Desafios da Clínica</label>
+            <textarea id="form-mensagem"
+              placeholder="Indique o que pretende melhorar na sua operação clínica..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit-form" id="btn-submit">
+            <span>Enviar Pedido de Proposta Comercial</span>
+          </button>
+
+          <div style="text-align:center; font-size:0.78rem; color:var(--text-dim); margin-top:0.4rem;">
+            🔒 Dados protegidos sob o Regulamento Geral sobre a Proteção de Dados (RGPD).
+          </div>
+        </form>
+
       </div>
     </div>
   </section>
 
+  <!-- Luxury Footer -->
   <footer>
-    <div class="footer-logo">DigitalClinica</div>
-    <p style="margin-top:0.5rem;">Plataformas digitais premium para clinicas de saude e bem-estar em Portugal.</p>
-    <p style="margin-top:1rem;">2026 - Todos os direitos reservados - RGPD Compliant</p>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:1rem;">
+            <img src="logo-mark-light.png" alt="Digital Clínica" style="height:36px; width:auto;" />
+            <div class="brand-name" style="font-size:1.15rem;">Digital<span>Clínica</span></div>
+          </div>
+          <p style="max-width:320px; font-size:0.86rem; line-height:1.6; color:var(--text-muted);">
+            O sistema operativo digital de alta performance desenvolvido para elevar a rentabilidade e o prestígio
+            clínico em Portugal.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h5>Ecossistema</h5>
+          <ul>
+            <li><a href="#ecossistema" onclick="showEcoView('client')">Visão do Paciente</a></li>
+            <li><a href="#ecossistema" onclick="showEcoView('admin')">Visão Dashboard</a></li>
+            <li><a href="#demonstracao">Módulos Interativos</a></li>
+            <li><a href="#precos">Planos & Preços</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Estratégia & ROI</h5>
+          <ul>
+            <li><a href="roi-report.html" style="color:var(--gold-light);">📊 Relatório ROI 3 Pilares</a></li>
+            <li><a href="marketing-plan.html" style="color:var(--accent-light);">🚀 Plano Marketing 2026</a></li>
+            <li><a href="#roi-calc">Calculadora Interativa</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Conformidade</h5>
+          <ul>
+            <li><a href="#">Isenção Art. 9º CIVA</a></li>
+            <li><a href="#">Conformidade CNPD & RGPD</a></li>
+            <li><a href="#contacto">Contacto Comercial</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 Digital Clínica • Todos os direitos reservados.</div>
+        <div style="display:flex; gap:1.5rem;">
+          <span>Desenvolvido para Clínicas Médicas & Terapêuticas em Portugal</span>
+        </div>
+      </div>
+    </div>
   </footer>
 
+  <!-- Scripts -->
   <script>
+    // Scroll reveal observer
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach((e, i) => {
-        if (e.isIntersecting) {
-          setTimeout(() => e.target.classList.add('visible'), i * 80);
-        }
+      entries.forEach((e) => {
+        if (e.isIntersecting) e.target.classList.add('visible');
       });
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    function handleSubmit(e) {
-      e.preventDefault();
-      const btn = document.getElementById('submit-btn');
-      btn.textContent = 'Proposta enviada! Respondemos em 24h.';
-      btn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
-      btn.disabled = true;
+    // Ecosystem View Switcher (Client vs Admin)
+    function showEcoView(view) {
+      const clientView = document.getElementById('eco-client-view');
+      const adminView = document.getElementById('eco-admin-view');
+      const btnClient = document.getElementById('btn-view-client');
+      const btnAdmin = document.getElementById('btn-view-admin');
+
+      if (view === 'client') {
+        clientView.classList.add('active');
+        adminView.classList.remove('active');
+        btnClient.classList.add('active');
+        btnAdmin.classList.remove('active');
+      } else {
+        clientView.classList.remove('active');
+        adminView.classList.add('active');
+        btnClient.classList.remove('active');
+        btnAdmin.classList.add('active');
+      }
     }
 
+    // Demo Tabs Switcher
+    function switchDemoTab(tabId) {
+      document.querySelectorAll('.demo-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.demo-panel').forEach(p => p.classList.remove('active'));
+
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Body Zone Click Simulator
+    function selectZone(zone, btn) {
+      document.querySelectorAll('.body-zone-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+
+      const box = document.getElementById('triage-result-box');
+      if (zone === 'cervical') {
+        box.innerHTML = `
+          <div style="font-weight:800; color:var(--white); font-size:1.05rem; margin-bottom:0.4rem;">Região Selecionada: Cervical / Pescoço</div>
+          <div style="font-size:0.82rem; color:var(--gold-light); margin-bottom:0.8rem;">Especialidade Recomendada: Fisioterapia Músculo-Esquelética</div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); padding:0.9rem; border-radius:10px; font-size:0.84rem; color:var(--text-muted); margin-bottom:1rem;">
+            <strong>Protocolo Terapêutico Sugerido:</strong> Avaliação postural, mobilização articular cervical e terapia miofascial (60 min).
+          </div>
+          <button style="background:linear-gradient(135deg, var(--gold), var(--gold-dark)); color:#0A0A14; border:none; padding:0.75rem; border-radius:10px; font-weight:800; font-size:0.85rem; width:100%; cursor:pointer;">
+            Agendar Consulta com Dr(a). Especialista →
+          </button>
+        `;
+      } else if (zone === 'lombar') {
+        box.innerHTML = `
+          <div style="font-weight:800; color:var(--white); font-size:1.05rem; margin-bottom:0.4rem;">Região Selecionada: Lombar & Ciática</div>
+          <div style="font-size:0.82rem; color:var(--gold-light); margin-bottom:0.8rem;">Especialidade Recomendada: Osteopatia / Fisioterapia Avançada</div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); padding:0.9rem; border-radius:10px; font-size:0.84rem; color:var(--text-muted); margin-bottom:1rem;">
+            <strong>Protocolo Terapêutico Sugerido:</strong> Descompressão vertebral, eletroterapia analgésica e reeducação motora (60 min).
+          </div>
+          <button style="background:linear-gradient(135deg, var(--gold), var(--gold-dark)); color:#0A0A14; border:none; padding:0.75rem; border-radius:10px; font-weight:800; font-size:0.85rem; width:100%; cursor:pointer;">
+            Agendar Consulta com Dr(a). Especialista →
+          </button>
+        `;
+      } else if (zone === 'ombro') {
+        box.innerHTML = `
+          <div style="font-weight:800; color:var(--white); font-size:1.05rem; margin-bottom:0.4rem;">Região Selecionada: Ombro & Manguito Rotador</div>
+          <div style="font-size:0.82rem; color:var(--gold-light); margin-bottom:0.8rem;">Especialidade Recomendada: Reabilitação Desportiva</div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); padding:0.9rem; border-radius:10px; font-size:0.84rem; color:var(--text-muted); margin-bottom:1rem;">
+            <strong>Protocolo Terapêutico Sugerido:</strong> Ganho de amplitude de movimento, reforço de estabilizadores e dry needling.
+          </div>
+          <button style="background:linear-gradient(135deg, var(--gold), var(--gold-dark)); color:#0A0A14; border:none; padding:0.75rem; border-radius:10px; font-weight:800; font-size:0.85rem; width:100%; cursor:pointer;">
+            Agendar Consulta com Dr(a). Especialista →
+          </button>
+        `;
+      } else if (zone === 'joelho') {
+        box.innerHTML = `
+          <div style="font-weight:800; color:var(--white); font-size:1.05rem; margin-bottom:0.4rem;">Região Selecionada: Joelho & Menisco / LCA</div>
+          <div style="font-size:0.82rem; color:var(--gold-light); margin-bottom:0.8rem;">Especialidade Recomendada: Fisioterapia Traumato-Ortopédica</div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); padding:0.9rem; border-radius:10px; font-size:0.84rem; color:var(--text-muted); margin-bottom:1rem;">
+            <strong>Protocolo Terapêutico Sugerido:</strong> Controlo de edema, fortalecimento excêntrico de quadricípete e treino proprioceptivo.
+          </div>
+          <button style="background:linear-gradient(135deg, var(--gold), var(--gold-dark)); color:#0A0A14; border:none; padding:0.75rem; border-radius:10px; font-weight:800; font-size:0.85rem; width:100%; cursor:pointer;">
+            Agendar Consulta com Dr(a). Especialista →
+          </button>
+        `;
+      }
+    }
+
+    // Dynamic ROI Calculation Engine
+    function updateROI() {
+      const consultas = parseInt(document.getElementById('slider-consultas').value);
+      const preco = parseInt(document.getElementById('slider-preco').value);
+      const noShowRate = parseInt(document.getElementById('slider-noshow').value) / 100;
+      const horas = parseInt(document.getElementById('slider-horas').value);
+
+      document.getElementById('val-consultas').textContent = consultas + ' consultas';
+      document.getElementById('val-preco').textContent = preco + ' €';
+      document.getElementById('val-noshow').textContent = (noShowRate * 100).toFixed(0) + '%';
+      document.getElementById('val-horas').textContent = horas + ' horas/sem';
+
+      const totalNoShowsPerMonth = consultas * noShowRate;
+      const noShowsSavedPerMonth = totalNoShowsPerMonth * 0.75;
+      const annualNoShowRevenue = noShowsSavedPerMonth * preco * 12;
+
+      const hoursSavedPerWeek = horas * 0.65;
+      const annualHoursSaved = Math.round(hoursSavedPerWeek * 50);
+
+      const newPatientsPerMonth = consultas * 0.08;
+      const annualNewPatientRevenue = newPatientsPerMonth * preco * 12;
+
+      const totalAnnualBenefit = annualNoShowRevenue + annualNewPatientRevenue;
+      const monthlyBenefit = totalAnnualBenefit / 12;
+      const paybackWeeks = Math.max(2, Math.round((4900 / monthlyBenefit) * 4.3));
+
+      document.getElementById('res-noshow-val').textContent = '+ ' + Math.round(annualNoShowRevenue).toLocaleString('pt-PT') + ' € / ano';
+      document.getElementById('res-tempo-val').textContent = '~ ' + annualHoursSaved + ' horas / ano';
+      document.getElementById('res-novos-val').textContent = '+ ' + Math.round(annualNewPatientRevenue).toLocaleString('pt-PT') + ' € / ano';
+      document.getElementById('res-total-val').textContent = '+ ' + Math.round(totalAnnualBenefit).toLocaleString('pt-PT') + ' € / ano';
+      document.getElementById('res-payback').textContent = '~ ' + paybackWeeks + ' Semanas';
+    }
+
+    // Lead Form Handler
+    function handleProposalSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit');
+      const nome = document.getElementById('form-nome').value;
+      const clinica = document.getElementById('form-clinica').value;
+
+      btn.innerHTML = '<span>✓ Pedido Enviado com Sucesso! A confirmar...</span>';
+      btn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        alert('Obrigado, ' + nome + '! Recebemos a sua solicitação para a clínica ' + clinica + '. O nosso especialista entrará em contacto nas próximas 24h úteis.');
+      }, 600);
+    }
+
+    // Smooth Anchor Scroll
     document.querySelectorAll('a[href^="#"]').forEach(a => {
       a.addEventListener('click', e => {
-        e.preventDefault();
-        const target = document.querySelector(a.getAttribute('href'));
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const href = a.getAttribute('href');
+        if (href === '#' || href === '') return;
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       });
     });
+
+    updateROI();
   </script>
 </body>
+
 </html>

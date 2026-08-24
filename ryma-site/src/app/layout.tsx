@@ -34,7 +34,10 @@ const ibmPlexMono = IBM_Plex_Mono({
   weight: ['400', '600'],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://digitalclinica.pt';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
     template: '%s | Digital Clínica',
@@ -57,10 +60,27 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'pt_PT',
+    url: siteUrl,
     siteName: 'Digital Clínica — Fisioterapia & Estética Avançada',
     title: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
     description:
       'Clínica especializada em Lisboa, Portugal. Fisioterapia médica, reabilitação do pavimento pélvico, tratamentos corporais não invasivos.',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
+        type: 'image/jpeg',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
+    description:
+      'Clínica especializada em Lisboa, Portugal. Fisioterapia médica, reabilitação do pavimento pélvico, tratamentos corporais não invasivos.',
+    images: ['/og-image.jpg'],
   },
   robots: {
     index: true,
