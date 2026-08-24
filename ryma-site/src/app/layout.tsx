@@ -34,7 +34,13 @@ const ibmPlexMono = IBM_Plex_Mono({
   weight: ['400', '600'],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://digitalclinica.pt';
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : undefined) ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+  'https://digitalclinica.pt';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -67,11 +73,20 @@ export const metadata: Metadata = {
       'Clínica especializada em Lisboa, Portugal. Fisioterapia médica, reabilitação do pavimento pélvico, tratamentos corporais não invasivos.',
     images: [
       {
-        url: '/og-image.jpg',
+        url: `${siteUrl}/og-image.jpg`,
+        secureUrl: `${siteUrl}/og-image.jpg`,
         width: 1200,
         height: 630,
         alt: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
         type: 'image/jpeg',
+      },
+      {
+        url: `${siteUrl}/og-image.png`,
+        secureUrl: `${siteUrl}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
+        type: 'image/png',
       },
     ],
   },
@@ -80,7 +95,7 @@ export const metadata: Metadata = {
     title: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
     description:
       'Clínica especializada em Lisboa, Portugal. Fisioterapia médica, reabilitação do pavimento pélvico, tratamentos corporais não invasivos.',
-    images: ['/og-image.jpg'],
+    images: [`${siteUrl}/og-image.jpg`],
   },
   robots: {
     index: true,
