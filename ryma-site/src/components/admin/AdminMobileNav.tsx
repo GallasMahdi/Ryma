@@ -20,6 +20,7 @@ interface AdminMobileNavProps {
   totalAppointments: number;
   totalNotes: number;
   totalInvoices?: number;
+  isAnalyticsUnlocked?: boolean;
   onOpenAddModal: () => void;
 }
 
@@ -30,6 +31,7 @@ export function AdminMobileNav({
   totalAppointments,
   totalNotes,
   totalInvoices,
+  isAnalyticsUnlocked = false,
 }: AdminMobileNavProps) {
   const tabs = [
     {
@@ -58,9 +60,9 @@ export function AdminMobileNav({
     },
     {
       id: 'analytics' as const,
-      label: lang === 'pt' ? 'Mais' : lang === 'en' ? 'More' : 'Plus',
+      label: lang === 'pt' ? 'Stats' : lang === 'en' ? 'Stats' : 'Stats',
       icon: IconChartBar,
-      badge: null,
+      badge: isAnalyticsUnlocked ? '🔓' : '🔒',
     },
   ];
 
@@ -108,12 +110,14 @@ export function AdminMobileNav({
                 {tab.badge !== null && (
                   <span
                     className={`absolute -top-1.5 -right-3 text-[10px] font-black px-1.5 py-0.2 rounded-full leading-none transition-all ${
-                      isActive
+                      typeof tab.badge === 'string'
+                        ? (isAnalyticsUnlocked ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300')
+                        : isActive
                         ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] border border-[#FFF8E7] shadow-[0_2px_8px_rgba(196,154,60,0.4)]'
                         : 'bg-[#F5E9C8] text-[#8A6A24] border border-[#C49A3C]/30'
                     }`}
                   >
-                    {tab.badge > 99 ? '99+' : tab.badge}
+                    {typeof tab.badge === 'number' && tab.badge > 99 ? '99+' : tab.badge}
                   </span>
                 )}
               </div>

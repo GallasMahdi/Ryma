@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES } from '@/data/services';
-import { IconAlertTriangle } from '@tabler/icons-react';
+import { IconAlertTriangle, IconLock } from '@tabler/icons-react';
 
 import {
   Appointment,
@@ -39,6 +39,8 @@ import { MultipleSessionsModal } from '@/components/admin/MultipleSessionsModal'
 import { CreateInvoiceModal } from '@/components/admin/CreateInvoiceModal';
 import { AdminCommandPalette } from '@/components/admin/AdminCommandPalette';
 import { ClinicHelpdeskDrawer } from '@/components/admin/ClinicHelpdeskDrawer';
+import { OwnerAuthModal } from '@/components/admin/OwnerAuthModal';
+import { ChangeOwnerPasswordModal } from '@/components/admin/ChangeOwnerPasswordModal';
 import { LuxuryToastContainer, LuxuryProgressBar, LuxuryToast } from '@/components/admin/LuxuryFeedback';
 
 async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
@@ -210,6 +212,89 @@ export default function AdminPage() {
     });
   }, []);
 
+  // ── Owner Analytics Step-Up State ─────────────────────────────────────────
+  const [isAnalyticsUnlocked, setIsAnalyticsUnlocked] = useState(false);
+  const [analyticsExpiresAt, setAnalyticsExpiresAt] = useState<number | null>(null);
+  const [isOwnerAuthModalOpen, setIsOwnerAuthModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [serverAnalytics, setServerAnalytics] = useState<{
+    stats: any;
+    analyticsData: any;
+  } | null>(null);
+  const [loadingServerAnalytics, setLoadingServerAnalytics] = useState(false);
+
+  const fetchServerAnalytics = useCallback(async () => {
+    setLoadingServerAnalytics(true);
+    try {
+      const res = await fetch(`/api/admin/analytics?lang=${lang}`, {
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        setIsAnalyticsUnlocked(false);
+        setAnalyticsExpiresAt(null);
+        setServerAnalytics(null);
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error('Erreur lors du chargement des statistiques');
+      }
+
+      const data = await res.json();
+      setServerAnalytics({
+        stats: data.stats,
+        analyticsData: data.analyticsData,
+      });
+      setIsAnalyticsUnlocked(true);
+      setAnalyticsExpiresAt(data.expiresAt);
+    } catch {
+      setIsAnalyticsUnlocked(false);
+      setAnalyticsExpiresAt(null);
+      setServerAnalytics(null);
+    } finally {
+      setLoadingServerAnalytics(false);
+    }
+  }, [lang]);
+
+  // When tab switches to analytics, attempt fetch or prompt unlock
+  useEffect(() => {
+    if (activeTab === 'analytics') {
+      if (isAnalyticsUnlocked) {
+        fetchServerAnalytics();
+      } else {
+        setIsOwnerAuthModalOpen(true);
+      }
+    }
+  }, [activeTab, isAnalyticsUnlocked, fetchServerAnalytics]);
+
+  const handleOwnerAuthSuccess = (expiresAt: number) => {
+    setIsAnalyticsUnlocked(true);
+    setAnalyticsExpiresAt(expiresAt);
+    setIsOwnerAuthModalOpen(false);
+    fetchServerAnalytics();
+    addToast({
+      type: 'success',
+      title: lang === 'pt' ? 'Autorização Confirmada' : lang === 'en' ? 'Owner Authorization Confirmed' : 'Autorisation Propriétaire Confirmée',
+      message: lang === 'pt' ? 'Estatísticas desbloqueadas durante 15 minutos.' : lang === 'en' ? 'Analytics unlocked for 15 minutes.' : 'Statistiques déverrouillées pendant 15 minutes.',
+    });
+  };
+
+  const handleLockAnalytics = async () => {
+    try {
+      await fetch('/api/admin/analytics/lock', { method: 'POST', credentials: 'same-origin' });
+    } catch { /* silent */ }
+    setIsAnalyticsUnlocked(false);
+    setAnalyticsExpiresAt(null);
+    setServerAnalytics(null);
+    addToast({
+      type: 'info',
+      title: lang === 'pt' ? 'Estatísticas Bloqueadas' : lang === 'en' ? 'Analytics Locked' : 'Statistiques Verrouillées',
+      message: lang === 'pt' ? 'Acesso restrito ao proprietário.' : lang === 'en' ? 'Restricted to clinic owner.' : 'Accès réservé au propriétaire.',
+    });
+  };
+
   // Command Palette State
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isCreateInvoiceFromPaletteOpen, setIsCreateInvoiceFromPaletteOpen] = useState(false);
@@ -360,16 +445,24 @@ export default function AdminPage() {
       });
       setInvoices(prev => prev.map(inv => (inv.id === id ? res.invoice : inv)));
       fetchInvoices();
+
+      if (newStatus === 'PAID') {
+        playNotificationChime();
+      }
+
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Estado Atualizado' : lang === 'fr' ? 'Statut mis à jour' : 'Status Updated',
-        message: `${res.invoice.invoiceNumber}: ${newStatus === 'PAID' ? (lang === 'fr' ? 'Payé' : lang === 'en' ? 'Paid' : 'Pago') : (lang === 'fr' ? 'En attente' : lang === 'en' ? 'Pending' : 'Pendente')}`,
+        title:
+          newStatus === 'PAID'
+            ? (lang === 'pt' ? 'Recibo Liquidado (PAGO)' : lang === 'fr' ? 'Reçu Encaissé (PAYÉ)' : 'Receipt Settled (PAID)')
+            : (lang === 'pt' ? 'Marcado como Em Aberto' : lang === 'fr' ? 'Marqué En Attente' : 'Marked as Pending'),
+        message: `${res.invoice.invoiceNumber} • ${res.invoice.patientName} (${res.invoice.amount.toFixed(2)} € • ${res.invoice.paymentMethod})`,
       });
     } catch (err: any) {
       fetchInvoices(); // rollback
       addToast({
         type: 'error',
-        title: lang === 'pt' ? 'Erro ao atualizar estado' : 'Error updating status',
+        title: lang === 'pt' ? 'Erro ao atualizar estado' : lang === 'fr' ? 'Erreur de mise à jour' : 'Error updating status',
         message: err.message,
       });
     }
@@ -1004,6 +1097,7 @@ export default function AdminPage() {
           totalAppointments={stats.total}
           totalNotes={Math.max(patientsList.length, patientNotes.length)}
           totalInvoices={invoices.length}
+          isAnalyticsUnlocked={isAnalyticsUnlocked}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebar}
           onOpenHelpdesk={() => setIsHelpdeskOpen(true)}
@@ -1013,7 +1107,12 @@ export default function AdminPage() {
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             {activeTab === 'appointments' && (
               <>
-                <AdminKpiCards stats={stats} lang={lang} />
+                <AdminKpiCards
+                  stats={stats}
+                  lang={lang}
+                  isAnalyticsUnlocked={isAnalyticsUnlocked}
+                  onUnlockClick={() => setIsOwnerAuthModalOpen(true)}
+                />
                 <AppointmentsTab
                   lang={lang}
                   searchQuery={searchQuery}
@@ -1089,16 +1188,45 @@ export default function AdminPage() {
                 onDelete={handleDeleteInvoice}
                 patients={patientsList}
                 appointments={appointments}
+                isAnalyticsUnlocked={isAnalyticsUnlocked}
+                onUnlockClick={() => setIsOwnerAuthModalOpen(true)}
                 lang={lang}
               />
             )}
 
             {activeTab === 'analytics' && (
-              <AnalyticsTab
-                lang={lang}
-                stats={stats}
-                analyticsData={analyticsData}
-              />
+              isAnalyticsUnlocked && serverAnalytics ? (
+                <AnalyticsTab
+                  lang={lang}
+                  stats={serverAnalytics.stats}
+                  analyticsData={serverAnalytics.analyticsData}
+                  expiresAt={analyticsExpiresAt}
+                  onLock={handleLockAnalytics}
+                  onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
+                />
+              ) : (
+                <div className="bg-white p-8 sm:p-12 rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-lg mx-auto my-8 sm:my-16 font-sans">
+                  <div className="w-16 h-16 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-inner">
+                    <IconLock size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#0F172A]">
+                      {lang === 'pt' ? 'Autorização de Proprietário Necessária' : lang === 'en' ? 'Owner Authorization Required' : 'Autorisation Propriétaire Requise'}
+                    </h3>
+                    <p className="text-xs text-[#64748B] mt-1.5 max-w-sm leading-relaxed">
+                      {lang === 'pt' ? 'Esta secção contém métricas de faturação e relatórios confidenciais.' : lang === 'en' ? 'This section contains restricted financial performance and business metrics.' : 'Cette section contient des indicateurs financiers et de chiffre d’affaires confidentiels.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsOwnerAuthModalOpen(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] hover:from-[#6D28D9] hover:to-[#4C1D95] text-white text-xs font-bold shadow-md shadow-[#7C3AED]/25 transition-all cursor-pointer"
+                  >
+                    <IconLock size={16} />
+                    <span>{lang === 'pt' ? 'Desbloquear Estatísticas' : lang === 'en' ? 'Unlock Analytics' : 'Déverrouiller les Statistiques'}</span>
+                  </button>
+                </div>
+              )
             )}
           </div>
         </main>
@@ -1112,6 +1240,7 @@ export default function AdminPage() {
         totalAppointments={stats.total}
         totalNotes={Math.max(patientsList.length, patientNotes.length)}
         totalInvoices={invoices.length}
+        isAnalyticsUnlocked={isAnalyticsUnlocked}
         onOpenAddModal={() => setIsAddModalOpen(true)}
       />
 
@@ -1211,6 +1340,33 @@ export default function AdminPage() {
         lang={lang}
         activeTab={activeTab}
         isLiveConnected={isLiveConnected}
+      />
+
+      {/* Owner Analytics Step-Up Authorization Modal */}
+      <OwnerAuthModal
+        isOpen={isOwnerAuthModalOpen}
+        onSuccess={handleOwnerAuthSuccess}
+        onCancel={() => {
+          setIsOwnerAuthModalOpen(false);
+          if (!isAnalyticsUnlocked) {
+            setActiveTab('appointments');
+          }
+        }}
+        lang={lang}
+      />
+
+      {/* Change Owner Analytics Password Modal */}
+      <ChangeOwnerPasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+        onSuccessToast={(msg) => {
+          addToast({
+            type: 'success',
+            title: lang === 'pt' ? 'Palavra-passe Alterada' : lang === 'en' ? 'Password Changed' : 'Mot de Passe Modifié',
+            message: msg,
+          });
+        }}
+        lang={lang}
       />
     </div>
   );

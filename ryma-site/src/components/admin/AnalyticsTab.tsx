@@ -1,6 +1,4 @@
-'use client';
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getServiceName } from '@/types/admin';
 import { Lang } from '@/lib/i18n';
@@ -9,6 +7,10 @@ import {
   IconClock,
   IconFileSpreadsheet,
   IconStethoscope,
+  IconShieldCheck,
+  IconLock,
+  IconKey,
+  IconLoader2,
 } from '@tabler/icons-react';
 
 interface AnalyticsData {
@@ -32,16 +34,96 @@ interface AnalyticsTabProps {
     revenue: number;
   };
   analyticsData: AnalyticsData;
+  expiresAt?: number | null;
+  onLock?: () => void;
+  onOpenChangePassword?: () => void;
 }
 
-export function AnalyticsTab({ lang, stats, analyticsData }: AnalyticsTabProps) {
+export function AnalyticsTab({
+  lang,
+  stats,
+  analyticsData,
+  expiresAt,
+  onLock,
+  onOpenChangePassword,
+}: AnalyticsTabProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
+
+  // Countdown timer for 15-minute step-up expiration
+  const [timeLeft, setTimeLeft] = useState<string>('');
+
+  useEffect(() => {
+    if (!expiresAt) return;
+
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      setTimeLeft(`${mins}:${String(secs).padStart(2, '0')}`);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [expiresAt]);
 
   const confirmationRate = stats.total > 0 ? Math.round((stats.confirmed / stats.total) * 100) : 0;
 
   return (
     <div className="space-y-4 font-sans">
+      {/* Security Status Bar (Owner Authenticated) */}
+      <div className="bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#0F172A] text-white p-3.5 sm:p-4 rounded-xl border border-[#334155] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#7C3AED]/30 border border-[#A78BFA]/40 text-[#C4B5FD] flex items-center justify-center shrink-0">
+            <IconShieldCheck size={18} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold tracking-tight text-white">
+                {txt('Session Propriétaire Active', 'Owner Session Active', 'Sessão do Proprietário Ativa')}
+              </span>
+              {timeLeft && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  ⏱ {timeLeft}
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-[#94A3B8]">
+              {txt(
+                'Données financières déverrouillées temporairement pour 15 minutes.',
+                'Financial and statistical data temporarily unlocked for 15 minutes.',
+                'Dados financeiros desbloqueados temporariamente por 15 minutos.'
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-center">
+          {onOpenChangePassword && (
+            <button
+              type="button"
+              onClick={onOpenChangePassword}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-medium transition-colors"
+            >
+              <IconKey size={14} className="text-[#C4B5FD]" />
+              <span>{txt('Mot de passe', 'Password', 'Palavra-passe')}</span>
+            </button>
+          )}
+
+          {onLock && (
+            <button
+              type="button"
+              onClick={onLock}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 text-xs font-semibold transition-colors"
+            >
+              <IconLock size={14} />
+              <span>{txt('Verrouiller', 'Lock Analytics', 'Bloquear')}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Top Banner & CSV Export Actions */}
       <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>

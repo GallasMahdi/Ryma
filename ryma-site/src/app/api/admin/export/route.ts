@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/requireAdmin';
-import { dbGetAppointments, dbGetAllPatients, dbExportFullDatabaseBackup } from '@/lib/db';
+import { requireOwnerAnalytics } from '@/lib/requireAdmin';
+import { dbGetAppointments, dbGetAllPatients, dbGetInvoices, dbExportFullDatabaseBackup } from '@/lib/db';
 import { getServicePrice } from '@/types/admin';
 
 function sanitizeCsvField(val: unknown): string {
@@ -16,7 +16,7 @@ function sanitizeCsvField(val: unknown): string {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin(request);
+  const auth = await requireOwnerAnalytics(request);
   if ('status' in auth) return auth;
 
   const { searchParams } = request.nextUrl;
@@ -65,6 +65,34 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="ryma_utentes_${new Date().toISOString().split('T')[0]}.csv"`,
+      },
+    });
+  }
+
+  if (type === 'invoices') {
+    const invoices = await dbGetInvoices();
+    let csv = 'Numero Fatura;Data;Nome Utente;NIF;Telefone;Servico;Valor EUR;Metodo Pagamento;Estado;Data Pagamento\n';
+    invoices.forEach(inv => {
+      const row = [
+        sanitizeCsvField(inv.invoiceNumber),
+        sanitizeCsvField(inv.createdAt),
+        sanitizeCsvField(inv.patientName),
+        sanitizeCsvField(inv.patientNif),
+        sanitizeCsvField(inv.patientPhone),
+        sanitizeCsvField(inv.serviceName),
+        sanitizeCsvField(inv.amount),
+        sanitizeCsvField(inv.paymentMethod),
+        sanitizeCsvField(inv.paymentStatus),
+        sanitizeCsvField(inv.paidAt ?? ''),
+      ];
+      csv += row.join(';') + '\n';
+    });
+
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="ryma_faturas_${new Date().toISOString().split('T')[0]}.csv"`,
       },
     });
   }

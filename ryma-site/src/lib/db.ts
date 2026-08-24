@@ -9,6 +9,7 @@ import { SITE } from '@/lib/site';
 import { phonesMatch } from '@/lib/phone';
 import { broadcastAppointmentCreated, broadcastMultipleAppointmentsCreated } from '@/lib/events';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
+import { env } from '@/lib/env';
 
 // ─── Dual Storage Engine: Dynamic Turso (Cloud) with Local Fallback ───────────
 let _tursoClient: LibSqlClient | null = null;
@@ -128,6 +129,19 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
         generalNotes      TEXT,
         createdAt         TEXT NOT NULL
       )`,
+      `CREATE TABLE IF NOT EXISTS security_settings (
+        key        TEXT PRIMARY KEY,
+        value      TEXT NOT NULL,
+        updatedAt  TEXT NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS security_audit_logs (
+        id        TEXT PRIMARY KEY,
+        eventType TEXT NOT NULL,
+        ip        TEXT NOT NULL,
+        userAgent TEXT,
+        details   TEXT,
+        createdAt TEXT NOT NULL
+      )`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime)`,
@@ -146,6 +160,7 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
       `CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus)`,
       `CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patientPhone)`,
       `CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date)`,
+      `CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON security_audit_logs(createdAt DESC)`,
     ]);
 
     // 2. Safe non-destructive column migrations on Turso
@@ -479,6 +494,21 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
       createdAt         TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS security_settings (
+      key        TEXT PRIMARY KEY,
+      value      TEXT NOT NULL,
+      updatedAt  TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS security_audit_logs (
+      id        TEXT PRIMARY KEY,
+      eventType TEXT NOT NULL,
+      ip        TEXT NOT NULL,
+      userAgent TEXT,
+      details   TEXT,
+      createdAt TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
     CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
     CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime);
@@ -497,6 +527,7 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
     CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus);
     CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patientPhone);
     CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON security_audit_logs(createdAt DESC);
   `);
 
   // Non-destructive migration for existing tables
@@ -1205,6 +1236,59 @@ export async function dbRecordRateLimitAttempt(ip: string, action: string): Prom
   ]);
   const oneHourAgo = Date.now() - 3600 * 1000;
   await executeQuery('DELETE FROM rate_limit_log WHERE timestamp < ?', [oneHourAgo]);
+}
+
+export async function dbResetRateLimit(ip: string, action: string): Promise<void> {
+  try {
+    await executeQuery('DELETE FROM rate_limit_log WHERE ip = ? AND action = ?', [ip, action]);
+  } catch (err) {
+    console.warn('[Rate Limit Reset Warning]:', err);
+  }
+}
+
+// ─── Owner Analytics Security & Audit Logging Helpers ─────────────────────────
+export async function dbGetOwnerAnalyticsPasswordHash(): Promise<string> {
+  try {
+    const rows = await executeQuery<{ value: string }>(
+      'SELECT value FROM security_settings WHERE key = ?',
+      ['analytics_owner_password_hash']
+    );
+    if (rows.length > 0 && rows[0]?.value) {
+      return rows[0].value;
+    }
+  } catch (err) {
+    console.warn('[Security Settings Query Warning]:', err);
+  }
+  return env.OWNER_ANALYTICS_PASSWORD_HASH;
+}
+
+export async function dbSetOwnerAnalyticsPasswordHash(newHash: string): Promise<void> {
+  const now = new Date().toISOString();
+  await executeQuery(
+    `INSERT INTO security_settings (key, value, updatedAt)
+     VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updatedAt = excluded.updatedAt`,
+    ['analytics_owner_password_hash', newHash, now]
+  );
+}
+
+export async function dbLogSecurityAudit(
+  eventType: string,
+  ip: string,
+  userAgent?: string | null,
+  details?: Record<string, unknown> | null
+): Promise<void> {
+  try {
+    const id = 'audit_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+    const now = new Date().toISOString();
+    const detailsStr = details ? JSON.stringify(details) : null;
+    await executeQuery(
+      'INSERT INTO security_audit_logs (id, eventType, ip, userAgent, details, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, eventType, ip, userAgent ? userAgent.slice(0, 500) : null, detailsStr, now]
+    );
+  } catch (err) {
+    console.warn('[Security Audit Log Error]:', err);
+  }
 }
 
 // ─── Patient Notes Helpers ────────────────────────────────────────────────────

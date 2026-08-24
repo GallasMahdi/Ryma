@@ -23,6 +23,10 @@ import {
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
+  IconLock,
+  IconLockOpen,
+  IconShieldLock,
+  IconLoader2,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import {
@@ -47,6 +51,8 @@ interface InvoicesTabProps {
   onDelete: (id: string) => void;
   patients: PatientRecord[];
   appointments: Appointment[];
+  isAnalyticsUnlocked?: boolean;
+  onUnlockClick?: () => void;
   lang: Lang;
 }
 
@@ -60,6 +66,8 @@ export function InvoicesTab({
   onDelete,
   patients,
   appointments,
+  isAnalyticsUnlocked = false,
+  onUnlockClick,
   lang,
 }: InvoicesTabProps) {
   const [search, setSearch] = useState('');
@@ -69,6 +77,23 @@ export function InvoicesTab({
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [prefilledData, setPrefilledData] = useState<Partial<CreateInvoiceInput> | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+
+  const handleInlineStatusToggle = async (inv: Invoice, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (updatingStatusId === inv.id) return;
+
+    setUpdatingStatusId(inv.id);
+    const newStatus: InvoicePaymentStatus = inv.paymentStatus === 'PAID' ? 'PENDING' : 'PAID';
+
+    try {
+      await onUpdateStatus(inv.id, newStatus, inv.paymentMethod);
+    } finally {
+      setTimeout(() => {
+        setUpdatingStatusId(null);
+      }, 350);
+    }
+  };
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -140,7 +165,7 @@ export function InvoicesTab({
   };
 
   const handleExportCsv = () => {
-    window.location.href = '/api/admin/invoices/export';
+    window.location.href = '/api/admin/export?type=invoices';
   };
 
   return (
@@ -148,19 +173,41 @@ export function InvoicesTab({
       {/* ── Top Financial KPI Cards ───────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
         {/* Total Revenue */}
-        <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
+        <div
+          onClick={!isAnalyticsUnlocked ? onUnlockClick : undefined}
+          role={!isAnalyticsUnlocked ? 'button' : undefined}
+          tabIndex={!isAnalyticsUnlocked ? 0 : undefined}
+          title={!isAnalyticsUnlocked ? txt('Cliquez pour déverrouiller', 'Click to unlock', 'Clique para desbloquear') : undefined}
+          className={`p-4 rounded-2xl border shadow-xs flex flex-col justify-between transition-all select-none ${
+            isAnalyticsUnlocked
+              ? 'bg-white border-[#E2E8F0]'
+              : 'bg-gradient-to-br from-[#FAF5FF] via-white to-[#F5F3FF] border-[#DDD6FE] hover:border-[#7C3AED] hover:shadow-md cursor-pointer group'
+          }`}
+        >
           <div className="flex items-center justify-between text-[#64748B] mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              {txt('Facturation Totale', 'Total Revenue', 'Faturação Total')}
+              {isAnalyticsUnlocked
+                ? txt('Facturation Totale', 'Total Revenue', 'Faturação Total')
+                : txt('Faturação (Proprietário)', 'Revenue (Owner)', 'Faturação (Proprietário)')}
             </span>
-            <div className="p-1.5 rounded-lg bg-[#0F172A] text-[#C49A3C]">
-              <IconTrendingUp size={15} />
+            <div className={`p-1.5 rounded-lg ${isAnalyticsUnlocked ? 'bg-[#0F172A] text-[#C49A3C]' : 'bg-[#EDE9FE] text-[#7C3AED]'}`}>
+              {isAnalyticsUnlocked ? <IconTrendingUp size={15} /> : <IconShieldLock size={15} />}
             </div>
           </div>
           <div>
-            <p className="text-xl sm:text-2xl font-bold font-mono text-[#0F172A]">
-              {(stats?.totalRevenue ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €
-            </p>
+            <div className="flex items-baseline justify-between gap-1">
+              <p className={`text-xl sm:text-2xl font-bold font-mono ${isAnalyticsUnlocked ? 'text-[#0F172A]' : 'text-[#7C3AED] tracking-widest'}`}>
+                {isAnalyticsUnlocked
+                  ? `${(stats?.totalRevenue ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €`
+                  : '•••• €'}
+              </p>
+              {!isAnalyticsUnlocked && (
+                <span className="text-[10px] font-bold text-[#7C3AED] group-hover:underline flex items-center gap-0.5">
+                  <IconLock size={10} />
+                  <span>{txt('Déverrouiller', 'Unlock', 'Desbloquear')}</span>
+                </span>
+              )}
+            </div>
             <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">
               {stats?.countTotal ?? 0} {txt('documents émis', 'issued invoices', 'documentos emitidos')}
             </p>
@@ -168,7 +215,16 @@ export function InvoicesTab({
         </div>
 
         {/* Total Paid */}
-        <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
+        <div
+          onClick={!isAnalyticsUnlocked ? onUnlockClick : undefined}
+          role={!isAnalyticsUnlocked ? 'button' : undefined}
+          tabIndex={!isAnalyticsUnlocked ? 0 : undefined}
+          className={`p-4 rounded-2xl border shadow-xs flex flex-col justify-between transition-all select-none ${
+            isAnalyticsUnlocked
+              ? 'bg-white border-[#E2E8F0]'
+              : 'bg-white border-[#E2E8F0] hover:border-[#CBD5E1] cursor-pointer'
+          }`}
+        >
           <div className="flex items-center justify-between text-[#64748B] mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
               {txt('Total Encaissé', 'Total Collected', 'Total Liquidado')}
@@ -178,8 +234,10 @@ export function InvoicesTab({
             </div>
           </div>
           <div>
-            <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-700">
-              {(stats?.totalPaid ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €
+            <p className={`text-xl sm:text-2xl font-bold font-mono ${isAnalyticsUnlocked ? 'text-emerald-700' : 'text-[#94A3B8] tracking-widest'}`}>
+              {isAnalyticsUnlocked
+                ? `${(stats?.totalPaid ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €`
+                : '•••• €'}
             </p>
             <p className="text-[10px] text-emerald-600 mt-0.5 font-medium">
               {stats?.countPaid ?? 0} {txt('reçus réglés', 'paid receipts', 'recibos quitados')}
@@ -188,7 +246,16 @@ export function InvoicesTab({
         </div>
 
         {/* Pending Amount */}
-        <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
+        <div
+          onClick={!isAnalyticsUnlocked ? onUnlockClick : undefined}
+          role={!isAnalyticsUnlocked ? 'button' : undefined}
+          tabIndex={!isAnalyticsUnlocked ? 0 : undefined}
+          className={`p-4 rounded-2xl border shadow-xs flex flex-col justify-between transition-all select-none ${
+            isAnalyticsUnlocked
+              ? 'bg-white border-[#E2E8F0]'
+              : 'bg-white border-[#E2E8F0] hover:border-[#CBD5E1] cursor-pointer'
+          }`}
+        >
           <div className="flex items-center justify-between text-[#64748B] mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700">
               {txt('En Attente', 'Pending Amount', 'Em Aberto')}
@@ -198,8 +265,10 @@ export function InvoicesTab({
             </div>
           </div>
           <div>
-            <p className="text-xl sm:text-2xl font-bold font-mono text-amber-700">
-              {(stats?.totalPending ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €
+            <p className={`text-xl sm:text-2xl font-bold font-mono ${isAnalyticsUnlocked ? 'text-amber-700' : 'text-[#94A3B8] tracking-widest'}`}>
+              {isAnalyticsUnlocked
+                ? `${(stats?.totalPending ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €`
+                : '•••• €'}
             </p>
             <p className="text-[10px] text-amber-600 mt-0.5 font-medium">
               {stats?.countPending ?? 0} {txt('factures en attente', 'pending invoices', 'faturas pendentes')}
@@ -208,7 +277,16 @@ export function InvoicesTab({
         </div>
 
         {/* Average Ticket */}
-        <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
+        <div
+          onClick={!isAnalyticsUnlocked ? onUnlockClick : undefined}
+          role={!isAnalyticsUnlocked ? 'button' : undefined}
+          tabIndex={!isAnalyticsUnlocked ? 0 : undefined}
+          className={`p-4 rounded-2xl border shadow-xs flex flex-col justify-between transition-all select-none ${
+            isAnalyticsUnlocked
+              ? 'bg-white border-[#E2E8F0]'
+              : 'bg-white border-[#E2E8F0] hover:border-[#CBD5E1] cursor-pointer'
+          }`}
+        >
           <div className="flex items-center justify-between text-[#64748B] mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {txt('Panier Moyen', 'Average Ticket', 'Ticket Médio')}
@@ -218,8 +296,10 @@ export function InvoicesTab({
             </div>
           </div>
           <div>
-            <p className="text-xl sm:text-2xl font-bold font-mono text-[#0F172A]">
-              {(stats?.avgTicket ?? 0).toFixed(2)} €
+            <p className={`text-xl sm:text-2xl font-bold font-mono ${isAnalyticsUnlocked ? 'text-[#0F172A]' : 'text-[#94A3B8] tracking-widest'}`}>
+              {isAnalyticsUnlocked
+                ? `${(stats?.avgTicket ?? 0).toFixed(2)} €`
+                : '•••• €'}
             </p>
             <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">
               {txt('par acte clinique', 'per session', 'por ato clínico')}
@@ -228,7 +308,16 @@ export function InvoicesTab({
         </div>
 
         {/* Insurance Ratio */}
-        <div className="col-span-2 lg:col-span-1 p-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white shadow-xs flex flex-col justify-between">
+        <div
+          onClick={!isAnalyticsUnlocked ? onUnlockClick : undefined}
+          role={!isAnalyticsUnlocked ? 'button' : undefined}
+          tabIndex={!isAnalyticsUnlocked ? 0 : undefined}
+          className={`col-span-2 lg:col-span-1 p-4 rounded-2xl shadow-xs flex flex-col justify-between transition-all select-none ${
+            isAnalyticsUnlocked
+              ? 'bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white'
+              : 'bg-gradient-to-br from-[#1E293B] to-[#0F172A] text-white/90 hover:brightness-110 cursor-pointer'
+          }`}
+        >
           <div className="flex items-center justify-between text-white/70 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#E8C97A]">
               {txt('Mutuelles & ADSE', 'Insurance & ADSE', 'Seguros & ADSE')}
@@ -238,8 +327,8 @@ export function InvoicesTab({
             </div>
           </div>
           <div>
-            <p className="text-xl sm:text-2xl font-bold font-mono text-white">
-              {stats?.insuranceShare ?? 0} %
+            <p className={`text-xl sm:text-2xl font-bold font-mono text-white ${!isAnalyticsUnlocked ? 'tracking-widest' : ''}`}>
+              {isAnalyticsUnlocked ? `${stats?.insuranceShare ?? 0} %` : '•• %'}
             </p>
             <p className="text-[10px] text-white/70 mt-0.5 font-medium">
               {txt('des soins facturés', 'of billed care', 'dos tratamentos faturados')}
@@ -488,25 +577,47 @@ export function InvoicesTab({
                           </span>
                         </td>
 
-                        {/* Status with Advanced Inline Quick-Action Toggle */}
+                        {/* Status with Advanced Enterprise Inline Quick-Action Toggle & Live Feedback */}
                         <td className="py-3 px-4 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                          <button
+                          <motion.button
                             type="button"
-                            onClick={() => onUpdateStatus(inv.id, isPaid ? 'PENDING' : 'PAID')}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer ${
-                              isPaid
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300'
-                                : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:border-amber-300'
+                            disabled={updatingStatusId === inv.id}
+                            onClick={(e) => handleInlineStatusToggle(inv, e)}
+                            whileHover={{ scale: 1.04 }}
+                            whileTap={{ scale: 0.96 }}
+                            className={`group/status inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all shadow-2xs select-none ${
+                              updatingStatusId === inv.id
+                                ? 'bg-slate-100 text-slate-500 border border-slate-300 opacity-80 cursor-wait'
+                                : isPaid
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 hover:shadow-xs cursor-pointer'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:border-amber-300 hover:shadow-xs cursor-pointer'
                             }`}
                             title={
                               isPaid
-                                ? txt('Cliquez pour marquer comme EN ATTENTE', 'Click to mark as PENDING', 'Clique para marcar como PENDENTE')
-                                : txt('Cliquez pour marquer como PAYÉ', 'Click to mark as PAID', 'Clique para marcar como PAGO')
+                                ? (inv.paidAt
+                                    ? `${txt('Payé le', 'Paid on', 'Pago em')} ${new Date(inv.paidAt).toLocaleDateString(lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'pt-PT')} • ${txt('Cliquer pour marquer EN ATTENTE', 'Click to mark as PENDING', 'Clique para marcar como PENDENTE')}`
+                                    : txt('Cliquer pour marquer EN ATTENTE', 'Click to mark as PENDING', 'Clique para marcar como PENDENTE'))
+                                : txt('Cliquer pour marquer PAYÉ', 'Click to mark as PAID', 'Clique para marcar como PAGO')
                             }
                           >
-                            {isPaid ? <IconCheck size={12} className="text-emerald-600" /> : <IconClock size={12} className="text-amber-600" />}
-                            <span>{isPaid ? txt('Payé', 'Paid', 'Pago') : txt('En Attente', 'Pending', 'Pendente')}</span>
-                          </button>
+                            {updatingStatusId === inv.id ? (
+                              <IconLoader2 size={12} className="animate-spin text-slate-600 shrink-0" />
+                            ) : isPaid ? (
+                              <IconCheck size={12} className="text-emerald-600 group-hover/status:scale-110 transition-transform shrink-0" />
+                            ) : (
+                              <span className="relative flex h-2 w-2 shrink-0">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                              </span>
+                            )}
+                            <span>
+                              {updatingStatusId === inv.id
+                                ? txt('Mise à jour...', 'Updating...', 'A atualizar...')
+                                : isPaid
+                                ? txt('Payé', 'Paid', 'Pago')
+                                : txt('En Attente', 'Pending', 'Pendente')}
+                            </span>
+                          </motion.button>
                         </td>
 
                         {/* Action Shortcuts */}

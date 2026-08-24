@@ -21,6 +21,7 @@ interface AdminSidebarProps {
   totalAppointments: number;
   totalNotes: number;
   totalInvoices?: number;
+  isAnalyticsUnlocked?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   onOpenHelpdesk?: () => void;
@@ -33,6 +34,7 @@ export function AdminSidebar({
   totalAppointments,
   totalNotes,
   totalInvoices,
+  isAnalyticsUnlocked = false,
   isCollapsed = false,
   onToggleCollapse,
   onOpenHelpdesk,
@@ -74,7 +76,7 @@ export function AdminSidebar({
       label: txt('Statistiques', 'Analytics & Reports', 'Estatísticas'),
       sublabel: txt('Rapports & Revenus', 'Reports & Revenue', 'Relatórios & Receita'),
       icon: IconChartBar,
-      badge: null,
+      badge: isAnalyticsUnlocked ? '🔓' : '🔒',
     },
   ];
 
@@ -147,7 +149,7 @@ export function AdminSidebar({
                   )}
                 </div>
 
-                {item.badge !== null && item.badge > 0 && (
+                {item.badge !== null && (typeof item.badge === 'string' || item.badge > 0) && (
                   isCollapsed ? (
                     <span
                       className={`absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full flex items-center justify-center ${
@@ -156,14 +158,14 @@ export function AdminSidebar({
                           : 'bg-[#0F172A] text-white'
                       }`}
                     >
-                      {item.badge > 99 ? '99+' : item.badge}
+                      {typeof item.badge === 'number' && item.badge > 99 ? '99+' : item.badge}
                     </span>
                   ) : (
                     <span
                       className={`text-[11px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${
-                        isActive
-                          ? 'bg-white/20 text-white'
-                          : 'bg-[#E2E8F0] text-[#475569]'
+                        typeof item.badge === 'string'
+                          ? (isAnalyticsUnlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800')
+                          : (isActive ? 'bg-white/20 text-white' : 'bg-[#E2E8F0] text-[#475569]')
                       }`}
                     >
                       {item.badge}

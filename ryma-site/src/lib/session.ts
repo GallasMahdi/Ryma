@@ -4,6 +4,7 @@ import { env } from './env';
 export interface SessionData {
   isAdmin: boolean;
   loginAt: number;
+  analyticsUnlockedUntil?: number; // Epoch timestamp (ms) until which owner analytics step-up is valid
 }
 
 export const SESSION_OPTIONS: SessionOptions = {

@@ -13,6 +13,7 @@ import {
   IconBuildingHospital,
   IconReceipt,
   IconDownload,
+  IconLoader2,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { Invoice, InvoicePaymentStatus, PaymentMethod } from '@/types/admin';
@@ -135,53 +136,81 @@ export function InvoiceDetailModal({
 
             {/* ── ADVANCED INTERACTIVE STATUS & PAYMENT CONTROL PANEL ── */}
             {onUpdateStatus && (
-              <div className="px-4 sm:px-6 py-2.5 bg-[#F8FAFC] border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-xs print:hidden">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-[#475569] text-[11px] uppercase tracking-wider">
-                    {txt('État :', 'Status:', 'Estado:')}
-                  </span>
-                  {/* Segmented Switch */}
-                  <div className="inline-flex rounded-xl p-0.5 bg-[#E2E8F0] border border-[#CBD5E1]">
-                    <button
-                      type="button"
-                      disabled={updating}
-                      onClick={() => {
-                        if (!isPaid) {
-                          setUpdating(true);
-                          onUpdateStatus(invoice.id, 'PAID', invoice.paymentMethod);
-                          setTimeout(() => setUpdating(false), 300);
-                        }
-                      }}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        isPaid
-                          ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'text-[#64748B] hover:text-[#0F172A]'
-                      }`}
-                    >
-                      <IconCheck size={13} />
-                      <span>{txt('Payé / Réglé', 'Paid / Settled', 'Pago / Quitado')}</span>
-                    </button>
+              <div className="px-4 sm:px-6 py-3 bg-[#F8FAFC] border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-xs print:hidden">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-[#475569] text-[11px] uppercase tracking-wider">
+                      {txt('État :', 'Status:', 'Estado:')}
+                    </span>
+                    {/* Segmented Switch */}
+                    <div className="inline-flex rounded-xl p-0.5 bg-[#E2E8F0] border border-[#CBD5E1] shadow-2xs">
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={async () => {
+                          if (!isPaid) {
+                            setUpdating(true);
+                            try {
+                              await onUpdateStatus(invoice.id, 'PAID', invoice.paymentMethod);
+                            } finally {
+                              setTimeout(() => setUpdating(false), 350);
+                            }
+                          }
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${
+                          isPaid
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/50'
+                        }`}
+                      >
+                        {updating && !isPaid ? (
+                          <IconLoader2 size={13} className="animate-spin" />
+                        ) : (
+                          <IconCheck size={13} />
+                        )}
+                        <span>{txt('Payé / Réglé', 'Paid / Settled', 'Pago / Quitado')}</span>
+                      </button>
 
-                    <button
-                      type="button"
-                      disabled={updating}
-                      onClick={() => {
-                        if (isPaid) {
-                          setUpdating(true);
-                          onUpdateStatus(invoice.id, 'PENDING');
-                          setTimeout(() => setUpdating(false), 300);
-                        }
-                      }}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        !isPaid
-                          ? 'bg-amber-500 text-white shadow-xs'
-                          : 'text-[#64748B] hover:text-[#0F172A]'
-                      }`}
-                    >
-                      <IconClock size={13} />
-                      <span>{txt('En Attente', 'Pending', 'Pendente')}</span>
-                    </button>
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={async () => {
+                          if (isPaid) {
+                            setUpdating(true);
+                            try {
+                              await onUpdateStatus(invoice.id, 'PENDING');
+                            } finally {
+                              setTimeout(() => setUpdating(false), 350);
+                            }
+                          }
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${
+                          !isPaid
+                            ? 'bg-amber-500 text-white shadow-xs'
+                            : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/50'
+                        }`}
+                      >
+                        {updating && isPaid ? (
+                          <IconLoader2 size={13} className="animate-spin" />
+                        ) : (
+                          <IconClock size={13} />
+                        )}
+                        <span>{txt('En Attente', 'Pending', 'Pendente')}</span>
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Payment settled timestamp pill */}
+                  {isPaid && invoice.paidAt && (
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <IconCheck size={11} className="text-emerald-600" />
+                      <span>
+                        {txt('Liquidado em', 'Settled on', 'Liquidado em')}{' '}
+                        {new Date(invoice.paidAt).toLocaleDateString(lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'pt-PT')}{' '}
+                        {new Date(invoice.paidAt).toLocaleTimeString(lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </span>
+                  )}
                 </div>
 
                 {/* Quick Payment Method Selector */}
@@ -192,12 +221,15 @@ export function InvoiceDetailModal({
                   <select
                     value={invoice.paymentMethod}
                     disabled={updating}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       setUpdating(true);
-                      onUpdateStatus(invoice.id, invoice.paymentStatus, e.target.value as PaymentMethod);
-                      setTimeout(() => setUpdating(false), 300);
+                      try {
+                        await onUpdateStatus(invoice.id, invoice.paymentStatus, e.target.value as PaymentMethod);
+                      } finally {
+                        setTimeout(() => setUpdating(false), 350);
+                      }
                     }}
-                    className="bg-white border border-[#CBD5E1] rounded-lg px-2.5 py-1 text-xs font-bold text-[#0F172A] outline-none cursor-pointer hover:border-[#94A3B8]"
+                    className="bg-white border border-[#CBD5E1] rounded-lg px-2.5 py-1 text-xs font-bold text-[#0F172A] outline-none cursor-pointer hover:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all shadow-2xs"
                   >
                     <option value="MULTIBANCO">Multibanco (TPA)</option>
                     <option value="MBWAY">MB Way</option>
