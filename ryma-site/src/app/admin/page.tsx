@@ -271,12 +271,24 @@ export default function AdminPage() {
           isInitialLoadDoneRef.current = true;
           setAppointments(data.appointments);
         } else {
-          data.appointments.forEach(a => {
-            if (!knownAppointmentIdsRef.current.has(a.id)) {
-              handleNewIncomingAppointment(a, false);
-            }
-          });
+          const newIncoming = data.appointments.filter(a => !knownAppointmentIdsRef.current.has(a.id));
+          newIncoming.forEach(a => knownAppointmentIdsRef.current.add(a.id));
           setAppointments(data.appointments);
+
+          if (!isSilent && newIncoming.length > 0) {
+            if (newIncoming.length === 1) {
+              handleNewIncomingAppointment(newIncoming[0], false);
+            } else {
+              const patientName = newIncoming[0].patientName;
+              addToast({
+                type: 'success',
+                title: lang === 'pt' ? 'Plano de Sessões Agendado' : lang === 'en' ? 'Sessions Scheduled' : 'Plan de Séances Planifié',
+                message: `${patientName} • ${newIncoming.length} sessões agendadas com sucesso.`,
+                duration: 7000,
+              });
+              playNotificationChime();
+            }
+          }
         }
       }
     } catch (err) {
@@ -411,6 +423,49 @@ export default function AdminPage() {
                 return [appt, ...prev];
               });
               handleNewIncomingAppointment(appt, false);
+            }
+          } catch { /* silent */ }
+        });
+
+        eventSource.addEventListener('appointments:batch_created', (e: MessageEvent) => {
+          try {
+            const parsed = JSON.parse(e.data);
+            const { appointments: batchAppts, count, patientName, service } = parsed.data;
+            if (Array.isArray(batchAppts) && batchAppts.length > 0) {
+              const newAppts = batchAppts.filter(a => !knownAppointmentIdsRef.current.has(a.id));
+              if (newAppts.length > 0) {
+                newAppts.forEach(a => knownAppointmentIdsRef.current.add(a.id));
+                setAppointments(prev => {
+                  const existingIds = new Set(prev.map(p => p.id));
+                  const toAdd = newAppts.filter(a => !existingIds.has(a.id));
+                  return [...toAdd, ...prev];
+                });
+
+                playNotificationChime();
+                slotCacheRef.current = {};
+
+                // Display EXACTLY 1 consolidated toast for the entire batch
+                const svcName = getServiceName(service || newAppts[0].service, lang);
+                const toastTitle =
+                  lang === 'fr'
+                    ? 'Plan de Séances Créé !'
+                    : lang === 'en'
+                    ? 'Treatment Plan Created!'
+                    : 'Plano de Sessões Criado!';
+                const toastMsg =
+                  lang === 'fr'
+                    ? `${patientName || newAppts[0].patientName} — ${count || newAppts.length} séances planifiées (${svcName})`
+                    : lang === 'en'
+                    ? `${patientName || newAppts[0].patientName} — ${count || newAppts.length} sessions scheduled (${svcName})`
+                    : `${patientName || newAppts[0].patientName} — ${count || newAppts.length} sessões agendadas com sucesso (${svcName})`;
+
+                addToast({
+                  type: 'success',
+                  title: toastTitle,
+                  message: toastMsg,
+                  duration: 7000,
+                });
+              }
             }
           } catch { /* silent */ }
         });
@@ -1076,6 +1131,9 @@ export default function AdminPage() {
         patientsList={patientsList}
         onActionToast={addToast}
         onSuccess={(created) => {
+          if (Array.isArray(created)) {
+            created.forEach(a => knownAppointmentIdsRef.current.add(a.id));
+          }
           fetchAppointments(true);
           fetchPatientNotes();
           slotCacheRef.current = {};

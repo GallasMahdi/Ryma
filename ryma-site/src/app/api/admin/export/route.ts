@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
-import { dbGetAppointments, dbGetAllPatients } from '@/lib/db';
+import { dbGetAppointments, dbGetAllPatients, dbExportFullDatabaseBackup } from '@/lib/db';
 import { getServicePrice } from '@/types/admin';
 
 function sanitizeCsvField(val: unknown): string {
@@ -23,6 +23,18 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type') ?? 'appointments';
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
+
+  if (type === 'backup' || type === 'json') {
+    const backupData = await dbExportFullDatabaseBackup();
+    const dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+    return new NextResponse(JSON.stringify(backupData, null, 2), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': `attachment; filename="ryma_crm_full_backup_${dateStr}.json"`,
+      },
+    });
+  }
 
   if (type === 'patients') {
     const patients = await dbGetAllPatients();

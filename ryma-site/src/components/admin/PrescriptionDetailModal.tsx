@@ -155,8 +155,8 @@ export function PrescriptionDetailModal({
                     🧴 Produtos & Cuidados Tópicos Recomendados
                   </h4>
                   <div className="space-y-1.5">
-                    {careProducts.map(it => (
-                      <div key={it.id} className="p-2.5 bg-white border border-[#E2E8F0] rounded-xl">
+                    {careProducts.map((it, idx) => (
+                      <div key={it.id || `care-${idx}-${it.title}`} className="p-2.5 bg-white border border-[#E2E8F0] rounded-xl">
                         <p className="font-bold text-[#0F172A]">{it.title}</p>
                         <p className="text-[11px] text-[#475569] mt-0.5">
                           <strong>Aplicação / Posologia:</strong> {it.instructions}
@@ -174,8 +174,8 @@ export function PrescriptionDetailModal({
                     🧘 Material Ergonómico & Auto-Reabilitação
                   </h4>
                   <div className="space-y-1.5">
-                    {equipment.map(it => (
-                      <div key={it.id} className="p-2.5 bg-white border border-[#E2E8F0] rounded-xl">
+                    {equipment.map((it, idx) => (
+                      <div key={it.id || `equip-${idx}-${it.title}`} className="p-2.5 bg-white border border-[#E2E8F0] rounded-xl">
                         <p className="font-bold text-[#0F172A]">{it.title}</p>
                         <p className="text-[11px] text-[#475569] mt-0.5">
                           <strong>Utilização:</strong> {it.instructions}
@@ -193,8 +193,8 @@ export function PrescriptionDetailModal({
                     💡 Hábitos & Higiene Postural
                   </h4>
                   <div className="space-y-1.5">
-                    {habits.map(it => (
-                      <div key={it.id} className="p-2.5 bg-white border border-[#E2E8F0] rounded-xl">
+                    {habits.map((it, idx) => (
+                      <div key={it.id || `habit-${idx}-${it.title}`} className="p-2.5 bg-white border border-[#E2E8F0] rounded-xl">
                         <p className="font-bold text-[#0F172A]">{it.title}</p>
                         <p className="text-[11px] text-[#475569] mt-0.5">
                           <strong>Conselho:</strong> {it.instructions}

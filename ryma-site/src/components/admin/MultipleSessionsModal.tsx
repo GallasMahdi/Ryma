@@ -164,6 +164,25 @@ export function MultipleSessionsModal({
     setPreviewError(null);
   };
 
+  // Explicitly remove a weekday pattern via the dedicated X button
+  const removeWeekday = (dayOfWeek: number) => {
+    setSchedulePatterns(prev => {
+      if (prev.length === 1) {
+        setPreviewError(
+          txt(
+            'Veuillez conserver au moins un jour de récurrence.',
+            'Please keep at least one recurring day.',
+            'Mantenha pelo menos um dia de recorrência selecionado.'
+          )
+        );
+        return prev;
+      }
+      return prev.filter(p => p.dayOfWeek !== dayOfWeek);
+    });
+    setHasCalculated(false);
+    setPreviewError(null);
+  };
+
   const updatePatternTime = (dayOfWeek: number, startTime: string) => {
     setSchedulePatterns(prev =>
       prev.map(p => (p.dayOfWeek === dayOfWeek ? { ...p, startTime } : p))
@@ -581,7 +600,7 @@ export function MultipleSessionsModal({
                       ? 'bg-white border-[#0F172A] shadow-2xs'
                       : isBlockedByLimit
                       ? 'bg-[#F1F5F9]/60 border-[#E2E8F0] opacity-40'
-                      : 'bg-[#F1F5F9] border-[#E2E8F0] opacity-75 hover:opacity-100'
+                      : 'bg-[#F1F5F9] border-[#E2E8F0] opacity-75 hover:opacity-100 hover:border-[#CBD5E1]'
                   }`}
                   title={
                     isBlockedByLimit
@@ -594,23 +613,43 @@ export function MultipleSessionsModal({
                   }
                 >
                   <div className="flex items-center justify-between mb-1.5">
-                    <button
-                      type="button"
-                      disabled={isBlockedByLimit}
-                      onClick={() => toggleWeekday(w.day)}
-                      className={`px-2 py-0.5 rounded-md font-bold text-xs transition-colors ${
-                        isActive
-                          ? 'bg-[#0F172A] text-white'
-                          : isBlockedByLimit
-                          ? 'bg-[#E2E8F0] text-[#94A3B8] cursor-not-allowed'
-                          : 'bg-[#E2E8F0] text-[#475569] hover:bg-[#CBD5E1]'
-                      }`}
-                    >
-                      {lang === 'fr' ? w.labelFr : lang === 'en' ? w.labelEn : w.labelPt}
-                    </button>
-                    <span className="text-[11px] font-bold text-[#64748B]">
-                      {lang === 'fr' ? w.labelFr : lang === 'en' ? w.labelEn : w.labelPt}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`px-2 py-0.5 rounded-md font-bold text-xs select-none ${
+                          isActive ? 'bg-[#0F172A] text-white' : 'bg-[#E2E8F0] text-[#475569]'
+                        }`}
+                      >
+                        {lang === 'fr' ? w.labelFr : lang === 'en' ? w.labelEn : w.labelPt}
+                      </span>
+                      <span className="text-[11px] font-bold text-[#64748B]">
+                        {lang === 'fr' ? w.labelFr : lang === 'en' ? w.labelEn : w.labelPt}
+                      </span>
+                    </div>
+
+                    {isActive ? (
+                      <button
+                        type="button"
+                        onClick={() => removeWeekday(w.day)}
+                        className="w-5 h-5 rounded-md bg-rose-50 hover:bg-rose-100 active:scale-90 text-rose-600 hover:text-rose-700 flex items-center justify-center transition-all border border-rose-200 shadow-2xs"
+                        title={txt(`Supprimer le ${w.labelFr}`, `Remove ${w.labelEn}`, `Remover ${w.labelPt}`)}
+                        aria-label={txt(`Supprimer le ${w.labelFr}`, `Remove ${w.labelEn}`, `Remover ${w.labelPt}`)}
+                      >
+                        <IconX size={12} strokeWidth={2.5} />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={isBlockedByLimit}
+                        onClick={() => toggleWeekday(w.day)}
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                          isBlockedByLimit
+                            ? 'text-[#94A3B8] cursor-not-allowed'
+                            : 'text-[#0F172A] hover:bg-[#CBD5E1]/60 active:scale-95'
+                        }`}
+                      >
+                        + {txt('Ajouter', 'Add', 'Adicionar')}
+                      </button>
+                    )}
                   </div>
 
                   {isActive && activePattern && (

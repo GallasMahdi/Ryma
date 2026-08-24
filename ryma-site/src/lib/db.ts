@@ -7,7 +7,7 @@ import fs from 'fs';
 import type { PatientRecord, PatientSession, Invoice, CreateInvoiceInput, InvoiceStats, PatientPrescription, PrescriptionItem } from '@/types/admin';
 import { SITE } from '@/lib/site';
 import { phonesMatch } from '@/lib/phone';
-import { broadcastAppointmentCreated } from '@/lib/events';
+import { broadcastAppointmentCreated, broadcastMultipleAppointmentsCreated } from '@/lib/events';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
 
 // ─── Dual Storage Engine: Dynamic Turso (Cloud) with Local Fallback ───────────
@@ -130,12 +130,19 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
       )`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
+      `CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime)`,
+      `CREATE INDEX IF NOT EXISTS idx_appointments_phone_date ON appointments(phone, date DESC)`,
       `CREATE INDEX IF NOT EXISTS idx_rate_limit ON rate_limit_log(ip, action, timestamp)`,
       `CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone)`,
+      `CREATE INDEX IF NOT EXISTS idx_patients_updated ON patients(updatedAt DESC)`,
+      `CREATE INDEX IF NOT EXISTS idx_patients_coverage ON patients(coverageType)`,
       `CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient ON patient_sessions(patientId)`,
+      `CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient_date ON patient_sessions(patientId, date DESC, createdAt DESC)`,
+      `CREATE INDEX IF NOT EXISTS idx_blocked_slots_date_time ON blocked_slots(date, time)`,
       `CREATE INDEX IF NOT EXISTS idx_invoices_number ON invoices(invoiceNumber)`,
       `CREATE INDEX IF NOT EXISTS idx_invoices_patient ON invoices(patientPhone)`,
       `CREATE INDEX IF NOT EXISTS idx_invoices_date ON invoices(createdAt)`,
+      `CREATE INDEX IF NOT EXISTS idx_invoices_patient_created ON invoices(patientPhone, createdAt DESC)`,
       `CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus)`,
       `CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patientPhone)`,
       `CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date)`,
@@ -172,6 +179,17 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
     }
     if (!apptColNames.includes('coverageNumber')) {
       await client.execute("ALTER TABLE appointments ADD COLUMN coverageNumber TEXT");
+    }
+
+    // 3. Automated index maintenance and prune stale rate limit logs (> 24 hours)
+    try {
+      await client.execute({
+        sql: 'DELETE FROM rate_limit_log WHERE timestamp < ?',
+        args: [Date.now() - 24 * 60 * 60 * 1000],
+      });
+      await client.execute('PRAGMA optimize');
+    } catch {
+      /* non-blocking maintenance */
     }
 
     _tursoInitialized = true;
@@ -235,7 +253,7 @@ function getTursoClient(): LibSqlClient {
 }
 
 /**
- * Executes a query ONLY against Turso, with a single retry on socket failure.
+ * Executes a query ONLY against Turso, with 3 resilient retry attempts with exponential backoff on network drop.
  * NEVER falls back to local SQLite. Used for critical booking conflict checks
  * and INSERTs that must be authoritative. Falls back only if Turso is not
  * configured (local dev without Turso credentials).
@@ -245,7 +263,8 @@ async function executeTursoDirectly<T = any>(sql: string, args: any[] = []): Pro
     return executeSqliteQuery<T>(sql, args);
   }
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const client = getTursoClient();
       await ensureTursoSchema(client);
@@ -253,10 +272,12 @@ async function executeTursoDirectly<T = any>(sql: string, args: any[] = []): Pro
       return res.rows as unknown as T[];
     } catch (err) {
       _tursoClient = null;
-      if (attempt === 2) throw err;
+      if (attempt === maxAttempts) throw err;
+      // Exponential jittered backoff: 50ms, 100ms
+      await new Promise(r => setTimeout(r, attempt * 50));
     }
   }
-  throw new Error('Turso unreachable after 2 attempts');
+  throw new Error('Turso unreachable after 3 attempts');
 }
 
 // ─── Local SQLite Fallback Engine ─────────────────────────────────────────────
@@ -460,12 +481,19 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
     CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
+    CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime);
+    CREATE INDEX IF NOT EXISTS idx_appointments_phone_date ON appointments(phone, date DESC);
     CREATE INDEX IF NOT EXISTS idx_rate_limit ON rate_limit_log(ip, action, timestamp);
     CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone);
+    CREATE INDEX IF NOT EXISTS idx_patients_updated ON patients(updatedAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_patients_coverage ON patients(coverageType);
     CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient ON patient_sessions(patientId);
+    CREATE INDEX IF NOT EXISTS idx_patient_sessions_patient_date ON patient_sessions(patientId, date DESC, createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_blocked_slots_date_time ON blocked_slots(date, time);
     CREATE INDEX IF NOT EXISTS idx_invoices_number ON invoices(invoiceNumber);
     CREATE INDEX IF NOT EXISTS idx_invoices_patient ON invoices(patientPhone);
     CREATE INDEX IF NOT EXISTS idx_invoices_date ON invoices(createdAt);
+    CREATE INDEX IF NOT EXISTS idx_invoices_patient_created ON invoices(patientPhone, createdAt DESC);
     CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus);
     CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patientPhone);
     CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date);
@@ -985,10 +1013,6 @@ export async function dbCreateMultipleAppointments(
       const createdAppt = apptRows[0];
       if (createdAppt) {
         createdAppointments.push(createdAppt);
-        // Broadcast real-time event to update admin calendar tabs instantly
-        try {
-          broadcastAppointmentCreated(createdAppt);
-        } catch { /* silent */ }
       }
 
       // B) Insert PatientSession record for clinical dossier
@@ -1056,6 +1080,11 @@ export async function dbCreateMultipleAppointments(
       `UPDATE patients SET totalPrescribedSessions = MAX(totalPrescribedSessions, ?), updatedAt = ? WHERE id = ?`,
       [input.sessions.length, now, patientId]
     );
+  } catch { /* silent */ }
+
+  // Broadcast real-time batch event to update all open admin tabs in a single notification
+  try {
+    broadcastMultipleAppointmentsCreated(createdAppointments);
   } catch { /* silent */ }
 
   return {
@@ -1888,11 +1917,53 @@ export async function dbGetPrescriptionsByPatientPhone(patientPhone: string): Pr
       practitioner: r.practitioner,
       date: r.date,
       diagnosisOrGoal: r.diagnosisOrGoal,
-      items,
+      items: items.map((it, idx) => ({
+        ...it,
+        id: it.id || `rx_item_${r.id}_${idx}`,
+      })),
       generalNotes: r.generalNotes,
       createdAt: r.createdAt,
     };
   });
+}
+
+// ─── Full Database Snapshot Export ────────────────────────────────────────────
+export async function dbExportFullDatabaseBackup(): Promise<{
+  version: string;
+  exportedAt: string;
+  tables: {
+    appointments: Appointment[];
+    patients: any[];
+    patient_sessions: any[];
+    invoices: Invoice[];
+    prescriptions: any[];
+    blocked_slots: any[];
+    patient_notes: any[];
+  };
+}> {
+  const [appointments, patients, sessions, invoices, prescriptions, blockedSlots, notes] = await Promise.all([
+    dbGetAppointments(),
+    dbGetAllPatients(),
+    executeQuery('SELECT * FROM patient_sessions ORDER BY createdAt DESC'),
+    dbGetInvoices(),
+    executeQuery('SELECT * FROM prescriptions ORDER BY createdAt DESC'),
+    executeQuery('SELECT * FROM blocked_slots ORDER BY date, time'),
+    executeQuery('SELECT * FROM patient_notes ORDER BY updatedAt DESC'),
+  ]);
+
+  return {
+    version: '1.0.0',
+    exportedAt: new Date().toISOString(),
+    tables: {
+      appointments,
+      patients,
+      patient_sessions: sessions,
+      invoices,
+      prescriptions,
+      blocked_slots: blockedSlots,
+      patient_notes: notes,
+    },
+  };
 }
 
 export async function dbDeletePrescription(id: string): Promise<void> {

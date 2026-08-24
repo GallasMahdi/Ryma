@@ -5,6 +5,7 @@ export type AdminEventType =
   | 'appointment:created'
   | 'appointment:updated'
   | 'appointment:deleted'
+  | 'appointments:batch_created'
   | 'slot:updated';
 
 export interface AdminEventPayload {
@@ -45,6 +46,18 @@ export function broadcastAdminEvent(type: AdminEventType, data: any) {
  */
 export function broadcastAppointmentCreated(appointment: any) {
   broadcastAdminEvent('appointment:created', appointment);
+}
+
+/**
+ * Convenience helper to broadcast a batch of multiple appointments created at once
+ */
+export function broadcastMultipleAppointmentsCreated(appointments: any[]) {
+  broadcastAdminEvent('appointments:batch_created', {
+    appointments,
+    count: appointments.length,
+    patientName: appointments[0]?.patientName,
+    service: appointments[0]?.service,
+  });
 }
 
 /**
