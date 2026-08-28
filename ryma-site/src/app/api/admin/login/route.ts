@@ -13,9 +13,10 @@ const GENERIC_ERROR = { error: 'Invalid credentials' };
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
 
-  // Rate limiting: 20 attempts per 15 minutes per IP (disabled in development)
+  // Rate limiting: 10 attempts in prod (100 in dev) per 15 minutes per IP
   const isDev = process.env.NODE_ENV !== 'production';
-  const allowed = isDev || (await dbCheckRateLimit(ip, 'login', 20, 15 * 60));
+  const maxAttempts = isDev ? 100 : 10;
+  const allowed = await dbCheckRateLimit(ip, 'login', maxAttempts, 15 * 60);
   if (!allowed) {
     return NextResponse.json(
       { error: 'Trop de tentatives. Veuillez attendre 15 minutes.' },

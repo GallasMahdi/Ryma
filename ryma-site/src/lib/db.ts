@@ -160,8 +160,46 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
       `CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus)`,
       `CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patientPhone)`,
       `CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date)`,
-      `CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON security_audit_logs(createdAt DESC)`,
     ]);
+
+    // Migration for legacy appointments table with table-level UNIQUE constraint on Turso
+    try {
+      const apptTableRes = await client.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='appointments'");
+      const tableSql = String(apptTableRes.rows[0]?.sql ?? '');
+      if (tableSql && (tableSql.includes('UNIQUE(date, startTime)') || tableSql.includes('UNIQUE (date, startTime)'))) {
+        console.log('[Turso Migration] Migrating legacy appointments table on Turso Cloud...');
+        await client.batch([
+          `CREATE TABLE appointments_migration (
+            id               TEXT PRIMARY KEY,
+            patientName      TEXT NOT NULL,
+            email            TEXT,
+            phone            TEXT NOT NULL,
+            service          TEXT NOT NULL,
+            date             TEXT NOT NULL,
+            startTime        TEXT NOT NULL,
+            status           TEXT NOT NULL DEFAULT 'PENDING'
+                             CHECK (status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')),
+            notes            TEXT,
+            coverageType     TEXT DEFAULT 'PARTICULAR',
+            coverageProvider TEXT,
+            coverageNumber   TEXT,
+            createdAt        TEXT NOT NULL,
+            updatedAt        TEXT NOT NULL
+          )`,
+          `INSERT INTO appointments_migration SELECT id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt FROM appointments`,
+          `DROP TABLE appointments`,
+          `ALTER TABLE appointments_migration RENAME TO appointments`,
+          `CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED'`,
+          `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
+          `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
+          `CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime)`,
+          `CREATE INDEX IF NOT EXISTS idx_appointments_phone_date ON appointments(phone, date DESC)`,
+        ]);
+        console.log('[Turso Migration] Successfully migrated appointments on Turso Cloud!');
+      }
+    } catch (migErr) {
+      console.warn('[Turso Table Migration Warning]:', migErr);
+    }
 
     // 2. Safe non-destructive column migrations on Turso
     const patientColsRes = await client.execute("PRAGMA table_info(patients)");

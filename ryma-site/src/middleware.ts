@@ -14,9 +14,12 @@ import { NextRequest, NextResponse } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Let the login page through (avoid redirect loop)
+  // Let the login page through with no-store headers
   if (pathname === '/admin/login' || pathname.startsWith('/admin/login/')) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return res;
   }
 
   // Check for the session cookie presence
@@ -25,10 +28,16 @@ export function middleware(request: NextRequest) {
   if (!sessionCookie?.value) {
     const loginUrl = new URL('/admin/login', request.url);
     loginUrl.searchParams.set('from', pathname);
-    return NextResponse.redirect(loginUrl);
+    const redirectRes = NextResponse.redirect(loginUrl);
+    redirectRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    redirectRes.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return redirectRes;
   }
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  return res;
 }
 
 export const config = {

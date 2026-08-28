@@ -84,7 +84,7 @@ const nextConfig: NextConfig = {
       },
       // Strict No-Cache for Admin & Dynamic API Endpoints
       {
-        source: '/(admin.*|api.*)',
+        source: '/admin/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -93,6 +93,28 @@ const nextConfig: NextConfig = {
           {
             key: 'X-Robots-Tag',
             value: 'noindex, nofollow',
+          },
+        ],
+      },
+      {
+        source: '/admin',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow',
+          },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
           },
         ],
       },

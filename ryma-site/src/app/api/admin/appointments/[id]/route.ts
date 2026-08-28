@@ -84,10 +84,11 @@ export async function PATCH(
     updates.notes = String(body.notes).trim().slice(0, 1000);
   }
 
-  if (body.date !== undefined || body.startTime !== undefined) {
-    const newDate = body.date ? String(body.date).trim() : existing.date;
-    const newTime = body.startTime ? String(body.startTime).trim() : existing.startTime;
+  const newDate = body.date ? String(body.date).trim() : existing.date;
+  const newTime = body.startTime ? String(body.startTime).trim() : existing.startTime;
+  const newStatus = body.status !== undefined ? (body.status as AppointmentStatus) : existing.status;
 
+  if (body.date !== undefined || body.startTime !== undefined) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
       return NextResponse.json({ error: 'Format de date invalide' }, { status: 422 });
     }
@@ -96,6 +97,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Créneau horaire invalide' }, { status: 422 });
     }
 
+    updates.date = newDate;
+    updates.startTime = newTime;
+  }
+
+  // If the appointment will be ACTIVE, verify slot is not taken by another active appointment
+  if (newStatus !== 'CANCELLED' && (body.date !== undefined || body.startTime !== undefined || existing.status === 'CANCELLED')) {
     const appts = await dbGetAppointments({ date: newDate });
     const conflict = appts.some(a => a.startTime === newTime && a.status !== 'CANCELLED' && a.id !== id);
 
@@ -103,11 +110,8 @@ export async function PATCH(
     const blocked = blockedList.some(b => b.date === newDate && b.time === newTime);
 
     if (conflict || blocked) {
-      return NextResponse.json({ error: 'Ce créneau n\'est plus disponible' }, { status: 409 });
+      return NextResponse.json({ error: 'Ce créneau est déjà occupé par un autre rendez-vous actif.' }, { status: 409 });
     }
-
-    updates.date = newDate;
-    updates.startTime = newTime;
   }
 
   const updated = await dbUpdateAppointment(id, updates);
