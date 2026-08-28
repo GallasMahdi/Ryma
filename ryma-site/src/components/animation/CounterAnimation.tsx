@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useNativeInView } from '@/lib/useIntersection';
 
 interface CounterProps {
   end: number;
@@ -10,62 +9,71 @@ interface CounterProps {
   duration?: number;
 }
 
-export function CounterAnimation({ end, suffix = '', prefix = '', duration = 1800 }: CounterProps) {
+/**
+ * CounterAnimation — enterprise-grade, always-fires counter.
+ *
+ * Design decisions:
+ * - No IntersectionObserver: the stats ribbon lives above the fold in the Hero,
+ *   so an IO-based trigger is unreliable after SSR hydration. We start immediately
+ *   on mount via a zero-timeout to let React finish painting, then kick off RAF.
+ * - easeOutExpo: numbers rush up fast and settle elegantly — premium feel.
+ * - `started` ref guards against double-fire in Strict Mode double-invocation.
+ * - Cleanup cancels the RAF so there are no memory leaks on unmount.
+ */
+export function CounterAnimation({
+  end,
+  suffix = '',
+  prefix = '',
+  duration = 1400,
+}: CounterProps) {
   const [count, setCount] = useState(0);
-  const { ref, inView } = useNativeInView({ threshold: 0 });
-  const hasStarted = useRef(false);
+  const rafRef = useRef<number | null>(null);
+  const startedRef = useRef(false);
 
   useEffect(() => {
-    let animationFrameId: number;
+    // Guard: only start once per mount (handles React Strict Mode double-call)
+    if (startedRef.current) return;
+    startedRef.current = true;
+
     let startTime: number | null = null;
 
-    const startAnimation = () => {
-      if (hasStarted.current) return;
-      hasStarted.current = true;
+    const tick = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
 
-      const animate = (timestamp: number) => {
-        if (!startTime) startTime = timestamp;
-        const progress = Math.min((timestamp - startTime) / duration, 1);
-        
-        // Luxury easeOutQuart: 1 - (1 - progress)^4
-        const ease = 1 - Math.pow(1 - progress, 4);
-        const currentVal = Math.round(ease * end);
+      // easeOutExpo: 1 - 2^(-10 * progress)
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const value = Math.round(ease * end);
+      setCount(value);
 
-        setCount(currentVal);
-
-        if (progress < 1) {
-          animationFrameId = requestAnimationFrame(animate);
-        } else {
-          setCount(end);
-        }
-      };
-
-      animationFrameId = requestAnimationFrame(animate);
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        setCount(end); // guarantee exact final value
+        rafRef.current = null;
+      }
     };
 
-    if (inView) {
-      startAnimation();
-    } else {
-      // Immediate fallback if element is already inside the initial viewport (above fold)
-      const fallbackTimer = setTimeout(() => {
-        if (ref.current) {
-          const rect = ref.current.getBoundingClientRect();
-          const isVisible = rect.top < (window.innerHeight || document.documentElement.clientHeight) && rect.bottom > 0;
-          if (isVisible) {
-            startAnimation();
-          }
-        }
-      }, 100);
-      return () => clearTimeout(fallbackTimer);
-    }
+    // Defer one tick so the component is fully painted before we start
+    const timerId = setTimeout(() => {
+      rafRef.current = requestAnimationFrame(tick);
+    }, 0);
 
     return () => {
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      clearTimeout(timerId);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      // Reset so the animation can restart if the component re-mounts
+      startedRef.current = false;
     };
-  }, [inView, end, duration, ref]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [end, duration]);
 
   return (
-    <span ref={ref as any} className="inline-block tabular-nums">
+    <span className="inline-block tabular-nums">
       {prefix}{count.toLocaleString()}{suffix}
     </span>
   );

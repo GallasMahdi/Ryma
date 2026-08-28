@@ -129,11 +129,13 @@ export function Hero() {
     playSlideChange();
   }, []);
 
+  // Bug 1 fix: only depend on `isPlaying`. Adding `currentIndex` caused the
+  // 6-second timer to reset from 0 on every auto-advance, making the slideshow
+  // stutter and double-fire the slide-change sound.
   useEffect(() => {
-    if (!isPlaying) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (!isPlaying) return;
+
     timerRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);
     }, SLIDE_DURATION_MS);
@@ -141,7 +143,7 @@ export function Hero() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPlaying, currentIndex]);
+  }, [isPlaying]);
 
   const currentSlide = HERO_SLIDES[currentIndex];
 
@@ -162,17 +164,20 @@ export function Hero() {
           return (
             <motion.div
               key={slide.src}
-              initial={{ opacity: 0, scale: 1.04 }}
+              // Bug 3 + Perf fix:
+              // - Inactive slides get opacity:0 but scale stays at 1 (not 1.04).
+              //   Previously they animated back to 1.04 during crossfade = jank.
+              // - willChange only on the active slide to avoid 4× GPU compositor layers.
+              initial={{ opacity: 0, scale: 1 }}
               animate={{
                 opacity: isActive ? 1 : 0,
-                scale: isActive ? 1 : 1.04,
+                scale: isActive ? 1 : 1,
               }}
               transition={{
-                opacity: { duration: 1.4, ease: [0.25, 1, 0.5, 1] },
-                scale: { duration: SLIDE_DURATION_MS / 1000, ease: 'linear' },
+                opacity: { duration: 1.2, ease: [0.25, 1, 0.5, 1] },
               }}
               className="absolute inset-0"
-              style={{ willChange: 'opacity, transform' }}
+              style={isActive ? { willChange: 'opacity' } : undefined}
             >
               <Image
                 src={slide.src}
@@ -207,6 +212,7 @@ export function Hero() {
       {/* ── Top Header Micro Badge ── */}
       <div className="relative z-10 mx-auto max-w-5xl px-3 sm:px-6 w-full text-center mb-2 sm:mb-4">
         <motion.div
+          key="hero-badge"
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -257,6 +263,7 @@ export function Hero() {
 
         {/* Master Heading with Animated Typography */}
         <motion.div
+          key="hero-heading"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
@@ -414,6 +421,7 @@ export function Hero() {
 
         {/* DESKTOP (>= 768px): Dual Ultra-Luxury Glass Cards */}
         <motion.div
+          key="hero-cards"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.25 }}
@@ -492,6 +500,7 @@ export function Hero() {
 
         {/* ── Luxury CTAs ── */}
         <motion.div
+          key="hero-ctas"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.35 }}
@@ -542,6 +551,7 @@ export function Hero() {
 
         {/* ── Key Trust Pillars ── */}
         <motion.div
+          key="hero-trust"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.45 }}
