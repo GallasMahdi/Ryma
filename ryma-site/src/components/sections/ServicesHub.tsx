@@ -540,7 +540,7 @@ export function ServicesHub() {
                           {lang === 'pt' ? 'Detalhes & FAQ' : lang === 'en' ? 'Details & FAQ' : 'Détails & FAQ'}
                         </Link>
                         <Link
-                          href="/rendez-vous"
+                          href={`/rendez-vous?service=${activeService.slug}`}
                           onClick={playSoftClick}
                           className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#9A7428] hover:from-[#B88E32] hover:to-[#8A6620] text-white font-bold text-xs transition-all shadow-[0_4px_16px_rgba(196,154,60,0.25)] hover:shadow-[0_6px_20px_rgba(196,154,60,0.35)] touch-target"
                         >

@@ -394,7 +394,7 @@ export default function TarifsPage() {
                           </div>
 
                           <Link
-                            href="/rendez-vous"
+                            href={`/rendez-vous?service=${service.slug}`}
                             onClick={playSoftClick}
                             className="hidden sm:inline-flex items-center justify-center p-2 rounded-xl text-[#9A7428] bg-[#FAF5EA] hover:bg-[#C49A3C] hover:text-white transition-all shadow-xs"
                             aria-label={`Agendar ${service.name.pt}`}
@@ -448,7 +448,7 @@ export default function TarifsPage() {
                           </div>
 
                           <Link
-                            href="/rendez-vous"
+                            href={`/rendez-vous?service=${service.slug}`}
                             onClick={playSoftClick}
                             className="hidden sm:inline-flex items-center justify-center p-2 rounded-xl text-[#9A7428] bg-[#FAF5EA] hover:bg-[#C49A3C] hover:text-white transition-all shadow-xs"
                             aria-label={`Agendar ${service.name.pt}`}

@@ -557,7 +557,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
         >
           <div className="flex flex-col sm:flex-row gap-2.5">
             <Button
-              href="/rendez-vous"
+              href={`/rendez-vous?service=${service.slug}`}
               variant="primary"
               className="flex-1 justify-center py-3 shadow-[0_4px_20px_rgba(196,154,60,0.25)]"
             >

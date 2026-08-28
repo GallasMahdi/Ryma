@@ -134,7 +134,7 @@ export function ServiceCard({ service, featured = false }: ServiceCardProps) {
         </Link>
 
         <Link
-          href="/rendez-vous"
+          href={`/rendez-vous?service=${service.slug}`}
           onClick={playSoftClick}
           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-[#1A1412] text-xs font-bold transition-all shadow-xs border border-[#C49A3C]/30 hover:border-[#C49A3C]"
         >

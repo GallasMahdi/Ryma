@@ -155,7 +155,7 @@ export default function ServiceDetailPage({ params }: Props) {
             {/* Direct CTAs in Hero */}
             <div className="flex flex-wrap items-center gap-3.5">
               <Button
-                href="/rendez-vous"
+                href={`/rendez-vous?service=${service.slug}`}
                 variant="primary"
                 size="md"
                 className="shadow-[0_4px_20px_rgba(196,154,60,0.4)]"
@@ -294,7 +294,7 @@ export default function ServiceDetailPage({ params }: Props) {
                   </div>
 
                   <div className="space-y-3">
-                    <Button href="/rendez-vous" variant="primary" className="w-full justify-center">
+                    <Button href={`/rendez-vous?service=${service.slug}`} variant="primary" className="w-full justify-center">
                       <IconCalendarEvent size={15} className="me-2" />
                       {t.common.bookAppointment}
                     </Button>

@@ -18,6 +18,7 @@ import {
 
 interface ResultCase {
   id: string;
+  slug: string;
   category: { fr: string; pt: string; en: string };
   label: { fr: string; pt: string; en: string };
   sessions: { fr: string; pt: string; en: string };
@@ -30,6 +31,7 @@ interface ResultCase {
 const CASES: ResultCase[] = [
   {
     id: 'cellulite',
+    slug: 'massage-drainant',
     category: { fr: 'Cellulite', pt: 'Celulite & Firmeza', en: 'Cellulite & Firming' },
     label: { fr: 'Traitement cellulite', pt: 'Tratamento de Celulite e Remodelação', en: 'Cellulite & Silhouette Remodeling' },
     sessions: { fr: '8 séances', pt: '8 sessões', en: '8 sessions' },
@@ -40,6 +42,7 @@ const CASES: ResultCase[] = [
   },
   {
     id: 'cryolipolyse',
+    slug: 'cryolipolyse',
     category: { fr: 'Cryolipolyse', pt: 'Criolipólise Avançada', en: 'Advanced Cryolipolysis' },
     label: { fr: 'Élimination des graisses', pt: 'Redução de Gordura Localizada', en: 'Targeted Fat Reduction' },
     sessions: { fr: '3 séances', pt: '3 sessões', en: '3 sessions' },
@@ -50,6 +53,7 @@ const CASES: ResultCase[] = [
   },
   {
     id: 'postpartum',
+    slug: 'reeducation-post-partum',
     category: { fr: 'Rééducation post-partum', pt: 'Reabilitação Pós-Parto', en: 'Postpartum Rehab' },
     label: { fr: 'Reconstruction abdominale', pt: 'Recuperação Abdominal e Pélvica', en: 'Abdominal & Pelvic Recovery' },
     sessions: { fr: '12 séances', pt: '12 sessões', en: '12 sessions' },
@@ -60,6 +64,7 @@ const CASES: ResultCase[] = [
   },
   {
     id: 'radiofrequence',
+    slug: 'radiofrequence',
     category: { fr: 'Radiofréquence', pt: 'Radiofrequência Médica', en: 'Medical Radiofrequency' },
     label: { fr: 'Raffermissement cutané', pt: 'Firmeza Cutânea e Colagénio', en: 'Skin Tightening & Collagen' },
     sessions: { fr: '6 séances', pt: '6 sessões', en: '6 sessions' },
@@ -70,6 +75,7 @@ const CASES: ResultCase[] = [
   },
   {
     id: 'drainage',
+    slug: 'drainage-lymphatique',
     category: { fr: 'Drainage lymphatique', pt: 'Drenagem Linfática (Vodder)', en: 'Lymphatic Drainage (Vodder)' },
     label: { fr: 'Jambes légères & désenflées', pt: 'Pernas Leves e Descongestionadas', en: 'Heavy Legs & Edema Relief' },
     sessions: { fr: '5 séances', pt: '5 sessões', en: '5 sessions' },
@@ -77,6 +83,17 @@ const CASES: ResultCase[] = [
     image: '/results/before_after_drainage.png',
     tag: { fr: 'Rééducation', pt: 'Reabilitação Ativa', en: 'Active Rehab' },
     color: '#8B7355',
+  },
+  {
+    id: 'lipolaser',
+    slug: 'laser-lipo',
+    category: { fr: 'Laser Lipo', pt: 'Laser Lipolítico', en: 'Laser Lipo Contouring' },
+    label: { fr: 'Amincissement ciblé', pt: 'Adiposidade Localizada e Contorno', en: 'Targeted Adipose Tightening' },
+    sessions: { fr: '8 séances', pt: '8 sessões', en: '8 sessions' },
+    duration: { fr: '4 semaines', pt: '4 semanas', en: '4 weeks' },
+    image: '/results/before_after_cellulite.png',
+    tag: { fr: 'Haute Technologie', pt: 'Alta Tecnologia', en: 'High Tech' },
+    color: '#C49A3C',
   },
 ];
 
@@ -346,7 +363,7 @@ export function BeforeAfterGallery() {
 
             <div className="pt-2">
               <Link
-                href="/rendez-vous"
+                href={`/rendez-vous?service=${current.slug}`}
                 onClick={playSoftClick}
                 className="inline-flex items-center justify-center gap-2 bg-[#C49A3C] hover:bg-[#E8C97A] text-[#0F0D0B] font-bold px-6 py-3 sm:px-8 sm:py-3.5 rounded-full transition-all duration-200 text-xs sm:text-sm shadow-[0_4px_20px_rgba(196,154,60,0.35)] hover:shadow-[0_6px_28px_rgba(196,154,60,0.55)] hover:-translate-y-0.5 w-full sm:w-auto"
               >
