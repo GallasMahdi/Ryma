@@ -1097,6 +1097,7 @@ export default function AdminPage() {
           totalAppointments={stats.total}
           totalNotes={Math.max(patientsList.length, patientNotes.length)}
           totalInvoices={invoices.length}
+          isLoading={loadingAppointments}
           isAnalyticsUnlocked={isAnalyticsUnlocked}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebar}
@@ -1110,6 +1111,7 @@ export default function AdminPage() {
                 <AdminKpiCards
                   stats={stats}
                   lang={lang}
+                  isLoading={loadingAppointments}
                   isAnalyticsUnlocked={isAnalyticsUnlocked}
                   onUnlockClick={() => setIsOwnerAuthModalOpen(true)}
                 />

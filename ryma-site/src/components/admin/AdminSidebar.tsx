@@ -21,6 +21,7 @@ interface AdminSidebarProps {
   totalAppointments: number;
   totalNotes: number;
   totalInvoices?: number;
+  isLoading?: boolean;
   isAnalyticsUnlocked?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -34,6 +35,7 @@ export function AdminSidebar({
   totalAppointments,
   totalNotes,
   totalInvoices,
+  isLoading = false,
   isAnalyticsUnlocked = false,
   isCollapsed = false,
   onToggleCollapse,
@@ -149,7 +151,9 @@ export function AdminSidebar({
                   )}
                 </div>
 
-                {item.badge !== null && (typeof item.badge === 'string' || item.badge > 0) && (
+                {isLoading && (item.id === 'appointments' || item.id === 'patients') && totalAppointments === 0 ? (
+                  <span className="w-5 h-4 bg-slate-200/80 rounded-md animate-pulse shrink-0" />
+                ) : item.badge !== null && (typeof item.badge === 'string' || item.badge > 0) ? (
                   isCollapsed ? (
                     <span
                       className={`absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full flex items-center justify-center ${
@@ -171,7 +175,7 @@ export function AdminSidebar({
                       {item.badge}
                     </span>
                   )
-                )}
+                ) : null}
               </button>
             );
           })}

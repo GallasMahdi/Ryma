@@ -877,9 +877,30 @@ export function AppointmentsTab({
 
       {/* Content Rendering based on viewMode */}
       {loadingAppointments ? (
-        <div className="py-20 text-center text-[#64748B] text-xs flex flex-col items-center justify-center gap-3 bg-white rounded-xl border border-[#E2E8F0]">
-          <div className="w-5 h-5 border-2 border-[#0F172A] border-t-transparent rounded-full animate-spin" />
-          <span>{txt('Chargement des rendez-vous...', 'Loading appointments...', 'A carregar consultas...')}</span>
+        <div className="space-y-3 font-sans">
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden"
+            >
+              {/* Shimmer sweep animation */}
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.8s_infinite] bg-gradient-to-r from-transparent via-slate-100/80 to-transparent" />
+
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200/50 shrink-0 animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-3.5 w-36 bg-slate-100 rounded-md animate-pulse" />
+                  <div className="h-3 w-52 bg-slate-100 rounded-md animate-pulse" />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 relative z-10 pt-2 sm:pt-0">
+                <div className="h-6 w-20 bg-slate-100 rounded-full animate-pulse" />
+                <div className="h-7 w-20 bg-slate-100 rounded-lg animate-pulse hidden sm:block" />
+                <div className="h-7 w-8 bg-slate-100 rounded-lg animate-pulse" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : displayedAppointments.length === 0 ? (
         <div className="py-16 text-center text-[#64748B] bg-white rounded-xl border border-[#E2E8F0] space-y-2">
