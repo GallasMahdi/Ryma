@@ -86,10 +86,15 @@ export function ServicesHub() {
   const [viewMode,     setViewMode]     = useState<'spotlight' | 'grid'>('spotlight');
   const [selectedSlug, setSelectedSlug] = useState<string>(SERVICES[0]?.slug ?? 'reeducation-posturale');
 
-  // ── FIX 1: per-item refs so we can scroll active item into view ──────────
+  // ── FIX 1: per-item refs for scroll-into-view ────────────────────────────
+  // hasInteracted guard: only scroll AFTER the user has explicitly clicked
+  // something — prevents the page from jumping to the services section on load
+  // (which was causing the Home button to appear to redirect to services).
   const itemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const hasInteracted = useRef(false);
 
   useEffect(() => {
+    if (!hasInteracted.current) return;
     const el = itemRefs.current[selectedSlug];
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   }, [selectedSlug]);
@@ -163,14 +168,20 @@ export function ServicesHub() {
   }, []);
 
   // ── Navigation handlers ──────────────────────────────────────────────────
-  const handleSelectService = (slug: string) => { setSelectedSlug(slug); playSlideChange(); };
+  const handleSelectService = (slug: string) => {
+    hasInteracted.current = true;
+    setSelectedSlug(slug);
+    playSlideChange();
+  };
   const handleNextService   = () => {
     if (!filteredServices.length) return;
+    hasInteracted.current = true;
     setSelectedSlug(filteredServices[(activeServiceIndex + 1) % filteredServices.length].slug);
     playSlideChange();
   };
   const handlePrevService   = () => {
     if (!filteredServices.length) return;
+    hasInteracted.current = true;
     setSelectedSlug(filteredServices[(activeServiceIndex - 1 + filteredServices.length) % filteredServices.length].slug);
     playSlideChange();
   };

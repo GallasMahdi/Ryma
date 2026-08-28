@@ -185,28 +185,51 @@ export function Hero() {
                 fill
                 priority={index === 0}
                 loading={index === 0 ? 'eager' : 'lazy'}
-                quality={75}
+                quality={isActive ? 90 : 60}
                 sizes="100vw"
-                className="object-cover object-center"
+                className="object-cover object-center scale-[1.02]"
               />
             </motion.div>
           );
         })}
 
-        {/* Multi-layered Frosted Luxury Light Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-white/55 to-[#FAFAF8]" />
+        {/* ── Enterprise-grade 5-layer overlay system ──
+             The image remains prominently visible (~75%).
+             Each layer has a single responsibility.
+        */}
+
+        {/* Layer 1: Edge vignette — depth & cinematic framing */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 90% 65% at 50% 30%, rgba(255,255,255,0.9) 0%, rgba(250,248,242,0.5) 60%, rgba(245,238,225,0.85) 100%)',
+              'radial-gradient(ellipse 100% 100% at 50% 50%, transparent 35%, rgba(15,10,5,0.60) 100%)',
           }}
         />
 
-        {/* Ambient Subtle Gold Aura Orbs */}
-        <div className="absolute -left-20 top-1/4 h-80 w-80 sm:h-96 sm:w-96 rounded-full bg-[#C49A3C]/12 blur-3xl" />
-        <div className="absolute -right-20 top-1/3 h-80 w-80 sm:h-96 sm:w-96 rounded-full bg-[#E8C97A]/15 blur-3xl" />
-        <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-t from-[#FAFAF8] via-[#FAFAF8]/80 to-transparent" />
+        {/* Layer 2: Top dark gradient — anchors the badge + tag text */}
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#0F0A05]/55 via-[#0F0A05]/20 to-transparent" />
+
+        {/* Layer 3: Warm gold atmosphere — luxury clinic signature */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 75% 55% at 50% 42%, rgba(196,154,60,0.14) 0%, transparent 65%)',
+          }}
+        />
+
+        {/* Layer 4: Subtle center tint for heading readability without washing out the image */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 65% 48% at 50% 38%, rgba(15,10,5,0.30) 0%, transparent 70%)',
+          }}
+        />
+
+        {/* Layer 5: Bottom cinematic page-blend — smooth transition to next section */}
+        <div className="absolute inset-x-0 bottom-0 h-48 sm:h-64 bg-gradient-to-t from-[#FAFAF8] via-[#FAFAF8]/75 to-transparent" />
       </div>
 
       {/* ── Top Header Micro Badge ── */}
@@ -252,11 +275,11 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.25 }}
-              className="inline-flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.24em] text-[#9A7428]"
+              className="inline-flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.24em] text-[#E8C97A] drop-shadow-sm"
             >
-              <span className="w-4 sm:w-5 h-px bg-[#C49A3C]" />
+              <span className="w-4 sm:w-5 h-px bg-[#E8C97A]/70" />
               <span>{currentSlide.tag[lang] || currentSlide.tag.pt}</span>
-              <span className="w-4 sm:w-5 h-px bg-[#C49A3C]" />
+              <span className="w-4 sm:w-5 h-px bg-[#E8C97A]/70" />
             </motion.div>
           </AnimatePresence>
         </div>
@@ -269,7 +292,7 @@ export function Hero() {
           transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="mx-auto max-w-4xl mb-2 sm:mb-4"
         >
-          <h1 className="font-serif text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.15] sm:leading-[1.1] text-[#1A1412] tracking-tight">
+          <h1 className="font-serif text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.15] sm:leading-[1.1] text-white tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
             {lang === 'pt' ? (
               <>
                 A Arte da Fisioterapia & <br className="hidden sm:inline" />
@@ -304,7 +327,7 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.28 }}
-              className="text-xs sm:text-sm md:text-base text-[#554C42] font-normal leading-relaxed"
+              className="text-xs sm:text-sm md:text-base text-white/85 font-normal leading-relaxed drop-shadow-sm"
             >
               {currentSlide.subtitle[lang] || currentSlide.subtitle.pt}
             </motion.p>
@@ -313,25 +336,27 @@ export function Hero() {
 
         {/* ── Dual Core Expertise Cards ── */}
 
-        {/* MOBILE (< 768px): Segment Switcher & Compact Card */}
+        {/* MOBILE: Segment switcher + solid white card */}
         <div className="block md:hidden mb-4 max-w-sm mx-auto">
-          <div className="p-1 bg-white/90 backdrop-blur-md rounded-full border border-[#C49A3C]/30 flex items-center mb-2.5 shadow-xs">
+          <div className="p-1 bg-white rounded-full border border-white/20 flex items-center mb-3 shadow-lg">
             <button
               onClick={() => { setActiveSegment('kine'); playSoftClick(); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${activeSegment === 'kine'
-                ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                : 'text-[#554C42]'
-                }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-[11px] font-bold transition-all duration-300 ${
+                activeSegment === 'kine'
+                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-sm'
+                  : 'text-[#554C42]'
+              }`}
             >
               <IconStethoscope size={13} />
               <span>{lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}</span>
             </button>
             <button
               onClick={() => { setActiveSegment('minceur'); playSoftClick(); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${activeSegment === 'minceur'
-                ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-xs'
-                : 'text-[#554C42]'
-                }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-[11px] font-bold transition-all duration-300 ${
+                activeSegment === 'minceur'
+                  ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-sm'
+                  : 'text-[#554C42]'
+              }`}
             >
               <IconFlame size={13} />
               <span>{lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}</span>
@@ -342,76 +367,76 @@ export function Hero() {
             {activeSegment === 'kine' ? (
               <motion.div
                 key="mob-kine"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-                className="bg-white/95 backdrop-blur-xl border border-[#C49A3C]/30 rounded-xl p-3.5 text-left shadow-sm"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}
+                className="bg-white rounded-2xl p-4 text-left shadow-[0_8px_40px_rgba(0,0,0,0.18)] border-l-4 border-[#C49A3C]"
               >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="grid place-items-center h-7 w-7 rounded-lg bg-[#C49A3C]/10 text-[#9A7428] shrink-0">
-                    <IconStethoscope size={15} />
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="grid place-items-center h-9 w-9 rounded-xl bg-gradient-to-br from-[#FAF5EA] to-[#F5E9C8] text-[#9A7428] border border-[#C49A3C]/30 shrink-0">
+                    <IconStethoscope size={17} />
                   </div>
-                  <span className="text-xs font-bold text-[#1A1412]">
-                    {lang === 'pt' ? 'Reeducação Postural & Alívio' : lang === 'en' ? 'Postural Rehab & Pain Relief' : 'Rééducation Posturale'}
-                  </span>
+                  <div>
+                    <div className="font-mono text-[9px] uppercase tracking-widest text-[#C49A3C] font-bold mb-0.5">Polo 01</div>
+                    <span className="text-xs font-bold text-[#1A1412] leading-tight">
+                      {lang === 'pt' ? 'Fisioterapia & Reeducação' : lang === 'en' ? 'Physiotherapy & Rehab' : 'Kinésithérapie & Rééducation'}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-[#554C42] mb-2 leading-relaxed">
+                <p className="text-[11px] text-[#6B6058] mb-2.5 leading-relaxed">
                   {lang === 'pt'
                     ? 'Protocolos clínicos especializados para postura, hérnias e recuperação articular.'
                     : lang === 'en'
-                      ? 'Specialized clinical protocols for posture, spinal discs, and joint rehab.'
-                      : 'Protocoles cliniques pour la posture, le dos et la rééducation.'}
+                    ? 'Specialized clinical protocols for posture, spinal discs, and joint rehab.'
+                    : 'Protocoles cliniques pour la posture, le dos et la rééducation.'}
                 </p>
-                <div className="flex items-center justify-between pt-1 border-t border-[#C49A3C]/15">
-                  <div className="flex gap-1 text-[9px] font-mono font-semibold text-[#8A6A24]">
-                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">RPG</span>
-                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">TENS</span>
-                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">Vodder</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-1 flex-wrap">
+                    {['RPG', 'TENS', 'Vodder'].map(tag => (
+                      <span key={tag} className="text-[9px] font-mono font-bold text-[#8A6A24] bg-[#FAF5EA] border border-[#C49A3C]/25 px-1.5 py-0.5 rounded-md">{tag}</span>
+                    ))}
                   </div>
-                  <Link
-                    href="/services?pole=kinesitherapie"
-                    className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#9A7428]"
-                  >
-                    {lang === 'pt' ? 'Ver Todos' : lang === 'en' ? 'Explore' : 'Voir'} →
+                  <Link href="/services?pole=kinesitherapie" className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#9A7428]">
+                    {lang === 'pt' ? 'Ver' : lang === 'en' ? 'See' : 'Voir'} <IconArrowUpRight size={12} />
                   </Link>
                 </div>
               </motion.div>
             ) : (
               <motion.div
                 key="mob-minceur"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-                className="bg-white/95 backdrop-blur-xl border border-[#C49A3C]/30 rounded-xl p-3.5 text-left shadow-sm"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}
+                className="bg-white rounded-2xl p-4 text-left shadow-[0_8px_40px_rgba(0,0,0,0.18)] border-l-4 border-[#E8C97A]"
               >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="grid place-items-center h-7 w-7 rounded-lg bg-[#E8C97A]/15 text-[#C49A3C] shrink-0">
-                    <IconFlame size={15} />
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="grid place-items-center h-9 w-9 rounded-xl bg-gradient-to-br from-[#FAF3E0] to-[#FAF5EA] text-[#C49A3C] border border-[#C49A3C]/30 shrink-0">
+                    <IconFlame size={17} />
                   </div>
-                  <span className="text-xs font-bold text-[#1A1412]">
-                    {lang === 'pt' ? 'Remodelação & Emagrecimento' : lang === 'en' ? 'Body Sculpting & Slimming' : 'Remodelage Minceur'}
-                  </span>
+                  <div>
+                    <div className="font-mono text-[9px] uppercase tracking-widest text-[#C49A3C] font-bold mb-0.5">Polo 02</div>
+                    <span className="text-xs font-bold text-[#1A1412] leading-tight">
+                      {lang === 'pt' ? 'Estética Médica & Minceur' : lang === 'en' ? 'Body Sculpting & Slimming' : 'Soins Minceur High-Tech'}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-[#554C42] mb-2 leading-relaxed">
+                <p className="text-[11px] text-[#6B6058] mb-2.5 leading-relaxed">
                   {lang === 'pt'
                     ? 'Redução de gordura localizada, firmeza da pele e drenagem sem cirurgia.'
                     : lang === 'en'
-                      ? 'Targeted fat reduction, skin firming, and drainage with zero downtime.'
-                      : 'Élimination des graisses localisées et raffermissement sans chirurgie.'}
+                    ? 'Targeted fat reduction, skin firming, and drainage with zero downtime.'
+                    : 'Élimination des graisses localisées et raffermissement sans chirurgie.'}
                 </p>
-                <div className="flex items-center justify-between pt-1 border-t border-[#C49A3C]/15">
-                  <div className="flex gap-1 text-[9px] font-mono font-semibold text-[#8A6A24]">
-                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">Criolipólise</span>
-                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">Cavitação</span>
-                    <span className="bg-[#FAF5EA] px-1.5 py-0.5 rounded">RF</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-1 flex-wrap">
+                    {['Criolipólise', 'Cavitação', 'RF'].map(tag => (
+                      <span key={tag} className="text-[9px] font-mono font-bold text-[#8A6A24] bg-[#FAF5EA] border border-[#C49A3C]/25 px-1.5 py-0.5 rounded-md">{tag}</span>
+                    ))}
                   </div>
-                  <Link
-                    href="/services?pole=minceur"
-                    className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#9A7428]"
-                  >
-                    {lang === 'pt' ? 'Ver Todos' : lang === 'en' ? 'Explore' : 'Voir'} →
+                  <Link href="/services?pole=minceur" className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#9A7428]">
+                    {lang === 'pt' ? 'Ver' : lang === 'en' ? 'See' : 'Voir'} <IconArrowUpRight size={12} />
                   </Link>
                 </div>
               </motion.div>
@@ -419,7 +444,7 @@ export function Hero() {
           </AnimatePresence>
         </div>
 
-        {/* DESKTOP (>= 768px): Dual Ultra-Luxury Glass Cards */}
+        {/* DESKTOP: Premium solid-white dual expertise cards */}
         <motion.div
           key="hero-cards"
           initial={{ opacity: 0, y: 20 }}
@@ -427,73 +452,76 @@ export function Hero() {
           transition={{ duration: 0.7, delay: 0.25 }}
           className="hidden md:grid md:grid-cols-2 gap-4 lg:gap-5 max-w-3xl mx-auto mb-6 lg:mb-8 text-left"
         >
-          {/* Card 1: Fisioterapia */}
+          {/* Card 1 — Fisioterapia */}
           <Link
             href="/services?pole=kinesitherapie"
             onClick={playSoftClick}
-            className="group relative overflow-hidden rounded-2xl bg-white/85 backdrop-blur-xl border border-[#C49A3C]/25 p-4.5 shadow-[0_8px_30px_rgba(196,154,60,0.08)] hover:border-[#C49A3C] hover:shadow-[0_16px_40px_rgba(196,154,60,0.2)] hover:-translate-y-1 transition-all duration-300"
+            className="group relative overflow-hidden rounded-2xl bg-white border-l-4 border-[#C49A3C] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.22)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.30)] hover:-translate-y-1.5 transition-all duration-300"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#E8C97A] opacity-80 group-hover:opacity-100" />
-            <div className="flex items-start gap-3">
-              <div className="grid place-items-center h-10 w-10 rounded-xl bg-gradient-to-br from-[#F5E9C8] to-[#FAF3E0] text-[#9A7428] border border-[#C49A3C]/30 shadow-xs shrink-0 group-hover:scale-110 transition-transform">
-                <IconStethoscope size={20} />
+            {/* Subtle hover sheen */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FAF5EA]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+            <div className="flex items-start gap-3 mb-3">
+              <div className="grid place-items-center h-11 w-11 rounded-xl bg-gradient-to-br from-[#FAF5EA] to-[#F5E9C8] text-[#9A7428] border border-[#C49A3C]/30 shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                <IconStethoscope size={21} />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="font-serif text-sm lg:text-base font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors truncate">
-                    {lang === 'pt' ? 'Fisioterapia & Reeducação' : lang === 'en' ? 'Physiotherapy & Rehab' : 'Kinésithérapie & Rééducation'}
-                  </span>
-                  <IconArrowUpRight size={15} className="text-[#C49A3C] opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                </div>
-                <p className="text-xs text-[#554C42] leading-relaxed mb-2 line-clamp-2">
-                  {lang === 'pt'
-                    ? 'RPG, alívio de hérnias discais, recuperação articular e reabilitação pós-parto com acompanhamento contínuo.'
-                    : lang === 'en'
-                      ? 'GPR therapy, spinal disc relief, joint restoration, and dedicated postpartum pelvic health.'
-                      : 'RPG, soulagement du dos, rééducation articulaire et soins périnéaux post-partum.'}
-                </p>
-                <div className="flex flex-wrap gap-1 text-[10px] font-mono font-bold text-[#8A6A24]">
-                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">RPG</span>
-                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">TENS</span>
-                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Vodder</span>
-                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">{lang === 'pt' ? 'Seguros' : lang === 'en' ? 'Insurance' : 'Mutuelle'}</span>
-                </div>
+              <div className="flex-1 min-w-0 pt-0.5">
+                <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#C49A3C] font-bold mb-0.5">Polo 01</div>
+                <span className="font-serif text-sm lg:text-base font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors leading-tight block">
+                  {lang === 'pt' ? 'Fisioterapia & Reeducação' : lang === 'en' ? 'Physiotherapy & Rehab' : 'Kinésithérapie & Rééducation'}
+                </span>
               </div>
+              <IconArrowUpRight size={16} className="text-[#C49A3C] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
+            </div>
+
+            <p className="text-xs text-[#554C42] leading-relaxed mb-3 line-clamp-2">
+              {lang === 'pt'
+                ? 'RPG, alívio de hérnias discais, recuperação articular e reabilitação pós-parto com acompanhamento contínuo.'
+                : lang === 'en'
+                ? 'GPR therapy, spinal disc relief, joint restoration, and dedicated postpartum pelvic health.'
+                : 'RPG, soulagement du dos, rééducation articulaire et soins périnéaux post-partum.'}
+            </p>
+
+            <div className="flex flex-wrap gap-1">
+              {['RPG', 'TENS', 'Vodder', lang === 'pt' ? 'Seguros' : lang === 'en' ? 'Insurance' : 'Mutuelle'].map(tag => (
+                <span key={tag} className="text-[10px] font-mono font-bold text-[#8A6A24] bg-[#FAF5EA] border border-[#C49A3C]/25 px-2 py-0.5 rounded-md">{tag}</span>
+              ))}
             </div>
           </Link>
 
-          {/* Card 2: Estética Minceur */}
+          {/* Card 2 — Estética Minceur */}
           <Link
             href="/services?pole=minceur"
             onClick={playSoftClick}
-            className="group relative overflow-hidden rounded-2xl bg-white/85 backdrop-blur-xl border border-[#C49A3C]/25 p-4.5 shadow-[0_8px_30px_rgba(196,154,60,0.08)] hover:border-[#C49A3C] hover:shadow-[0_16px_40px_rgba(196,154,60,0.2)] hover:-translate-y-1 transition-all duration-300"
+            className="group relative overflow-hidden rounded-2xl bg-white border-l-4 border-[#E8C97A] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.22)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.30)] hover:-translate-y-1.5 transition-all duration-300"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#E8C97A] via-[#C49A3C] to-[#9A7428] opacity-80 group-hover:opacity-100" />
-            <div className="flex items-start gap-3">
-              <div className="grid place-items-center h-10 w-10 rounded-xl bg-gradient-to-br from-[#FAF3E0] to-[#F5E9C8] text-[#C49A3C] border border-[#C49A3C]/30 shadow-xs shrink-0 group-hover:scale-110 transition-transform">
-                <IconFlame size={20} />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FAF3E0]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+            <div className="flex items-start gap-3 mb-3">
+              <div className="grid place-items-center h-11 w-11 rounded-xl bg-gradient-to-br from-[#FAF3E0] to-[#F5E9C8] text-[#C49A3C] border border-[#C49A3C]/30 shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                <IconFlame size={21} />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="font-serif text-sm lg:text-base font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors truncate">
-                    {lang === 'pt' ? 'Estética Médica & Minceur' : lang === 'en' ? 'Slimming & Body Sculpting' : 'Soins Minceur High-Tech'}
-                  </span>
-                  <IconArrowUpRight size={15} className="text-[#C49A3C] opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                </div>
-                <p className="text-xs text-[#554C42] leading-relaxed mb-2 line-clamp-2">
-                  {lang === 'pt'
-                    ? 'Tecnologias avançadas não invasivas para destruição de gordura, refirmação cutânea e drenagem sequencial.'
-                    : lang === 'en'
-                      ? 'Cutting-edge non-invasive modalities for targeted fat apoptosis, collagen tightening, and drainage.'
-                      : 'Technologies médicales pour la réduction graisseuse ciblée et le raffermissement cutané.'}
-                </p>
-                <div className="flex flex-wrap gap-1 text-[10px] font-mono font-bold text-[#8A6A24]">
-                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Criolipólise</span>
-                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Cavitação</span>
-                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Radiofrequência</span>
-                  <span className="bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-md">Pressoterapia</span>
-                </div>
+              <div className="flex-1 min-w-0 pt-0.5">
+                <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#C49A3C] font-bold mb-0.5">Polo 02</div>
+                <span className="font-serif text-sm lg:text-base font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors leading-tight block">
+                  {lang === 'pt' ? 'Estética Médica & Minceur' : lang === 'en' ? 'Slimming & Body Sculpting' : 'Soins Minceur High-Tech'}
+                </span>
               </div>
+              <IconArrowUpRight size={16} className="text-[#C49A3C] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
+            </div>
+
+            <p className="text-xs text-[#554C42] leading-relaxed mb-3 line-clamp-2">
+              {lang === 'pt'
+                ? 'Tecnologias avançadas não invasivas para destruição de gordura, refirmação cutânea e drenagem sequencial.'
+                : lang === 'en'
+                ? 'Cutting-edge non-invasive modalities for targeted fat apoptosis, collagen tightening, and drainage.'
+                : 'Technologies médicales pour la réduction graisseuse ciblée et le raffermissement cutané.'}
+            </p>
+
+            <div className="flex flex-wrap gap-1">
+              {['Criolipólise', 'Cavitação', 'Radiofrequência', 'Pressoterapia'].map(tag => (
+                <span key={tag} className="text-[10px] font-mono font-bold text-[#8A6A24] bg-[#FAF5EA] border border-[#C49A3C]/25 px-2 py-0.5 rounded-md">{tag}</span>
+              ))}
             </div>
           </Link>
         </motion.div>
@@ -555,20 +583,20 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.45 }}
-          className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-1.5 text-[10px] sm:text-xs text-[#6B6058] font-medium mb-3 sm:mb-5"
+          className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-1.5 text-[10px] sm:text-xs text-white/75 font-medium mb-3 sm:mb-5"
         >
           <span className="flex items-center gap-1">
-            <IconCheck size={13} className="text-[#9A7428]" />
+            <IconCheck size={13} className="text-[#E8C97A]" />
             {lang === 'pt' ? 'Atendimento 1-a-1' : lang === 'en' ? '1-on-1 Care' : 'Soins 1-à-1'}
           </span>
-          <span className="text-[#C49A3C]/40">•</span>
+          <span className="text-white/25">•</span>
           <span className="flex items-center gap-1">
-            <IconShieldCheck size={13} className="text-[#9A7428]" />
+            <IconShieldCheck size={13} className="text-[#E8C97A]" />
             {lang === 'pt' ? 'Equipamentos Médicos' : lang === 'en' ? 'Medical Grade' : 'Équipements Médicaux'}
           </span>
-          <span className="text-[#C49A3C]/40">•</span>
+          <span className="text-white/25">•</span>
           <span className="flex items-center gap-1">
-            <IconAward size={13} className="text-[#9A7428]" />
+            <IconAward size={13} className="text-[#E8C97A]" />
             {lang === 'pt' ? 'Recibos p/ Seguros' : lang === 'en' ? 'Insurance Receipts' : 'Reçus Assurances'}
           </span>
         </motion.div>
