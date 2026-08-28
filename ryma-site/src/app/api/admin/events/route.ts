@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
 
   const encoder = new TextEncoder();
 
+  let onAdminEvent: ((payload: AdminEventPayload) => void) | null = null;
+
   const stream = new ReadableStream({
     start(controller) {
       // Send initial handshake
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest) {
       controller.enqueue(encoder.encode(initialMessage));
 
       // Event listener for all admin bus events
-      const onAdminEvent = (payload: AdminEventPayload) => {
+      onAdminEvent = (payload: AdminEventPayload) => {
         try {
           const message = `event: ${payload.type}\ndata: ${JSON.stringify(payload)}\n\n`;
           controller.enqueue(encoder.encode(message));
@@ -46,9 +48,12 @@ export async function GET(request: NextRequest) {
       }, 20000);
 
       // Clean up when client disconnects
+      let cleanedUp = false;
       const cleanup = () => {
+        if (cleanedUp) return;
+        cleanedUp = true;
         clearInterval(pingInterval);
-        adminEventBus.off('admin_event', onAdminEvent);
+        if (onAdminEvent) adminEventBus.off('admin_event', onAdminEvent);
         try {
           controller.close();
         } catch {
@@ -57,6 +62,10 @@ export async function GET(request: NextRequest) {
       };
 
       request.signal.addEventListener('abort', cleanup);
+    },
+    cancel() {
+      // Called when consumer closes stream
+      if (onAdminEvent) adminEventBus.off('admin_event', onAdminEvent);
     },
   });
 

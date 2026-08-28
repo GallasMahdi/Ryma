@@ -57,11 +57,13 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  // If status is being updated to CANCELLED, permanently remove the appointment
+  // If status is being updated to CANCELLED, soft-cancel the appointment so clinical history is preserved
   if (body.status === 'CANCELLED') {
-    await dbDeleteAppointment(id);
-    broadcastAppointmentDeleted(id);
-    return NextResponse.json({ deleted: true, id, message: 'Rendez-vous annulé et supprimé' });
+    const updated = await dbUpdateAppointment(id, { status: 'CANCELLED' });
+    if (updated) {
+      broadcastAppointmentUpdated(updated);
+    }
+    return NextResponse.json({ appointment: updated, id, message: 'Rendez-vous annulé' });
   }
 
   const updates: Partial<{

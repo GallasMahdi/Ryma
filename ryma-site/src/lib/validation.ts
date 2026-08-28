@@ -93,14 +93,23 @@ export function validateAppointmentInput(
 
 /**
  * Extracts and sanitizes the client IP address from request headers.
+ * Prioritizes edge-verified headers (Cloudflare, Vercel) before falling back to X-Forwarded-For.
  */
 export function getClientIp(request: { headers: { get: (name: string) => string | null } }): string {
+  const cfIp = request.headers.get('cf-connecting-ip');
+  if (cfIp && cfIp.trim() !== '') return cfIp.trim();
+
+  const vercelIp = request.headers.get('x-vercel-ip');
+  if (vercelIp && vercelIp.trim() !== '') return vercelIp.trim();
+
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp && realIp.trim() !== '') return realIp.trim();
+
   const xForwardedFor = request.headers.get('x-forwarded-for');
   if (xForwardedFor) {
     const ips = xForwardedFor.split(',').map(ip => ip.trim()).filter(Boolean);
     if (ips.length > 0 && ips[0] !== '') return ips[0];
   }
-  const realIp = request.headers.get('x-real-ip');
-  if (realIp && realIp.trim() !== '') return realIp.trim();
+
   return '127.0.0.1';
 }

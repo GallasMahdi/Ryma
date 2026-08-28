@@ -341,22 +341,20 @@ export function Hero() {
           <div className="p-1 bg-white rounded-full border border-white/20 flex items-center mb-3 shadow-lg">
             <button
               onClick={() => { setActiveSegment('kine'); playSoftClick(); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-[11px] font-bold transition-all duration-300 ${
-                activeSegment === 'kine'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-[11px] font-bold transition-all duration-300 ${activeSegment === 'kine'
                   ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-sm'
                   : 'text-[#554C42]'
-              }`}
+                }`}
             >
               <IconStethoscope size={13} />
               <span>{lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}</span>
             </button>
             <button
               onClick={() => { setActiveSegment('minceur'); playSoftClick(); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-[11px] font-bold transition-all duration-300 ${
-                activeSegment === 'minceur'
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-full text-[11px] font-bold transition-all duration-300 ${activeSegment === 'minceur'
                   ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] text-white shadow-sm'
                   : 'text-[#554C42]'
-              }`}
+                }`}
             >
               <IconFlame size={13} />
               <span>{lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}</span>
@@ -388,8 +386,8 @@ export function Hero() {
                   {lang === 'pt'
                     ? 'Protocolos clínicos especializados para postura, hérnias e recuperação articular.'
                     : lang === 'en'
-                    ? 'Specialized clinical protocols for posture, spinal discs, and joint rehab.'
-                    : 'Protocoles cliniques pour la posture, le dos et la rééducation.'}
+                      ? 'Specialized clinical protocols for posture, spinal discs, and joint rehab.'
+                      : 'Protocoles cliniques pour la posture, le dos et la rééducation.'}
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-1 flex-wrap">
@@ -426,8 +424,8 @@ export function Hero() {
                   {lang === 'pt'
                     ? 'Redução de gordura localizada, firmeza da pele e drenagem sem cirurgia.'
                     : lang === 'en'
-                    ? 'Targeted fat reduction, skin firming, and drainage with zero downtime.'
-                    : 'Élimination des graisses localisées et raffermissement sans chirurgie.'}
+                      ? 'Targeted fat reduction, skin firming, and drainage with zero downtime.'
+                      : 'Élimination des graisses localisées et raffermissement sans chirurgie.'}
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-1 flex-wrap">
@@ -478,8 +476,8 @@ export function Hero() {
               {lang === 'pt'
                 ? 'RPG, alívio de hérnias discais, recuperação articular e reabilitação pós-parto com acompanhamento contínuo.'
                 : lang === 'en'
-                ? 'GPR therapy, spinal disc relief, joint restoration, and dedicated postpartum pelvic health.'
-                : 'RPG, soulagement du dos, rééducation articulaire et soins périnéaux post-partum.'}
+                  ? 'GPR therapy, spinal disc relief, joint restoration, and dedicated postpartum pelvic health.'
+                  : 'RPG, soulagement du dos, rééducation articulaire et soins périnéaux post-partum.'}
             </p>
 
             <div className="flex flex-wrap gap-1">
@@ -514,8 +512,8 @@ export function Hero() {
               {lang === 'pt'
                 ? 'Tecnologias avançadas não invasivas para destruição de gordura, refirmação cutânea e drenagem sequencial.'
                 : lang === 'en'
-                ? 'Cutting-edge non-invasive modalities for targeted fat apoptosis, collagen tightening, and drainage.'
-                : 'Technologies médicales pour la réduction graisseuse ciblée et le raffermissement cutané.'}
+                  ? 'Cutting-edge non-invasive modalities for targeted fat apoptosis, collagen tightening, and drainage.'
+                  : 'Technologies médicales pour la réduction graisseuse ciblée et le raffermissement cutané.'}
             </p>
 
             <div className="flex flex-wrap gap-1">

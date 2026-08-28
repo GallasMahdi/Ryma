@@ -228,9 +228,9 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
         <p class="clinic-subtitle">Clínica de Fisioterapia & Estética Médica Avançada</p>
         <p class="clinic-address">Avenida da Liberdade 120, 1250-146 Lisboa, Portugal</p>
         <div class="clinic-identifiers">
-          <span><strong>NIF:</strong> ${escapeHtml(SITE.clinicNif || '518 923 456')}</span>
-          <span><strong>Registo ERS:</strong> ${escapeHtml(SITE.ersRegistration || 'E164321')}</span>
-          <span><strong>Ordem Fisio:</strong> ${escapeHtml(SITE.professionalLicense || 'C-054321')}</span>
+          ${SITE.clinicNif ? `<span><strong>NIF:</strong> ${escapeHtml(SITE.clinicNif)}</span>` : ''}
+          ${SITE.ersRegistration ? `<span><strong>Registo ERS:</strong> ${escapeHtml(SITE.ersRegistration)}</span>` : ''}
+          ${SITE.professionalLicense ? `<span><strong>Ordem Fisio:</strong> ${escapeHtml(SITE.professionalLicense)}</span>` : ''}
         </div>
       </div>
 

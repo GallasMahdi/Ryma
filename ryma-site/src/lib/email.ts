@@ -15,6 +15,16 @@ interface AppointmentData {
   coverageProvider?: string | null;
 }
 
+function escapeHtml(str: unknown): string {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Configure and cache Nodemailer SMTP Transporter
  */
@@ -307,7 +317,7 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
           <div class="badge-confirmed">✓ Appointment Confirmed</div>
         </div>
 
-        <h2 class="greeting">Hello ${appointment.patientName},</h2>
+        <h2 class="greeting">Hello ${escapeHtml(appointment.patientName)},</h2>
         <p class="intro-text">
           Your appointment has been successfully scheduled. We look forward to welcoming you for your consultation.
         </p>
@@ -320,21 +330,21 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
             <tr>
               <td style="padding-bottom: 12px;" width="50%">
                 <div class="detail-label">Treatment</div>
-                <div class="detail-val detail-val-highlight">${serviceName}</div>
+                <div class="detail-val detail-val-highlight">${escapeHtml(serviceName)}</div>
               </td>
               <td style="padding-bottom: 12px;" width="50%">
                 <div class="detail-label">Duration & Price</div>
-                <div class="detail-val">${duration} · ${servicePrice}</div>
+                <div class="detail-val">${escapeHtml(duration)} · ${escapeHtml(servicePrice)}</div>
               </td>
             </tr>
             <tr>
               <td style="padding-top: 6px;">
                 <div class="detail-label">Date</div>
-                <div class="detail-val">${formattedDate}</div>
+                <div class="detail-val">${escapeHtml(formattedDate)}</div>
               </td>
               <td style="padding-top: 6px;">
                 <div class="detail-label">Time</div>
-                <div class="detail-val">${appointment.startTime}</div>
+                <div class="detail-val">${escapeHtml(appointment.startTime)}</div>
               </td>
             </tr>
           </table>
@@ -347,7 +357,7 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
             Digital Clínica
           </div>
           <div style="font-size: 13px; color: #666158; margin-bottom: 12px;">
-            ${clinicAddress}
+            ${escapeHtml(clinicAddress)}
           </div>
           <a href="${mapsUrl}" target="_blank" style="color: #9B793A; font-size: 12px; font-weight: 700; text-decoration: none;">
             → Open route in Google Maps
@@ -459,28 +469,28 @@ export async function sendAdminNewBookingNotification(
       <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
         <tr style="border-bottom: 1px solid #F1F5F9;">
           <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Patient</td>
-          <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${appointment.patientName}</td>
+          <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${escapeHtml(appointment.patientName)}</td>
         </tr>
         <tr style="border-bottom: 1px solid #F1F5F9;">
           <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Phone</td>
-          <td style="padding: 10px 0; color: #0F172A;"><a href="tel:${appointment.phone}" style="color: #2563EB; text-decoration: none;">${appointment.phone}</a></td>
+          <td style="padding: 10px 0; color: #0F172A;"><a href="tel:${escapeHtml(appointment.phone)}" style="color: #2563EB; text-decoration: none;">${escapeHtml(appointment.phone)}</a></td>
         </tr>
         <tr style="border-bottom: 1px solid #F1F5F9;">
           <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Email</td>
-          <td style="padding: 10px 0; color: #0F172A;">${appointment.email || 'Not provided'}</td>
+          <td style="padding: 10px 0; color: #0F172A;">${escapeHtml(appointment.email || 'Not provided')}</td>
         </tr>
         <tr style="border-bottom: 1px solid #F1F5F9;">
           <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Requested Care</td>
-          <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${serviceName}</td>
+          <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${escapeHtml(serviceName)}</td>
         </tr>
         <tr style="border-bottom: 1px solid #F1F5F9;">
           <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Date & Time</td>
-          <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${appointment.date} at ${appointment.startTime}</td>
+          <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${escapeHtml(appointment.date)} at ${escapeHtml(appointment.startTime)}</td>
         </tr>
         ${appointment.notes ? `
         <tr style="border-bottom: 1px solid #F1F5F9;">
           <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Notes</td>
-          <td style="padding: 10px 0; color: #0F172A;">${appointment.notes}</td>
+          <td style="padding: 10px 0; color: #0F172A;">${escapeHtml(appointment.notes)}</td>
         </tr>
         ` : ''}
       </table>

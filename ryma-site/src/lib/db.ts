@@ -40,8 +40,7 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
         coverageProvider TEXT,
         coverageNumber   TEXT,
         createdAt        TEXT NOT NULL,
-        updatedAt        TEXT NOT NULL,
-        UNIQUE(date, startTime)
+        updatedAt        TEXT NOT NULL
       )`,
       `CREATE TABLE IF NOT EXISTS blocked_slots (
         id    TEXT PRIMARY KEY,
@@ -142,6 +141,7 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
         details   TEXT,
         createdAt TEXT NOT NULL
       )`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED'`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime)`,
@@ -397,8 +397,7 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
       coverageProvider TEXT,
       coverageNumber   TEXT,
       createdAt        TEXT NOT NULL,
-      updatedAt        TEXT NOT NULL,
-      UNIQUE(date, startTime)
+      updatedAt        TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS blocked_slots (
@@ -509,6 +508,7 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
       createdAt TEXT NOT NULL
     );
 
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED';
     CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
     CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
     CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime);
@@ -529,6 +529,44 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
     CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date);
     CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON security_audit_logs(createdAt DESC);
   `);
+
+  // Migration for legacy appointments table with table-level UNIQUE constraint
+  try {
+    const tableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='appointments'").get() as { sql: string } | undefined;
+    if (tableInfo?.sql && (tableInfo.sql.includes('UNIQUE(date, startTime)') || tableInfo.sql.includes('UNIQUE (date, startTime)'))) {
+      db.exec(`
+        BEGIN TRANSACTION;
+        CREATE TABLE appointments_migration (
+          id               TEXT PRIMARY KEY,
+          patientName      TEXT NOT NULL,
+          email            TEXT,
+          phone            TEXT NOT NULL,
+          service          TEXT NOT NULL,
+          date             TEXT NOT NULL,
+          startTime        TEXT NOT NULL,
+          status           TEXT NOT NULL DEFAULT 'PENDING'
+                           CHECK (status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')),
+          notes            TEXT,
+          coverageType     TEXT DEFAULT 'PARTICULAR',
+          coverageProvider TEXT,
+          coverageNumber   TEXT,
+          createdAt        TEXT NOT NULL,
+          updatedAt        TEXT NOT NULL
+        );
+        INSERT INTO appointments_migration SELECT id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt FROM appointments;
+        DROP TABLE appointments;
+        ALTER TABLE appointments_migration RENAME TO appointments;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED';
+        CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
+        CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
+        CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime);
+        CREATE INDEX IF NOT EXISTS idx_appointments_phone_date ON appointments(phone, date DESC);
+        COMMIT;
+      `);
+    }
+  } catch (migErr) {
+    console.warn('[Appointments Schema Migration Warning]:', migErr);
+  }
 
   // Non-destructive migration for existing tables
   try {
@@ -998,103 +1036,147 @@ export async function dbCreateMultipleAppointments(
     process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
   );
 
-  // 5. Atomic creation: create Appointment + PatientSession for each session
+  // 5. Build prepared objects for all appointments and sessions
+  const appointmentInserts: { id: string; row: Appointment; args: any[] }[] = [];
+  const sessionInserts: { id: string; row: PatientSession; args: any[] }[] = [];
+
+  for (let i = 0; i < input.sessions.length; i++) {
+    const s = input.sessions[i];
+    const aptId = 'apt_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+    const sessId = 'sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+    const evaScore = typeof s.evaPainScore === 'number' ? s.evaPainScore : 5;
+    const sessionNote = s.notes || `Sessão #${i + 1} • Plano de Tratamento`;
+
+    const apptArgs = [
+      aptId,
+      input.patientName,
+      input.email ?? null,
+      normalizedPhone,
+      input.service,
+      s.date,
+      s.startTime,
+      'CONFIRMED',
+      sessionNote,
+      input.coverageType ?? 'PARTICULAR',
+      input.coverageProvider ?? null,
+      input.coverageNumber ?? null,
+      now,
+      now,
+    ];
+
+    const apptRow: Appointment = {
+      id: aptId,
+      patientName: input.patientName,
+      email: input.email ?? null,
+      phone: normalizedPhone,
+      service: input.service,
+      date: s.date,
+      startTime: s.startTime,
+      status: 'CONFIRMED',
+      notes: sessionNote,
+      coverageType: input.coverageType ?? 'PARTICULAR',
+      coverageProvider: input.coverageProvider ?? null,
+      coverageNumber: input.coverageNumber ?? null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const sessArgs = [
+      sessId,
+      patientId,
+      s.date,
+      s.startTime,
+      input.service,
+      evaScore,
+      'MANUAL',
+      sessionNote,
+      input.practitioner ?? null,
+      now,
+    ];
+
+    const sessRow: PatientSession = {
+      id: sessId,
+      patientId,
+      date: s.date,
+      time: s.startTime,
+      serviceSlug: input.service,
+      evaPainScore: evaScore,
+      sessionType: 'MANUAL',
+      notes: sessionNote,
+      practitioner: input.practitioner ?? undefined,
+      createdAt: now,
+    };
+
+    appointmentInserts.push({ id: aptId, row: apptRow, args: apptArgs });
+    sessionInserts.push({ id: sessId, row: sessRow, args: sessArgs });
+  }
+
+  // 6. Execute atomic transaction batch
   try {
-    for (let i = 0; i < input.sessions.length; i++) {
-      const s = input.sessions[i];
-      const aptId = 'apt_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
-      const sessId = 'sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
-      const evaScore = typeof s.evaPainScore === 'number' ? s.evaPainScore : 5;
-      const sessionNote = s.notes || `Sessão #${i + 1} • Plano de Tratamento`;
+    if (isTursoEnabled()) {
+      const client = getTursoClient();
+      await ensureTursoSchema(client);
 
-      // A) Insert Appointment (status: CONFIRMED so it blocks slot immediately)
-      await executeTursoDirectly(
-        `INSERT INTO appointments
-          (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'CONFIRMED', ?, ?, ?, ?, ?, ?)`,
-        [
-          aptId,
-          input.patientName,
-          input.email ?? null,
-          normalizedPhone,
-          input.service,
-          s.date,
-          s.startTime,
-          sessionNote,
-          input.coverageType ?? 'PARTICULAR',
-          input.coverageProvider ?? null,
-          input.coverageNumber ?? null,
-          now,
-          now,
-        ]
-      );
+      const batchStatements: { sql: string; args: any[] }[] = [];
 
-      if (!isServerless) {
-        try {
-          executeSqliteQuery(
-            `INSERT OR REPLACE INTO appointments
-              (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'CONFIRMED', ?, ?, ?, ?, ?, ?)`,
-            [aptId, input.patientName, input.email ?? null, normalizedPhone, input.service, s.date, s.startTime, sessionNote, input.coverageType ?? 'PARTICULAR', input.coverageProvider ?? null, input.coverageNumber ?? null, now, now]
-          );
-        } catch { /* silent mirror */ }
+      for (const item of appointmentInserts) {
+        batchStatements.push({
+          sql: `INSERT INTO appointments
+                (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: item.args,
+        });
       }
 
-      const apptRows = await executeTursoDirectly<Appointment>('SELECT * FROM appointments WHERE id = ?', [aptId]);
-      const createdAppt = apptRows[0];
-      if (createdAppt) {
-        createdAppointments.push(createdAppt);
+      for (const item of sessionInserts) {
+        batchStatements.push({
+          sql: `INSERT INTO patient_sessions
+                (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: item.args,
+        });
       }
 
-      // B) Insert PatientSession record for clinical dossier
-      await executeTursoDirectly(
-        `INSERT INTO patient_sessions
-          (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?, ?)`,
-        [
-          sessId,
-          patientId,
-          s.date,
-          s.startTime,
-          input.service,
-          evaScore,
-          sessionNote,
-          input.practitioner ?? null,
-          now,
-        ]
-      );
+      batchStatements.push({
+        sql: `UPDATE patients SET totalPrescribedSessions = MAX(totalPrescribedSessions, ?), updatedAt = ? WHERE id = ?`,
+        args: [input.sessions.length, now, patientId],
+      });
 
-      if (!isServerless) {
-        try {
-          executeSqliteQuery(
-            `INSERT OR REPLACE INTO patient_sessions
-              (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
-             VALUES (?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?, ?)`,
-            [sessId, patientId, s.date, s.startTime, input.service, evaScore, sessionNote, input.practitioner ?? null, now]
-          );
-        } catch { /* silent mirror */ }
-      }
+      // LibSQL client.batch executes in a single transaction on Turso
+      await client.batch(batchStatements, 'write');
+    } else {
+      // Local SQLite atomic transaction
+      const db = getDb();
+      const insertAppt = db.prepare(`
+        INSERT INTO appointments
+        (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      const insertSess = db.prepare(`
+        INSERT INTO patient_sessions
+        (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      const updatePat = db.prepare(`
+        UPDATE patients SET totalPrescribedSessions = MAX(totalPrescribedSessions, ?), updatedAt = ? WHERE id = ?
+      `);
 
-      const sessRows = await executeTursoDirectly<PatientSession>('SELECT * FROM patient_sessions WHERE id = ?', [sessId]);
-      if (sessRows[0]) {
-        createdSessions.push(sessRows[0]);
-      }
+      const runBatchTx = db.transaction(() => {
+        for (const item of appointmentInserts) {
+          insertAppt.run(...item.args);
+        }
+        for (const item of sessionInserts) {
+          insertSess.run(...item.args);
+        }
+        updatePat.run(input.sessions.length, now, patientId);
+      });
+
+      runBatchTx();
     }
+
+    createdAppointments.push(...appointmentInserts.map(i => i.row));
+    createdSessions.push(...sessionInserts.map(i => i.row));
   } catch (err: any) {
-    // Rollback any partially created records in this batch
-    for (const ca of createdAppointments) {
-      try {
-        await executeTursoDirectly('DELETE FROM appointments WHERE id = ?', [ca.id]);
-        if (!isServerless) executeSqliteQuery('DELETE FROM appointments WHERE id = ?', [ca.id]);
-      } catch { /* silent cleanup */ }
-    }
-    for (const cs of createdSessions) {
-      try {
-        await executeTursoDirectly('DELETE FROM patient_sessions WHERE id = ?', [cs.id]);
-        if (!isServerless) executeSqliteQuery('DELETE FROM patient_sessions WHERE id = ?', [cs.id]);
-      } catch { /* silent cleanup */ }
-    }
-
     if (err?.message?.includes('UNIQUE') || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       return {
         success: false,
