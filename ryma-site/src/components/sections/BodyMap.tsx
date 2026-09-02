@@ -8,6 +8,7 @@ import React, {
   useRef,
   useEffect,
   useId,
+  useLayoutEffect,
 } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import dynamic from 'next/dynamic';
@@ -381,6 +382,7 @@ interface ServiceDetailCardProps {
   lang: Lang;
   t: Translations;
   onClose: () => void;
+  hideClose?: boolean;
 }
 
 const ServiceDetailCard = memo(function ServiceDetailCard({
@@ -389,6 +391,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
   lang,
   t,
   onClose,
+  hideClose = false,
 }: ServiceDetailCardProps) {
   const panelId = useId();
 
@@ -446,15 +449,17 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
               </h3>
             </div>
 
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label={lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer'}
-              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-[#FAF6EE] border border-[#E8E2D8] text-[#6B6058] hover:text-[#1A1412] hover:bg-[#F5E9C8] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C]"
-            >
-              <IconX size={15} />
-            </button>
+            {/* Close button — hidden when parent (e.g. bottom sheet) provides its own */}
+            {!hideClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label={lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer'}
+                className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-[#1A1412] text-white shadow-md hover:bg-[#C49A3C] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] active:scale-95"
+              >
+                <IconX size={18} strokeWidth={2.5} />
+              </button>
+            )}
           </div>
 
           {/* Key metrics */}
@@ -864,15 +869,60 @@ function MobileBottomSheet({
   t: Translations;
   onClose: () => void;
 }) {
-  useEffect(() => {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef(0);
+  const isDragging = useRef(false);
+  const currentDragY = useRef(0);
+
+  // Lock body scroll instantly on mount without layout thrash
+  useLayoutEffect(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     if (isMobile && point) {
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
   }, [point]);
+
+  // Swipe-to-dismiss handlers
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    // Only start drag from the handle area (first 60px of sheet)
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const rect = sheet.getBoundingClientRect();
+    if (e.clientY - rect.top > 64) return; // only drag from top area
+    isDragging.current = true;
+    dragStartY.current = e.clientY;
+    currentDragY.current = 0;
+    sheet.setPointerCapture(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isDragging.current || !sheetRef.current) return;
+    const delta = Math.max(0, e.clientY - dragStartY.current);
+    currentDragY.current = delta;
+    sheetRef.current.style.transform = `translateY(${delta}px)`;
+    sheetRef.current.style.transition = 'none';
+  }, []);
+
+  const onPointerUp = useCallback((_e: React.PointerEvent) => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (sheetRef.current) {
+      sheetRef.current.style.transform = '';
+      sheetRef.current.style.transition = '';
+    }
+    // Dismiss if dragged down more than 80px
+    if (currentDragY.current > 80) {
+      onClose();
+    }
+  }, [onClose]);
 
   return (
     <AnimatePresence>
@@ -884,45 +934,355 @@ function MobileBottomSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             className="fixed inset-0 z-40 lg:hidden"
-            style={{ background: 'rgba(15,23,42,0.35)', backdropFilter: 'blur(4px)' }}
+            style={{ background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(6px)' }}
             onClick={onClose}
             aria-hidden="true"
           />
 
-          {/* Sheet — scrolls itself, no inner overflow:hidden wrapper */}
+          {/* Sheet */}
           <motion.div
+            ref={sheetRef}
             key="sheet"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-            className="fixed bottom-0 inset-x-0 z-50 lg:hidden rounded-t-2xl overflow-y-auto"
+            transition={{ type: 'spring', damping: 38, stiffness: 480, restDelta: 0.5 }}
+            className="fixed bottom-0 inset-x-0 z-50 lg:hidden rounded-t-3xl overflow-hidden"
+            style={{
+              maxHeight: '90vh',
+              background: WHITE,
+              boxShadow: '0 -12px 48px rgba(15,23,42,0.18)',
+              willChange: 'transform',
+            }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+          >
+            {/* Sticky header: handle + close button */}
+            <div
+              className="sticky top-0 z-20 flex items-center justify-between px-5 pt-3.5 pb-3"
+              style={{ background: WHITE, borderBottom: `1px solid ${BORDER}` }}
+            >
+              {/* Drag handle */}
+              <div className="flex-1" />
+              <div
+                className="w-10 h-1.5 rounded-full cursor-grab active:cursor-grabbing"
+                style={{ background: '#D4CEBE' }}
+              />
+              <div className="flex-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label={lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer'}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-[#1A1412] text-white shadow-md hover:bg-[#C49A3C] transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C]"
+                >
+                  <IconX size={17} strokeWidth={2.5} />
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 56px)', scrollbarWidth: 'none' }}>
+              <ServiceDetailCard
+                point={point}
+                service={service}
+                lang={lang}
+                t={t}
+                onClose={onClose}
+                hideClose={true}
+              />
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Mobile Filter Sheet                                                  */
+/* ------------------------------------------------------------------ */
+
+function MobileFilterSheet({
+  open,
+  onClose,
+  lang,
+  goal,
+  onGoalChange,
+  view,
+  onViewChange,
+  zone,
+  onZoneChange,
+  zoneCounts,
+  onReset,
+  activeCount,
+}: {
+  open: boolean;
+  onClose: () => void;
+  lang: Lang;
+  goal: MedicalGoal;
+  onGoalChange: (g: MedicalGoal) => void;
+  view: ViewSide;
+  onViewChange: (v: ViewSide) => void;
+  zone: BodyZone;
+  onZoneChange: (z: BodyZone) => void;
+  zoneCounts: Record<BodyZone, number>;
+  onReset: () => void;
+  activeCount: number;
+}) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef(0);
+  const isDragging = useRef(false);
+  const currentDragY = useRef(0);
+
+  useLayoutEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [open]);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const rect = sheet.getBoundingClientRect();
+    if (e.clientY - rect.top > 64) return; // only from top handle area
+    isDragging.current = true;
+    dragStartY.current = e.clientY;
+    currentDragY.current = 0;
+    sheet.setPointerCapture(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isDragging.current || !sheetRef.current) return;
+    const delta = Math.max(0, e.clientY - dragStartY.current);
+    currentDragY.current = delta;
+    sheetRef.current.style.transform = `translateY(${delta}px)`;
+    sheetRef.current.style.transition = 'none';
+  }, []);
+
+  const onPointerUp = useCallback((_e: React.PointerEvent) => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (sheetRef.current) {
+      sheetRef.current.style.transform = '';
+      sheetRef.current.style.transition = '';
+    }
+    if (currentDragY.current > 80) {
+      onClose();
+    }
+  }, [onClose]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="mfs-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-40"
+            style={{ background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(6px)' }}
+            onClick={onClose}
+            aria-hidden="true"
+          />
+
+          {/* Sheet */}
+          <motion.div
+            ref={sheetRef}
+            key="mfs-sheet"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 38, stiffness: 480, restDelta: 0.5 }}
+            className="fixed bottom-0 inset-x-0 z-50 rounded-t-3xl overflow-hidden"
             style={{
               maxHeight: '88vh',
               background: WHITE,
-              boxShadow: '0 -8px 40px rgba(15,23,42,0.12)',
+              boxShadow: '0 -12px 48px rgba(15,23,42,0.18)',
+              willChange: 'transform',
             }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
           >
-            {/* Drag handle — sticky so it always shows at top as user scrolls */}
+            {/* Header */}
             <div
-              className="sticky top-0 flex justify-center pt-3 pb-1 z-10"
-              style={{ background: WHITE }}
+              className="cursor-grab active:cursor-grabbing"
+              style={{ borderBottom: `1px solid ${BORDER}` }}
             >
-              <div
-                className="w-9 h-1 rounded-full"
-                style={{ background: BORDER }}
-              />
+              {/* Drag handle pill */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div
+                  className="w-10 h-1.5 rounded-full"
+                  style={{ background: '#D4CEBE' }}
+                />
+              </div>
+
+              {/* Title + close */}
+              <div className="flex items-center justify-between px-5 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#1A1412] text-white">
+                    <IconAdjustmentsHorizontal size={15} />
+                  </div>
+                  <span className="font-serif font-bold text-base text-[#1A1412]">
+                    {lang === 'pt' ? 'Filtros' : lang === 'en' ? 'Filters' : 'Filtres'}
+                  </span>
+                  {activeCount > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#C49A3C] text-white text-[10px] font-bold">
+                      {activeCount}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close filters"
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-[#1A1412] text-white shadow-md hover:bg-[#C49A3C] transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C]"
+                >
+                  <IconX size={16} strokeWidth={2.5} />
+                </button>
+              </div>
             </div>
 
-            <ServiceDetailCard
-              point={point}
-              service={service}
-              lang={lang}
-              t={t}
-              onClose={onClose}
-            />
+            {/* Scrollable options */}
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(88vh - 120px)', scrollbarWidth: 'none' }}>
+              <div className="px-5 py-4 space-y-6">
+
+                {/* Section: Medical Goal */}
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#9A7428] mb-3">
+                    {lang === 'pt' ? 'Objetivo' : lang === 'en' ? 'Goal' : 'Objectif'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {MEDICAL_GOALS.map((g) => {
+                      const isSel = goal === g.id;
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => onGoalChange(g.id)}
+                          className={`flex items-center gap-2.5 px-3.5 py-3 rounded-2xl text-xs font-semibold border transition-all text-start ${
+                            isSel
+                              ? 'bg-[#1A1412] text-white border-[#1A1412] shadow-md'
+                              : 'bg-white text-[#4A4540] border-[#E8E2D8] hover:border-[#C49A3C]/50'
+                          }`}
+                        >
+                          <span className={isSel ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}>{g.icon}</span>
+                          <span className="leading-tight">{g.label[lang] || g.label.fr}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ height: 1, background: BORDER }} />
+
+                {/* Section: View */}
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#9A7428] mb-3">
+                    {lang === 'pt' ? 'Vista' : lang === 'en' ? 'View' : 'Vue'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['front', 'back'] as const).map((v) => {
+                      const isSel = view === v;
+                      return (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => onViewChange(v)}
+                          className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-semibold border transition-all ${
+                            isSel
+                              ? 'bg-[#1A1412] text-white border-[#1A1412] shadow-md'
+                              : 'bg-white text-[#4A4540] border-[#E8E2D8] hover:border-[#C49A3C]/50'
+                          }`}
+                        >
+                          {v === 'front'
+                            ? (lang === 'pt' ? 'Vista Frontal' : lang === 'en' ? 'Front View' : 'Vue Avant')
+                            : (lang === 'pt' ? 'Vista Posterior' : lang === 'en' ? 'Back View' : 'Vue Arrière')}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ height: 1, background: BORDER }} />
+
+                {/* Section: Body Zone */}
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#9A7428] mb-3">
+                    {lang === 'pt' ? 'Zona Corporal' : lang === 'en' ? 'Body Zone' : 'Zone corporelle'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ZONE_ORDER.map((z) => {
+                      const isSel = zone === z;
+                      return (
+                        <button
+                          key={z}
+                          type="button"
+                          onClick={() => onZoneChange(z)}
+                          className={`flex items-center gap-2.5 px-3.5 py-3 rounded-2xl text-xs font-semibold border transition-all text-start ${
+                            isSel
+                              ? 'bg-[#1A1412] text-white border-[#1A1412] shadow-md'
+                              : 'bg-white text-[#4A4540] border-[#E8E2D8] hover:border-[#C49A3C]/50'
+                          }`}
+                        >
+                          <span className={isSel ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}>{ZONE_ICONS[z]}</span>
+                          <span className="flex-1 leading-tight">{ZONE_LABELS[z][lang]}</span>
+                          {zoneCounts[z] > 0 && (
+                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
+                              isSel ? 'bg-white/20 text-[#F5E9C8]' : 'bg-[#FAF6EE] text-[#9A7428]'
+                            }`}>
+                              {zoneCounts[z]}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Footer actions */}
+            <div
+              className="px-5 py-4 flex items-center gap-3"
+              style={{ borderTop: `1px solid ${BORDER}`, background: '#FDFBF7' }}
+            >
+              {activeCount > 0 && (
+                <button
+                  type="button"
+                  onClick={onReset}
+                  className="flex-1 py-3 rounded-2xl text-xs font-bold border border-[#E8E2D8] text-[#6B6058] bg-white hover:bg-[#FAF6EE] hover:text-[#C49A3C] hover:border-[#C49A3C]/40 transition-all"
+                >
+                  {lang === 'pt' ? 'Limpar filtros' : lang === 'en' ? 'Clear filters' : 'Réinitialiser'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 rounded-2xl text-xs font-bold bg-[#1A1412] text-white hover:bg-[#C49A3C] transition-all shadow-md"
+              >
+                {lang === 'pt' ? 'Ver resultados' : lang === 'en' ? 'See results' : 'Voir les résultats'}
+              </button>
+            </div>
           </motion.div>
         </>
       )}
@@ -1065,6 +1425,9 @@ export function BodyMap() {
   }, []);
 
   const hasActiveFilters = selectedZone !== 'all' || selectedPole !== 'all' || selectedGoal !== 'all' || searchQuery.trim() !== '';
+  const activeFilterCount = (selectedZone !== 'all' ? 1 : 0) + (selectedGoal !== 'all' ? 1 : 0) + (view !== 'front' ? 1 : 0) + (searchQuery.trim() !== '' ? 1 : 0);
+
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const handleResetFilters = useCallback(() => {
     setSelectedZone('all');
@@ -1136,13 +1499,103 @@ export function BodyMap() {
           </p>
         </motion.div>
 
-        {/* ── Unified Luxury Curator Console ── */}
+        {/* ── Mobile Compact Filter Bar (hidden on lg+) ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.3, delay: 0.06 }}
+          className="lg:hidden w-full max-w-5xl mx-auto mb-6"
+        >
+          <div className="flex items-center gap-2">
+            {/* Search */}
+            <div className="relative flex-1">
+              <IconSearch size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-[#9A7428] pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={lang === 'pt' ? 'Pesquisar cuidados...' : lang === 'en' ? 'Search treatments...' : 'Rechercher un soin...'}
+                className="w-full ps-8 pe-7 py-2.5 text-xs rounded-2xl border border-[#E8E2D8] bg-white text-[#1A1412] placeholder:text-[#9A9088] focus:outline-none focus:border-[#C49A3C] focus:ring-2 focus:ring-[#C49A3C]/20 transition-all shadow-xs"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[#8A8078] hover:text-[#1A1412] transition-colors"
+                >
+                  <IconX size={12} />
+                </button>
+              )}
+            </div>
+
+            {/* Filters trigger */}
+            <button
+              type="button"
+              onClick={() => setFilterSheetOpen(true)}
+              className="relative shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl border font-semibold text-xs transition-all shadow-xs"
+              style={{
+                background: activeFilterCount > 0 ? NAVY : WHITE,
+                borderColor: activeFilterCount > 0 ? NAVY : BORDER,
+                color: activeFilterCount > 0 ? WHITE : SLATE,
+              }}
+            >
+              <IconAdjustmentsHorizontal size={14} style={{ color: activeFilterCount > 0 ? '#E8C97A' : GOLD }} />
+              <span>{lang === 'pt' ? 'Filtros' : lang === 'en' ? 'Filters' : 'Filtres'}</span>
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#C49A3C] text-white text-[9px] font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Active filter chips summary */}
+          {hasActiveFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex flex-wrap items-center gap-1.5 mt-2.5"
+            >
+              <span className="text-[11px] font-semibold text-[#1A1412] flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3C]" />
+                {currentPoints.length} {lang === 'pt' ? 'cuidados' : lang === 'en' ? 'treatments' : 'soins'}
+              </span>
+              {selectedGoal !== 'all' && (
+                <span className="px-2 py-0.5 rounded-full bg-[#FDFAF4] border border-[#C49A3C]/30 text-[#9A7428] text-[11px] font-medium">
+                  {getLocalizedText(MEDICAL_GOALS.find((g) => g.id === selectedGoal)!.label, lang)}
+                </span>
+              )}
+              {selectedZone !== 'all' && (
+                <span className="px-2 py-0.5 rounded-full bg-[#FDFAF4] border border-[#C49A3C]/30 text-[#9A7428] text-[11px] font-medium">
+                  {getLocalizedText(ZONE_LABELS[selectedZone], lang)}
+                </span>
+              )}
+              {view !== 'front' && (
+                <span className="px-2 py-0.5 rounded-full bg-[#FDFAF4] border border-[#C49A3C]/30 text-[#9A7428] text-[11px] font-medium">
+                  {lang === 'pt' ? 'Vista Posterior' : lang === 'en' ? 'Back View' : 'Vue Arrière'}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="text-[#9A7428] hover:text-[#C49A3C] font-semibold text-[11px] flex items-center gap-1 transition-colors px-2 py-0.5 rounded-lg hover:bg-[#FAF6EE]"
+              >
+                <IconX size={11} />
+                {lang === 'pt' ? 'Limpar' : lang === 'en' ? 'Clear' : 'Effacer'}
+              </button>
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* ── Desktop Unified Curator Console (hidden below lg) ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.35, delay: 0.08, ease: [0, 0, 0.2, 1] }}
-          className="w-full max-w-5xl mx-auto mb-10"
+          className="hidden lg:block w-full max-w-5xl mx-auto mb-10"
         >
           <div className="rounded-3xl bg-white/90 backdrop-blur-xl border border-[#E8E2D8] shadow-[0_12px_40px_rgba(26,20,18,0.04)] p-3 sm:p-4.5 space-y-3.5">
             
@@ -1348,6 +1801,22 @@ export function BodyMap() {
         lang={lang}
         t={t}
         onClose={handleClose}
+      />
+
+      {/* Mobile Filter Sheet */}
+      <MobileFilterSheet
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        lang={lang}
+        goal={selectedGoal}
+        onGoalChange={(g) => { setSelectedGoal(g); }}
+        view={view}
+        onViewChange={(v) => { handleViewChange(v); }}
+        zone={selectedZone}
+        onZoneChange={(z) => { setSelectedZone(z); }}
+        zoneCounts={zoneCounts}
+        onReset={handleResetFilters}
+        activeCount={activeFilterCount}
       />
     </section>
   );
