@@ -102,6 +102,9 @@ interface WeekCalendarViewProps {
   openWhatsAppModal?: (appt: Appointment) => void;
 }
 
+import { AdminDateJumpPicker } from './AdminDateJumpPicker';
+import { AppointmentDetailModal } from './AppointmentDetailModal';
+
 function WeekCalendarView({
   appointments,
   lang,
@@ -145,6 +148,16 @@ function WeekCalendarView({
     return map;
   }, [appointments]);
 
+  const appointmentDatesMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    appointments.forEach((a) => {
+      if (a.status !== 'CANCELLED') {
+        map[a.date] = (map[a.date] || 0) + 1;
+      }
+    });
+    return map;
+  }, [appointments]);
+
   const weekLabel = useMemo(() => {
     const locale = lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
     const s = weekDays[0].toLocaleDateString(locale, { day: 'numeric', month: 'short' });
@@ -163,20 +176,41 @@ function WeekCalendarView({
   return (
     <div className="space-y-4 font-sans">
       {/* Week Navigation Header */}
-      <div className="flex items-center justify-between bg-white border border-[#E2E8F0] rounded-xl px-4 py-3 shadow-xs">
-        <button
-          onClick={() => setWeekStart(d => addDays(d, -7))}
-          className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
-        >
-          <IconChevronLeft size={16} />
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-2.5 bg-white border border-[#E2E8F0] rounded-xl px-4 py-3 shadow-xs">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setWeekStart(d => addDays(d, -7))}
+            className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
+            title={txt('Semaine précédente', 'Previous week', 'Semana anterior')}
+          >
+            <IconChevronLeft size={16} />
+          </button>
+          <button
+            onClick={() => setWeekStart(d => addDays(d, 7))}
+            className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
+            title={txt('Semaine suivante', 'Next week', 'Semana seguinte')}
+          >
+            <IconChevronRight size={16} />
+          </button>
+        </div>
 
-        <div className="text-center">
+        {/* Center: Week Label & Direct Date Jumper */}
+        <div className="flex flex-col sm:flex-row items-center gap-2 text-center">
           <div className="font-semibold text-[#0F172A] text-sm sm:text-base">{weekLabel}</div>
-          <div className="text-xs text-[#64748B] font-medium mt-0.5">
-            {txt('Semaine', 'Week', 'Semana')} · {appointments.filter(a => weekDays.some(d => toDateStr(d) === a.date)).length}{' '}
+          <AdminDateJumpPicker
+            selectedDate={toDateStr(weekStart)}
+            onSelectDate={(newDate) => {
+              const d = new Date(newDate + 'T12:00:00');
+              setWeekStart(getWeekStart(d));
+            }}
+            lang={lang}
+            appointmentDatesMap={appointmentDatesMap}
+            buttonVariant="compact"
+          />
+          <span className="text-xs text-[#64748B] font-medium hidden md:inline">
+            · {appointments.filter(a => weekDays.some(d => toDateStr(d) === a.date)).length}{' '}
             {txt('rendez-vous', 'appointments', 'consultas')}
-          </div>
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -185,12 +219,6 @@ function WeekCalendarView({
             className="px-3 py-1.5 rounded-lg bg-[#F1F5F9] text-[#334155] text-xs font-semibold hover:bg-[#E2E8F0] transition-colors"
           >
             {txt("Auj.", 'Today', 'Hoje')}
-          </button>
-          <button
-            onClick={() => setWeekStart(d => addDays(d, 7))}
-            className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
-          >
-            <IconChevronRight size={16} />
           </button>
         </div>
       </div>
@@ -312,131 +340,19 @@ function WeekCalendarView({
         </div>
       </div>
 
-      {/* Detail Popover */}
-      <AnimatePresence>
-        {selectedAppt && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ duration: 0.2 }}
-            ref={popoverRef}
-            className="relative bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-lg overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-[#334155] flex items-center justify-center font-bold text-sm shrink-0">
-                  {getInitials(selectedAppt.patientName)}
-                </div>
-                <div>
-                  <div className="font-semibold text-[#0F172A] text-base leading-tight">
-                    {selectedAppt.patientName}
-                  </div>
-                  <div className="text-xs text-[#64748B] mt-0.5">
-                    {selectedAppt.date} · {selectedAppt.startTime}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedAppt(null)}
-                className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors shrink-0"
-              >
-                <IconX size={16} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-4 text-xs">
-              <div className="bg-[#F8FAFC] rounded-lg p-3 border border-[#E2E8F0]">
-                <div className="text-[10px] text-[#64748B] uppercase font-semibold mb-1">
-                  {txt('Traitement', 'Treatment', 'Tratamento')}
-                </div>
-                <div className="font-semibold text-[#0F172A]">{getServiceName(selectedAppt.service, lang)}</div>
-              </div>
-              <div className="bg-[#F8FAFC] rounded-lg p-3 border border-[#E2E8F0]">
-                <div className="text-[10px] text-[#64748B] uppercase font-semibold mb-1">
-                  {txt('Statut', 'Status', 'Estado')}
-                </div>
-                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
-                  STATUS_CONFIG[selectedAppt.status].bg
-                } ${
-                  STATUS_CONFIG[selectedAppt.status].color
-                } ${
-                  STATUS_CONFIG[selectedAppt.status].border
-                }`}>
-                  {STATUS_CONFIG[selectedAppt.status][lang] || STATUS_CONFIG[selectedAppt.status].pt}
-                </span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2">
-              {openWhatsAppModal ? (
-                <button
-                  type="button"
-                  onClick={() => { openWhatsAppModal(selectedAppt); setSelectedAppt(null); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] text-xs font-medium hover:bg-[#DCFCE7] transition-colors"
-                >
-                  <IconBrandWhatsapp size={14} />
-                  WhatsApp
-                </button>
-              ) : (
-                <a
-                  href={`https://wa.me/${selectedAppt.phone.replace(/[^0-9]/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] text-xs font-medium hover:bg-[#DCFCE7] transition-colors"
-                >
-                  <IconBrandWhatsapp size={14} />
-                  WhatsApp
-                </a>
-              )}
-
-              <button
-                onClick={() => { openPatientNote(selectedAppt); setSelectedAppt(null); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#334155] text-xs font-medium hover:bg-[#F1F5F9] transition-colors"
-              >
-                <IconNotes size={14} />
-                {txt('Dossier', 'File', 'Ficha')}
-              </button>
-
-              {selectedAppt.status !== 'CONFIRMED' && selectedAppt.status !== 'CANCELLED' && (
-                <button
-                  onClick={() => { updateStatus(selectedAppt.id, 'CONFIRMED'); setSelectedAppt(null); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] text-xs font-medium hover:bg-[#BBF7D0] transition-colors"
-                >
-                  <IconCheck size={14} />
-                  {txt('Confirmer', 'Confirm', 'Confirmar')}
-                </button>
-              )}
-
-              {selectedAppt.status === 'CONFIRMED' && (
-                <button
-                  onClick={() => { updateStatus(selectedAppt.id, 'COMPLETED'); setSelectedAppt(null); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DBEAFE] border border-[#BFDBFE] text-[#1E40AF] text-xs font-medium hover:bg-[#BFDBFE] transition-colors"
-                >
-                  <IconCheck size={14} />
-                  {txt('Terminer', 'Complete', 'Concluir')}
-                </button>
-              )}
-
-              {selectedAppt.status !== 'CANCELLED' && (
-                <button
-                  onClick={() => {
-                    setConfirmDialog({
-                      title: txt('Annuler ce rendez-vous ?', 'Cancel this appointment?', 'Cancelar esta consulta?'),
-                      onConfirm: () => { softDeleteAppointment(selectedAppt.id); setSelectedAppt(null); },
-                    });
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-xs font-medium hover:bg-[#FECACA] transition-colors"
-                >
-                  <IconX size={14} />
-                  {txt('Annuler', 'Cancel', 'Cancelar')}
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Modal for Appointment Details */}
+      <AppointmentDetailModal
+        isOpen={Boolean(selectedAppt)}
+        onClose={() => setSelectedAppt(null)}
+        appointment={selectedAppt}
+        lang={lang}
+        updateStatus={updateStatus}
+        softDeleteAppointment={softDeleteAppointment}
+        openPatientNote={openPatientNote}
+        setConfirmDialog={setConfirmDialog}
+        openWhatsAppModal={openWhatsAppModal}
+        recentNewIds={recentNewIds}
+      />
     </div>
   );
 }
@@ -484,18 +400,31 @@ export function AppointmentsTab({
     return ptStr;
   };
 
-  const [viewMode, setViewMode] = useState<'agenda' | 'week' | 'cards' | 'table' | 'grouped'>('agenda');
+  const [viewMode, setViewMode] = useState<'agenda' | 'week' | 'cards' | 'table' | 'grouped'>('week');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'upcoming'>('all');
+  const [specificDateFilter, setSpecificDateFilter] = useState<string | null>(null);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [selectedApptForInvoice, setSelectedApptForInvoice] = useState<Appointment | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [selectedApptForWhatsApp, setSelectedApptForWhatsApp] = useState<Appointment | null>(null);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [selectedDetailAppt, setSelectedDetailAppt] = useState<Appointment | null>(null);
 
   const handleOpenWhatsAppHub = (appt: Appointment) => {
     setSelectedApptForWhatsApp(appt);
     setIsWhatsAppModalOpen(true);
   };
+
+  // Map of date -> appointment count for calendar dots
+  const appointmentDatesMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    appointments.forEach((a) => {
+      if (a.status !== 'CANCELLED') {
+        map[a.date] = (map[a.date] || 0) + 1;
+      }
+    });
+    return map;
+  }, [appointments]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -510,16 +439,17 @@ export function AppointmentsTab({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filter, dateFilter, viewMode, itemsPerPage]);
+  }, [searchQuery, filter, dateFilter, specificDateFilter, viewMode, itemsPerPage]);
 
   const displayedAppointments = useMemo(() => {
     return filteredAppointments.filter(item => {
+      if (specificDateFilter) return item.date === specificDateFilter;
       if (dateFilter === 'today') return item.date === todayStr;
       if (dateFilter === 'tomorrow') return item.date === tomorrowStr;
       if (dateFilter === 'upcoming') return item.date >= todayStr;
       return true;
     });
-  }, [filteredAppointments, dateFilter, todayStr, tomorrowStr]);
+  }, [filteredAppointments, dateFilter, specificDateFilter, todayStr, tomorrowStr]);
 
   const totalItems = displayedAppointments.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
@@ -539,12 +469,13 @@ export function AppointmentsTab({
     return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
   }, [paginatedAppointments]);
 
-  const isAnyFilterActive = searchQuery || filter !== 'all' || dateFilter !== 'all';
+  const isAnyFilterActive = searchQuery || filter !== 'all' || dateFilter !== 'all' || specificDateFilter !== null;
 
   const resetFilters = () => {
     setSearchQuery('');
     setFilter('all');
     setDateFilter('all');
+    setSpecificDateFilter(null);
   };
 
   const renderAppointmentCard = (item: Appointment) => {
@@ -563,14 +494,17 @@ export function AppointmentsTab({
             : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
         }`}
       >
-        <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] text-[#334155] flex items-center justify-center font-bold text-xs shrink-0 border border-[#E2E8F0]">
+        <div
+          onClick={() => setSelectedDetailAppt(item)}
+          className="flex items-start gap-3 flex-1 min-w-0 cursor-pointer group"
+        >
+          <div className="w-10 h-10 rounded-lg bg-[#F1F5F9] group-hover:bg-[#E2E8F0] text-[#334155] flex items-center justify-center font-bold text-xs shrink-0 border border-[#E2E8F0] transition-colors">
             {initials}
           </div>
 
           <div className="space-y-1 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-semibold text-sm sm:text-base text-[#0F172A] truncate">
+              <span className="font-semibold text-sm sm:text-base text-[#0F172A] group-hover:text-[#2563EB] transition-colors truncate">
                 {item.patientName}
               </span>
               {isRecentNew && (
@@ -734,6 +668,19 @@ export function AppointmentsTab({
           {/* View Mode Selector */}
           <div className="flex items-center gap-1 bg-[#F1F5F9] p-1 rounded-lg border border-[#E2E8F0] overflow-x-auto no-scrollbar self-start sm:self-auto">
             <button
+              onClick={() => setViewMode('week')}
+              className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap touch-target ${
+                viewMode === 'week'
+                  ? 'bg-white text-[#0F172A] shadow-xs font-semibold'
+                  : 'text-[#64748B] hover:text-[#0F172A]'
+              }`}
+              title={txt('Vue Semaine', 'Week View', 'Vista Semanal')}
+            >
+              <IconCalendarWeek size={15} className={viewMode === 'week' ? 'text-[#0F172A]' : ''} />
+              <span>{txt('Semaine', 'Week', 'Semana')}</span>
+            </button>
+
+            <button
               onClick={() => setViewMode('agenda')}
               className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap touch-target ${
                 viewMode === 'agenda'
@@ -744,19 +691,6 @@ export function AppointmentsTab({
             >
               <IconCalendarEvent size={15} className={viewMode === 'agenda' ? 'text-[#0F172A]' : ''} />
               <span>{txt('Agenda', 'Agenda', 'Agenda')}</span>
-            </button>
-
-            <button
-              onClick={() => setViewMode('week')}
-              className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap touch-target ${
-                viewMode === 'week'
-                  ? 'bg-white text-[#0F172A] shadow-xs font-semibold'
-                  : 'text-[#64748B] hover:text-[#0F172A]'
-              }`}
-              title={txt('Vue Semaine', 'Week View', 'Vista Semanal')}
-            >
-              <IconCalendarWeek size={15} className={viewMode === 'week' ? 'text-[#0F172A]' : ''} />
-              <span className="hidden xs:inline">{txt('Semaine', 'Week', 'Semana')}</span>
             </button>
 
             <button
@@ -828,7 +762,7 @@ export function AppointmentsTab({
             ))}
           </div>
 
-          {/* Quick Date Pills */}
+          {/* Quick Date Pills & Direct Date Jump Picker */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
             {[
               { id: 'all', label: txt('Toutes dates', 'All dates', 'Todas as datas') },
@@ -838,9 +772,12 @@ export function AppointmentsTab({
             ].map(d => (
               <button
                 key={d.id}
-                onClick={() => setDateFilter(d.id as typeof dateFilter)}
+                onClick={() => {
+                  setDateFilter(d.id as typeof dateFilter);
+                  setSpecificDateFilter(null);
+                }}
                 className={`px-2.5 py-1 rounded-lg transition-colors text-xs font-medium whitespace-nowrap ${
-                  dateFilter === d.id
+                  dateFilter === d.id && !specificDateFilter
                     ? 'bg-[#0F172A] text-white'
                     : 'bg-[#F8FAFC] text-[#64748B] hover:text-[#0F172A] border border-[#E2E8F0]'
                 }`}
@@ -848,6 +785,35 @@ export function AppointmentsTab({
                 {d.label}
               </button>
             ))}
+
+            <AdminDateJumpPicker
+              selectedDate={specificDateFilter || todayStr}
+              onSelectDate={(newDate) => {
+                setSpecificDateFilter(newDate);
+                setDateFilter('all');
+              }}
+              lang={lang}
+              appointmentDatesMap={appointmentDatesMap}
+              showAllOption={true}
+              onClearDateFilter={() => {
+                setSpecificDateFilter(null);
+                setDateFilter('all');
+              }}
+              isDateFilterActive={specificDateFilter !== null}
+              buttonVariant="toolbar"
+            />
+
+            {specificDateFilter && (
+              <button
+                type="button"
+                onClick={() => setSpecificDateFilter(null)}
+                className="px-2 py-1 rounded-lg bg-[#FAF6EE] text-[#C49A3C] border border-[#C49A3C] text-xs font-bold flex items-center gap-1 hover:bg-[#F5E9C8] transition-colors"
+                title={txt('Effacer filtre de date', 'Clear date filter', 'Limpar filtro de data')}
+              >
+                <span>{specificDateFilter}</span>
+                <IconX size={12} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -863,6 +829,8 @@ export function AppointmentsTab({
         setFilter={setFilter}
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}
+        specificDateFilter={specificDateFilter}
+        setSpecificDateFilter={setSpecificDateFilter}
         onReset={resetFilters}
         totalResults={displayedAppointments.length}
       />
@@ -922,6 +890,10 @@ export function AppointmentsTab({
               softDeleteAppointment={softDeleteAppointment}
               openPatientNote={openPatientNote}
               setConfirmDialog={setConfirmDialog}
+              onOpenCreateInvoice={(appt) => {
+                setSelectedApptForInvoice(appt);
+                setIsInvoiceModalOpen(true);
+              }}
               noShowCounts={noShowCounts}
               recentNewIds={recentNewIds}
               openWhatsAppModal={handleOpenWhatsAppHub}
@@ -968,13 +940,16 @@ export function AppointmentsTab({
                             isRecentNew ? 'bg-[#FAF6EE]' : 'hover:bg-[#F8FAFC]'
                           }`}
                         >
-                          <td className="py-3.5 px-4">
+                          <td
+                            onClick={() => setSelectedDetailAppt(item)}
+                            className="py-3.5 px-4 cursor-pointer group"
+                          >
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-md bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center text-[#334155] font-semibold text-xs shrink-0">
+                              <div className="w-7 h-7 rounded-md bg-[#F1F5F9] group-hover:bg-[#E2E8F0] border border-[#E2E8F0] flex items-center justify-center text-[#334155] font-semibold text-xs shrink-0 transition-colors">
                                 {initials}
                               </div>
                               <div className="min-w-0">
-                                <div className="font-semibold text-[#0F172A] text-xs flex items-center gap-1.5">
+                                <div className="font-semibold text-[#0F172A] group-hover:text-[#2563EB] text-xs flex items-center gap-1.5 transition-colors">
                                   <span>{item.patientName}</span>
                                   {isRecentNew && (
                                     <span className="bg-[#C49A3C] text-white text-[8px] font-bold px-1.5 py-0.2 rounded uppercase animate-pulse">
@@ -986,14 +961,23 @@ export function AppointmentsTab({
                               </div>
                             </div>
                           </td>
-                          <td className="py-3.5 px-4">
+                          <td
+                            onClick={() => setSelectedDetailAppt(item)}
+                            className="py-3.5 px-4 cursor-pointer"
+                          >
                             <div className="font-medium text-[#0F172A]">{getServiceName(item.service, lang)}</div>
                             <div className="text-[11px] text-[#64748B]">{price} €</div>
                           </td>
-                          <td className="py-3.5 px-4 font-semibold text-[#0F172A]">
+                          <td
+                            onClick={() => setSelectedDetailAppt(item)}
+                            className="py-3.5 px-4 font-semibold text-[#0F172A] cursor-pointer"
+                          >
                             {item.date} {item.startTime}
                           </td>
-                          <td className="py-3.5 px-4">
+                          <td
+                            onClick={() => setSelectedDetailAppt(item)}
+                            className="py-3.5 px-4 cursor-pointer"
+                          >
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${st.bg} ${st.color} ${st.border}`}>
                               {st[lang] || st.pt || st.fr}
                             </span>
@@ -1222,6 +1206,25 @@ export function AppointmentsTab({
           lang={lang}
         />
       )}
+
+      {/* Appointment Detail Modal (for cards, table, and grouped views) */}
+      <AppointmentDetailModal
+        isOpen={Boolean(selectedDetailAppt)}
+        onClose={() => setSelectedDetailAppt(null)}
+        appointment={selectedDetailAppt}
+        lang={lang}
+        updateStatus={updateStatus}
+        softDeleteAppointment={softDeleteAppointment}
+        openPatientNote={openPatientNote}
+        setConfirmDialog={setConfirmDialog}
+        onOpenCreateInvoice={(appt: Appointment) => {
+          setSelectedApptForInvoice(appt);
+          setIsInvoiceModalOpen(true);
+        }}
+        openWhatsAppModal={handleOpenWhatsAppHub}
+        noShowCounts={noShowCounts}
+        recentNewIds={recentNewIds}
+      />
     </div>
   );
 }

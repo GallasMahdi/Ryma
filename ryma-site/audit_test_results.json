@@ -1,0 +1,389 @@
+{
+  "timestamp": "2026-09-02T11:32:07.816Z",
+  "stats": {
+    "total": 54,
+    "passed": 53,
+    "failed": 0,
+    "warnings": 1
+  },
+  "results": [
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /a-propos",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /avis",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /blog",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /conditions-utilisation",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /confidentialite",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /contact",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /mentions-legales",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /rendez-vous",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /services",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /tarifs",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /sitemap.xml",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /robots.txt",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /favicon.ico",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Route /icon.svg",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Dynamic Service Route /services/reeducation-posturale",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "PUBLIC_ROUTES",
+      "testName": "Dynamic Blog Post /blog/cellulite-mythes-realites",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "X-Frame-Options Clickjacking Defense",
+      "status": "PASS",
+      "details": "DENY",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "X-Content-Type-Options Sniff Defense",
+      "status": "PASS",
+      "details": "nosniff",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "Unauthenticated /admin Navigation Rejection",
+      "status": "PASS",
+      "details": "Status 307",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "Unauthenticated API Rejection: /api/admin/appointments",
+      "status": "PASS",
+      "details": "HTTP 401",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "Unauthenticated API Rejection: /api/admin/patients",
+      "status": "PASS",
+      "details": "HTTP 401",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "Unauthenticated API Rejection: /api/admin/invoices",
+      "status": "PASS",
+      "details": "HTTP 401",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "Unauthenticated API Rejection: /api/admin/prescriptions",
+      "status": "PASS",
+      "details": "HTTP 401",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "Unauthenticated API Rejection: /api/admin/slots",
+      "status": "PASS",
+      "details": "HTTP 401",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "Unauthenticated API Rejection: /api/admin/export",
+      "status": "PASS",
+      "details": "HTTP 401",
+      "error": null
+    },
+    {
+      "category": "SECURITY",
+      "testName": "Unauthenticated API Rejection: /api/admin/analytics",
+      "status": "PASS",
+      "details": "HTTP 401",
+      "error": null
+    },
+    {
+      "category": "BOOKING_API",
+      "testName": "Health Endpoint /api/health",
+      "status": "PASS",
+      "details": "Status: healthy, DB: turso_cloud (354ms)",
+      "error": null
+    },
+    {
+      "category": "BOOKING_API",
+      "testName": "Slots API Rejection of Malformed Date",
+      "status": "PASS",
+      "details": "HTTP 400",
+      "error": null
+    },
+    {
+      "category": "BOOKING_API",
+      "testName": "Slots API Valid Query for 2026-09-14",
+      "status": "PASS",
+      "details": "15 slots returned",
+      "error": null
+    },
+    {
+      "category": "BOOKING_API",
+      "testName": "Appointment Creation Rejects Missing Required Fields",
+      "status": "PASS",
+      "details": "HTTP 422",
+      "error": null
+    },
+    {
+      "category": "BOOKING_API",
+      "testName": "Appointment Creation Rejects Past Dates (2023-01-01)",
+      "status": "PASS",
+      "details": "HTTP 422",
+      "error": null
+    },
+    {
+      "category": "BOOKING_API",
+      "testName": "Appointment Creation Rejects Invalid Time (03:17)",
+      "status": "PASS",
+      "details": "HTTP 422",
+      "error": null
+    },
+    {
+      "category": "ADMIN_AUTH",
+      "testName": "Login Rejection on Invalid Password",
+      "status": "PASS",
+      "details": "HTTP 401",
+      "error": null
+    },
+    {
+      "category": "ADMIN_AUTH",
+      "testName": "Admin Login with Valid Credentials",
+      "status": "PASS",
+      "details": "Cookie issued",
+      "error": null
+    },
+    {
+      "category": "ADMIN_AUTH",
+      "testName": "Session Verification /api/admin/me",
+      "status": "PASS",
+      "details": "Role: admin",
+      "error": null
+    },
+    {
+      "category": "ADMIN_APPOINTMENTS",
+      "testName": "Create Appointment for 2026-09-14 11:00",
+      "status": "PASS",
+      "details": "ID: apt_mtk0njj3qdyj70",
+      "error": null
+    },
+    {
+      "category": "ADMIN_APPOINTMENTS",
+      "testName": "Double-Booking & Abuse Prevention on Active Slot",
+      "status": "PASS",
+      "details": "HTTP 429 (Rate-Limited)",
+      "error": null
+    },
+    {
+      "category": "ADMIN_APPOINTMENTS",
+      "testName": "Appointment Status Transition to CONFIRMED",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "ADMIN_APPOINTMENTS",
+      "testName": "Appointment Status Transition to COMPLETED",
+      "status": "PASS",
+      "details": "HTTP 200",
+      "error": null
+    },
+    {
+      "category": "SLOTS_MANAGEMENT",
+      "testName": "Block Slot 2026-09-14 08:30",
+      "status": "PASS",
+      "details": "HTTP 200 (Blocked)",
+      "error": null
+    },
+    {
+      "category": "SLOTS_MANAGEMENT",
+      "testName": "Slot 08:30 confirmed unavailable in public query",
+      "status": "PASS",
+      "details": "Blocked",
+      "error": null
+    },
+    {
+      "category": "SLOTS_MANAGEMENT",
+      "testName": "Unblock Slot via Toggle 2026-09-14 08:30",
+      "status": "PASS",
+      "details": "HTTP 200 (Unblocked)",
+      "error": null
+    },
+    {
+      "category": "PATIENT_EHR",
+      "testName": "Create/Update Patient Clinical Record",
+      "status": "PASS",
+      "details": "ID: pat_mtd3q7d0oykw",
+      "error": null
+    },
+    {
+      "category": "PATIENT_EHR",
+      "testName": "Log Clinical Session with EVA Pain Scale (7/10)",
+      "status": "PASS",
+      "details": "Session saved",
+      "error": null
+    },
+    {
+      "category": "INVOICING_ENGINE",
+      "testName": "Generate Portuguese CIVA Art. 9 Medical Invoice",
+      "status": "PASS",
+      "details": "Invoice: FR 2026/0300",
+      "error": null
+    },
+    {
+      "category": "PRESCRIPTIONS",
+      "testName": "Issue Digital Clinical Prescription",
+      "status": "PASS",
+      "details": "Prescription saved",
+      "error": null
+    },
+    {
+      "category": "OWNER_ANALYTICS",
+      "testName": "Rejection of Invalid Owner Elevation Password",
+      "status": "PASS",
+      "details": "HTTP 401/403",
+      "error": null
+    },
+    {
+      "category": "OWNER_ANALYTICS",
+      "testName": "Owner Password Elevation Authentication",
+      "status": "PASS",
+      "details": "Elevated session verified",
+      "error": null
+    },
+    {
+      "category": "DATA_EXPORT",
+      "testName": "Full Database Export (JSON)",
+      "status": "PASS",
+      "details": "1379.3 KB",
+      "error": null
+    },
+    {
+      "category": "DATA_EXPORT",
+      "testName": "Full Database Export (PATIENTS)",
+      "status": "PASS",
+      "details": "34.6 KB",
+      "error": null
+    },
+    {
+      "category": "DATA_EXPORT",
+      "testName": "Full Database Export (APPOINTMENTS)",
+      "status": "PASS",
+      "details": "58.8 KB",
+      "error": null
+    },
+    {
+      "category": "ADMIN_APPOINTMENTS",
+      "testName": "Clean Up Audit Test Appointment Record",
+      "status": "PASS",
+      "details": "Deleted cleanly",
+      "error": null
+    },
+    {
+      "category": "CONCURRENCY",
+      "testName": "Slot Concurrency Test Results",
+      "status": "WARN",
+      "details": "0 successes, 0 rejections",
+      "error": null
+    }
+  ]
+}

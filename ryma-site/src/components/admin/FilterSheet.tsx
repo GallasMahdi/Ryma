@@ -16,6 +16,8 @@ interface FilterSheetProps {
   setFilter: (s: AppointmentStatus | 'all') => void;
   dateFilter: 'all' | 'today' | 'tomorrow' | 'upcoming';
   setDateFilter: (d: 'all' | 'today' | 'tomorrow' | 'upcoming') => void;
+  specificDateFilter?: string | null;
+  setSpecificDateFilter?: (d: string | null) => void;
   onReset: () => void;
   totalResults: number;
 }
@@ -30,6 +32,8 @@ export function FilterSheet({
   setFilter,
   dateFilter,
   setDateFilter,
+  specificDateFilter = null,
+  setSpecificDateFilter,
   onReset,
   totalResults,
 }: FilterSheetProps) {
@@ -51,7 +55,7 @@ export function FilterSheet({
     { id: 'upcoming', label: txt('À venir', 'Upcoming', 'Próximas') },
   ];
 
-  const isFiltered = searchQuery || filter !== 'all' || dateFilter !== 'all';
+  const isFiltered = searchQuery || filter !== 'all' || dateFilter !== 'all' || specificDateFilter !== null;
 
   return (
     <ResponsiveModal
@@ -109,19 +113,22 @@ export function FilterSheet({
           </div>
         </div>
 
-        {/* Date Filter */}
+        {/* Date Filter & Specific Date Jump */}
         <div className="space-y-1.5">
           <label className="font-semibold uppercase tracking-wider text-[#475569] text-[11px]">
-            {txt('Période', 'Period', 'Período')}
+            {txt('Période / Date', 'Period / Date', 'Período / Data')}
           </label>
           <div className="grid grid-cols-2 gap-2">
             {dateOptions.map(opt => {
-              const isSelected = dateFilter === opt.id;
+              const isSelected = dateFilter === opt.id && !specificDateFilter;
               return (
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setDateFilter(opt.id)}
+                  onClick={() => {
+                    setDateFilter(opt.id);
+                    if (setSpecificDateFilter) setSpecificDateFilter(null);
+                  }}
                   className={`p-2.5 rounded-xl border text-xs font-medium text-center transition-all flex items-center justify-center gap-1.5 touch-target ${
                     isSelected
                       ? 'bg-[#0F172A] border-[#0F172A] text-white font-semibold shadow-xs'
@@ -133,6 +140,38 @@ export function FilterSheet({
                 </button>
               );
             })}
+          </div>
+
+          {/* Specific Date Picker Input */}
+          <div className="pt-2">
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+              <span className="text-[11px] font-semibold text-[#475569] whitespace-nowrap">
+                {txt('Date exacte:', 'Exact date:', 'Data exata:')}
+              </span>
+              <input
+                type="date"
+                value={specificDateFilter || ''}
+                onChange={(e) => {
+                  if (setSpecificDateFilter) {
+                    setSpecificDateFilter(e.target.value || null);
+                    if (e.target.value) setDateFilter('all');
+                  }
+                }}
+                className="flex-1 bg-white border border-[#CBD5E1] rounded-lg px-2.5 py-1 text-xs text-[#0F172A] font-semibold focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
+              />
+              {specificDateFilter && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setSpecificDateFilter) setSpecificDateFilter(null);
+                  }}
+                  className="p-1 rounded-md text-[#991B1B] hover:bg-[#FEE2E2] transition-colors"
+                  title="Effacer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

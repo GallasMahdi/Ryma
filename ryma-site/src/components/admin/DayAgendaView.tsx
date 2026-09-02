@@ -25,6 +25,9 @@ import {
 } from '@/types/admin';
 import { Lang } from '@/lib/i18n';
 
+import { AdminDateJumpPicker } from './AdminDateJumpPicker';
+import { AppointmentDetailModal } from './AppointmentDetailModal';
+
 interface DayAgendaViewProps {
   appointments: Appointment[];
   lang: Lang;
@@ -32,6 +35,7 @@ interface DayAgendaViewProps {
   softDeleteAppointment: (id: string) => void;
   openPatientNote: (appt: Appointment) => void;
   setConfirmDialog: (dlg: { title: string; onConfirm: () => void } | null) => void;
+  onOpenCreateInvoice?: (appt: Appointment) => void;
   noShowCounts?: Record<string, number>;
   recentNewIds?: Set<string>;
   openWhatsAppModal?: (appt: Appointment) => void;
@@ -51,6 +55,7 @@ export function DayAgendaView({
   softDeleteAppointment,
   openPatientNote,
   setConfirmDialog,
+  onOpenCreateInvoice,
   noShowCounts,
   recentNewIds,
   openWhatsAppModal,
@@ -60,6 +65,18 @@ export function DayAgendaView({
 
   const todayStr = useMemo(() => formatLocalDate(new Date()), []);
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const [selectedDetailAppt, setSelectedDetailAppt] = useState<Appointment | null>(null);
+
+  // Map of date -> appointment count for calendar dots
+  const appointmentDatesMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    appointments.forEach((a) => {
+      if (a.status !== 'CANCELLED') {
+        map[a.date] = (map[a.date] || 0) + 1;
+      }
+    });
+    return map;
+  }, [appointments]);
 
   const dayStrip = useMemo(() => {
     const list: string[] = [];
@@ -84,25 +101,40 @@ export function DayAgendaView({
     <div className="space-y-4 font-sans">
       {/* Date Switcher Header */}
       <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setSelectedDate(prev => shiftDateString(prev, -1))}
-            className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
-            title={txt('Jour précédent', 'Previous day', 'Dia anterior')}
-          >
-            <IconChevronLeft size={18} />
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setSelectedDate(prev => shiftDateString(prev, -1))}
+              className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
+              title={txt('Jour précédent', 'Previous day', 'Dia anterior')}
+            >
+              <IconChevronLeft size={18} />
+            </button>
 
-          <div className="text-center min-w-0 px-2">
-            <div className="font-semibold text-base text-[#0F172A] capitalize truncate">
-              {dateMeta.title}
-            </div>
-            <div className="text-xs text-[#64748B] font-medium mt-0.5">
-              {dateMeta.subtitle} · {dayAppointments.length}{' '}
+            <button
+              onClick={() => setSelectedDate(prev => shiftDateString(prev, 1))}
+              className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
+              title={txt('Jour suivant', 'Next day', 'Dia seguinte')}
+            >
+              <IconChevronRight size={18} />
+            </button>
+          </div>
+
+          {/* Central Direct Date Jump Selector */}
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <AdminDateJumpPicker
+              selectedDate={selectedDate}
+              onSelectDate={(newDate) => setSelectedDate(newDate)}
+              lang={lang}
+              appointmentDatesMap={appointmentDatesMap}
+              buttonVariant="header"
+            />
+            <span className="text-xs text-[#64748B] font-medium hidden sm:inline">
+              · {dayAppointments.length}{' '}
               {dayAppointments.length === 1
                 ? txt('rendez-vous', 'appointment', 'consulta')
                 : txt('rendez-vous', 'appointments', 'consultas')}
-            </div>
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -116,13 +148,12 @@ export function DayAgendaView({
             >
               {txt("Auj.", 'Today', 'Hoje')}
             </button>
-
             <button
-              onClick={() => setSelectedDate(prev => shiftDateString(prev, 1))}
-              className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
-              title={txt('Jour suivant', 'Next day', 'Dia seguinte')}
+              onClick={() => setSelectedDate(prev => shiftDateString(prev, 7))}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] transition-colors hidden sm:inline-block"
+              title={txt('+7 jours', '+7 days', '+7 dias')}
             >
-              <IconChevronRight size={18} />
+              +7d
             </button>
           </div>
         </div>
@@ -215,9 +246,12 @@ export function DayAgendaView({
                 />
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pl-2">
-                  {/* Time + Patient Identity */}
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] min-w-[54px] shrink-0">
+                  {/* Time + Patient Identity (Clickable to open AppointmentDetailModal) */}
+                  <div
+                    onClick={() => setSelectedDetailAppt(appt)}
+                    className="flex items-start gap-3 min-w-0 cursor-pointer group flex-1"
+                  >
+                    <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-[#F8FAFC] group-hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] min-w-[54px] shrink-0 transition-colors">
                       <IconClock size={14} className="text-[#64748B] mb-0.5" />
                       <span className="font-bold text-xs">
                         {appt.startTime}
@@ -226,7 +260,7 @@ export function DayAgendaView({
 
                     <div className="min-w-0 space-y-1">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-semibold text-sm sm:text-base text-[#0F172A] truncate">
+                        <span className="font-semibold text-sm sm:text-base text-[#0F172A] group-hover:text-[#2563EB] transition-colors truncate">
                           {appt.patientName}
                         </span>
                         {isNew && (
@@ -258,13 +292,7 @@ export function DayAgendaView({
                           </>
                         )}
                         <span className="text-[#CBD5E1]">•</span>
-                        <a
-                          href={`tel:${appt.phone}`}
-                          className="flex items-center gap-1 text-[#475569] hover:text-[#0F172A] transition-colors"
-                        >
-                          <IconPhoneCall size={12} />
-                          <span>{appt.phone}</span>
-                        </a>
+                        <span className="text-[#475569]">{appt.phone}</span>
                       </div>
 
                       {appt.notes && (
@@ -347,6 +375,22 @@ export function DayAgendaView({
           })}
         </div>
       )}
+
+      {/* Appointment Detail Modal for Day Agenda View */}
+      <AppointmentDetailModal
+        isOpen={Boolean(selectedDetailAppt)}
+        onClose={() => setSelectedDetailAppt(null)}
+        appointment={selectedDetailAppt}
+        lang={lang}
+        updateStatus={updateStatus}
+        softDeleteAppointment={softDeleteAppointment}
+        openPatientNote={openPatientNote}
+        setConfirmDialog={setConfirmDialog}
+        onOpenCreateInvoice={onOpenCreateInvoice}
+        openWhatsAppModal={openWhatsAppModal}
+        noShowCounts={noShowCounts}
+        recentNewIds={recentNewIds}
+      />
     </div>
   );
 }

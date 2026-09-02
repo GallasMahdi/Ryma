@@ -1,0 +1,170 @@
+{
+  "timestamp": "2026-09-02T12:43:59.296Z",
+  "durationSeconds": "12.7",
+  "summary": {
+    "total": 18,
+    "passed": 18,
+    "failed": 0,
+    "warnings": 0,
+    "startTime": 1788353026570,
+    "tierResults": {
+      "TIER_1_LOAD": {
+        "passed": 1,
+        "failed": 0,
+        "warnings": 0,
+        "tests": [
+          {
+            "testName": "100 Concurrent Burst Requests",
+            "status": "PASS",
+            "details": "100% Success (13.7 req/s, p50: 6986ms, p95: 7281ms, p99: 7289ms)",
+            "error": null
+          }
+        ]
+      },
+      "TIER_2_SECURITY": {
+        "passed": 7,
+        "failed": 0,
+        "warnings": 0,
+        "tests": [
+          {
+            "testName": "SQLi Defense on Date Query: ' OR '1'='1...",
+            "status": "PASS",
+            "details": "Blocked HTTP 400",
+            "error": null
+          },
+          {
+            "testName": "SQLi Defense on Date Query: 2026-09-14'; DROP TA...",
+            "status": "PASS",
+            "details": "Blocked HTTP 400",
+            "error": null
+          },
+          {
+            "testName": "SQLi Defense on Date Query: 2026-09-14' UNION SE...",
+            "status": "PASS",
+            "details": "Blocked HTTP 400",
+            "error": null
+          },
+          {
+            "testName": "SQLi Defense on Date Query: ../../etc/passwd...",
+            "status": "PASS",
+            "details": "Blocked HTTP 400",
+            "error": null
+          },
+          {
+            "testName": "XSS Injection Storage & Sanitization",
+            "status": "PASS",
+            "details": "Stored safely without HTML execution",
+            "error": null
+          },
+          {
+            "testName": "CSV Formula Injection Neutralization",
+            "status": "PASS",
+            "details": "Formulas escaped with leading single-quote",
+            "error": null
+          },
+          {
+            "testName": "10,000 Character Buffer Overflow Defense",
+            "status": "PASS",
+            "details": "Handled safely (422)",
+            "error": null
+          }
+        ]
+      },
+      "TIER_3_DISASTER_RECOVERY": {
+        "passed": 2,
+        "failed": 0,
+        "warnings": 0,
+        "tests": [
+          {
+            "testName": "Full Database Snapshot Integrity Verification",
+            "status": "PASS",
+            "details": "Appts: 0, Patients: 0, Invoices: 0",
+            "error": null
+          },
+          {
+            "testName": "Relational FK Consistency (0 Orphaned Records)",
+            "status": "PASS",
+            "details": "Zero orphaned records",
+            "error": null
+          }
+        ]
+      },
+      "TIER_4_EMAIL": {
+        "passed": 1,
+        "failed": 0,
+        "warnings": 0,
+        "tests": [
+          {
+            "testName": "SMTP Configuration (.env.local)",
+            "status": "PASS",
+            "details": "Host, User, Port, Admin Inbox active",
+            "error": null
+          }
+        ]
+      },
+      "TIER_5_TAX_COMPLIANCE": {
+        "passed": 2,
+        "failed": 0,
+        "warnings": 0,
+        "tests": [
+          {
+            "testName": "Portuguese NIF Validation Handling",
+            "status": "PASS",
+            "details": "Processed safely (422)",
+            "error": null
+          },
+          {
+            "testName": "Artigo 9.º do CIVA Medical VAT Exemption Stamp",
+            "status": "PASS",
+            "details": "FR 2026/0304: 0% IVA (Isento Art. 9)",
+            "error": null
+          }
+        ]
+      },
+      "TIER_6_SEO_METADATA": {
+        "passed": 4,
+        "failed": 0,
+        "warnings": 0,
+        "tests": [
+          {
+            "testName": "Title & Medical Meta Descriptions",
+            "status": "PASS",
+            "details": "Verified",
+            "error": null
+          },
+          {
+            "testName": "Mobile Responsive Viewport Tag",
+            "status": "PASS",
+            "details": "width=device-width",
+            "error": null
+          },
+          {
+            "testName": "OpenGraph & Social Share Cards",
+            "status": "PASS",
+            "details": "og:image active",
+            "error": null
+          },
+          {
+            "testName": "Schema.org MedicalBusiness JSON-LD Structure",
+            "status": "PASS",
+            "details": "Structured data verified",
+            "error": null
+          }
+        ]
+      },
+      "TIER_7_SSE_STREAM": {
+        "passed": 1,
+        "failed": 0,
+        "warnings": 0,
+        "tests": [
+          {
+            "testName": "SSE Endpoint Content-Type & Connection Headers",
+            "status": "PASS",
+            "details": "text/event-stream; keep-alive",
+            "error": null
+          }
+        ]
+      }
+    }
+  }
+}

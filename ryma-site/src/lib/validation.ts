@@ -36,6 +36,14 @@ export function validateAppointmentInput(
     return { ok: false, error: 'O nome do utente é obrigatório (mínimo 2 caracteres).' };
   }
 
+  // Reject malicious HTML tags, script injection, and CSV formula prefixes in patient name
+  if (/[<>]|javascript:|data:/i.test(patientName)) {
+    return { ok: false, error: 'O nome do utente contém caracteres ou formatação inválida.' };
+  }
+  if (/^[=\+\-@\t\r]/.test(patientName.trim())) {
+    return { ok: false, error: 'O nome do utente não pode iniciar com símbolos de fórmula (=, @, +, -).' };
+  }
+
   if (!phone || typeof phone !== 'string') {
     return { ok: false, error: 'O número de telefone é obrigatório.' };
   }

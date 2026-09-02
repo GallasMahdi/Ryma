@@ -91,6 +91,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Nome e telefone são obrigatórios' }, { status: 422 });
   }
 
+  if (/[<>]|javascript:|data:/i.test(patientName)) {
+    return NextResponse.json({ error: 'O nome do utente contém caracteres ou formatação inválida.' }, { status: 422 });
+  }
+  if (/^[=\+\-@\t\r]/.test(patientName.trim())) {
+    return NextResponse.json({ error: 'O nome do utente não pode iniciar com símbolos de fórmula (=, @, +, -).' }, { status: 422 });
+  }
+
   const phoneValidation = validateAndNormalizePhone(rawPhone);
   const phone = phoneValidation.isValid ? phoneValidation.normalized : rawPhone.replace(/[^\d+]/g, '');
 
