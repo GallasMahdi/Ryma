@@ -1747,6 +1747,26 @@ export async function dbDeletePatientSession(sessionId: string): Promise<void> {
   await executeQuery('DELETE FROM patient_sessions WHERE id = ?', [sessionId]);
 }
 
+export async function dbUpdatePatientSession(sessionId: string, updates: {
+  evaPainScore?: number;
+  notes?: string | null;
+}): Promise<PatientSession | null> {
+  if (typeof updates.evaPainScore === 'number') {
+    await executeQuery('UPDATE patient_sessions SET evaPainScore = ? WHERE id = ?', [
+      Math.min(10, Math.max(0, updates.evaPainScore)),
+      sessionId,
+    ]);
+  }
+  if (updates.notes !== undefined) {
+    await executeQuery('UPDATE patient_sessions SET notes = ? WHERE id = ?', [
+      updates.notes ? String(updates.notes).trim() : null,
+      sessionId,
+    ]);
+  }
+  const rows = await executeQuery<PatientSession>('SELECT * FROM patient_sessions WHERE id = ?', [sessionId]);
+  return rows[0] || null;
+}
+
 export async function dbBulkBlockSlots(date: string, times: string[], action: 'block' | 'unblock'): Promise<void> {
   for (const time of times) {
     await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);

@@ -517,7 +517,13 @@ export function AdminCommandPalette({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[999999] flex items-start justify-center pt-12 sm:pt-20 px-3 sm:px-4 font-sans select-none">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-[999999] flex items-start justify-center pt-12 sm:pt-20 px-3 sm:px-4 font-sans select-none"
+        >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -525,7 +531,7 @@ export function AdminCommandPalette({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#0F172A]/50 backdrop-blur-sm"
+            className="fixed inset-0 bg-[#0F172A]/50 backdrop-blur-sm touch-none"
             aria-hidden="true"
           />
 
@@ -535,7 +541,7 @@ export function AdminCommandPalette({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0, y: -10 }}
             transition={{ type: 'spring', damping: 26, stiffness: 350 }}
-            className="relative z-10 w-full max-w-2xl bg-white border border-[#E2E8F0] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[82vh]"
+            className="relative z-10 w-full max-w-2xl bg-white border border-[#E2E8F0] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[82vh] overscroll-contain"
             onKeyDown={handleKeyDown}
           >
             {/* Search Input Header */}
@@ -712,7 +718,7 @@ export function AdminCommandPalette({
               </span>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

@@ -25,6 +25,7 @@ import { VALID_TIME_SLOTS } from '@/lib/validation';
 import { Lang } from '@/lib/i18n';
 import { PatientRecord, Appointment, CoverageType } from '@/types/admin';
 import { ResponsiveModal } from './ResponsiveModal';
+import { EvaScorePicker } from './EvaScorePicker';
 
 interface MultipleSessionsModalProps {
   isOpen: boolean;
@@ -88,6 +89,7 @@ export function MultipleSessionsModal({
   const [coverageProvider, setCoverageProvider] = useState('');
   const [coverageNumber, setCoverageNumber] = useState('');
   const [serviceSlug, setServiceSlug] = useState(SERVICES[0]?.slug || 'kinesitherapie-generale');
+  const [initialEvaScore, setInitialEvaScore] = useState<number>(7);
 
   // Recurrence settings
   const [totalSessions, setTotalSessions] = useState(10);
@@ -315,7 +317,9 @@ export function MultipleSessionsModal({
           sessions: previewSessions.map(s => ({
             date: s.date,
             startTime: s.startTime,
-            notes: `Sessão #${s.sessionIndex} • Plano de Tratamento (${totalSessions} sessões)`,
+            notes: s.sessionIndex === 1
+              ? `Sessão #1 • Plano de Tratamento (${totalSessions} sessões) • EVA Inicial: ${initialEvaScore}/10`
+              : `Sessão #${s.sessionIndex} • Plano de Tratamento (${totalSessions} sessões)`,
           })),
         }),
       });
@@ -556,6 +560,16 @@ export function MultipleSessionsModal({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Intake Pain Score (EVA Baseline) */}
+          <div className="pt-3 border-t border-[#E2E8F0]">
+            <EvaScorePicker
+              value={initialEvaScore}
+              onChange={setInitialEvaScore}
+              lang={lang}
+              showLabel={true}
+            />
           </div>
         </div>
 

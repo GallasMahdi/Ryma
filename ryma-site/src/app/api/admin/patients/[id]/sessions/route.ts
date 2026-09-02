@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import {
   dbAddPatientSession,
+  dbUpdatePatientSession,
   dbDeletePatientSession,
   dbGetPatientById,
   dbGetAppointmentById,
@@ -110,6 +111,42 @@ export async function POST(
   }
 
   return NextResponse.json({ session }, { status: 201 });
+}
+
+// PATCH /api/admin/patients/[id]/sessions — update a session EVA score or notes
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireAdmin(request);
+  if ('status' in auth) return auth;
+
+  const { id: patientId } = await params;
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
+  }
+
+  const sessionId = body.sessionId ? String(body.sessionId).trim() : null;
+  if (!sessionId) {
+    return NextResponse.json({ error: 'sessionId requis' }, { status: 422 });
+  }
+
+  const evaPainScore = typeof body.evaPainScore === 'number' ? Math.min(10, Math.max(0, body.evaPainScore)) : undefined;
+  const notes = body.notes !== undefined ? (body.notes ? String(body.notes).trim() : null) : undefined;
+
+  const updatedSession = await dbUpdatePatientSession(sessionId, {
+    evaPainScore,
+    notes,
+  });
+
+  if (!updatedSession) {
+    return NextResponse.json({ error: 'Session introuvable' }, { status: 404 });
+  }
+
+  return NextResponse.json({ session: updatedSession });
 }
 
 // DELETE /api/admin/patients/[id]/sessions?sessionId=xxx — delete a session

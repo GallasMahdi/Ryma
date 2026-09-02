@@ -80,12 +80,19 @@ export function InvoiceDetailModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto print:p-0 print:bg-white print:static">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto print:p-0 print:bg-white print:static font-sans"
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-[#E2E8F0] overflow-hidden my-4 max-h-[96vh] flex flex-col font-sans print:shadow-none print:border-none print:max-h-none print:m-0 print:rounded-none"
+            transition={{ duration: 0.15 }}
+            className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-[#E2E8F0] overflow-hidden my-4 max-h-[96vh] flex flex-col font-sans print:shadow-none print:border-none print:max-h-none print:m-0 print:rounded-none overscroll-contain"
           >
             {/* Top Interactive Action Bar (Hidden on Print) */}
             <div className="px-3.5 sm:px-6 py-3 bg-[#0F172A] text-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 shrink-0 border-b border-white/10 print:hidden">
@@ -451,7 +458,7 @@ export function InvoiceDetailModal({
               </div>
             )}
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

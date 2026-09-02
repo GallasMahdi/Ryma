@@ -42,30 +42,24 @@ export function ResponsiveModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[99999] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-4 overflow-hidden font-sans">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-[99999] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-4 font-sans"
+        >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-0"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-0 touch-none"
             aria-hidden="true"
           />
 
@@ -75,7 +69,7 @@ export function ResponsiveModal({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className={`relative z-10 w-full ${MAX_WIDTH_CLASSES[maxWidth]} bg-white border border-[#E2E8F0] rounded-t-2xl md:rounded-2xl shadow-xl flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden`}
+            className={`relative z-10 w-full ${MAX_WIDTH_CLASSES[maxWidth]} bg-white border border-[#E2E8F0] rounded-t-2xl md:rounded-2xl shadow-xl flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden overscroll-contain`}
           >
             {/* Mobile Drag Indicator Handle */}
             <div className="w-full flex justify-center pt-2.5 pb-1 md:hidden">
@@ -112,7 +106,7 @@ export function ResponsiveModal({
               {children}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

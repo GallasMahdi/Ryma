@@ -102,27 +102,34 @@ export function ClinicHelpdeskDrawer({
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[99999] flex justify-end font-sans">
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40 backdrop-blur-xs"
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-[99999] flex justify-end font-sans"
+        >
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/40 backdrop-blur-xs touch-none"
+          />
 
-      {/* Slide-over Drawer */}
-      <motion.div
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        className="relative w-full max-w-md bg-white h-full shadow-2xl border-s border-[#E2E8F0] z-10 flex flex-col justify-between overflow-hidden"
-      >
+          {/* Slide-over Drawer */}
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            className="relative w-full max-w-md bg-white h-full shadow-2xl border-s border-[#E2E8F0] z-10 flex flex-col justify-between overflow-hidden overscroll-contain"
+          >
         {/* Drawer Header */}
         <div className="p-5 bg-[#0F172A] text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -451,6 +458,8 @@ export function ClinicHelpdeskDrawer({
           Digital Clínica • Suporte Técnico Central Lisboa
         </div>
       </motion.div>
-    </div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

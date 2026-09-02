@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-02T11:32:07.816Z",
+  "timestamp": "2026-09-02T13:38:16.489Z",
   "stats": {
     "total": 54,
     "passed": 53,
@@ -200,7 +200,7 @@
       "category": "BOOKING_API",
       "testName": "Health Endpoint /api/health",
       "status": "PASS",
-      "details": "Status: healthy, DB: turso_cloud (354ms)",
+      "details": "Status: healthy, DB: turso_cloud (214ms)",
       "error": null
     },
     {
@@ -263,7 +263,7 @@
       "category": "ADMIN_APPOINTMENTS",
       "testName": "Create Appointment for 2026-09-14 11:00",
       "status": "PASS",
-      "details": "ID: apt_mtk0njj3qdyj70",
+      "details": "ID: apt_mtk55qjuolnlfz",
       "error": null
     },
     {
@@ -312,7 +312,7 @@
       "category": "PATIENT_EHR",
       "testName": "Create/Update Patient Clinical Record",
       "status": "PASS",
-      "details": "ID: pat_mtd3q7d0oykw",
+      "details": "ID: pat_mtk55qut9lcw",
       "error": null
     },
     {
@@ -326,7 +326,7 @@
       "category": "INVOICING_ENGINE",
       "testName": "Generate Portuguese CIVA Art. 9 Medical Invoice",
       "status": "PASS",
-      "details": "Invoice: FR 2026/0300",
+      "details": "Invoice: FR 2026/0297",
       "error": null
     },
     {
@@ -354,21 +354,21 @@
       "category": "DATA_EXPORT",
       "testName": "Full Database Export (JSON)",
       "status": "PASS",
-      "details": "1379.3 KB",
+      "details": "1368.5 KB",
       "error": null
     },
     {
       "category": "DATA_EXPORT",
       "testName": "Full Database Export (PATIENTS)",
       "status": "PASS",
-      "details": "34.6 KB",
+      "details": "34.8 KB",
       "error": null
     },
     {
       "category": "DATA_EXPORT",
       "testName": "Full Database Export (APPOINTMENTS)",
       "status": "PASS",
-      "details": "58.8 KB",
+      "details": "56.4 KB",
       "error": null
     },
     {

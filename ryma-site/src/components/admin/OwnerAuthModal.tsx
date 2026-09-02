@@ -85,7 +85,11 @@ export function OwnerAuthModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
           className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-[#0A0D1A]/70 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
@@ -98,8 +102,8 @@ export function OwnerAuthModal({
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-[#E2E8F0] overflow-hidden z-10 font-sans"
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-[#E2E8F0] overflow-hidden z-10 font-sans overscroll-contain"
           >
             {/* Header / Accent Ribbon */}
             <div className="bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#0F172A] p-6 text-white text-center relative">
@@ -229,7 +233,7 @@ export function OwnerAuthModal({
               </div>
             </form>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

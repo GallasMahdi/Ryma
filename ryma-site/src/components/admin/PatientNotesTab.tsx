@@ -49,6 +49,7 @@ import { InvoiceDetailModal } from './InvoiceDetailModal';
 import { CreatePrescriptionModal } from './CreatePrescriptionModal';
 import { PrescriptionDetailModal } from './PrescriptionDetailModal';
 import { MultipleSessionsModal } from './MultipleSessionsModal';
+import { EvaScorePicker, getEvaColor } from './EvaScorePicker';
 import { formatPrescriptionWhatsAppMessage } from '@/lib/prescriptionPdf';
 import { SITE } from '@/lib/site';
 
@@ -642,6 +643,44 @@ export function PatientNotesTab({
     }
   };
 
+  const [editingEvaSessionId, setEditingEvaSessionId] = useState<string | null>(null);
+
+  // Update EVA score for an existing session with immediate optimistic feedback
+  const handleUpdateSessionEva = async (sessionId: string, newScore: number) => {
+    if (!activePatient) return;
+    setEditingEvaSessionId(null);
+
+    try {
+      const cleanId = activePatient.id.startsWith('legacy_') ? '' : activePatient.id;
+      if (!cleanId) return;
+
+      const res = await fetch(`/api/admin/patients/${cleanId}/sessions`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, evaPainScore: newScore }),
+      });
+
+      if (!res.ok) throw new Error('Falha ao atualizar score EVA');
+
+      if (onRefreshPatients) onRefreshPatients();
+      if (onActionToast) {
+        onActionToast({
+          type: 'success',
+          title: txt('Score EVA Atualizado', 'EVA Score Updated', 'Score EVA Atualizado'),
+          message: `Sessão ajustada para EVA ${newScore}/10`,
+        });
+      }
+    } catch {
+      if (onActionToast) {
+        onActionToast({
+          type: 'error',
+          title: txt('Erreur', 'Error', 'Erro'),
+          message: 'Falha ao atualizar score EVA',
+        });
+      }
+    }
+  };
+
   // Quick increment/decrement prescribed sessions
   const updatePrescribedTarget = async (delta: number) => {
     if (!activePatient) return;
@@ -686,14 +725,16 @@ export function PatientNotesTab({
         `Eliminar definitivamente a ficha de ${patient.patientName} (${patient.phone})?`
       ),
       onConfirm: async () => {
+        // Optimistic UI state reset
+        setSelectedPatientId(null);
+        setIsMobileDetailOpen(false);
+        deleteNote(patient.phone);
+
         try {
           const cleanId = patient.id.startsWith('legacy_') ? '' : patient.id;
           await fetch(`/api/admin/patients?id=${encodeURIComponent(cleanId)}&phone=${encodeURIComponent(patient.phone)}`, {
             method: 'DELETE',
           });
-          deleteNote(patient.phone);
-          setSelectedPatientId(null);
-          setIsMobileDetailOpen(false);
           if (onRefreshPatients) onRefreshPatients();
           if (onActionToast) {
             onActionToast({
@@ -1324,61 +1365,151 @@ export function PatientNotesTab({
 
                 {activeDossierTab === 'eva' && (
                   <div className="space-y-4">
-                    <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-2xl space-y-3">
-                      <h4 className="font-bold text-sm text-[#0F172A]">
-                        {txt('Échelle Visuelle Analogique (EVA 0 – 10)', 'Visual Analog Scale (EVA 0 – 10)', 'Escala Visual Analógica (EVA 0 – 10)')}
-                      </h4>
-                      <p className="text-xs text-[#64748B] leading-relaxed">
-                        {txt(
-                          'L’évaluation de la douleur permet d’ajuster le protocole de rééducation au fur et à mesure des séances.',
-                          'Pain scale tracking allows fine-tuning rehabilitation protocols session by session.',
-                          'A monitorização da dor permite ajustar o protocolo de reabilitação a cada sessão.'
-                        )}
-                      </p>
+                    <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-4 sm:p-5 rounded-2xl space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <h4 className="font-bold text-sm text-[#0F172A] flex items-center gap-2">
+                            <IconActivity size={18} className="text-[#C49A3C]" />
+                            <span>{txt('Échelle Visuelle Analogique (EVA 0 – 10)', 'Visual Analog Scale (EVA 0 – 10)', 'Escala Visual Analógica (EVA 0 – 10)')}</span>
+                          </h4>
+                          <p className="text-xs text-[#64748B] leading-relaxed mt-0.5">
+                            {txt(
+                              'Cliquez sur le score d’une séance pour ajuster instantanément le niveau de douleur.',
+                              'Click on any session score to adjust pain level in real-time.',
+                              'Clique no score de uma sessão para ajustar instantaneamente o nível de dor.'
+                            )}
+                          </p>
+                        </div>
 
-                      {/* Visual scale guide */}
+                        {/* EVA Progression summary badge */}
+                        {evaAnalytics && (
+                          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-[#CBD5E1] shadow-2xs">
+                            <div className="text-right">
+                              <div className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                                {txt('Évolution Globale', 'Pain Evolution', 'Evolução Global')}
+                              </div>
+                              <div className="text-xs font-bold font-mono">
+                                <span className="text-rose-600">EVA {evaAnalytics.initial}</span>
+                                <span className="text-[#94A3B8] mx-1">→</span>
+                                <span className="text-emerald-600">EVA {evaAnalytics.current}</span>
+                              </div>
+                            </div>
+                            <span
+                              className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                                evaAnalytics.diff > 0
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                  : evaAnalytics.diff < 0
+                                  ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                                  : 'bg-slate-50 text-slate-700 border border-slate-200'
+                              }`}
+                            >
+                              {evaAnalytics.diff > 0
+                                ? `-${evaAnalytics.diff} pts (${Math.round((evaAnalytics.diff / (evaAnalytics.initial || 1)) * 100)}%)`
+                                : evaAnalytics.diff < 0
+                                ? `+${Math.abs(evaAnalytics.diff)} pts`
+                                : txt('Estável', 'Stable', 'Stable')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Visual scale reference guide */}
                       <div className="grid grid-cols-3 gap-2 p-2.5 bg-white rounded-xl border border-[#E2E8F0] text-center text-[10px] font-bold">
                         <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          0 - 3 : Leve / Sem dor
+                          0 - 3 : {txt('Légère / Sans douleur', 'Mild / No pain', 'Leve / Sem dor')}
                         </div>
                         <div className="p-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
-                          4 - 6 : Moderada
+                          4 - 6 : {txt('Modérée', 'Moderate', 'Moderada')}
                         </div>
                         <div className="p-1.5 rounded-lg bg-rose-50 text-rose-800 border border-rose-200">
-                          7 - 10 : Intensa / Severa
+                          7 - 10 : {txt('Intense / Sévère', 'Severe / Worst', 'Intensa / Severa')}
                         </div>
                       </div>
 
                       {activePatient.sessions && activePatient.sessions.length > 0 ? (
-                        <div className="space-y-2 pt-2">
-                          {activePatient.sessions.map((s) => (
-                            <div
-                              key={s.id}
-                              className="p-3 rounded-xl bg-white border border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs"
-                            >
-                              <div className="text-xs">
-                                <span className="font-bold text-[#0F172A] font-mono">{s.date}</span>
-                                <span className="text-[#64748B] ml-2">{getServiceName(s.serviceSlug, lang)}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="flex-1 sm:w-32 h-2.5 bg-[#E2E8F0] rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full transition-all duration-300 ${
-                                      s.evaPainScore >= 7
-                                        ? 'bg-[#EF4444]'
-                                        : s.evaPainScore >= 4
-                                        ? 'bg-[#F59E0B]'
-                                        : 'bg-[#22C55E]'
-                                    }`}
-                                    style={{ width: `${s.evaPainScore * 10}%` }}
-                                  />
+                        <div className="space-y-2.5 pt-2">
+                          {activePatient.sessions.map((s, sIdx) => {
+                            const isEditing = editingEvaSessionId === s.id;
+                            const colorConf = getEvaColor(s.evaPainScore);
+
+                            return (
+                              <div
+                                key={s.id}
+                                className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] hover:border-[#CBD5E1] transition-all shadow-2xs space-y-3"
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="w-6 h-6 rounded-lg bg-[#0F172A] text-white flex items-center justify-center font-bold text-[11px] shrink-0">
+                                      #{activePatient.sessions!.length - sIdx}
+                                    </span>
+                                    <div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-bold text-[#0F172A] text-xs font-mono">{s.date}</span>
+                                        {s.time && <span className="text-[11px] text-[#64748B] font-mono">• {s.time}</span>}
+                                      </div>
+                                      <span className="text-[11px] text-[#64748B]">{getServiceName(s.serviceSlug, lang)}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Interactive EVA Score Pill (Click to toggle quick-adjust buttons) */}
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex-1 sm:w-32 h-2.5 bg-[#E2E8F0] rounded-full overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full transition-all duration-300 ${colorConf.bg}`}
+                                        style={{ width: `${Math.max(5, s.evaPainScore * 10)}%` }}
+                                      />
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingEvaSessionId(isEditing ? null : s.id)}
+                                      className={`px-2.5 py-1 rounded-lg border font-bold text-xs flex items-center gap-1.5 transition-all touch-target shadow-2xs ${colorConf.badgeBg} hover:scale-105`}
+                                      title={txt('Cliquer pour modifier le score', 'Click to modify score', 'Clique para alterar')}
+                                    >
+                                      <IconPencil size={12} className="opacity-70" />
+                                      <span>EVA {s.evaPainScore}/10</span>
+                                    </button>
+                                  </div>
                                 </div>
-                                <span className="font-bold text-xs text-[#0F172A] w-12 text-right">
-                                  {s.evaPainScore}/10
-                                </span>
+
+                                {/* Expanded 1-Tap Quick Number Adjuster */}
+                                {isEditing && (
+                                  <div className="pt-2 border-t border-[#F1F5F9] space-y-2">
+                                    <div className="flex items-center justify-between text-[11px] font-bold text-[#475569]">
+                                      <span>{txt('Sélectionnez le nouveau score :', 'Select new score:', 'Selecione o novo score:')}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingEvaSessionId(null)}
+                                        className="text-[#94A3B8] hover:text-[#0F172A]"
+                                      >
+                                        <IconX size={14} />
+                                      </button>
+                                    </div>
+                                    <div className="grid grid-cols-11 gap-1">
+                                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                                        const isCurrent = s.evaPainScore === num;
+                                        const c = getEvaColor(num);
+                                        return (
+                                          <button
+                                            key={num}
+                                            type="button"
+                                            onClick={() => handleUpdateSessionEva(s.id, num)}
+                                            className={`py-1.5 rounded-lg font-bold text-xs text-center transition-all ${
+                                              isCurrent
+                                                ? `${c.bg} text-white shadow-sm ring-2 ring-[#0F172A] ring-offset-1`
+                                                : 'bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#CBD5E1] text-[#334155]'
+                                            }`}
+                                          >
+                                            {num}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="text-center py-8 text-xs text-[#64748B]">
@@ -1937,30 +2068,13 @@ export function PatientNotesTab({
             </select>
           </div>
 
-          {/* EVA Slider */}
-          <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-2xl space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="font-bold text-[#0F172A] text-xs">
-                {txt('Échelle de douleur EVA (0 – 10)', 'EVA Pain Score (0 – 10)', 'Escala EVA (0 – 10)')}
-              </label>
-              <span className="font-bold text-xs text-[#0F172A] bg-white px-2.5 py-1 rounded-lg border border-[#CBD5E1] shadow-2xs">
-                {sessionForm.evaPainScore} / 10
-              </span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={10}
-              step={1}
+          {/* EVA Score Picker */}
+          <div className="bg-[#F8FAFC] border border-[#CBD5E1] p-4 rounded-2xl">
+            <EvaScorePicker
               value={sessionForm.evaPainScore}
-              onChange={e => setSessionForm(p => ({ ...p, evaPainScore: Number(e.target.value) }))}
-              className="w-full accent-[#0F172A] h-2 bg-[#E2E8F0] rounded-lg cursor-pointer"
+              onChange={score => setSessionForm(p => ({ ...p, evaPainScore: score }))}
+              lang={lang}
             />
-            <div className="flex justify-between text-[11px] font-bold text-[#64748B]">
-              <span className="text-emerald-700">0 (Sem dor)</span>
-              <span className="text-amber-700">5 (Moderada)</span>
-              <span className="text-rose-700">10 (Intensa)</span>
-            </div>
           </div>
 
           <div>

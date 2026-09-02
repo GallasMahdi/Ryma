@@ -1037,11 +1037,18 @@ export default function AdminPage() {
       {/* Confirmation Dialog */}
       <AnimatePresence>
         {confirmDialog && (
-          <div className="fixed inset-0 z-[999998] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[999998] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4"
+          >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
               className="bg-white border border-[#E2E8F0] p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-xl text-center font-sans"
             >
               <div className="w-12 h-12 rounded-xl bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] flex items-center justify-center mx-auto">
@@ -1052,15 +1059,18 @@ export default function AdminPage() {
               </h3>
               <div className="flex gap-2.5 justify-center pt-2">
                 <button
+                  type="button"
                   onClick={() => setConfirmDialog(null)}
                   className="px-4 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target"
                 >
                   {lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
-                    confirmDialog.onConfirm();
+                    const action = confirmDialog.onConfirm;
                     setConfirmDialog(null);
+                    action();
                   }}
                   className="px-4 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold shadow-xs transition-colors touch-target"
                 >
@@ -1068,7 +1078,7 @@ export default function AdminPage() {
                 </button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -1104,7 +1114,7 @@ export default function AdminPage() {
           onOpenHelpdesk={() => setIsHelpdeskOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8">
+        <main className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8 touch-pan-y">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             {activeTab === 'appointments' && (
               <>

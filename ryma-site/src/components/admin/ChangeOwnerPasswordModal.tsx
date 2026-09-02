@@ -93,8 +93,12 @@ export function ChangeOwnerPasswordModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div
-          className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-[#0A0D1A]/70 backdrop-blur-sm"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-[#0A0D1A]/70 backdrop-blur-sm font-sans"
           role="dialog"
           aria-modal="true"
         >
@@ -104,7 +108,8 @@ export function ChangeOwnerPasswordModal({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-[#E2E8F0] overflow-hidden z-10 font-sans"
+            transition={{ duration: 0.15 }}
+            className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-[#E2E8F0] overflow-hidden z-10 font-sans overscroll-contain"
           >
             <div className="p-5 border-b border-[#E2E8F0] flex items-center justify-between bg-[#FAFAFA]">
               <div className="flex items-center gap-2.5">
@@ -221,7 +226,7 @@ export function ChangeOwnerPasswordModal({
               </div>
             </form>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
