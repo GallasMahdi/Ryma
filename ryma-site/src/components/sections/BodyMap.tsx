@@ -925,7 +925,7 @@ function MobileBottomSheet({
   }, [onClose]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={false}>
       {point && service && (
         <>
           {/* Backdrop */}
@@ -936,7 +936,7 @@ function MobileBottomSheet({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             className="fixed inset-0 z-40 lg:hidden"
-            style={{ background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(6px)' }}
+            style={{ background: 'rgba(15,23,42,0.55)', willChange: 'opacity' }}
             onClick={onClose}
             aria-hidden="true"
           />
@@ -1084,7 +1084,7 @@ function MobileFilterSheet({
   }, [onClose]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={false}>
       {open && (
         <>
           {/* Backdrop */}
@@ -1095,7 +1095,7 @@ function MobileFilterSheet({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             className="fixed inset-0 z-40"
-            style={{ background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(6px)' }}
+            style={{ background: 'rgba(15,23,42,0.55)', willChange: 'opacity' }}
             onClick={onClose}
             aria-hidden="true"
           />
