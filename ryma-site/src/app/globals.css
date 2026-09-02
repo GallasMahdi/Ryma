@@ -1,9 +1,16 @@
 @import "tailwindcss";
 
+@theme {
+  --font-serif: var(--font-cormorant), var(--font-fraunces), "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: var(--font-cormorant), var(--font-fraunces), Georgia, serif;
+}
+
 /* ================================================================
-   DIGITAL CLÍNICA — Design System v2
-   Palette: Blanc / Or Champagne / Crème chaude
-   Typography: Fraunces (serif) + Inter (sans) + IBM Plex Mono (mono)
+   DIGITAL CLÍNICA — Design System v2 (Haute Médicale Luxe)
+   Palette: Blanc Pur / Or Champagne / Crème Chaude
+   Typography: Cormorant Garamond (editorial serif) + Plus Jakarta Sans (ultra-clean sans)
    ================================================================ */
 
 :root {
@@ -39,9 +46,9 @@
   --color-cream:        #FAFAF8;
 
   /* Typography — loaded via next/font in layout.tsx */
-  --font-serif: var(--font-fraunces, Georgia, serif);
-  --font-sans:  var(--font-inter, system-ui, -apple-system, sans-serif);
-  --font-mono:  var(--font-ibm-plex-mono, 'Courier New', monospace);
+  --font-serif: var(--font-cormorant), var(--font-fraunces), Georgia, serif;
+  --font-sans:  var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  --font-mono:  ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* ======================== RESET ======================== */
@@ -88,14 +95,21 @@ body {
 /* ======================== TYPOGRAPHY ======================== */
 .font-serif {
   font-family: var(--font-serif) !important;
+  font-feature-settings: "liga" 1, "kern" 1;
 }
 
 .font-sans {
   font-family: var(--font-sans) !important;
+  letter-spacing: -0.011em;
 }
 
 .font-mono {
   font-family: var(--font-mono) !important;
+}
+
+.font-display {
+  font-family: var(--font-cormorant), var(--font-serif) !important;
+  letter-spacing: -0.02em;
 }
 
 /* ======================== GLASSMORPHISM (light) ======================== */

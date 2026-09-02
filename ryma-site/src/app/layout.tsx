@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, Inter, IBM_Plex_Mono } from 'next/font/google';
+import { Cormorant_Garamond, Plus_Jakarta_Sans, Fraunces } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from '@/lib/i18n';
 import { Navbar } from '@/components/layout/Navbar';
@@ -14,24 +14,26 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-cormorant',
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-jakarta',
+  weight: ['300', '400', '500', '600', '700', '800'],
+});
+
 const fraunces = Fraunces({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-fraunces',
   weight: ['400', '600', '700'],
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-ibm-plex-mono',
-  weight: ['400', '600'],
 });
 
 const siteUrl =
@@ -124,7 +126,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="pt-PT"
       dir="ltr"
       translate="no"
-      className={`notranslate ${fraunces.variable} ${inter.variable} ${ibmPlexMono.variable}`}
+      className={`notranslate ${cormorant.variable} ${plusJakartaSans.variable} ${fraunces.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -189,7 +191,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         suppressHydrationWarning
         className="bg-[#FAFAF8] text-[#1A1412] antialiased"
         style={{
-          fontFamily: 'var(--font-inter), system-ui, sans-serif',
+          fontFamily: 'var(--font-sans)',
         }}
       >
         <LanguageProvider>

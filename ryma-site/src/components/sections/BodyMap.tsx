@@ -186,10 +186,63 @@ const MEDICAL_GOALS: { id: MedicalGoal; label: { fr: string; pt: string; en: str
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Luxury Segmented Zone Bar with Animated Active Background           */
+/*  Haute-Couture Goal Segmented Switcher                                */
 /* ------------------------------------------------------------------ */
 
-function LuxuryZoneSegment({
+function CuratorGoalTabs({
+  lang,
+  goal,
+  onGoalChange,
+}: {
+  lang: Lang;
+  goal: MedicalGoal;
+  onGoalChange: (g: MedicalGoal) => void;
+}) {
+  return (
+    <div
+      className="flex items-center justify-start lg:justify-center gap-1.5 p-1 rounded-2xl bg-[#FAF7F0] border border-[#EBE5DA] overflow-x-auto w-full"
+      style={{ scrollbarWidth: 'none' }}
+      role="tablist"
+      aria-label="Objectifs de soins"
+    >
+      {MEDICAL_GOALS.map((g) => {
+        const isSel = goal === g.id;
+        return (
+          <button
+            key={g.id}
+            type="button"
+            role="tab"
+            aria-selected={isSel}
+            onClick={() => onGoalChange(g.id)}
+            className={`relative shrink-0 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
+              isSel ? 'text-white' : 'text-[#6B6058] hover:text-[#1A1412]'
+            }`}
+          >
+            {isSel && (
+              <motion.div
+                layoutId="activeGoalTab"
+                className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#1A1412] to-[#2B2320] shadow-sm border border-[#C49A3C]/40"
+                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+              />
+            )}
+            <span className="relative z-10 flex items-center gap-1.5">
+              <span className={isSel ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}>
+                {g.icon}
+              </span>
+              <span>{g.label[lang] || g.label.pt || g.label.fr}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Minimalist Anatomical Zone Quick Selector                           */
+/* ------------------------------------------------------------------ */
+
+function CuratorZoneTabs({
   lang,
   zone,
   onZoneChange,
@@ -202,7 +255,7 @@ function LuxuryZoneSegment({
 }) {
   return (
     <div
-      className="w-full max-w-3xl mx-auto p-1.5 rounded-2xl bg-white/95 border border-[#C49A3C]/30 shadow-[0_8px_30px_rgba(196,154,60,0.1)] backdrop-blur-xl flex items-center justify-between gap-1 overflow-x-auto"
+      className="flex items-center gap-1.5 overflow-x-auto"
       style={{ scrollbarWidth: 'none' }}
       role="group"
       aria-label="Zones anatomiques"
@@ -214,69 +267,25 @@ function LuxuryZoneSegment({
             key={z}
             type="button"
             onClick={() => onZoneChange(z)}
-            className={`relative flex-1 min-w-[120px] py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
-              isSelected ? 'text-white' : 'text-[#6B6058] hover:text-[#1A1412]'
+            className={`relative shrink-0 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
+              isSelected
+                ? 'bg-[#1A1412] text-white shadow-2xs'
+                : 'bg-white text-[#6B6058] hover:bg-[#FAF7F0] hover:text-[#1A1412] border border-[#E8E2D8]'
             }`}
           >
-            {isSelected && (
-              <motion.div
-                layoutId="activeZonePill"
-                className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#1A1412] to-[#2B2320] shadow-md border border-[#C49A3C]/40"
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              />
-            )}
-            <span className="relative z-10 flex items-center gap-1.5">
-              <span className={isSelected ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}>
-                {ZONE_ICONS[z]}
-              </span>
-              <span>{ZONE_LABELS[z][lang]}</span>
-              {zoneCounts[z] > 0 && (
-                <span
-                  className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold ${
-                    isSelected ? 'bg-white/20 text-[#F5E9C8]' : 'bg-[#FAF6EE] text-[#9A7428] border border-[#C49A3C]/20'
-                  }`}
-                >
-                  {zoneCounts[z]}
-                </span>
-              )}
+            <span className={isSelected ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}>
+              {ZONE_ICONS[z]}
             </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Medical Goal Quick Filter Tabs                                      */
-/* ------------------------------------------------------------------ */
-
-function GoalFilterBar({
-  lang,
-  goal,
-  onGoalChange,
-}: {
-  lang: Lang;
-  goal: MedicalGoal;
-  onGoalChange: (g: MedicalGoal) => void;
-}) {
-  return (
-    <div className="flex items-center justify-center flex-wrap gap-2">
-      {MEDICAL_GOALS.map((g) => {
-        const isSel = goal === g.id;
-        return (
-          <button
-            key={g.id}
-            type="button"
-            onClick={() => onGoalChange(g.id)}
-            className={`px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 border transition-all duration-200 ${
-              isSel
-                ? 'bg-gradient-to-r from-[#C49A3C] to-[#9A7428] border-[#9A7428] text-white shadow-md shadow-[#C49A3C]/20'
-                : 'bg-white border-[#E8E2D8] text-[#6B6058] hover:border-[#C49A3C]/50 hover:bg-[#FDFBF7] hover:text-[#1A1412]'
-            }`}
-          >
-            <span className={isSel ? 'text-white' : 'text-[#C49A3C]'}>{g.icon}</span>
-            <span>{g.label[lang] || g.label.pt || g.label.fr}</span>
+            <span>{ZONE_LABELS[z][lang]}</span>
+            {zoneCounts[z] > 0 && (
+              <span
+                className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold ${
+                  isSelected ? 'bg-white/20 text-[#F5E9C8]' : 'bg-[#FAF6EE] text-[#9A7428] border border-[#C49A3C]/20'
+                }`}
+              >
+                {zoneCounts[z]}
+              </span>
+            )}
           </button>
         );
       })}
@@ -922,7 +931,7 @@ function MobileBottomSheet({
 }
 
 /* ------------------------------------------------------------------ */
-/*  View Toggle                                                          */
+/*  View Toggle (Minimalist Obsidian & Champagne Switcher)              */
 /* ------------------------------------------------------------------ */
 
 function ViewToggle({
@@ -938,25 +947,35 @@ function ViewToggle({
 }) {
   return (
     <div
-      className="inline-flex items-center p-1 rounded-full border border-[#E8E2D8] bg-white shadow-2xs"
+      className="inline-flex items-center p-1 rounded-full border border-[#E8E2D8] bg-[#F7F4EE]/90 shadow-2xs backdrop-blur-sm"
       role="group"
       aria-label={lang === 'pt' ? 'Vista do Corpo' : lang === 'en' ? 'Body View' : 'Vue du corps'}
     >
-      {(['front', 'back'] as const).map((v) => (
-        <button
-          key={v}
-          type="button"
-          aria-pressed={view === v}
-          onClick={() => onViewChange(v)}
-          className={`px-5 py-2 rounded-full text-xs font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
-            view === v
-              ? 'bg-[#1A1412] text-white shadow-xs'
-              : 'bg-transparent text-[#6B6058] hover:text-[#1A1412]'
-          }`}
-        >
-          {v === 'front' ? t.bodyMap.toggleViewFront : t.bodyMap.toggleViewBack}
-        </button>
-      ))}
+      {(['front', 'back'] as const).map((v) => {
+        const isSel = view === v;
+        return (
+          <button
+            key={v}
+            type="button"
+            aria-pressed={isSel}
+            onClick={() => onViewChange(v)}
+            className={`relative px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
+              isSel ? 'text-white' : 'text-[#7A6E65] hover:text-[#1A1412]'
+            }`}
+          >
+            {isSel && (
+              <motion.div
+                layoutId="activeViewPill"
+                className="absolute inset-0 rounded-full bg-[#1A1412] shadow-xs"
+                transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+              />
+            )}
+            <span className="relative z-10">
+              {v === 'front' ? t.bodyMap.toggleViewFront : t.bodyMap.toggleViewBack}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -1091,123 +1110,134 @@ export function BodyMap() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, ease: [0, 0, 0.2, 1] }}
-          className="mb-10 text-center"
+          className="mb-8 md:mb-10 text-center"
         >
           {/* Eyebrow */}
-          <div className="inline-flex items-center gap-2 mb-3.5 px-3.5 py-1.5 rounded-full bg-white border border-[#C49A3C]/30 shadow-2xs">
+          <div className="inline-flex items-center gap-2 mb-3.5 px-3.5 py-1 rounded-full bg-white/90 border border-[#C49A3C]/30 shadow-2xs backdrop-blur-sm">
             <div
               className="w-1.5 h-1.5 rounded-full bg-[#C49A3C] animate-pulse"
             />
             <span
-              className="text-[11px] font-bold uppercase tracking-widest text-[#9A7428]"
+              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.18em] text-[#9A7428]"
             >
               {lang === 'pt' ? 'Diagnóstico Interativo de Cuidados' : lang === 'en' ? 'Interactive Care Assessment' : 'Diagnostic & Carte des soins'}
             </span>
           </div>
 
           <h2
-            className="font-serif text-4xl sm:text-5xl font-bold leading-tight mb-3.5 text-[#1A1412]"
+            className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-3 text-[#1A1412]"
           >
             {t.bodyMap.title}
           </h2>
           <p
-            className="text-base max-w-lg mx-auto leading-relaxed text-[#6B6058]"
+            className="text-sm sm:text-base max-w-xl mx-auto leading-relaxed text-[#6B6058]"
           >
             {t.bodyMap.subtitle}
           </p>
         </motion.div>
 
-        {/* ── Luxury Multi-Tier Filter Suite ── */}
+        {/* ── Unified Luxury Curator Console ── */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.35, delay: 0.08, ease: [0, 0, 0.2, 1] }}
-          className="flex flex-col items-center gap-5 mb-10"
+          className="w-full max-w-5xl mx-auto mb-10"
         >
-          {/* Top Bar: Front/Back Toggle & Instant Search Input */}
-          <div className="w-full flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <ViewToggle
-                view={view}
-                lang={lang}
-                t={t}
-                onViewChange={handleViewChange}
-              />
-            </div>
+          <div className="rounded-3xl bg-white/90 backdrop-blur-xl border border-[#E8E2D8] shadow-[0_12px_40px_rgba(26,20,18,0.04)] p-3 sm:p-4.5 space-y-3.5">
+            
+            {/* Tier 1: Primary Goal Tabs (Haute-Couture Segmented Switcher) */}
+            <CuratorGoalTabs
+              lang={lang}
+              goal={selectedGoal}
+              onGoalChange={setSelectedGoal}
+            />
 
-            {/* Instant Search Bar */}
-            <div className="relative min-w-[240px] max-w-xs flex-1">
-              <IconSearch size={15} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-[#9A7428]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={lang === 'pt' ? 'Pesquisar tratamento, sintoma...' : lang === 'en' ? 'Search treatment, symptom...' : 'Rechercher un soin, symptôme...'}
-                className="w-full ps-9 pe-8 py-2.5 text-xs rounded-full border border-[#E8E2D8] bg-white text-[#1A1412] placeholder:text-[#9A9088] focus:outline-none focus:border-[#C49A3C] focus:ring-2 focus:ring-[#C49A3C]/20 transition-all shadow-2xs"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[#8A8078] hover:text-[#1A1412]"
-                >
-                  <IconX size={13} />
-                </button>
-              )}
-            </div>
-          </div>
+            {/* Tier 2: Precision Controls (Perspective View, Anatomical Zones, Instant Search) */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-1">
+              {/* Perspective View (Front / Back) */}
+              <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
+                <ViewToggle
+                  view={view}
+                  lang={lang}
+                  t={t}
+                  onViewChange={handleViewChange}
+                />
+              </div>
 
-          {/* Tier 1: Glassmorphic Luxury Zone Segment */}
-          <LuxuryZoneSegment
-            lang={lang}
-            zone={selectedZone}
-            onZoneChange={setSelectedZone}
-            zoneCounts={zoneCounts}
-          />
+              {/* Anatomical Zone Selector */}
+              <div className="flex-1 overflow-x-auto no-scrollbar py-0.5">
+                <CuratorZoneTabs
+                  lang={lang}
+                  zone={selectedZone}
+                  onZoneChange={setSelectedZone}
+                  zoneCounts={zoneCounts}
+                />
+              </div>
 
-          {/* Tier 2: Therapeutic Medical Goal Badges */}
-          <GoalFilterBar
-            lang={lang}
-            goal={selectedGoal}
-            onGoalChange={setSelectedGoal}
-          />
-
-          {/* Active Filter Summary Bar */}
-          {hasActiveFilters && (
-            <div className="w-full flex items-center justify-between text-xs text-[#6B6058] pt-2 border-t border-[#E8E2D8]">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-[#1A1412]">
-                  {currentPoints.length} {lang === 'pt' ? 'cuidados encontrados' : lang === 'en' ? 'treatments found' : 'soins trouvés'}
-                </span>
-                {selectedZone !== 'all' && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#FDFAF4] border border-[#C49A3C]/30 text-[#9A7428] font-semibold">
-                    {lang === 'pt' ? 'Zona: ' : lang === 'en' ? 'Zone: ' : 'Zone : '}
-                    {getLocalizedText(ZONE_LABELS[selectedZone], lang)}
-                  </span>
-                )}
-                {selectedGoal !== 'all' && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#FDFAF4] border border-[#C49A3C]/30 text-[#9A7428] font-semibold">
-                    {lang === 'pt' ? 'Objetivo: ' : lang === 'en' ? 'Goal: ' : 'Objectif : '}
-                    {getLocalizedText(MEDICAL_GOALS.find((g) => g.id === selectedGoal)!.label, lang)}
-                  </span>
-                )}
+              {/* Refined Search Input */}
+              <div className="relative w-full sm:w-60 lg:w-56 shrink-0">
+                <IconSearch size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-[#9A7428] pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={lang === 'pt' ? 'Pesquisar cuidados...' : lang === 'en' ? 'Search treatments...' : 'Rechercher un soin...'}
+                  className="w-full ps-8 pe-7 py-2 text-xs rounded-xl border border-[#E8E2D8] bg-[#FAF8F5]/80 text-[#1A1412] placeholder:text-[#9A9088] focus:outline-none focus:bg-white focus:border-[#C49A3C] focus:ring-2 focus:ring-[#C49A3C]/20 transition-all shadow-2xs"
+                />
                 {searchQuery && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#FAF6EE] border border-[#E8E2D8] text-[#1A1412] font-semibold">
-                    « {searchQuery} »
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[#8A8078] hover:text-[#1A1412] transition-colors"
+                  >
+                    <IconX size={12} />
+                  </button>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="text-[#9A7428] hover:text-[#C49A3C] font-bold underline underline-offset-2 flex items-center gap-1 transition-colors"
-              >
-                <IconX size={12} />
-                <span>{lang === 'pt' ? 'Repor' : lang === 'en' ? 'Reset' : 'Réinitialiser'}</span>
-              </button>
             </div>
-          )}
+
+            {/* Tier 3: Active Filters & Results Summary */}
+            {hasActiveFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="pt-2.5 border-t border-[#F0EBE1] flex flex-wrap items-center justify-between gap-2 text-xs text-[#6B6058]"
+              >
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-semibold text-[#1A1412] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3C]" />
+                    {currentPoints.length} {lang === 'pt' ? 'cuidados encontrados' : lang === 'en' ? 'treatments found' : 'soins trouvés'}
+                  </span>
+                  {selectedGoal !== 'all' && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#FDFAF4] border border-[#C49A3C]/30 text-[#9A7428] text-[11px] font-medium">
+                      {getLocalizedText(MEDICAL_GOALS.find((g) => g.id === selectedGoal)!.label, lang)}
+                    </span>
+                  )}
+                  {selectedZone !== 'all' && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#FDFAF4] border border-[#C49A3C]/30 text-[#9A7428] text-[11px] font-medium">
+                      {getLocalizedText(ZONE_LABELS[selectedZone], lang)}
+                    </span>
+                  )}
+                  {searchQuery && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#FAF6EE] border border-[#E8E2D8] text-[#1A1412] text-[11px] font-medium">
+                      « {searchQuery} »
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="text-[#9A7428] hover:text-[#C49A3C] font-semibold text-[11px] flex items-center gap-1 transition-colors px-2 py-0.5 rounded-lg hover:bg-[#FAF6EE]"
+                >
+                  <IconX size={12} />
+                  <span>{lang === 'pt' ? 'Limpar filtros' : lang === 'en' ? 'Reset filters' : 'Réinitialiser'}</span>
+                </button>
+              </motion.div>
+            )}
+
+          </div>
         </motion.div>
 
         {/* ── Main Layout ── */}
