@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLanguage, Lang } from '@/lib/i18n';
@@ -12,519 +13,550 @@ import {
   IconEyeOff,
   IconArrowLeft,
   IconShieldCheck,
-  IconSparkles,
   IconAlertCircle,
   IconLoader2,
   IconCheck,
   IconShieldLock,
-  IconClock,
   IconHelpCircle,
   IconX,
   IconMail,
   IconPhone,
-  IconServer,
   IconKey,
+  IconFingerprint,
+  IconServer,
 } from '@tabler/icons-react';
 
+/* ─── Floating particle dot ─────────────────────────────── */
+function Particle({ x, y, delay, dur }: { x: number; y: number; delay: number; dur: number }) {
+  return (
+    <motion.div
+      className="absolute w-[2px] h-[2px] rounded-full bg-[#C49A3C]/60"
+      style={{ left: `${x}%`, top: `${y}%` }}
+      animate={{ y: [0, -30, 0], opacity: [0, 1, 0] }}
+      transition={{ duration: dur, delay, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  );
+}
+
+const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
+  id: i,
+  x: Math.round(Math.random() * 100),
+  y: Math.round(Math.random() * 100),
+  delay: Math.round(Math.random() * 5 * 10) / 10,
+  dur: 3 + Math.round(Math.random() * 4 * 10) / 10,
+}));
+
+/* ─── Main Page ─────────────────────────────────────────── */
 export default function AdminLoginPage() {
   const { lang, setLang } = useLanguage();
   const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const [pwd, setPwd] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [capsLockActive, setCapsLockActive] = useState(false);
+  const [capsLock, setCapsLock] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState('');
+  const [inputFocused, setInputFocused] = useState(false);
 
-  // Mouse spotlight position
-  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
-
-  // Update Lisbon time clock
+  /* Live clock */
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
+    const tick = () =>
       setCurrentTime(
-        now.toLocaleTimeString('pt-PT', {
+        new Date().toLocaleTimeString('pt-PT', {
           timeZone: 'Europe/Lisbon',
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
         })
       );
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, []);
 
-  // Track mouse for ambient spotlight
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-  };
+  /* Auto-focus */
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 600);
+  }, []);
 
-  // Detect Caps Lock
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.getModifierState) {
-      setCapsLockActive(e.getModifierState('CapsLock'));
-    }
-  };
-
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.getModifierState) {
-      setCapsLockActive(e.getModifierState('CapsLock'));
-    }
+  const handleCapsLock = (e: React.KeyboardEvent) => {
+    if (e.getModifierState) setCapsLock(e.getModifierState('CapsLock'));
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pwd || loading) return;
-
     setLoading(true);
     setError(null);
-
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pwd, remember: rememberMe }),
       });
-
       if (res.ok) {
         setSuccess(true);
-        setTimeout(() => {
-          router.replace('/admin');
-          router.refresh();
-        }, 400);
+        setTimeout(() => { router.replace('/admin'); router.refresh(); }, 700);
       } else {
         const data = await res.json().catch(() => ({}));
         if (res.status === 429) {
           setError(
-            lang === 'fr'
-              ? 'Trop de tentatives. Veuillez patienter 15 minutes.'
-              : lang === 'en'
-                ? 'Too many attempts. Please wait 15 minutes.'
-                : 'Muitas tentativas. Por favor aguarde 15 minutos.'
+            lang === 'fr' ? 'Trop de tentatives. Veuillez patienter 15 minutes.'
+            : lang === 'en' ? 'Too many attempts. Please wait 15 minutes.'
+            : 'Muitas tentativas. Por favor aguarde 15 minutos.'
           );
         } else {
           setError(
-            lang === 'fr'
-              ? 'Mot de passe incorrect'
-              : lang === 'en'
-                ? 'Invalid password credentials'
-                : 'Palavra-passe incorreta'
+            lang === 'fr' ? 'Mot de passe incorrect'
+            : lang === 'en' ? 'Invalid password'
+            : 'Palavra-passe incorreta'
           );
         }
         setPwd('');
+        setTimeout(() => inputRef.current?.focus(), 50);
       }
     } catch {
       setError(
-        lang === 'fr'
-          ? 'Erreur réseau. Veuillez réessayer.'
-          : lang === 'en'
-            ? 'Network error. Please try again.'
-            : 'Erro de rede. Por favor tente novamente.'
+        lang === 'fr' ? 'Erreur réseau. Réessayez.'
+        : lang === 'en' ? 'Network error. Try again.'
+        : 'Erro de rede. Tente novamente.'
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const languages: { code: Lang; label: string; flag: string }[] = [
-    { code: 'pt', label: 'Português', flag: '🇵🇹' },
-    { code: 'fr', label: 'Français', flag: '🇫🇷' },
-    { code: 'en', label: 'English', flag: '🇬🇧' },
+  const languages: { code: Lang; flag: string; label: string }[] = [
+    { code: 'pt', flag: '🇵🇹', label: 'PT' },
+    { code: 'fr', flag: '🇫🇷', label: 'FR' },
+    { code: 'en', flag: '🇬🇧', label: 'EN' },
   ];
 
   return (
-    <div
-      onMouseMove={handleMouseMove}
-      className="relative min-h-screen w-full bg-[#FAFAF8] text-[#1A1412] flex flex-col justify-between overflow-x-hidden font-sans selection:bg-[#C49A3C]/20 selection:text-[#1A1412]"
-    >
-      {/* Dynamic Ambient Spotlight */}
-      <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-300 opacity-60 hidden md:block"
-        style={{
-          background: `radial-gradient(650px circle at ${mousePos.x}px ${mousePos.y}px, rgba(196, 154, 60, 0.08), transparent 80%)`,
-        }}
-      />
+    <div className="relative flex min-h-screen w-full overflow-hidden bg-[#060A0F]">
 
-      {/* Ambient background decoration */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[800px] h-[550px] bg-gradient-to-b from-[#E8C97A]/15 via-[#C49A3C]/5 to-transparent rounded-full blur-3xl" />
-        <div className="absolute -bottom-[20%] right-[-5%] w-[550px] h-[550px] bg-[#C49A3C]/6 rounded-full blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage: `radial-gradient(rgba(196, 154, 60, 0.22) 1px, transparent 1px)`,
-            backgroundSize: '28px 28px',
-          }}
-        />
+      {/* ═══ LEFT PANEL — atmospheric image ═══ */}
+      <div className="relative hidden lg:flex lg:w-[52%] xl:w-[55%] flex-col">
+        {/* Background image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/hero/therapy.jpg"
+            alt="Digital Clínica — Sala de Tratamentos"
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="55vw"
+          />
+          {/* Deep dark overlay — bottom to top gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#060A0F]/90 via-[#060A0F]/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#060A0F]/95 via-transparent to-[#060A0F]/30" />
+        </div>
+
+        {/* Floating particles */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {PARTICLES.map(p => <Particle key={p.id} {...p} />)}
+        </div>
+
+        {/* Content over the image */}
+        <div className="relative z-10 flex flex-col justify-between h-full p-10 xl:p-14">
+          {/* Top: back link */}
+          <Link
+            href="/"
+            className="group inline-flex items-center gap-2 text-[13px] font-medium text-white/50 hover:text-white/90 transition-all duration-300"
+          >
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-white/15 group-hover:border-white/40 group-hover:bg-white/10 transition-all duration-300">
+              <IconArrowLeft size={13} />
+            </span>
+            <span>{lang === 'fr' ? 'Site public' : lang === 'en' ? 'Public site' : 'Site público'}</span>
+          </Link>
+
+          {/* Center: hero copy */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-md"
+          >
+            {/* Small badge */}
+            <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full border border-[#C49A3C]/30 bg-[#C49A3C]/10 backdrop-blur-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3C] animate-pulse" />
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-[#E8C97A]">
+                Portal de Gestão
+              </span>
+            </div>
+
+            <h1 className="font-serif text-4xl xl:text-5xl font-bold text-white leading-tight tracking-tight mb-4">
+              Digital<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8C97A] to-[#C49A3C]">
+                Clínica
+              </span>
+            </h1>
+            <p className="text-[15px] text-white/55 leading-relaxed max-w-sm">
+              {lang === 'fr'
+                ? 'Espace sécurisé réservé aux administrateurs et praticiens autorisés.'
+                : lang === 'en'
+                  ? 'Secure management environment for authorized clinic staff and administrators.'
+                  : 'Ambiente seguro de gestão para profissionais e administradores autorizados.'}
+            </p>
+          </motion.div>
+
+          {/* Bottom: security badges */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="flex flex-wrap gap-3"
+          >
+            {[
+              { icon: <IconServer size={12} />, label: 'IronSession™' },
+              { icon: <IconShieldCheck size={12} />, label: 'Rate-Limited' },
+              { icon: <IconKey size={12} />, label: 'Bcrypt v2' },
+            ].map(b => (
+              <div
+                key={b.label}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/40"
+              >
+                {b.icon}
+                <span>{b.label}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
       </div>
 
-      {/* Top Header */}
-      <header className="relative z-20 p-4 sm:p-6 md:px-10 flex items-center justify-between">
-        {/* Return link */}
-        <Link
-          href="/"
-          className="group inline-flex items-center gap-2 text-xs font-medium text-[#8A8078] hover:text-[#1A1412] transition-colors py-1.5 px-3 rounded-full hover:bg-black/5"
-        >
-          <IconArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-          <span>{lang === 'fr' ? 'Site public' : lang === 'en' ? 'Public site' : 'Website público'}</span>
-        </Link>
+      {/* ═══ RIGHT PANEL — login form ═══ */}
+      <div className="relative flex-1 flex flex-col items-center justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto">
 
-        {/* Right side widgets: Live Status & Language */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Live Clinic Time & Status Pill */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md border border-[#C49A3C]/20 text-[11px] text-[#4A4540] shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
-            <span className="font-medium">Lisboa:</span>
-            <span className="font-mono text-[#1A1412] font-semibold">{currentTime || '--:--:--'}</span>
-            <span className="text-[#8A8078]">WET</span>
+        {/* Mobile: back link */}
+        <div className="lg:hidden absolute top-5 left-5">
+          <Link
+            href="/"
+            className="group inline-flex items-center gap-2 text-[12px] font-medium text-white/40 hover:text-white/80 transition-colors"
+          >
+            <IconArrowLeft size={14} />
+            <span>{lang === 'fr' ? 'Retour' : lang === 'en' ? 'Back' : 'Voltar'}</span>
+          </Link>
+        </div>
+
+        {/* Language + time strip — top right */}
+        <div className="absolute top-5 right-5 flex items-center gap-2">
+          {/* Clock — desktop only */}
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/40">
+            <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-mono">{currentTime || '--:--:--'}</span>
           </div>
 
-          {/* Minimalist Language Switcher */}
-          <div className="flex items-center bg-white/80 backdrop-blur-md p-1 rounded-full border border-[#C49A3C]/20 shadow-2xs">
-            {languages.map((l) => (
+          {/* Language switcher */}
+          <div className="flex items-center gap-0.5 bg-white/5 border border-white/10 rounded-full p-0.5">
+            {languages.map(l => (
               <button
                 key={l.code}
                 type="button"
                 onClick={() => setLang(l.code)}
-                className={`text-[11px] font-medium px-2.5 py-1 rounded-full transition-all duration-200 ${
+                className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all duration-200 ${
                   lang === l.code
-                    ? 'bg-[#1A1412] text-white shadow-xs'
-                    : 'text-[#8A8078] hover:text-[#1A1412]'
+                    ? 'bg-[#C49A3C] text-[#060A0F]'
+                    : 'text-white/35 hover:text-white/70'
                 }`}
               >
-                <span className="mr-1">{l.flag}</span>
-                <span className="uppercase tracking-wider">{l.code}</span>
+                {l.label}
               </button>
             ))}
           </div>
         </div>
-      </header>
 
-      {/* Centerpiece Login Form */}
-      <main className="relative z-20 flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
+        {/* ── The Card ── */}
         <motion.div
-          initial={{ opacity: 0, y: 16, scale: 0.98 }}
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[425px]"
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+          className="w-full max-w-[400px]"
         >
-          {/* Card */}
-          <div className="relative rounded-3xl bg-white/95 backdrop-blur-xl border border-[#C49A3C]/25 p-7 sm:p-9 shadow-[0_20px_50px_rgba(26,20,18,0.06),0_1px_3px_rgba(0,0,0,0.04)]">
-            {/* Top decorative subtle badge */}
-            <div className="flex items-center justify-between mb-5">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#C49A3C]/10 border border-[#C49A3C]/20 text-[10px] font-mono font-semibold tracking-wider text-[#9A7428] uppercase">
-                <IconSparkles size={10} />
-                <span>
-                  {lang === 'fr' ? 'Portail de Gestion' : lang === 'en' ? 'Management Portal' : 'Portal de Gestão'}
-                </span>
+          {/* Logo block */}
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="relative mb-4">
+              {/* Glow ring */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-[#C49A3C]/40 to-[#E8C97A]/20 blur-xl scale-125" />
+              <div className="relative w-[72px] h-[72px] rounded-2xl bg-gradient-to-b from-[#1C2030] to-[#111520] border border-[#C49A3C]/25 flex items-center justify-center shadow-[0_0_0_1px_rgba(196,154,60,0.1),inset_0_1px_0_rgba(255,255,255,0.05)]">
+                <LogoIcon size={48} variant="gold" />
               </div>
-
-              {/* Status pill */}
-              <div className="flex items-center gap-1 text-[10px] font-medium text-[#166534] bg-[#F0FDF4] border border-[#BBF7D0] px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-ping" style={{ animationDuration: '2.5s' }} />
-                <span>Online</span>
+              {/* Verified badge */}
+              <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-emerald-500 border-2 border-[#060A0F] flex items-center justify-center shadow-lg">
+                <IconShieldCheck size={12} strokeWidth={2.5} className="text-white" />
               </div>
             </div>
 
-            {/* Brand Logo Presentation */}
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className="relative mb-3.5 group">
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#C49A3C]/20 to-[#E8C97A]/40 rounded-2xl blur-md scale-110 opacity-70 group-hover:opacity-100 transition-opacity" />
-                <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-b from-[#FAFAF8] to-[#F4F2EE] border border-[#C49A3C]/30 flex items-center justify-center p-2.5 shadow-inner">
-                  <LogoIcon size={52} variant="gold" />
-                </div>
-                {/* Micro active shield indicator */}
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#1A1412] text-[#E8C97A] border-2 border-white flex items-center justify-center shadow-xs">
-                  <IconShieldCheck size={11} />
-                </div>
-              </div>
+            <h2 className="text-[22px] font-serif font-bold text-white tracking-tight">
+              {lang === 'fr' ? 'Accès Administration'
+               : lang === 'en' ? 'Admin Access'
+               : 'Acesso de Administração'}
+            </h2>
+            <p className="text-[12px] text-white/35 mt-1">
+              Digital Clínica &mdash; Lisboa, Portugal
+            </p>
+          </div>
 
-              <h1 className="font-serif text-2xl sm:text-[26px] font-bold tracking-tight text-[#1A1412]">
-                Digital Clínica
-              </h1>
-              <p className="text-xs text-[#8A8078] mt-1 max-w-[280px]">
-                {lang === 'fr'
-                  ? 'Espace sécurisé réservé aux praticiens et administrateurs'
-                  : lang === 'en'
-                    ? 'Secure environment for clinic practitioners & administrators'
-                    : 'Acesso seguro reservado a profissionais e administração'}
-              </p>
-            </div>
+          {/* Divider line */}
+          <div className="h-px bg-gradient-to-r from-transparent via-[#C49A3C]/25 to-transparent mb-7" />
 
-            {/* Login Form */}
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="admin-password"
-                    className="block text-[11px] font-semibold text-[#4A4540] tracking-wide uppercase font-mono"
-                  >
-                    {lang === 'fr' ? 'Mot de passe maître' : lang === 'en' ? 'Master Password' : 'Palavra-passe'}
-                  </label>
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
 
-                  <button
-                    type="button"
-                    onClick={() => setHelpOpen(true)}
-                    className="text-[11px] text-[#9A7428] hover:text-[#1A1412] font-medium inline-flex items-center gap-1 transition-colors"
-                  >
-                    <IconHelpCircle size={12} />
-                    <span>{lang === 'fr' ? 'Aide' : lang === 'en' ? 'Need help?' : 'Ajuda'}</span>
-                  </button>
-                </div>
-
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8A8078] group-focus-within:text-[#C49A3C] transition-colors">
-                    <IconShieldLock size={18} />
-                  </div>
-
-                  <input
-                    id="admin-password"
-                    type={showPwd ? 'text' : 'password'}
-                    value={pwd}
-                    onChange={(e) => setPwd(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    onKeyUp={handleKeyUp}
-                    placeholder="••••••••••••"
-                    autoComplete="current-password"
-                    maxLength={128}
-                    required
-                    autoFocus
-                    className={`w-full bg-[#FAFAF8] text-[#1A1412] placeholder:text-[#B8B0A8] rounded-xl pl-10 pr-12 py-3.5 text-sm transition-all outline-hidden ${
-                      error
-                        ? 'border-2 border-[#DC2626] bg-[#FEF2F2]/50 ring-2 ring-[#DC2626]/10'
-                        : 'border border-[#C49A3C]/30 focus:border-[#C49A3C] focus:bg-white focus:ring-3 focus:ring-[#C49A3C]/15 shadow-inner'
-                    }`}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPwd(!showPwd)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-[#8A8078] hover:text-[#1A1412] rounded-lg transition-colors focus:outline-none"
-                    tabIndex={-1}
-                    aria-label={showPwd ? 'Hide password' : 'Show password'}
-                  >
-                    {showPwd ? <IconEyeOff size={18} /> : <IconEye size={18} />}
-                  </button>
-                </div>
-
-                {/* Caps Lock Alert */}
-                <AnimatePresence>
-                  {capsLockActive && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="text-[11px] text-[#D97706] font-medium flex items-center gap-1.5 pt-1 px-1"
-                    >
-                      <IconAlertCircle size={13} />
-                      <span>
-                        {lang === 'fr'
-                          ? 'Touche Verrouillage Majuscule activée'
-                          : lang === 'en'
-                            ? 'Caps Lock is ON'
-                            : 'Aviso: Caps Lock está ativo'}
-                      </span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Remember session toggle */}
-              <div className="flex items-center justify-between pt-0.5 pb-1">
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-[#C49A3C]/40 text-[#1A1412] focus:ring-[#C49A3C] accent-[#1A1412] cursor-pointer"
-                  />
-                  <span className="text-[11px] text-[#64748B]">
-                    {lang === 'fr' ? 'Garder la session active (8h)' : lang === 'en' ? 'Keep session active (8h)' : 'Manter sessão iniciada (8h)'}
-                  </span>
+            {/* Password field */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="admin-password"
+                  className="text-[11px] font-semibold tracking-widest uppercase text-white/40 font-mono"
+                >
+                  {lang === 'fr' ? 'Mot de passe' : lang === 'en' ? 'Password' : 'Palavra-passe'}
                 </label>
+                <button
+                  type="button"
+                  onClick={() => setHelpOpen(true)}
+                  className="inline-flex items-center gap-1 text-[11px] text-[#C49A3C]/70 hover:text-[#E8C97A] transition-colors"
+                >
+                  <IconHelpCircle size={11} />
+                  <span>{lang === 'fr' ? 'Aide' : lang === 'en' ? 'Help' : 'Ajuda'}</span>
+                </button>
               </div>
 
-              {/* Error Message */}
+              <div className="relative">
+                {/* Lock icon */}
+                <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${inputFocused ? 'text-[#C49A3C]' : 'text-white/25'}`}>
+                  <IconShieldLock size={17} />
+                </div>
+
+                <input
+                  ref={inputRef}
+                  id="admin-password"
+                  type={showPwd ? 'text' : 'password'}
+                  value={pwd}
+                  onChange={e => setPwd(e.target.value)}
+                  onKeyDown={handleCapsLock}
+                  onKeyUp={handleCapsLock}
+                  onFocus={() => setInputFocused(true)}
+                  onBlur={() => setInputFocused(false)}
+                  placeholder="••••••••••••"
+                  autoComplete="current-password"
+                  maxLength={128}
+                  required
+                  className={`
+                    w-full rounded-xl pl-11 pr-12 py-3.5 text-sm text-white font-mono
+                    bg-white/5 backdrop-blur-sm
+                    border transition-all duration-200 outline-none
+                    placeholder:text-white/20
+                    ${error
+                      ? 'border-red-500/60 bg-red-500/5 ring-2 ring-red-500/15'
+                      : inputFocused
+                        ? 'border-[#C49A3C]/60 ring-2 ring-[#C49A3C]/15 bg-white/8'
+                        : 'border-white/10 hover:border-white/20'
+                    }
+                  `}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(!showPwd)}
+                  tabIndex={-1}
+                  aria-label={showPwd ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/25 hover:text-white/70 transition-colors"
+                >
+                  {showPwd ? <IconEyeOff size={17} /> : <IconEye size={17} />}
+                </button>
+              </div>
+
+              {/* Caps Lock */}
               <AnimatePresence>
-                {error && (
+                {capsLock && (
                   <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    className="p-3 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-[#DC2626] text-xs font-medium flex items-center gap-2 shadow-xs"
-                    role="alert"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-1.5 text-[11px] text-amber-400/80 pt-1 px-1"
                   >
-                    <IconAlertCircle size={16} className="shrink-0 text-[#DC2626]" />
-                    <span>{error}</span>
+                    <IconAlertCircle size={12} />
+                    <span>
+                      {lang === 'fr' ? 'Verr. Maj activé'
+                       : lang === 'en' ? 'Caps Lock is ON'
+                       : 'Caps Lock está ativo'}
+                    </span>
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
 
-              {/* Unlock Button */}
-              <button
-                type="submit"
-                disabled={loading || !pwd || success}
-                className="w-full relative group overflow-hidden py-3.5 px-6 rounded-xl bg-[#1A1412] hover:bg-[#2C2420] active:scale-[0.99] text-white font-medium text-sm shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+            {/* Remember me */}
+            <label className="flex items-center gap-2.5 cursor-pointer select-none group">
+              <div
+                onClick={() => setRememberMe(!rememberMe)}
+                className={`relative w-9 h-5 rounded-full border transition-all duration-300 flex-shrink-0 ${
+                  rememberMe
+                    ? 'bg-[#C49A3C] border-[#C49A3C]'
+                    : 'bg-white/5 border-white/15'
+                }`}
               >
-                {/* Subtle gold hover border shimmer */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#E8C97A]/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 ${
+                  rememberMe ? 'left-[18px]' : 'left-0.5'
+                }`} />
+              </div>
+              <span className="text-[12px] text-white/40 group-hover:text-white/60 transition-colors">
+                {lang === 'fr' ? 'Garder la session (8h)'
+                 : lang === 'en' ? 'Stay signed in (8h)'
+                 : 'Manter sessão (8h)'}
+              </span>
+            </label>
 
+            {/* Error */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  role="alert"
+                  className="flex items-center gap-2.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-[12px] font-medium"
+                >
+                  <IconAlertCircle size={15} className="shrink-0" />
+                  <span>{error}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading || !pwd || success}
+              className="relative w-full group overflow-hidden rounded-xl py-3.5 px-6 font-semibold text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: success
+                  ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                  : 'linear-gradient(135deg, #C49A3C, #9A7428)',
+                boxShadow: success
+                  ? '0 0 30px rgba(34,197,94,0.3)'
+                  : '0 0 30px rgba(196,154,60,0.25)',
+              }}
+            >
+              {/* Shimmer */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
+
+              <span className="relative flex items-center justify-center gap-2 text-[#060A0F]">
                 {loading ? (
                   <>
-                    <IconLoader2 size={18} className="animate-spin text-[#E8C97A]" />
-                    <span>
-                      {lang === 'fr'
-                        ? 'Vérification sécurisée...'
-                        : lang === 'en'
-                          ? 'Verifying credentials...'
-                          : 'A verificar credenciais...'}
-                    </span>
+                    <IconLoader2 size={17} className="animate-spin" />
+                    <span>{lang === 'fr' ? 'Vérification...' : lang === 'en' ? 'Verifying...' : 'A verificar...'}</span>
                   </>
                 ) : success ? (
                   <>
-                    <IconCheck size={18} className="text-[#22C55E]" />
-                    <span>
-                      {lang === 'fr'
-                        ? 'Accès autorisé'
-                        : lang === 'en'
-                          ? 'Access Granted'
-                          : 'Acesso Autorizado'}
-                    </span>
+                    <IconCheck size={17} strokeWidth={2.5} />
+                    <span>{lang === 'fr' ? 'Accès autorisé' : lang === 'en' ? 'Access Granted' : 'Acesso Autorizado'}</span>
                   </>
                 ) : (
                   <>
-                    <IconLock size={16} className="text-[#E8C97A]" />
-                    <span>
-                      {lang === 'fr'
-                        ? 'Déverrouiller le Portail'
-                        : lang === 'en'
-                          ? 'Unlock Management Portal'
-                          : 'Desbloquear Portal de Gestão'}
-                    </span>
+                    <IconFingerprint size={17} />
+                    <span>{lang === 'fr' ? 'Accéder au portail' : lang === 'en' ? 'Access Portal' : 'Entrar no Portal'}</span>
                   </>
                 )}
-              </button>
-            </form>
-
-            {/* Keyboard shortcut hint */}
-            <div className="mt-5 text-center">
-              <span className="text-[11px] text-[#8A8078] inline-flex items-center gap-1.5">
-                <span>{lang === 'fr' ? 'Appuyez sur' : lang === 'en' ? 'Press' : 'Prima'}</span>
-                <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-[#F4F2EE] border border-[#C49A3C]/20 rounded text-[#4A4540]">
-                  ↵ Enter
-                </kbd>
-                <span>{lang === 'fr' ? 'pour vous connecter' : lang === 'en' ? 'to log in' : 'para aceder'}</span>
               </span>
-            </div>
-          </div>
+            </button>
 
-          {/* Minimalist Security Trust Row */}
-          <div className="mt-4 flex items-center justify-center gap-3 text-[10px] text-[#8A8078]">
-            <div className="flex items-center gap-1">
-              <IconServer size={11} className="text-[#C49A3C]" />
-              <span>IronSession™</span>
-            </div>
-            <span>•</span>
-            <div className="flex items-center gap-1">
-              <IconShieldCheck size={11} className="text-[#22C55E]" />
-              <span>RateLimit Guard</span>
-            </div>
-            <span>•</span>
-            <div className="flex items-center gap-1">
-              <IconKey size={11} className="text-[#C49A3C]" />
-              <span>Bcrypt v2</span>
-            </div>
+            {/* Enter hint */}
+            <p className="text-center text-[11px] text-white/20">
+              {lang === 'fr' ? 'Appuyez sur' : lang === 'en' ? 'Press' : 'Prima'}{' '}
+              <kbd className="px-1.5 py-0.5 font-mono text-[10px] bg-white/8 border border-white/15 rounded text-white/40">↵ Enter</kbd>{' '}
+              {lang === 'fr' ? 'pour continuer' : lang === 'en' ? 'to continue' : 'para continuar'}
+            </p>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-center gap-2 text-[10px] text-white/20">
+            <span className="w-1 h-1 rounded-full bg-emerald-400/60" />
+            <span>SSL 256-bit</span>
+            <span className="text-white/10">·</span>
+            <span>Digital Clínica © 2026</span>
           </div>
         </motion.div>
-      </main>
+      </div>
 
-      {/* Clean Minimalist Footer */}
-      <footer className="relative z-20 p-4 sm:p-6 text-center text-xs text-[#8A8078] flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#4A4540]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
-          <span>SSL 256-bit Encrypted Session</span>
-        </div>
-        <span className="hidden sm:inline text-[#C49A3C]/40">•</span>
-        <div className="text-[11px]">
-          Digital Clínica © 2026 — Lisboa, Portugal
-        </div>
-      </footer>
-
-      {/* Security & Access Assistance Modal */}
+      {/* ═══ Help Modal ═══ */}
       <AnimatePresence>
         {helpOpen && (
-          <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setHelpOpen(false)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-xs"
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-[#C49A3C]/30 z-10"
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-md rounded-2xl z-10 overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #0F1520 0%, #111827 100%)',
+                border: '1px solid rgba(196,154,60,0.2)',
+                boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
+              }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#FAFAF8] border border-[#C49A3C]/30 flex items-center justify-center text-[#C49A3C]">
-                    <IconKey size={16} />
+              {/* Modal header */}
+              <div className="flex items-center justify-between p-5 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#C49A3C]/15 border border-[#C49A3C]/25 flex items-center justify-center text-[#C49A3C]">
+                    <IconKey size={17} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm text-[#1A1412]">
-                      {lang === 'fr' ? 'Assistance Connexion' : lang === 'en' ? 'Access Assistance' : 'Ajuda de Acesso'}
-                    </h3>
-                    <p className="text-[11px] text-[#8A8078]">
-                      {lang === 'fr' ? 'Protocole de sécurité de la clinique' : lang === 'en' ? 'Clinic security protocol' : 'Protocolo de segurança da clínica'}
+                    <p className="text-sm font-semibold text-white">
+                      {lang === 'fr' ? 'Assistance Connexion' : lang === 'en' ? 'Access Help' : 'Ajuda de Acesso'}
+                    </p>
+                    <p className="text-[11px] text-white/35">
+                      {lang === 'fr' ? 'Protocole de sécurité' : lang === 'en' ? 'Security protocol' : 'Protocolo de segurança'}
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setHelpOpen(false)}
-                  className="p-1 rounded-lg text-[#8A8078] hover:text-[#1A1412] hover:bg-black/5 transition-colors"
+                  className="p-1.5 rounded-lg text-white/30 hover:text-white/80 hover:bg-white/8 transition-all"
                 >
-                  <IconX size={18} />
+                  <IconX size={17} />
                 </button>
               </div>
 
-              <div className="space-y-3 text-xs text-[#4A4540] bg-[#FAFAF8] p-4 rounded-xl border border-[#E2E8F0]">
-                <p>
+              {/* Modal body */}
+              <div className="p-5 space-y-4">
+                <p className="text-[13px] text-white/55 leading-relaxed">
                   {lang === 'fr'
-                    ? 'L’accès à ce portail est strictement restreint. Si vous avez oublié la clé de sécurité, veuillez contacter la direction :'
+                    ? 'L\'accès à ce portail est strictement réservé. Si vous avez oublié la clé, veuillez contacter la direction :'
                     : lang === 'en'
-                      ? 'Access to this portal is strictly restricted. If you forgot the security key, please contact administration:'
-                      : 'O acesso a este portal é restrito. Se esqueceu a chave de segurança, por favor contacte a administração:'}
+                      ? 'Access to this portal is strictly restricted. If you forgot your credentials, contact administration:'
+                      : 'O acesso a este portal é restrito. Se esqueceu as credenciais, contacte a administração:'}
                 </p>
-                <div className="space-y-1.5 pt-1">
-                  <div className="flex items-center gap-2 text-[#1A1412] font-medium">
-                    <IconMail size={14} className="text-[#C49A3C]" />
-                    <span className="font-mono text-[11px]">admin@digitalclinica.pt</span>
+                <div className="space-y-2.5 p-4 rounded-xl bg-white/3 border border-white/8">
+                  <div className="flex items-center gap-3 text-[12px]">
+                    <IconMail size={14} className="text-[#C49A3C] shrink-0" />
+                    <span className="font-mono text-white/70">admin@digitalclinica.pt</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[#1A1412] font-medium">
-                    <IconPhone size={14} className="text-[#C49A3C]" />
-                    <span className="font-mono text-[11px]">+351 912 000 000</span>
+                  <div className="flex items-center gap-3 text-[12px]">
+                    <IconPhone size={14} className="text-[#C49A3C] shrink-0" />
+                    <span className="font-mono text-white/70">+351 912 000 000</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex justify-end">
+              <div className="px-5 pb-5 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setHelpOpen(false)}
-                  className="px-4 py-2 text-xs font-medium bg-[#1A1412] text-white rounded-xl hover:bg-[#2C2420] transition-colors"
+                  className="px-5 py-2 text-[12px] font-semibold rounded-xl text-[#060A0F] transition-all"
+                  style={{ background: 'linear-gradient(135deg, #C49A3C, #9A7428)' }}
                 >
                   {lang === 'fr' ? 'Fermer' : lang === 'en' ? 'Close' : 'Fechar'}
                 </button>
@@ -536,4 +568,3 @@ export default function AdminLoginPage() {
     </div>
   );
 }
-

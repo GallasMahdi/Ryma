@@ -82,14 +82,6 @@ export const metadata: Metadata = {
         alt: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
         type: 'image/jpeg',
       },
-      {
-        url: `${siteUrl}/og-image.png`,
-        secureUrl: `${siteUrl}/og-image.png`,
-        width: 1200,
-        height: 630,
-        alt: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
-        type: 'image/png',
-      },
     ],
   },
   twitter: {
@@ -97,7 +89,14 @@ export const metadata: Metadata = {
     title: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
     description:
       'Clínica especializada em Lisboa, Portugal. Fisioterapia médica, reabilitação do pavimento pélvico, tratamentos corporais não invasivos.',
-    images: [`${siteUrl}/og-image.jpg`],
+    images: [
+      {
+        url: `${siteUrl}/og-image.jpg`,
+        alt: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
+        width: 1200,
+        height: 630,
+      },
+    ],
   },
   robots: {
     index: true,
