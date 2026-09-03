@@ -16,7 +16,7 @@ import {
   IconLoader2,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
-import { Invoice, InvoicePaymentStatus, PaymentMethod } from '@/types/admin';
+import { Invoice, InvoicePaymentStatus, PaymentMethod, calculateVatBreakdown } from '@/types/admin';
 import { SITE } from '@/lib/site';
 import { printInvoicePdf } from '@/lib/invoicePdf';
 
@@ -44,8 +44,11 @@ export function InvoiceDetailModal({
   };
 
   const [updating, setUpdating] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   if (!invoice) return null;
+
+  const { vatRate, vatAmount, incidence, isExempt } = calculateVatBreakdown(invoice.amount, invoice.vatRate);
 
   const handlePrint = () => {
     printInvoicePdf(invoice);
@@ -325,9 +328,9 @@ export function InvoiceDetailModal({
                     <tr className="bg-[#0F172A] text-white text-[10px] uppercase tracking-wider font-semibold">
                       <th className="py-2.5 px-4">Descrição do Ato Clínico / Tratamento</th>
                       <th className="py-2.5 px-3 text-center">Qtd</th>
-                      <th className="py-2.5 px-3 text-right">Preço Unit.</th>
+                      <th className="py-2.5 px-3 text-right">{txt('Prix HT', 'Net Price', 'Preço s/ IVA')}</th>
                       <th className="py-2.5 px-3 text-center">IVA</th>
-                      <th className="py-2.5 px-4 text-right">Total Líquido</th>
+                      <th className="py-2.5 px-4 text-right">{txt('Total c/ IVA', 'Total (inc. VAT)', 'Total c/ IVA')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E2E8F0] text-xs">
@@ -344,8 +347,8 @@ export function InvoiceDetailModal({
                         )}
                       </td>
                       <td className="py-3.5 px-3 text-center font-mono font-medium">1</td>
-                      <td className="py-3.5 px-3 text-right font-mono">{invoice.amount.toFixed(2)} €</td>
-                      <td className="py-3.5 px-3 text-center font-mono font-medium">{invoice.vatRate}%</td>
+                      <td className="py-3.5 px-3 text-right font-mono">{incidence.toFixed(2)} €</td>
+                      <td className="py-3.5 px-3 text-center font-mono font-medium">{vatRate}%</td>
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-[#0F172A]">
                         {invoice.amount.toFixed(2)} €
                       </td>
@@ -358,29 +361,43 @@ export function InvoiceDetailModal({
               <div className="flex flex-col sm:flex-row items-start justify-between gap-6 my-6 pt-4 border-t border-[#E2E8F0]">
                 <div className="max-w-md space-y-1 text-[11px] text-[#64748B]">
                   <p className="font-bold text-[#0F172A] uppercase tracking-wider text-[10px]">
-                    Enquadramento Legal & Fiscal
+                    {txt('Cadre Légal & Fiscal', 'Legal & Tax Framework', 'Enquadramento Legal & Fiscal')}
                   </p>
                   <p className="leading-relaxed">
-                    {invoice.vatRate === 0
-                      ? 'Serviço de saúde e fisioterapia isento de IVA nos termos do Artigo 9.º do Código do IVA (CIVA).'
-                      : 'Taxa normal de IVA a 23% incluída.'}
+                    {isExempt
+                      ? txt(
+                          'Service de santé et kinésithérapie exonéré de TVA en vertu de l’art. 9 du CIVA.',
+                          'Medical and physiotherapy service exempt from VAT under Article 9 of CIVA.',
+                          'Serviço de saúde e fisioterapia isento de IVA nos termos do Artigo 9.º do Código do IVA (CIVA).'
+                        )
+                      : txt(
+                          `Taux normal de TVA à ${vatRate}% inclus (${vatAmount.toFixed(2)} € de taxe sur une base imposable de ${incidence.toFixed(2)} €).`,
+                          `Standard VAT rate of ${vatRate}% included (${vatAmount.toFixed(2)} € tax on ${incidence.toFixed(2)} € net base).`,
+                          `Taxa normal de IVA a ${vatRate}% incluída (${vatAmount.toFixed(2)} € de imposto sobre incidência tributável de ${incidence.toFixed(2)} €).`
+                        )}
                   </p>
                   <p className="text-[10px] text-[#94A3B8]">
-                    Documento processado por programa certificado. Válido para efeitos de dedução em IRS e reembolso junto de seguradoras de saúde e subsistemas (ADSE, Médis, Multicare, AdvanceCare).
+                    {txt(
+                      'Document certifié. Valable pour déduction fiscale et remboursement auprès des mutuelles et assurances.',
+                      'Certified invoice receipt. Valid for tax deduction and private health insurance reimbursement.',
+                      'Documento processado por programa certificado. Válido para efeitos de dedução em IRS e reembolso junto de seguradoras de saúde e subsistemas (ADSE, Médis, Multicare, AdvanceCare).'
+                    )}
                   </p>
                 </div>
 
-                <div className="w-full sm:w-64 space-y-2 text-xs">
+                <div className="w-full sm:w-72 space-y-2 text-xs">
                   <div className="flex justify-between text-[#64748B]">
-                    <span>Incidência:</span>
-                    <span className="font-mono font-medium">{invoice.amount.toFixed(2)} €</span>
+                    <span>{txt('Incidence (Base Imposable) :', 'Incidence (Tax Base) :', 'Incidência (Base Tributável) :')}</span>
+                    <span className="font-mono font-medium">{incidence.toFixed(2)} €</span>
                   </div>
                   <div className="flex justify-between text-[#64748B]">
-                    <span>Total IVA ({invoice.vatRate}%):</span>
-                    <span className="font-mono font-medium">0.00 €</span>
+                    <span>{txt(`Total TVA (${vatRate}%) :`, `Total VAT (${vatRate}%) :`, `Total IVA (${vatRate}%) :`)}</span>
+                    <span className={`font-mono font-medium ${vatAmount > 0 ? 'text-[#0F172A]' : 'text-[#64748B]'}`}>
+                      {vatAmount.toFixed(2)} €
+                    </span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t-2 border-[#0F172A] text-sm sm:text-base font-bold text-[#0F172A]">
-                    <span>TOTAL LIQUIDADO:</span>
+                    <span>{txt('TOTAL LIQUIDÉ :', 'TOTAL SETTLED :', 'TOTAL LIQUIDADO :')}</span>
                     <span className="font-mono text-[#0F172A]">{invoice.amount.toFixed(2)} €</span>
                   </div>
                 </div>

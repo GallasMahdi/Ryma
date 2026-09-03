@@ -22,6 +22,7 @@ import {
   CoverageType,
   PatientRecord,
   Appointment,
+  calculateVatBreakdown,
 } from '@/types/admin';
 import { SITE } from '@/lib/site';
 
@@ -606,6 +607,35 @@ export function CreateInvoiceModal({
                     />
                   </div>
                 </div>
+
+                {/* Real-time VAT / Tax Breakdown Card */}
+                {(() => {
+                  const vatData = calculateVatBreakdown(amount, vatRate);
+                  return (
+                    <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-[#FAF8F5] to-white border border-[#E8E2D8] flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-2xs">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[#64748B] font-medium">
+                          {txt('Base HT / Incidência :', 'Net Tax Base :', 'Incidência (s/ IVA) :')}
+                        </span>
+                        <span className="font-mono font-bold text-[#0F172A]">{vatData.incidence.toFixed(2)} €</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[#64748B] font-medium">
+                          {txt(`Montant TVA (${vatRate}%) :`, `VAT Amount (${vatRate}%) :`, `Valor IVA (${vatRate}%) :`)}
+                        </span>
+                        <span className={`font-mono font-bold ${vatData.vatAmount > 0 ? 'text-[#0F172A]' : 'text-[#64748B]'}`}>
+                          {vatData.vatAmount.toFixed(2)} €
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-[#C49A3C]/30 shadow-xs">
+                        <span className="text-[#9A7428] font-semibold">
+                          {txt('Total TTC :', 'Total (Gross) :', 'Total c/ IVA :')}
+                        </span>
+                        <span className="font-mono font-bold text-[#1A1412]">{vatData.total.toFixed(2)} €</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* ── Payment Details ─────────────────────────────────────── */}

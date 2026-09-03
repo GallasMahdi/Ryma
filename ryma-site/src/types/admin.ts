@@ -260,3 +260,44 @@ export interface CreateReviewInput {
   verified?: boolean;
   isFeatured?: boolean;
 }
+
+export interface VatBreakdown {
+  total: number;
+  vatRate: number;
+  vatAmount: number;
+  incidence: number;
+  isExempt: boolean;
+}
+
+/**
+ * Standard Portuguese & European Tax / TVA Calculation
+ * Clinical prices charged to patients are gross (VAT-inclusive / TTC).
+ * Incidence (tax base) = Total / (1 + vatRate / 100)
+ * VAT Amount = Total - Incidence
+ * Rounds to 2 decimal places to ensure incidence + vatAmount === total exactly.
+ */
+export function calculateVatBreakdown(totalAmount: number, vatRate: number = 0): VatBreakdown {
+  const safeTotal = Math.round((Number(totalAmount) || 0) * 100) / 100;
+  const safeRate = Number(vatRate) || 0;
+
+  if (safeRate <= 0) {
+    return {
+      total: safeTotal,
+      vatRate: 0,
+      vatAmount: 0,
+      incidence: safeTotal,
+      isExempt: true,
+    };
+  }
+
+  const incidence = Math.round((safeTotal / (1 + safeRate / 100)) * 100) / 100;
+  const vatAmount = Math.round((safeTotal - incidence) * 100) / 100;
+
+  return {
+    total: safeTotal,
+    vatRate: safeRate,
+    vatAmount,
+    incidence,
+    isExempt: false,
+  };
+}

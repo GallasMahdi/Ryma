@@ -1,4 +1,4 @@
-import { Invoice } from '@/types/admin';
+import { Invoice, calculateVatBreakdown } from '@/types/admin';
 import { SITE } from '@/lib/site';
 
 function escapeHtml(str: unknown): string {
@@ -20,11 +20,8 @@ export function generateInvoiceHtml(invoice: Invoice): string {
   const issueDate = invoice.createdAt ? invoice.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
   const paidDate = invoice.paidAt ? invoice.paidAt.split('T')[0] : issueDate;
 
-  const vatRate = typeof invoice.vatRate === 'number' ? invoice.vatRate : 0;
-  const isVatExempt = vatRate === 0;
   const totalAmount = Number(invoice.amount) || 0;
-  const vatAmount = isVatExempt ? 0 : (totalAmount * (vatRate / (100 + vatRate)));
-  const incidenceAmount = totalAmount - vatAmount;
+  const { vatRate, vatAmount, incidence, isExempt } = calculateVatBreakdown(totalAmount, invoice.vatRate);
 
   return `<!DOCTYPE html>
 <html lang="pt">
@@ -355,9 +352,9 @@ export function generateInvoiceHtml(invoice: Invoice): string {
         <tr>
           <th>Descrição do Ato Clínico / Tratamento</th>
           <th style="text-align: center; width: 50px;">Qtd</th>
-          <th style="text-align: right; width: 80px;">Preço Unit.</th>
-          <th style="text-align: center; width: 60px;">IVA</th>
-          <th style="text-align: right; width: 90px;">Total Líquido</th>
+          <th style="text-align: right; width: 85px;">Preço s/ IVA</th>
+          <th style="text-align: center; width: 60px;">Taxa IVA</th>
+          <th style="text-align: right; width: 90px;">Total c/ IVA</th>
         </tr>
       </thead>
       <tbody>
@@ -372,7 +369,7 @@ export function generateInvoiceHtml(invoice: Invoice): string {
             }
           </td>
           <td style="text-align: center; font-family: monospace; font-weight: bold;">1</td>
-          <td style="text-align: right; font-family: monospace;">${totalAmount.toFixed(2)} €</td>
+          <td style="text-align: right; font-family: monospace;">${incidence.toFixed(2)} €</td>
           <td style="text-align: center; font-family: monospace;">${vatRate}%</td>
           <td style="text-align: right; font-family: monospace; font-weight: bold;">${totalAmount.toFixed(2)} €</td>
         </tr>
@@ -384,17 +381,17 @@ export function generateInvoiceHtml(invoice: Invoice): string {
       <div class="legal-notice">
         <strong>Enquadramento Legal & Fiscal</strong><br>
         ${
-          isVatExempt
+          isExempt
             ? 'Serviço de saúde e fisioterapia isento de IVA nos termos do Artigo 9.º do Código do IVA (CIVA).'
-            : `Taxa normal de IVA a ${vatRate}% incluída.`
+            : `Taxa de IVA a ${vatRate}% incluída (${vatAmount.toFixed(2)} € de imposto sobre incidência tributável de ${incidence.toFixed(2)} €).`
         }<br>
         Documento processado por programa certificado. Válido para efeitos de dedução em IRS e reembolso junto de seguradoras de saúde e subsistemas (ADSE, Médis, Multicare, AdvanceCare).
       </div>
 
       <div class="totals-box">
         <div class="totals-row">
-          <span>Incidência:</span>
-          <span style="font-family: monospace;">${incidenceAmount.toFixed(2)} €</span>
+          <span>Incidência (Base Tributável):</span>
+          <span style="font-family: monospace;">${incidence.toFixed(2)} €</span>
         </div>
         <div class="totals-row">
           <span>IVA (${vatRate}%):</span>
