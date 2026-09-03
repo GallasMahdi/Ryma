@@ -302,188 +302,223 @@ export function AdminDateJumpPicker({
         </button>
       )}
 
-      {/* Floating Popover Modal */}
+      {/* Floating Popover Modal on Desktop / Bottom Sheet Modal on Mobile */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.96 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute left-0 sm:left-auto sm:right-0 mt-2 z-50 w-[330px] sm:w-[360px] bg-white rounded-2xl border border-[#E2E8F0] shadow-2xl p-4 font-sans space-y-3.5"
-          >
-            {/* Header with Month/Year Navigation */}
-            <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-3">
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                className="w-8 h-8 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] flex items-center justify-center transition-colors"
-                title={txt('Mois précédent', 'Previous month', 'Mês anterior')}
-              >
-                <IconChevronLeft size={16} />
-              </button>
+          <>
+            {/* Mobile Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[99998] sm:hidden"
+              aria-hidden="true"
+            />
 
-              <div className="flex items-center gap-1.5">
-                <select
-                  value={viewMonth}
-                  onChange={(e) => setViewMonth(Number(e.target.value))}
-                  className="bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-2 py-1 text-xs font-bold text-[#0F172A] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
-                >
-                  {MONTH_NAMES[lang].map((name, idx) => (
-                    <option key={idx} value={idx}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={viewYear}
-                  onChange={(e) => setViewYear(Number(e.target.value))}
-                  className="bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-2 py-1 text-xs font-bold text-[#0F172A] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
-                >
-                  {Array.from({ length: 7 }, (_, i) => 2024 + i).map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                className="w-8 h-8 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] flex items-center justify-center transition-colors"
-                title={txt('Mois suivant', 'Next month', 'Mês seguinte')}
-              >
-                <IconChevronRight size={16} />
-              </button>
-            </div>
-
-            {/* Quick Presets Strip */}
-            <div className="grid grid-cols-4 gap-1.5 text-[11px] font-medium">
-              <button
-                type="button"
-                onClick={handleJumpToday}
-                className={`py-1 px-1.5 rounded-lg border text-center transition-colors ${
-                  selectedDate === todayStr
-                    ? 'bg-[#0F172A] text-white border-[#0F172A] font-bold'
-                    : 'bg-[#F8FAFC] text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9]'
-                }`}
-              >
-                {txt('Aujourd’hui', 'Today', 'Hoje')}
-              </button>
-              <button
-                type="button"
-                onClick={handleJumpTomorrow}
-                className={`py-1 px-1.5 rounded-lg border text-center transition-colors ${
-                  selectedDate === tomorrowStr
-                    ? 'bg-[#0F172A] text-white border-[#0F172A] font-bold'
-                    : 'bg-[#F8FAFC] text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9]'
-                }`}
-              >
-                {txt('Demain', 'Tomorrow', 'Amanhã')}
-              </button>
-              <button
-                type="button"
-                onClick={handleJumpNextWeek}
-                className="py-1 px-1.5 rounded-lg bg-[#F8FAFC] text-[#334155] border border-[#E2E8F0] hover:bg-[#F1F5F9] text-center transition-colors truncate"
-              >
-                +7 {txt('Jours', 'Days', 'Dias')}
-              </button>
-              <button
-                type="button"
-                onClick={handleJumpNextMonth}
-                className="py-1 px-1.5 rounded-lg bg-[#F8FAFC] text-[#334155] border border-[#E2E8F0] hover:bg-[#F1F5F9] text-center transition-colors truncate"
-              >
-                +1 {txt('Mois', 'Month', 'Mês')}
-              </button>
-            </div>
-
-            {/* Weekday Column Headers */}
-            <div className="grid grid-cols-7 text-center">
-              {WEEKDAY_NAMES[lang].map((w, idx) => (
-                <div
-                  key={idx}
-                  className={`text-[10px] font-bold uppercase tracking-wider py-1 ${
-                    idx === 6 ? 'text-[#94A3B8]' : 'text-[#64748B]'
-                  }`}
-                >
-                  {w}
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.97 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="
+                fixed inset-x-0 bottom-0 z-[99999] w-full max-h-[92vh] overflow-y-auto bg-white rounded-t-3xl border-t border-[#E2E8F0] shadow-2xl p-4 pb-7 space-y-3 font-sans
+                sm:static sm:absolute sm:inset-auto sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:z-50 sm:w-[360px] sm:max-h-none sm:rounded-2xl sm:border sm:p-4 sm:pb-4 sm:space-y-3.5 sm:shadow-2xl
+              "
+            >
+              {/* Mobile Sheet Handle & Header */}
+              <div className="flex items-center justify-between pb-2 border-b border-[#F1F5F9] sm:hidden relative">
+                <div className="w-10 h-1 rounded-full bg-[#CBD5E1] mx-auto absolute left-1/2 -translate-x-1/2 -top-1" />
+                <div className="flex items-center gap-1.5 pt-1.5">
+                  <IconCalendar size={16} className="text-[#C49A3C]" />
+                  <span className="font-bold text-sm text-[#0F172A]">
+                    {txt('Accéder à une Date', 'Jump to Date', 'Ir para Data')}
+                  </span>
                 </div>
-              ))}
-            </div>
-
-            {/* Calendar Days Matrix (7x6) */}
-            <div className="grid grid-cols-7 gap-1">
-              {calendarDays.map((day, idx) => {
-                const isSunday = (idx % 7) === 6;
-                return (
-                  <button
-                    key={day.dateStr + idx}
-                    type="button"
-                    onClick={() => {
-                      onSelectDate(day.dateStr);
-                      setIsOpen(false);
-                    }}
-                    className={`h-9 rounded-xl text-xs font-semibold flex flex-col items-center justify-center relative transition-all ${
-                      day.isSelected
-                        ? 'bg-[#0F172A] text-white shadow-md ring-2 ring-[#C49A3C]/40 font-bold z-10'
-                        : day.isToday
-                        ? 'bg-[#F1F5F9] text-[#0F172A] border border-[#CBD5E1] font-bold'
-                        : !day.isCurrentMonth
-                        ? 'text-[#CBD5E1] hover:bg-[#F8FAFC]'
-                        : isSunday
-                        ? 'text-[#94A3B8] bg-[#F8FAFC]/50 hover:bg-[#F1F5F9]'
-                        : 'text-[#1E293B] hover:bg-[#F1F5F9]'
-                    }`}
-                  >
-                    <span>{day.dayNumber}</span>
-                    {day.appointmentCount > 0 && (
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${
-                          day.isSelected ? 'bg-[#C49A3C]' : 'bg-[#2563EB]'
-                        }`}
-                        title={`${day.appointmentCount} ${txt('rendez-vous', 'appointments', 'consultas')}`}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Bottom Actions: Native Input Jump & Show All */}
-            <div className="pt-2 border-t border-[#F1F5F9] flex items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-[#64748B] font-medium">
-                  {txt('Saisie:', 'Type:', 'Digitar:')}
-                </span>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      onSelectDate(e.target.value);
-                      setIsOpen(false);
-                    }
-                  }}
-                  className="px-2 py-0.5 rounded-md bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
-                />
-              </div>
-
-              {showAllOption && (
                 <button
                   type="button"
-                  onClick={() => {
-                    if (onClearDateFilter) onClearDateFilter();
-                    setIsOpen(false);
-                  }}
-                  className="px-2.5 py-1 rounded-lg bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#334155] font-semibold text-[11px] transition-colors"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
+                  aria-label="Fermer"
                 >
-                  {txt('Voir tout', 'Show all', 'Ver tudo')}
+                  <IconX size={18} />
                 </button>
-              )}
-            </div>
-          </motion.div>
+              </div>
+
+              {/* Header with Month/Year Navigation */}
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-2.5 sm:pb-3">
+                <button
+                  type="button"
+                  onClick={handlePrevMonth}
+                  className="w-8 h-8 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] flex items-center justify-center transition-colors touch-target"
+                  title={txt('Mois précédent', 'Previous month', 'Mês anterior')}
+                >
+                  <IconChevronLeft size={16} />
+                </button>
+
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={viewMonth}
+                    onChange={(e) => setViewMonth(Number(e.target.value))}
+                    className="bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-2 py-1 text-xs font-bold text-[#0F172A] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
+                  >
+                    {MONTH_NAMES[lang].map((name, idx) => (
+                      <option key={idx} value={idx}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={viewYear}
+                    onChange={(e) => setViewYear(Number(e.target.value))}
+                    className="bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-2 py-1 text-xs font-bold text-[#0F172A] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
+                  >
+                    {Array.from({ length: 7 }, (_, i) => 2024 + i).map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  className="w-8 h-8 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] flex items-center justify-center transition-colors touch-target"
+                  title={txt('Mois suivant', 'Next month', 'Mês seguinte')}
+                >
+                  <IconChevronRight size={16} />
+                </button>
+              </div>
+
+              {/* Quick Presets Strip */}
+              <div className="grid grid-cols-4 gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-medium">
+                <button
+                  type="button"
+                  onClick={handleJumpToday}
+                  className={`py-1.5 sm:py-1 px-1 rounded-lg border text-center transition-colors truncate ${
+                    selectedDate === todayStr
+                      ? 'bg-[#0F172A] text-white border-[#0F172A] font-bold'
+                      : 'bg-[#F8FAFC] text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                  }`}
+                >
+                  {txt('Aujourd’hui', 'Today', 'Hoje')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleJumpTomorrow}
+                  className={`py-1.5 sm:py-1 px-1 rounded-lg border text-center transition-colors truncate ${
+                    selectedDate === tomorrowStr
+                      ? 'bg-[#0F172A] text-white border-[#0F172A] font-bold'
+                      : 'bg-[#F8FAFC] text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                  }`}
+                >
+                  {txt('Demain', 'Tomorrow', 'Amanhã')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleJumpNextWeek}
+                  className="py-1.5 sm:py-1 px-1 rounded-lg bg-[#F8FAFC] text-[#334155] border border-[#E2E8F0] hover:bg-[#F1F5F9] text-center transition-colors truncate"
+                >
+                  +7 {txt('Jours', 'Days', 'Dias')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleJumpNextMonth}
+                  className="py-1.5 sm:py-1 px-1 rounded-lg bg-[#F8FAFC] text-[#334155] border border-[#E2E8F0] hover:bg-[#F1F5F9] text-center transition-colors truncate"
+                >
+                  +1 {txt('Mois', 'Month', 'Mês')}
+                </button>
+              </div>
+
+              {/* Weekday Column Headers */}
+              <div className="grid grid-cols-7 text-center">
+                {WEEKDAY_NAMES[lang].map((w, idx) => (
+                  <div
+                    key={idx}
+                    className={`text-[10px] font-bold uppercase tracking-wider py-1 ${
+                      idx === 6 ? 'text-[#94A3B8]' : 'text-[#64748B]'
+                    }`}
+                  >
+                    {w}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Days Matrix (7x6) */}
+              <div className="grid grid-cols-7 gap-1">
+                {calendarDays.map((day, idx) => {
+                  const isSunday = (idx % 7) === 6;
+                  return (
+                    <button
+                      key={day.dateStr + idx}
+                      type="button"
+                      onClick={() => {
+                        onSelectDate(day.dateStr);
+                        setIsOpen(false);
+                      }}
+                      className={`h-9 sm:h-9 rounded-xl text-xs font-semibold flex flex-col items-center justify-center relative transition-all touch-manipulation ${
+                        day.isSelected
+                          ? 'bg-[#0F172A] text-white shadow-md ring-2 ring-[#C49A3C]/40 font-bold z-10'
+                          : day.isToday
+                          ? 'bg-[#F1F5F9] text-[#0F172A] border border-[#CBD5E1] font-bold'
+                          : !day.isCurrentMonth
+                          ? 'text-[#CBD5E1] hover:bg-[#F8FAFC]'
+                          : isSunday
+                          ? 'text-[#94A3B8] bg-[#F8FAFC]/50 hover:bg-[#F1F5F9]'
+                          : 'text-[#1E293B] hover:bg-[#F1F5F9]'
+                      }`}
+                    >
+                      <span>{day.dayNumber}</span>
+                      {day.appointmentCount > 0 && (
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${
+                            day.isSelected ? 'bg-[#C49A3C]' : 'bg-[#2563EB]'
+                          }`}
+                          title={`${day.appointmentCount} ${txt('rendez-vous', 'appointments', 'consultas')}`}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Actions: Native Input Jump & Show All */}
+              <div className="pt-2 border-t border-[#F1F5F9] flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-[#64748B] font-medium">
+                    {txt('Saisie:', 'Type:', 'Digitar:')}
+                  </span>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        onSelectDate(e.target.value);
+                        setIsOpen(false);
+                      }
+                    }}
+                    className="px-2 py-1 rounded-md bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] font-medium focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
+                  />
+                </div>
+
+                {showAllOption && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onClearDateFilter) onClearDateFilter();
+                      setIsOpen(false);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#334155] font-semibold text-[11px] transition-colors touch-target"
+                  >
+                    {txt('Voir tout', 'Show all', 'Ver tudo')}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
