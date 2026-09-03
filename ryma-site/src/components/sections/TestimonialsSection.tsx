@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/i18n';
 import { TESTIMONIALS, Testimonial } from '@/data/testimonials';
@@ -23,9 +23,18 @@ function TestimonialCard({
   testimonial,
   lang,
 }: {
-  testimonial: Testimonial;
+  testimonial: any;
   lang: string;
 }) {
+  const authorName = testimonial.patientName || testimonial.name || 'Utente';
+  const commentText =
+    typeof testimonial.comment === 'string'
+      ? testimonial.comment
+      : getLocalizedText(testimonial.comment, lang);
+  const roleText = testimonial.role
+    ? getLocalizedText(testimonial.role, lang)
+    : (lang === 'pt' ? 'Paciente Verificado' : lang === 'en' ? 'Verified Patient' : 'Patient Vérifié');
+
   return (
     <div className="bg-white/95 backdrop-blur-xl border border-[#C49A3C]/25 rounded-2xl p-5 sm:p-6 h-full flex flex-col justify-between shadow-[0_6px_25px_rgba(196,154,60,0.08)] hover:border-[#C49A3C]/60 hover:shadow-[0_12px_36px_rgba(196,154,60,0.18)] hover:-translate-y-1 transition-all duration-300 select-none">
       <div>
@@ -33,7 +42,7 @@ function TestimonialCard({
           {/* Rating stars */}
           <div className="flex items-center gap-1">
             <div className="flex gap-0.5">
-              {Array.from({ length: testimonial.rating }).map((_, si) => (
+              {Array.from({ length: testimonial.rating || 5 }).map((_, si) => (
                 <IconStar
                   key={si}
                   size={14}
@@ -43,7 +52,7 @@ function TestimonialCard({
               ))}
             </div>
             <span className="font-mono text-[11px] font-bold text-[#9A7428] ms-1.5">
-              5.0
+              {testimonial.rating || 5}.0
             </span>
           </div>
           <IconQuote size={24} className="text-[#C49A3C]/25 shrink-0" />
@@ -51,7 +60,7 @@ function TestimonialCard({
 
         {/* Comment */}
         <p className="text-[#332D28] leading-relaxed text-xs sm:text-sm mb-4 font-normal italic line-clamp-4">
-          &ldquo;{getLocalizedText(testimonial.comment, lang)}&rdquo;
+          &ldquo;{commentText}&rdquo;
         </p>
       </div>
 
@@ -59,14 +68,14 @@ function TestimonialCard({
       <div className="flex items-center justify-between pt-3.5 border-t border-[#E8E2D8]/80">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#F5E9C8] via-[#FAF3E0] to-[#E8C97A] flex items-center justify-center text-xs sm:text-sm font-bold text-[#8A6A24] border border-[#C49A3C]/30 shadow-xs shrink-0">
-            {testimonial.name.charAt(0)}
+            {authorName.charAt(0)}
           </div>
           <div className="min-w-0">
             <div className="font-semibold text-[#1A1412] text-xs sm:text-sm leading-tight truncate">
-              {testimonial.name}
+              {authorName}
             </div>
             <div className="text-[10px] sm:text-[11px] text-[#8A8078] leading-tight truncate">
-              {getLocalizedText(testimonial.role, lang)}
+              {roleText}
             </div>
           </div>
         </div>
@@ -76,7 +85,7 @@ function TestimonialCard({
             <IconShieldCheck size={13} className="text-[#6F8F72]" />
           )}
           <span className="font-mono text-[9px] sm:text-[10px] font-medium text-[#9A7428] bg-[#FAF5EA] border border-[#C49A3C]/20 px-2 py-0.5 rounded-full">
-            {testimonial.location}
+            {testimonial.location || 'Lisboa'}
           </span>
         </div>
       </div>
@@ -141,12 +150,24 @@ function TestimonialRow({
 export function TestimonialsSection() {
   const { lang, t } = useLanguage();
   const [isPaused, setIsPaused] = useState(false);
+  const [reviews, setReviews] = useState<any[]>(TESTIMONIALS);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    fetch('/api/reviews?limit=16')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.reviews && data.reviews.length > 0) {
+          setReviews(data.reviews);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Divide testimonials into 2 rows for desktop dynamic flow
-  const half = Math.ceil(TESTIMONIALS.length / 2);
-  const row1 = TESTIMONIALS.slice(0, half);
-  const row2 = TESTIMONIALS.slice(half);
+  const half = Math.ceil(reviews.length / 2);
+  const row1 = reviews.slice(0, half);
+  const row2 = reviews.slice(half);
 
   const scrollByAmount = (offset: number) => {
     playSoftClick();

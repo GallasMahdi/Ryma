@@ -10,6 +10,7 @@ import {
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
   IconLifebuoy,
+  IconMessageHeart,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { AdminTab } from './AdminMobileNav';
@@ -21,6 +22,7 @@ interface AdminSidebarProps {
   totalAppointments: number;
   totalNotes: number;
   totalInvoices?: number;
+  totalReviews?: number;
   isLoading?: boolean;
   isAnalyticsUnlocked?: boolean;
   isCollapsed?: boolean;
@@ -35,6 +37,7 @@ export function AdminSidebar({
   totalAppointments,
   totalNotes,
   totalInvoices,
+  totalReviews,
   isLoading = false,
   isAnalyticsUnlocked = false,
   isCollapsed = false,
@@ -72,6 +75,13 @@ export function AdminSidebar({
       sublabel: txt('NIF & Reçus Fiscaux', 'NIF & Tax Receipts', 'Recibos Fiscais & NIF'),
       icon: IconReceiptTax,
       badge: totalInvoices && totalInvoices > 0 ? totalInvoices : null,
+    },
+    {
+      id: 'reviews' as const,
+      label: txt('Avis & Témoignages', 'Reviews & Feedback', 'Avaliações & Opiniões'),
+      sublabel: txt('Modération & Site', 'Site Testimonials', 'Testemunhos no Site'),
+      icon: IconMessageHeart,
+      badge: totalReviews && totalReviews > 0 ? totalReviews : null,
     },
     {
       id: 'analytics' as const,

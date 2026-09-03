@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES } from '@/data/services';
 import { IconAlertTriangle, IconLock } from '@tabler/icons-react';
@@ -34,6 +34,7 @@ import { SlotsTab } from '@/components/admin/SlotsTab';
 import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
 import { PatientNotesTab } from '@/components/admin/PatientNotesTab';
 import { InvoicesTab } from '@/components/admin/InvoicesTab';
+import { ReviewsTab } from '@/components/admin/ReviewsTab';
 import { AddAppointmentModal } from '@/components/admin/AddAppointmentModal';
 import { MultipleSessionsModal } from '@/components/admin/MultipleSessionsModal';
 import { CreateInvoiceModal } from '@/components/admin/CreateInvoiceModal';
@@ -56,10 +57,54 @@ async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
   return res.json() as T;
 }
 
-export default function AdminPage() {
+const VALID_ADMIN_TABS: AdminTab[] = ['appointments', 'slots', 'patients', 'invoices', 'reviews', 'analytics'];
+
+function AdminDashboardContent() {
   const { lang, toggleLang } = useLanguage();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<AdminTab>('appointments');
+  const searchParams = useSearchParams();
+
+  // Read initial tab directly from URL query synchronously — no flash!
+  const tabFromUrl = searchParams.get('tab') as AdminTab | null;
+  const [activeTab, setActiveTabState] = useState<AdminTab>(() => {
+    if (tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl)) {
+      return tabFromUrl;
+    }
+    return 'appointments';
+  });
+
+  // Keep state in sync if URL query changes
+  useEffect(() => {
+    if (tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTabState(tabFromUrl);
+    }
+  }, [tabFromUrl, activeTab]);
+
+  // If no tab in URL on initial load, check localStorage once
+  useEffect(() => {
+    if (!tabFromUrl) {
+      try {
+        const saved = localStorage.getItem('ryma_admin_active_tab') as AdminTab | null;
+        if (saved && VALID_ADMIN_TABS.includes(saved) && saved !== 'appointments') {
+          setActiveTabState(saved);
+          const url = new URL(window.location.href);
+          url.searchParams.set('tab', saved);
+          window.history.replaceState(null, '', url.toString());
+        }
+      } catch {}
+    }
+  }, [tabFromUrl]);
+
+  // Update active tab and persist to URL and localStorage
+  const setActiveTab = useCallback((tab: AdminTab) => {
+    setActiveTabState(tab);
+    try {
+      localStorage.setItem('ryma_admin_active_tab', tab);
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState(null, '', url.toString());
+    } catch {}
+  }, []);
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -1206,6 +1251,13 @@ export default function AdminPage() {
               />
             )}
 
+            {activeTab === 'reviews' && (
+              <ReviewsTab
+                lang={lang}
+                onAddToast={(t) => addToast({ title: 'Avaliações', message: t.message, type: t.type })}
+              />
+            )}
+
             {activeTab === 'analytics' && (
               isAnalyticsUnlocked && serverAnalytics ? (
                 <AnalyticsTab
@@ -1381,5 +1433,22 @@ export default function AdminPage() {
         lang={lang}
       />
     </div>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-sans">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-[#0F172A] border-t-transparent animate-spin" />
+            <span className="text-xs text-[#64748B] font-medium">A carregar painel...</span>
+          </div>
+        </div>
+      }
+    >
+      <AdminDashboardContent />
+    </Suspense>
   );
 }

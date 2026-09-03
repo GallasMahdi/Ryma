@@ -4,7 +4,8 @@
 import { createClient, type Client as LibSqlClient } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
-import type { PatientRecord, PatientSession, Invoice, CreateInvoiceInput, InvoiceStats, PatientPrescription, PrescriptionItem } from '@/types/admin';
+import type { PatientRecord, PatientSession, Invoice, CreateInvoiceInput, InvoiceStats, PatientPrescription, PrescriptionItem, Review, ReviewStatus, CreateReviewInput } from '@/types/admin';
+import { TESTIMONIALS } from '@/data/testimonials';
 import { SITE } from '@/lib/site';
 import { phonesMatch } from '@/lib/phone';
 import { broadcastAppointmentCreated, broadcastMultipleAppointmentsCreated } from '@/lib/events';
@@ -160,6 +161,22 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
       `CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(paymentStatus)`,
       `CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patientPhone)`,
       `CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date)`,
+      `CREATE TABLE IF NOT EXISTS reviews (
+        id           TEXT PRIMARY KEY,
+        patientName  TEXT NOT NULL,
+        patientEmail TEXT,
+        rating       INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        serviceSlug  TEXT NOT NULL,
+        comment      TEXT NOT NULL,
+        location     TEXT NOT NULL DEFAULT 'Lisboa',
+        status       TEXT NOT NULL DEFAULT 'APPROVED' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+        verified     INTEGER NOT NULL DEFAULT 1,
+        isFeatured   INTEGER NOT NULL DEFAULT 0,
+        createdAt    TEXT NOT NULL,
+        updatedAt    TEXT NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status, createdAt DESC)`,
+      `CREATE INDEX IF NOT EXISTS idx_reviews_service ON reviews(serviceSlug)`,
     ]);
 
     // Migration for legacy appointments table with table-level UNIQUE constraint on Turso
@@ -566,6 +583,23 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
     CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON prescriptions(patientPhone);
     CREATE INDEX IF NOT EXISTS idx_prescriptions_date ON prescriptions(date);
     CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON security_audit_logs(createdAt DESC);
+
+    CREATE TABLE IF NOT EXISTS reviews (
+      id           TEXT PRIMARY KEY,
+      patientName  TEXT NOT NULL,
+      patientEmail TEXT,
+      rating       INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      serviceSlug  TEXT NOT NULL,
+      comment      TEXT NOT NULL,
+      location     TEXT NOT NULL DEFAULT 'Lisboa',
+      status       TEXT NOT NULL DEFAULT 'APPROVED' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+      verified     INTEGER NOT NULL DEFAULT 1,
+      isFeatured   INTEGER NOT NULL DEFAULT 0,
+      createdAt    TEXT NOT NULL,
+      updatedAt    TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status, createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_reviews_service ON reviews(serviceSlug);
   `);
 
   // Migration for legacy appointments table with table-level UNIQUE constraint
@@ -2200,5 +2234,208 @@ export async function dbExportFullDatabaseBackup(): Promise<{
 export async function dbDeletePrescription(id: string): Promise<void> {
   await executeQuery('DELETE FROM prescriptions WHERE id = ?', [id]);
 }
+
+// ─── Patient Reviews Engine ───────────────────────────────────────────────────
+
+let _reviewsSeeded = false;
+
+export async function dbEnsureReviewsSeeded(): Promise<void> {
+  if (_reviewsSeeded) return;
+  try {
+    const existing = await executeQuery<{ cnt: number }>('SELECT COUNT(*) as cnt FROM reviews');
+    const count = Number(existing[0]?.cnt ?? 0);
+    if (count === 0) {
+      // Seed default reviews from TESTIMONIALS
+      for (const t of TESTIMONIALS) {
+        const commentText = t.comment.pt || t.comment.fr || t.comment.en || '';
+        await executeQuery(
+          `INSERT OR IGNORE INTO reviews (id, patientName, patientEmail, rating, serviceSlug, comment, location, status, verified, isFeatured, createdAt, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'APPROVED', ?, ?, ?, ?)`,
+          [
+            t.id,
+            t.name,
+            null,
+            t.rating,
+            t.serviceSlug,
+            commentText,
+            t.location || 'Lisboa',
+            t.verified ? 1 : 0,
+            1,
+            t.date ? `${t.date}T10:00:00.000Z` : new Date().toISOString(),
+            new Date().toISOString(),
+          ]
+        );
+      }
+    }
+    _reviewsSeeded = true;
+  } catch (err) {
+    console.warn('[Reviews Seed Warning]:', err);
+  }
+}
+
+export async function dbGetApprovedReviews(options?: {
+  serviceSlug?: string;
+  limit?: number;
+}): Promise<Review[]> {
+  await dbEnsureReviewsSeeded();
+  let sql = `SELECT * FROM reviews WHERE status = 'APPROVED'`;
+  const args: any[] = [];
+
+  if (options?.serviceSlug && options.serviceSlug !== 'all') {
+    sql += ` AND serviceSlug = ?`;
+    args.push(options.serviceSlug);
+  }
+
+  sql += ` ORDER BY isFeatured DESC, createdAt DESC`;
+
+  if (options?.limit && options.limit > 0) {
+    sql += ` LIMIT ?`;
+    args.push(options.limit);
+  }
+
+  const rows = await executeQuery<any>(sql, args);
+  return rows.map((r) => ({
+    id: String(r.id),
+    patientName: String(r.patientName),
+    patientEmail: r.patientEmail ? String(r.patientEmail) : null,
+    rating: Number(r.rating),
+    serviceSlug: String(r.serviceSlug),
+    comment: String(r.comment),
+    location: String(r.location || 'Lisboa'),
+    status: r.status as ReviewStatus,
+    verified: Boolean(r.verified),
+    isFeatured: Boolean(r.isFeatured),
+    createdAt: String(r.createdAt),
+    updatedAt: String(r.updatedAt),
+  }));
+}
+
+export async function dbGetAllReviewsAdmin(options?: {
+  status?: ReviewStatus | 'ALL';
+  search?: string;
+}): Promise<Review[]> {
+  await dbEnsureReviewsSeeded();
+  let sql = `SELECT * FROM reviews`;
+  const args: any[] = [];
+  const where: string[] = [];
+
+  if (options?.status && options.status !== 'ALL') {
+    where.push(`status = ?`);
+    args.push(options.status);
+  }
+
+  if (options?.search && options.search.trim()) {
+    where.push(`(patientName LIKE ? OR comment LIKE ? OR location LIKE ?)`);
+    const term = `%${options.search.trim()}%`;
+    args.push(term, term, term);
+  }
+
+  if (where.length > 0) {
+    sql += ` WHERE ` + where.join(' AND ');
+  }
+
+  sql += ` ORDER BY createdAt DESC`;
+
+  const rows = await executeQuery<any>(sql, args);
+  return rows.map((r) => ({
+    id: String(r.id),
+    patientName: String(r.patientName),
+    patientEmail: r.patientEmail ? String(r.patientEmail) : null,
+    rating: Number(r.rating),
+    serviceSlug: String(r.serviceSlug),
+    comment: String(r.comment),
+    location: String(r.location || 'Lisboa'),
+    status: r.status as ReviewStatus,
+    verified: Boolean(r.verified),
+    isFeatured: Boolean(r.isFeatured),
+    createdAt: String(r.createdAt),
+    updatedAt: String(r.updatedAt),
+  }));
+}
+
+export async function dbCreateReview(input: CreateReviewInput): Promise<Review> {
+  await dbEnsureReviewsSeeded();
+  const id = 'rev_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+  const now = new Date().toISOString();
+  // As requested: user accepted first (status = 'APPROVED')
+  const status: ReviewStatus = input.status || 'APPROVED';
+  const verified = input.verified !== undefined ? (input.verified ? 1 : 0) : 1;
+  const isFeatured = input.isFeatured ? 1 : 0;
+  const location = input.location?.trim() || 'Lisboa';
+
+  await executeQuery(
+    `INSERT INTO reviews (id, patientName, patientEmail, rating, serviceSlug, comment, location, status, verified, isFeatured, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.patientName.trim(),
+      input.patientEmail?.trim() || null,
+      Math.min(5, Math.max(1, Math.round(input.rating))),
+      input.serviceSlug,
+      input.comment.trim(),
+      location,
+      status,
+      verified,
+      isFeatured,
+      now,
+      now,
+    ]
+  );
+
+  return {
+    id,
+    patientName: input.patientName.trim(),
+    patientEmail: input.patientEmail?.trim() || null,
+    rating: Math.min(5, Math.max(1, Math.round(input.rating))),
+    serviceSlug: input.serviceSlug,
+    comment: input.comment.trim(),
+    location,
+    status,
+    verified: Boolean(verified),
+    isFeatured: Boolean(isFeatured),
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+export async function dbUpdateReviewStatus(
+  id: string,
+  updates: { status?: ReviewStatus; verified?: boolean; isFeatured?: boolean }
+): Promise<Review | null> {
+  const existing = await executeQuery<any>('SELECT * FROM reviews WHERE id = ?', [id]);
+  if (!existing || existing.length === 0) return null;
+
+  const current = existing[0];
+  const newStatus = updates.status !== undefined ? updates.status : current.status;
+  const newVerified = updates.verified !== undefined ? (updates.verified ? 1 : 0) : current.verified;
+  const newFeatured = updates.isFeatured !== undefined ? (updates.isFeatured ? 1 : 0) : current.isFeatured;
+  const now = new Date().toISOString();
+
+  await executeQuery(
+    `UPDATE reviews SET status = ?, verified = ?, isFeatured = ?, updatedAt = ? WHERE id = ?`,
+    [newStatus, newVerified, newFeatured, now, id]
+  );
+
+  return {
+    id,
+    patientName: String(current.patientName),
+    patientEmail: current.patientEmail ? String(current.patientEmail) : null,
+    rating: Number(current.rating),
+    serviceSlug: String(current.serviceSlug),
+    comment: String(current.comment),
+    location: String(current.location || 'Lisboa'),
+    status: newStatus as ReviewStatus,
+    verified: Boolean(newVerified),
+    isFeatured: Boolean(newFeatured),
+    createdAt: String(current.createdAt),
+    updatedAt: now,
+  };
+}
+
+export async function dbDeleteReview(id: string): Promise<boolean> {
+  await executeQuery('DELETE FROM reviews WHERE id = ?', [id]);
+  return true;
+}
+
 
 

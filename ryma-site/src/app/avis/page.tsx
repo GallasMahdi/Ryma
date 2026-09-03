@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,6 +22,7 @@ import {
   IconSend,
   IconBrandGoogle,
   IconFilter,
+  IconLoader2,
 } from '@tabler/icons-react';
 
 export default function AvisPage() {
@@ -38,9 +39,35 @@ export default function AvisPage() {
   const [formService, setFormService] = useState('reeducation-posturale');
   const [formComment, setFormComment] = useState('');
   const [formLocation, setFormLocation] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Live reviews state with fallback to static TESTIMONIALS
+  const [reviewsList, setReviewsList] = useState<any[]>(TESTIMONIALS);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  const fetchLiveReviews = useCallback(async () => {
+    try {
+      setLoadingReviews(true);
+      const res = await fetch('/api/reviews');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.reviews && data.reviews.length > 0) {
+          setReviewsList(data.reviews);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not fetch reviews:', err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLiveReviews();
+  }, [fetchLiveReviews]);
 
   // Filtering reviews
-  const filteredReviews = TESTIMONIALS.filter((rev) => {
+  const filteredReviews = reviewsList.filter((rev) => {
     if (activePole === 'all') return true;
     if (activePole === 'kine') {
       return ['reeducation-posturale', 'massage-therapeutique'].includes(rev.serviceSlug);
@@ -61,18 +88,44 @@ export default function AvisPage() {
     setUserVoted((prev) => ({ ...prev, [id]: true }));
   };
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim() || !formComment.trim()) return;
-    playNotificationChime();
-    setModalSuccess(true);
-    setTimeout(() => {
-      setIsModalOpen(false);
-      setModalSuccess(false);
-      setFormName('');
-      setFormComment('');
-      setFormLocation('');
-    }, 2200);
+
+    setSubmittingReview(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientName: formName.trim(),
+          rating: formRating,
+          serviceSlug: formService,
+          comment: formComment.trim(),
+          location: formLocation.trim() || 'Lisboa',
+        }),
+      });
+
+      if (res.ok) {
+        playNotificationChime();
+        setModalSuccess(true);
+        await fetchLiveReviews();
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setModalSuccess(false);
+          setFormName('');
+          setFormComment('');
+          setFormLocation('');
+        }, 2200);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Erro ao submeter avaliação.');
+      }
+    } catch {
+      alert('Erro de rede ao enviar avaliação.');
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   return (
@@ -238,7 +291,7 @@ export default function AvisPage() {
                     : 'text-[#6B6058] hover:text-[#1A1412]'
                 }`}
               >
-                {lang === 'pt' ? 'Todas (8)' : lang === 'en' ? 'All (8)' : 'Tous (8)'}
+                {lang === 'pt' ? `Todas (${reviewsList.length})` : lang === 'en' ? `All (${reviewsList.length})` : `Tous (${reviewsList.length})`}
               </button>
               <button
                 onClick={() => { setActivePole('kine'); playSoftClick(); }}
@@ -288,6 +341,9 @@ export default function AvisPage() {
               const service = SERVICES.find((s) => s.slug === review.serviceSlug);
               const helpful = (helpfulCounts[review.id] || 0) + 4;
               const hasVoted = userVoted[review.id];
+              const authorName = review.patientName || review.name || 'Utente';
+              const dateDisplay = review.date || (review.createdAt ? new Date(review.createdAt).toLocaleDateString('pt-PT') : '');
+              const commentText = typeof review.comment === 'string' ? review.comment : (review.comment[lang] || review.comment.pt || review.comment.fr || '');
 
               return (
                 <ScrollReveal key={review.id} delay={i * 0.05}>
@@ -301,7 +357,7 @@ export default function AvisPage() {
                               <IconStar key={si} size={15} fill="#C49A3C" />
                             ))}
                           </div>
-                          <span className="font-mono text-xs font-bold text-[#9A7428]">5.0</span>
+                          <span className="font-mono text-xs font-bold text-[#9A7428]">{review.rating}.0</span>
                         </div>
 
                         {service && (
@@ -313,7 +369,7 @@ export default function AvisPage() {
 
                       {/* Comment Body */}
                       <p className="text-xs sm:text-sm text-[#4A433D] leading-relaxed mb-6 font-normal">
-                        &ldquo;{review.comment[lang] || review.comment.pt || review.comment.fr}&rdquo;
+                        &ldquo;{commentText}&rdquo;
                       </p>
                     </div>
 
@@ -321,11 +377,11 @@ export default function AvisPage() {
                     <div className="flex items-center justify-between pt-4 border-t border-[#E8E2D8]">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FAF3E0] via-[#F5E9C8] to-[#E8C97A] border border-[#C49A3C]/40 flex items-center justify-center text-[#8A6A24] font-bold text-sm shadow-xs">
-                          {review.name.charAt(0)}
+                          {authorName.charAt(0)}
                         </div>
                         <div>
                           <div className="font-serif text-sm font-bold text-[#1A1412] flex items-center gap-1.5">
-                            <span>{review.name}</span>
+                            <span>{authorName}</span>
                             {review.verified && (
                               <span title="Paciente Verificado">
                                 <IconShieldCheck size={15} className="text-[#6F8F72]" />
@@ -333,7 +389,7 @@ export default function AvisPage() {
                             )}
                           </div>
                           <div className="text-[11px] text-[#8A8078] font-mono">
-                            {review.location} • {review.date}
+                            {review.location} {dateDisplay ? `• ${dateDisplay}` : ''}
                           </div>
                         </div>
                       </div>
@@ -481,9 +537,10 @@ export default function AvisPage() {
 
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-xl bg-[#C49A3C] hover:bg-[#E8C97A] text-[#1A1412] font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                    disabled={submittingReview}
+                    className="w-full py-3 rounded-xl bg-[#C49A3C] hover:bg-[#E8C97A] text-[#1A1412] font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-60"
                   >
-                    <IconSend size={15} />
+                    {submittingReview ? <IconLoader2 size={15} className="animate-spin" /> : <IconSend size={15} />}
                     <span>{lang === 'pt' ? 'Submeter Avaliação' : lang === 'en' ? 'Submit Review' : 'Envoyer mon avis'}</span>
                   </button>
                 </form>
@@ -497,10 +554,10 @@ export default function AvisPage() {
                   </h3>
                   <p className="text-xs text-[#6B6058]">
                     {lang === 'pt'
-                      ? 'O seu testemunho foi registado e será publicado após verificação clínica.'
+                      ? 'O seu testemunho foi registado e publicado com sucesso no website da clínica.'
                       : lang === 'en'
-                      ? 'Your feedback has been saved and will appear after clinical verification.'
-                      : 'Votre avis a été enregistré avec succès.'}
+                      ? 'Your feedback has been saved and is now published on the clinic website.'
+                      : 'Votre avis a été enregistré et publié avec succès.'}
                   </p>
                 </div>
               )}

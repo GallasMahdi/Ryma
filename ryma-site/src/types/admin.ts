@@ -230,3 +230,33 @@ export const STATUS_CONFIG: Record<AppointmentStatus, { fr: string; pt: string; 
   COMPLETED: { fr: 'Terminé',      pt: 'Concluído',     en: 'Completed',   color: 'text-[#1E40AF]', bg: 'bg-[#DBEAFE]', border: 'border-[#BFDBFE]' },
   NO_SHOW:   { fr: 'Non présenté', pt: 'Falta à Consulta', en: 'No-Show',     color: 'text-[#475569]', bg: 'bg-[#F1F5F9]', border: 'border-[#E2E8F0]' },
 };
+
+// ─── Patient Reviews ────────────────────────────────────────────────────────
+export type ReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface Review {
+  id: string;
+  patientName: string;
+  patientEmail?: string | null;
+  rating: number; // 1 to 5
+  serviceSlug: string;
+  comment: string;
+  location: string;
+  status: ReviewStatus;
+  verified: boolean;
+  isFeatured: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateReviewInput {
+  patientName: string;
+  patientEmail?: string | null;
+  rating: number;
+  serviceSlug: string;
+  comment: string;
+  location?: string;
+  status?: ReviewStatus;
+  verified?: boolean;
+  isFeatured?: boolean;
+}
