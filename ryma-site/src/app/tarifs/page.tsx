@@ -141,7 +141,7 @@ export default function TarifsPage() {
               </span>
               <span className="inline-flex items-center gap-1.5 bg-[#2A221E]/80 backdrop-blur-sm px-3 py-1 rounded-full border border-[#C49A3C]/30 shadow-xs">
                 <IconStar size={14} className="text-[#E8C97A]" fill="#E8C97A" />
-                5.0 ★ (500+ Pacientes)
+                {lang === 'pt' ? '5.0 ★ (500+ Utentes)' : '5.0 ★ (500+ Patients)'}
               </span>
             </div>
 

@@ -560,7 +560,7 @@ export function AppointmentsTab({
             type="button"
             onClick={() => handleOpenWhatsAppHub(item)}
             className="p-2 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] hover:bg-[#DCFCE7] transition-colors touch-target flex items-center justify-center shadow-2xs"
-            title="WhatsApp Hub (Lembretes & Pós-Tratamento)"
+            title={txt('WhatsApp Hub (Rappels & Suivi)', 'WhatsApp Hub (Reminders & Aftercare)', 'WhatsApp Hub (Lembretes & Pós-Tratamento)')}
           >
             <IconBrandWhatsapp size={15} />
           </button>
@@ -579,7 +579,7 @@ export function AppointmentsTab({
               setIsInvoiceModalOpen(true);
             }}
             className="p-2 rounded-lg border border-[#CBD5E1] bg-[#FAF8F5] text-[#9A7428] hover:bg-[#F5E9C8] transition-colors touch-target flex items-center justify-center shadow-xs"
-            title={txt('Émettre Fatura-Recibo', 'Issue Tax Invoice', 'Emitir Fatura-Recibo')}
+            title={txt('Émettre une Facture', 'Issue Tax Invoice', 'Emitir Fatura-Recibo')}
           >
             <IconReceiptTax size={15} />
           </button>

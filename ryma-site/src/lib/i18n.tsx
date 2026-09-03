@@ -18,15 +18,24 @@ interface LanguageContextType {
 
 export const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('pt');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('ryma_lang') as Lang;
-    if (saved === 'pt' || saved === 'en' || saved === 'fr') {
-      setLangState(saved);
+export function LanguageProvider({
+  children,
+  initialLang = 'pt',
+}: {
+  children: React.ReactNode;
+  initialLang?: Lang;
+}) {
+  const [lang, setLangState] = useState<Lang>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('ryma_lang') as Lang;
+        if (saved === 'pt' || saved === 'en' || saved === 'fr') {
+          return saved;
+        }
+      } catch {}
     }
-  }, []);
+    return initialLang;
+  });
 
   useEffect(() => {
     document.documentElement.setAttribute('dir', 'ltr');
@@ -35,7 +44,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const setLang = (newLang: Lang) => {
     setLangState(newLang);
-    localStorage.setItem('ryma_lang', newLang);
+    try {
+      localStorage.setItem('ryma_lang', newLang);
+      document.cookie = `ryma_lang=${newLang}; path=/; max-age=31536000; SameSite=Lax`;
+    } catch {}
   };
 
   const toggleLang = () => {
@@ -70,4 +82,3 @@ export function useLanguage(): LanguageContextType {
   if (!ctx) throw new Error('useLanguage must be used within LanguageProvider');
   return ctx;
 }
-

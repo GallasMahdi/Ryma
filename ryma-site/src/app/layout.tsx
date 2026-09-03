@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
 import { Cormorant_Garamond, Plus_Jakarta_Sans, Fraunces } from 'next/font/google';
 import './globals.css';
-import { LanguageProvider } from '@/lib/i18n';
+import { LanguageProvider, type Lang } from '@/lib/i18n';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SplashScreen } from '@/components/ui/SplashScreen';
@@ -119,10 +120,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const langCookie = cookieStore.get('ryma_lang')?.value;
+  const initialLang: Lang = (langCookie === 'fr' || langCookie === 'en' || langCookie === 'pt') ? (langCookie as Lang) : 'pt';
+
   return (
     <html
-      lang="pt-PT"
+      lang={initialLang}
       dir="ltr"
       translate="no"
       className={`notranslate ${cormorant.variable} ${plusJakartaSans.variable} ${fraunces.variable}`}
@@ -164,6 +169,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               ],
               priceRange: '€€',
             }),
+          }}
+        />
+        {/* Instant synchronous language cookie sync from localStorage to eliminate flicker */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('ryma_lang');
+                  if (saved && (saved === 'pt' || saved === 'en' || saved === 'fr')) {
+                    document.documentElement.setAttribute('lang', saved);
+                    if (!document.cookie.includes('ryma_lang=' + saved)) {
+                      document.cookie = 'ryma_lang=' + saved + '; path=/; max-age=31536000; SameSite=Lax';
+                    }
+                  }
+                } catch(e) {}
+              })();
+            `,
           }}
         />
         {/* Instant synchronous check: skip splash for bots, reduced motion, or returning users without flashing */}
@@ -246,7 +269,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           fontFamily: 'var(--font-sans)',
         }}
       >
-        <LanguageProvider>
+        <LanguageProvider initialLang={initialLang}>
           <SplashScreen />
           <Navbar />
           <main className="min-h-screen" suppressHydrationWarning>{children}</main>

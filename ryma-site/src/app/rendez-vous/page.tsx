@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react
 import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, type Lang } from '@/lib/i18n';
 import { SERVICES, Service } from '@/data/services';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { Badge } from '@/components/ui/Badge';
@@ -41,7 +41,7 @@ function formatFullConfirmationDate(dateStr: string, lang = 'pt'): string {
   }
 }
 
-function buildGoogleCalendarLink(serviceName: string, dateStr: string, timeStr: string, patientName: string) {
+function buildGoogleCalendarLink(serviceName: string, dateStr: string, timeStr: string, patientName: string, lang: Lang = 'pt') {
   try {
     const [year, month, day] = dateStr.split('-');
     const [hour, min] = timeStr.split(':');
@@ -50,18 +50,30 @@ function buildGoogleCalendarLink(serviceName: string, dateStr: string, timeStr: 
     const endH = Number(hour) + Math.floor(endMinutes / 60);
     const endM = endMinutes % 60;
     const endIso = `${year}${month}${day}T${String(endH).padStart(2, '0')}${String(endM).padStart(2, '0')}00`;
-    const title = encodeURIComponent(`Consulta: ${serviceName} — Digital Clínica`);
-    const details = encodeURIComponent(
-      `Consulta médica na Digital Clínica para ${patientName}.\n\nTratamento: ${serviceName}\nContacto: ${SITE.phone}\nMorada: ${SITE.address.pt || SITE.address.en}\nWhatsApp: ${SITE.whatsappDisplay}`
-    );
-    const location = encodeURIComponent(SITE.address.pt || SITE.address.en || 'Avenida da Liberdade 120, Lisboa');
+
+    const titleText = lang === 'fr'
+      ? `Rendez-vous : ${serviceName} — Digital Clínica`
+      : lang === 'en'
+        ? `Appointment: ${serviceName} — Digital Clínica`
+        : `Consulta: ${serviceName} — Digital Clínica`;
+
+    const detailsText = lang === 'fr'
+      ? `Consultation médicale à la Digital Clínica pour ${patientName}.\n\nSoin : ${serviceName}\nContact : ${SITE.phone}\nAdresse : ${SITE.address.fr || SITE.address.pt}\nWhatsApp : ${SITE.whatsappDisplay}`
+      : lang === 'en'
+        ? `Medical appointment at Digital Clínica for ${patientName}.\n\nTreatment: ${serviceName}\nContact: ${SITE.phone}\nAddress: ${SITE.address.en || SITE.address.pt}\nWhatsApp: ${SITE.whatsappDisplay}`
+        : `Consulta médica na Digital Clínica para ${patientName}.\n\nTratamento: ${serviceName}\nContacto: ${SITE.phone}\nMorada: ${SITE.address.pt || SITE.address.en}\nWhatsApp: ${SITE.whatsappDisplay}`;
+
+    const title = encodeURIComponent(titleText);
+    const details = encodeURIComponent(detailsText);
+    const addr = (SITE.address as any)[lang] || SITE.address.pt || SITE.address.en || 'Avenida da Liberdade 120, Lisboa';
+    const location = encodeURIComponent(addr);
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${details}&location=${location}`;
   } catch {
     return 'https://calendar.google.com';
   }
 }
 
-function downloadIcsEvent(serviceName: string, dateStr: string, timeStr: string, patientName: string) {
+function downloadIcsEvent(serviceName: string, dateStr: string, timeStr: string, patientName: string, lang: Lang = 'pt') {
   try {
     const [year, month, day] = dateStr.split('-');
     const [hour, min] = timeStr.split(':');
@@ -70,17 +82,35 @@ function downloadIcsEvent(serviceName: string, dateStr: string, timeStr: string,
     const endH = Number(hour) + Math.floor(endMinutes / 60);
     const endM = endMinutes % 60;
     const endIso = `${year}${month}${day}T${String(endH).padStart(2, '0')}${String(endM).padStart(2, '0')}00`;
-    const location = SITE.address.pt || SITE.address.en || 'Avenida da Liberdade 120, Lisboa';
+    const location = (SITE.address as any)[lang] || SITE.address.pt || SITE.address.en || 'Avenida da Liberdade 120, Lisboa';
+
+    const summaryText = lang === 'fr'
+      ? `Rendez-vous : ${serviceName} — Digital Clínica`
+      : lang === 'en'
+        ? `Appointment: ${serviceName} — Digital Clínica`
+        : `Consulta: ${serviceName} — Digital Clínica`;
+
+    const descText = lang === 'fr'
+      ? `Consultation confirmée à la Digital Clínica pour ${patientName}. Soin : ${serviceName}. Contact : ${SITE.phone}`
+      : lang === 'en'
+        ? `Confirmed medical appointment at Digital Clínica for ${patientName}. Treatment: ${serviceName}. Contact: ${SITE.phone}`
+        : `Consulta confirmada na Digital Clínica para ${patientName}. Tratamento: ${serviceName}. Contacto: ${SITE.phone}`;
+
+    const fileName = lang === 'fr'
+      ? `rendez-vous-digital-clinica-${dateStr}.ics`
+      : lang === 'en'
+        ? `appointment-digital-clinica-${dateStr}.ics`
+        : `consulta-digital-clinica-${dateStr}.ics`;
 
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//Digital Clinica//Booking System//PT',
+      'PRODID:-//Digital Clinica//Booking System//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       'BEGIN:VEVENT',
-      `SUMMARY:Consulta: ${serviceName} — Digital Clínica`,
-      `DESCRIPTION:Consulta confirmada na Digital Clínica para ${patientName}. Tratamento: ${serviceName}. Contacto: ${SITE.phone}`,
+      `SUMMARY:${summaryText}`,
+      `DESCRIPTION:${descText}`,
       `LOCATION:${location}`,
       `DTSTART:${startIso}`,
       `DTEND:${endIso}`,
@@ -93,7 +123,7 @@ function downloadIcsEvent(serviceName: string, dateStr: string, timeStr: string,
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `consulta-digital-clinica-${dateStr}.ics`);
+    link.setAttribute('download', fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -927,7 +957,8 @@ function BookingWizardContent() {
                         selectedService.name[lang] || selectedService.name.pt || selectedService.name.en || selectedService.name.fr,
                         selectedDate,
                         selectedSlot,
-                        form.name
+                        form.name,
+                        lang
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -945,7 +976,8 @@ function BookingWizardContent() {
                           selectedService.name[lang] || selectedService.name.pt || selectedService.name.en || selectedService.name.fr,
                           selectedDate,
                           selectedSlot,
-                          form.name
+                          form.name,
+                          lang
                         );
                       }}
                       className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-white hover:bg-[#FAF5EA] border border-[#C49A3C]/35 text-[#1A1412] font-bold text-xs transition-all shadow-2xs hover:shadow-xs group cursor-pointer"
@@ -965,40 +997,40 @@ function BookingWizardContent() {
                     <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8]/70">
                       <div className="flex items-center gap-1 text-[11px] font-serif font-bold text-[#1A1412]">
                         <IconClock size={12} className="text-[#C49A3C]" />
-                        <span>{lang === 'pt' ? 'Chegada' : 'Arrival'}</span>
+                        <span>{lang === 'pt' ? 'Chegada' : lang === 'fr' ? 'Arrivée' : 'Arrival'}</span>
                       </div>
                       <p className="text-[10px] text-[#6B6058] mt-0.5 leading-tight">
-                        {lang === 'pt' ? '5 a 10 min antes.' : '5-10 min early.'}
+                        {lang === 'pt' ? '5 a 10 min antes.' : lang === 'fr' ? '5 à 10 min avant.' : '5-10 min early.'}
                       </p>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8]/70">
                       <div className="flex items-center gap-1 text-[11px] font-serif font-bold text-[#1A1412]">
                         <IconFileText size={12} className="text-[#9A7428]" />
-                        <span>{lang === 'pt' ? 'Exames / RX' : 'Exams / RX'}</span>
+                        <span>{lang === 'pt' ? 'Exames / RX' : lang === 'fr' ? 'Examens / IRM' : 'Exams / RX'}</span>
                       </div>
                       <p className="text-[10px] text-[#6B6058] mt-0.5 leading-tight">
-                        {lang === 'pt' ? 'Trazer se tiver.' : 'Bring if available.'}
+                        {lang === 'pt' ? 'Trazer se tiver.' : lang === 'fr' ? 'Apportez vos radios.' : 'Bring if available.'}
                       </p>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8]/70">
                       <div className="flex items-center gap-1 text-[11px] font-serif font-bold text-[#1A1412]">
                         <IconSparkles size={12} className="text-[#C49A3C]" />
-                        <span>{lang === 'pt' ? 'Vestuário' : 'Clothing'}</span>
+                        <span>{lang === 'pt' ? 'Vestuário' : lang === 'fr' ? 'Tenue' : 'Clothing'}</span>
                       </div>
                       <p className="text-[10px] text-[#6B6058] mt-0.5 leading-tight">
-                        {lang === 'pt' ? 'Roupa confortável.' : 'Comfortable wear.'}
+                        {lang === 'pt' ? 'Roupa confortável.' : lang === 'fr' ? 'Tenue souple et confortable.' : 'Comfortable wear.'}
                       </p>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8]/70">
                       <div className="flex items-center gap-1 text-[11px] font-serif font-bold text-[#1A1412]">
                         <IconShieldCheck size={12} className="text-[#6F8F72]" />
-                        <span>{lang === 'pt' ? 'Flexibilidade' : 'Policy'}</span>
+                        <span>{lang === 'pt' ? 'Flexibilidade' : lang === 'fr' ? 'Politique' : 'Policy'}</span>
                       </div>
                       <p className="text-[10px] text-[#6B6058] mt-0.5 leading-tight">
-                        {lang === 'pt' ? 'Até 24h grátis.' : 'Free up to 24h.'}
+                        {lang === 'pt' ? 'Até 24h grátis.' : lang === 'fr' ? 'Annulation gratuite 24h.' : 'Free up to 24h.'}
                       </p>
                     </div>
                   </div>
@@ -1618,7 +1650,7 @@ export default function RendezVousPage() {
           <div className="flex flex-col items-center gap-3">
             <IconLoader2 size={32} className="animate-spin text-[#C49A3C]" />
             <span className="font-mono text-xs text-[#8A8078] tracking-widest uppercase font-bold">
-              Carregando agendamento...
+              Digital Clínica
             </span>
           </div>
         </div>

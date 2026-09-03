@@ -811,10 +811,10 @@ export function PatientNotesTab({
           {/* Quick Filter Chips */}
           <div className="flex items-center gap-1 mb-2.5 overflow-x-auto no-scrollbar pb-0.5">
             {[
-              { id: 'ALL' as const, label: txt('Todos', 'All', 'Todos'), count: filterCounts.all },
-              { id: 'INSURANCE' as const, label: txt('Seguro/ADSE', 'Insurance/ADSE', 'Seguro/ADSE'), count: filterCounts.insurance },
-              { id: 'PARTICULAR' as const, label: txt('Particular', 'Private', 'Particular'), count: filterCounts.particular },
-              { id: 'ACTIVE_SESSIONS' as const, label: txt('Com Sessões', 'With Sessions', 'Com Sessões'), count: filterCounts.withSessions },
+              { id: 'ALL' as const, label: txt('Tous', 'All', 'Todos'), count: filterCounts.all },
+              { id: 'INSURANCE' as const, label: txt('Assurance/Mutuelle', 'Insurance/ADSE', 'Seguro/ADSE'), count: filterCounts.insurance },
+              { id: 'PARTICULAR' as const, label: txt('Particulier', 'Private', 'Particular'), count: filterCounts.particular },
+              { id: 'ACTIVE_SESSIONS' as const, label: txt('Avec Séances', 'With Sessions', 'Com Sessões'), count: filterCounts.withSessions },
             ].map(f => (
               <button
                 key={f.id}
@@ -858,12 +858,12 @@ export function PatientNotesTab({
                 value={pageSize}
                 onChange={e => setPageSize(Number(e.target.value))}
                 className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg px-2 py-0.5 text-[11px] font-bold text-[#0F172A] outline-none cursor-pointer"
-                title="Itens por página"
+                title={txt('Fiches par page', 'Records per page', 'Itens por página')}
               >
-                <option value={8}>8 / pág</option>
-                <option value={10}>10 / pág</option>
-                <option value={20}>20 / pág</option>
-                <option value={50}>50 / pág</option>
+                <option value={8}>8 / {txt('page', 'page', 'pág')}</option>
+                <option value={10}>10 / {txt('page', 'page', 'pág')}</option>
+                <option value={20}>20 / {txt('page', 'page', 'pág')}</option>
+                <option value={50}>50 / {txt('page', 'page', 'pág')}</option>
               </select>
             </div>
           </div>
@@ -1092,7 +1092,7 @@ export function PatientNotesTab({
                       type="button"
                       disabled
                       className="min-h-[46px] p-2 rounded-xl bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed flex flex-col items-center justify-center gap-1 text-xs opacity-50"
-                      title="WhatsApp indisponível (sem número)"
+                      title={txt('WhatsApp non disponible (aucun numéro)', 'WhatsApp unavailable (no phone)', 'WhatsApp indisponível (sem número)')}
                     >
                       <IconBrandWhatsapp size={16} />
                       <span className="text-[11px]">WhatsApp</span>
@@ -1133,7 +1133,7 @@ export function PatientNotesTab({
                           type="button"
                           onClick={() => updatePrescribedTarget(-1)}
                           className="w-7 h-7 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] active:scale-95 font-bold flex items-center justify-center text-sm touch-target"
-                          title="Diminuir sessões"
+                          title={txt('Diminuer séances', 'Decrease sessions', 'Diminuir sessões')}
                         >
                           -
                         </button>
@@ -1144,7 +1144,7 @@ export function PatientNotesTab({
                           type="button"
                           onClick={() => updatePrescribedTarget(1)}
                           className="w-7 h-7 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] active:scale-95 font-bold flex items-center justify-center text-sm touch-target"
-                          title="Aumentar sessões"
+                          title={txt('Augmenter séances', 'Increase sessions', 'Aumentar sessões')}
                         >
                           +
                         </button>
@@ -1172,7 +1172,7 @@ export function PatientNotesTab({
                     className="px-3.5 py-2.5 rounded-xl bg-white border border-[#CBD5E1] hover:bg-[#F1F5F9] active:scale-[0.98] text-[#0F172A] text-xs font-bold transition-all shadow-2xs touch-target flex items-center justify-center gap-1.5 w-full sm:w-auto"
                   >
                     <IconCalendarRepeat size={16} className="text-[#0F172A]" />
-                    <span>{txt('Plano de Séances', 'Multiple Sessions', 'Plano de Sessões')}</span>
+                    <span>{txt('Plan de Séances', 'Multiple Sessions', 'Plano de Sessões')}</span>
                   </button>
 
                   <button
@@ -1192,8 +1192,8 @@ export function PatientNotesTab({
                     { id: 'overview', icon: IconFileText, label: txt('Aperçu Clinique', 'Overview', 'Visão Geral'), count: null },
                     { id: 'timeline', icon: IconClock, label: txt('Historique', 'History', 'Histórico'), count: combinedTimeline.length },
                     { id: 'eva', icon: IconActivity, label: txt('Échelle EVA', 'EVA Pain Scale', 'Escala EVA'), count: null },
-                    { id: 'invoices', icon: IconReceiptTax, label: txt('Faturação', 'Invoices', 'Faturação'), count: patientInvoices.length },
-                    { id: 'prescriptions', icon: IconNotes, label: txt('Recomendações', 'Recommendations', 'Recomendações'), count: patientPrescriptions.length },
+                    { id: 'invoices', icon: IconReceiptTax, label: txt('Facturation', 'Invoices', 'Faturação'), count: patientInvoices.length },
+                    { id: 'prescriptions', icon: IconNotes, label: txt('Recommandations', 'Recommendations', 'Recomendações'), count: patientPrescriptions.length },
                     { id: 'notes', icon: IconPencil, label: txt('Notes Libres', 'Notes', 'Notas'), count: null },
                   ].map(t => {
                     const Icon = t.icon;

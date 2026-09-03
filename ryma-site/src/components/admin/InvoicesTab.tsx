@@ -188,7 +188,7 @@ export function InvoicesTab({
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {isAnalyticsUnlocked
                 ? txt('Facturation Totale', 'Total Revenue', 'Faturação Total')
-                : txt('Faturação (Proprietário)', 'Revenue (Owner)', 'Faturação (Proprietário)')}
+                : txt('Revenu (Propriétaire)', 'Revenue (Owner)', 'Faturação (Proprietário)')}
             </span>
             <div className={`p-1.5 rounded-lg ${isAnalyticsUnlocked ? 'bg-[#0F172A] text-[#C49A3C]' : 'bg-[#EDE9FE] text-[#7C3AED]'}`}>
               {isAnalyticsUnlocked ? <IconTrendingUp size={15} /> : <IconShieldLock size={15} />}

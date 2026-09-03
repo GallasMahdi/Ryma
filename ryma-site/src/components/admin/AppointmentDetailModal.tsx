@@ -1,10 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   IconX,
   IconCheck,
-  IconClock,
   IconCalendar,
   IconPhoneCall,
   IconMail,
@@ -15,6 +14,7 @@ import {
   IconShieldCheck,
   IconStethoscope,
   IconCopy,
+  IconChecklist,
 } from '@tabler/icons-react';
 import {
   Appointment,
@@ -22,7 +22,6 @@ import {
   STATUS_CONFIG,
   getServiceName,
   getServicePrice,
-  formatSlotDateLabel,
 } from '@/types/admin';
 import { Lang } from '@/lib/i18n';
 import { ResponsiveModal } from './ResponsiveModal';
@@ -63,20 +62,43 @@ export function AppointmentDetailModal({
   noShowCounts,
   recentNewIds,
 }: AppointmentDetailModalProps) {
+  const [copiedPhone, setCopiedPhone] = useState(false);
+
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   if (!appointment) return null;
 
-  const st = STATUS_CONFIG[appointment.status];
+  const st = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.PENDING;
   const price = getServicePrice(appointment.service);
   const initials = getInitials(appointment.patientName);
   const isNew = recentNewIds?.has(appointment.id);
   const noShows = noShowCounts?.[appointment.phone] ?? 0;
-  const dateMeta = formatSlotDateLabel(appointment.date, lang);
+
+  // Formatted date string in current language
+  const dateObj = new Date(appointment.date + 'T12:00:00');
+  const dateFormatted = dateObj.toLocaleDateString(
+    lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR',
+    { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
+  );
+  const prettyDate = dateFormatted.charAt(0).toUpperCase() + dateFormatted.slice(1);
+  const subtitle = `${prettyDate} · ${appointment.startTime}`;
 
   const handleCopyPhone = () => {
     navigator.clipboard.writeText(appointment.phone);
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2000);
+  };
+
+  const getCoverageLabel = (type?: string) => {
+    const norm = (type || '').toUpperCase();
+    if (norm === 'INSURANCE' || norm === 'SEGURO') {
+      return txt('Assurance Privée / Mutuelle', 'Private Health Insurance', 'Seguro de Saúde Privado');
+    }
+    if (norm === 'SNS') {
+      return txt('Système National de Santé (SNS)', 'National Health Service (SNS)', 'Serviço Nacional de Saúde (SNS)');
+    }
+    return txt('Soin Privé / Particulier', 'Private Consultation', 'Consulta Particular');
   };
 
   return (
@@ -84,7 +106,7 @@ export function AppointmentDetailModal({
       isOpen={isOpen}
       onClose={onClose}
       title={txt('Détails du Rendez-vous', 'Appointment Details', 'Detalhes da Consulta')}
-      subtitle={`${dateMeta.title} · ${appointment.startTime}`}
+      subtitle={subtitle}
       maxWidth="md"
     >
       <div className="space-y-4 font-sans text-xs">
@@ -100,7 +122,7 @@ export function AppointmentDetailModal({
                   {appointment.patientName}
                 </span>
                 {isNew && (
-                  <span className="bg-[#C49A3C] text-white text-[9px] font-bold px-1.5 py-0.2 rounded uppercase animate-pulse">
+                  <span className="bg-[#C49A3C] text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase animate-pulse">
                     {txt('NOUVEAU', 'NEW', 'NOVO')}
                   </span>
                 )}
@@ -109,9 +131,13 @@ export function AppointmentDetailModal({
                 <span className={`font-semibold px-2 py-0.5 rounded-md border ${st.bg} ${st.color} ${st.border}`}>
                   {st[lang] || st.pt || st.fr}
                 </span>
-                {price > 0 && (
+                {price > 0 ? (
                   <span className="font-bold text-[#0F172A] bg-white px-2 py-0.5 rounded-md border border-[#E2E8F0]">
                     {price} €
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-medium text-[#64748B] bg-white px-2 py-0.5 rounded-md border border-[#E2E8F0]">
+                    {txt('Sur devis', 'Custom quote', 'Sob consulta')}
                   </span>
                 )}
               </div>
@@ -119,9 +145,16 @@ export function AppointmentDetailModal({
           </div>
 
           {noShows >= 2 && (
-            <span className="bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B] text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 shrink-0">
+            <span
+              className="bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B] text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 shrink-0"
+              title={txt(
+                'Ce patient a plusieurs annulations enregistrées',
+                'This patient has multiple recorded cancellations',
+                'Este utente tem faltas ou cancelamentos registados'
+              )}
+            >
               <IconAlertCircle size={12} />
-              <span>{noShows} {txt('annulations', 'cancels', 'faltas')}</span>
+              <span>{noShows} {txt('annulations', 'cancellations', 'faltas')}</span>
             </span>
           )}
         </div>
@@ -133,7 +166,7 @@ export function AppointmentDetailModal({
               <IconStethoscope size={13} className="text-[#2563EB]" />
               <span>{txt('Soin / Traitement', 'Treatment / Service', 'Tratamento / Cuidado')}</span>
             </div>
-            <div className="font-semibold text-[#0F172A] text-xs">
+            <div className="font-semibold text-[#0F172A] text-xs leading-snug">
               {getServiceName(appointment.service, lang)}
             </div>
           </div>
@@ -144,7 +177,13 @@ export function AppointmentDetailModal({
               <span>{txt('Date & Horaire', 'Date & Slot', 'Data & Horário')}</span>
             </div>
             <div className="font-semibold text-[#0F172A] text-xs">
-              {appointment.date} @ <span className="font-bold text-[#2563EB]">{appointment.startTime}</span>
+              {dateObj.toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}{' '}
+              {txt('à', 'at', 'às')}{' '}
+              <span className="font-bold text-[#2563EB]">{appointment.startTime}</span>
             </div>
           </div>
         </div>
@@ -160,6 +199,7 @@ export function AppointmentDetailModal({
               <a
                 href={`tel:${appointment.phone}`}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] font-semibold text-xs transition-colors"
+                title={txt('Appeler le patient', 'Call patient', 'Ligar para o utente')}
               >
                 <IconPhoneCall size={14} className="text-[#2563EB]" />
                 <span>{appointment.phone}</span>
@@ -167,10 +207,17 @@ export function AppointmentDetailModal({
               <button
                 type="button"
                 onClick={handleCopyPhone}
-                className="p-1.5 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] transition-colors"
-                title={txt('Copier le numéro', 'Copy phone', 'Copiar telefone')}
+                className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] transition-colors"
+                title={txt('Copier le numéro', 'Copy phone number', 'Copiar telefone')}
               >
-                <IconCopy size={13} />
+                {copiedPhone ? (
+                  <>
+                    <IconCheck size={13} className="text-[#166534]" />
+                    <span className="text-[10px] font-bold text-[#166534]">{txt('Copié !', 'Copied!', 'Copiado!')}</span>
+                  </>
+                ) : (
+                  <IconCopy size={13} />
+                )}
               </button>
             </div>
 
@@ -178,6 +225,7 @@ export function AppointmentDetailModal({
               <a
                 href={`mailto:${appointment.email}`}
                 className="flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#0F172A] transition-colors truncate max-w-xs"
+                title={txt('Envoyer un email', 'Send email', 'Enviar email')}
               >
                 <IconMail size={14} />
                 <span className="truncate">{appointment.email}</span>
@@ -191,14 +239,14 @@ export function AppointmentDetailModal({
           <div className="p-3 rounded-xl bg-[#F0FDF4]/50 border border-[#DCFCE7] space-y-1">
             <div className="text-[10px] uppercase font-bold text-[#166534] flex items-center gap-1">
               <IconShieldCheck size={13} />
-              <span>{txt('Couverture Santé / Assurance', 'Insurance Coverage', 'Regime de Saúde / Seguro')}</span>
+              <span>{txt('Couverture Santé / Mutuelle', 'Health Insurance / Coverage', 'Regime de Saúde / Seguro')}</span>
             </div>
-            <div className="text-xs text-[#166534] font-medium flex items-center gap-2">
-              <span className="font-bold">{appointment.coverageType || 'PARTICULAR'}</span>
+            <div className="text-xs text-[#166534] font-medium flex flex-wrap items-center gap-2">
+              <span className="font-bold">{getCoverageLabel(appointment.coverageType)}</span>
               {appointment.coverageProvider && <span>· {appointment.coverageProvider}</span>}
               {appointment.coverageNumber && (
                 <span className="text-[11px] font-mono bg-white px-1.5 py-0.5 rounded border border-[#BBF7D0]">
-                  #{appointment.coverageNumber}
+                  {txt('N°', 'Policy #', 'Nº')} {appointment.coverageNumber}
                 </span>
               )}
             </div>
@@ -210,7 +258,7 @@ export function AppointmentDetailModal({
           <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
             <div className="text-[10px] uppercase font-bold text-[#64748B] flex items-center gap-1">
               <IconNotes size={13} />
-              <span>{txt('Notes cliniques / Symptômes', 'Clinical Notes / Symptoms', 'Notas / Sintomas')}</span>
+              <span>{txt('Notes cliniques / Symptômes', 'Clinical Notes / Symptoms', 'Notas Clínicas / Sintomas')}</span>
             </div>
             <div className="text-xs text-[#334155] leading-relaxed">
               {appointment.notes}
@@ -228,8 +276,9 @@ export function AppointmentDetailModal({
                 openWhatsAppModal(appointment);
               }}
               className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#F0FDF4] hover:bg-[#DCFCE7] border border-[#DCFCE7] text-[#166534] transition-colors"
+              title={txt('Envoyer un modèle WhatsApp', 'Send WhatsApp template', 'Enviar modelo WhatsApp')}
             >
-              <IconBrandWhatsapp size={18} className="mb-0.5" />
+              <IconBrandWhatsapp size={18} className="mb-0.5 text-[#16a34a]" />
               <span className="font-bold text-[11px]">WhatsApp</span>
             </button>
           ) : (
@@ -239,7 +288,7 @@ export function AppointmentDetailModal({
               rel="noopener noreferrer"
               className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#F0FDF4] hover:bg-[#DCFCE7] border border-[#DCFCE7] text-[#166534] transition-colors"
             >
-              <IconBrandWhatsapp size={18} className="mb-0.5" />
+              <IconBrandWhatsapp size={18} className="mb-0.5 text-[#16a34a]" />
               <span className="font-bold text-[11px]">WhatsApp</span>
             </a>
           )}
@@ -251,9 +300,10 @@ export function AppointmentDetailModal({
               openPatientNote(appointment);
             }}
             className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#F1F5F9] hover:bg-[#E2E8F0] border border-[#CBD5E1] text-[#0F172A] transition-colors"
+            title={txt('Ouvrir la fiche médicale', 'Open medical record', 'Abrir ficha clínica')}
           >
             <IconNotes size={18} className="mb-0.5 text-[#2563EB]" />
-            <span className="font-bold text-[11px]">{txt('Dossier EHR', 'EHR File', 'Ficha Utente')}</span>
+            <span className="font-bold text-[11px]">{txt('Fiche Utente', 'EHR Record', 'Ficha Utente')}</span>
           </button>
 
           {onOpenCreateInvoice ? (
@@ -264,6 +314,7 @@ export function AppointmentDetailModal({
                 onOpenCreateInvoice(appointment);
               }}
               className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F5E9C8] border border-[#E8DCC0] text-[#9A7428] transition-colors"
+              title={txt('Créer une facture', 'Create invoice', 'Emitir fatura')}
             >
               <IconReceiptTax size={18} className="mb-0.5 text-[#C49A3C]" />
               <span className="font-bold text-[11px]">{txt('Facture', 'Invoice', 'Fatura')}</span>
@@ -300,7 +351,7 @@ export function AppointmentDetailModal({
                 className="px-3 py-2 rounded-xl bg-[#FEF2F2] hover:bg-[#FEE2E2] text-[#991B1B] font-semibold text-xs border border-[#FECACA] transition-colors flex items-center gap-1.5"
               >
                 <IconX size={15} />
-                <span>{txt('Annuler Consulta', 'Cancel Appt', 'Cancelar Consulta')}</span>
+                <span>{txt('Annuler RDV', 'Cancel Appt', 'Cancelar Consulta')}</span>
               </button>
             )}
           </div>
@@ -330,7 +381,7 @@ export function AppointmentDetailModal({
                 className="px-4 py-2 rounded-xl bg-[#DBEAFE] hover:bg-[#BFDBFE] text-[#1E40AF] font-bold text-xs border border-[#BFDBFE] transition-colors flex items-center gap-1.5 shadow-xs"
               >
                 <IconCheck size={15} />
-                <span>{txt('Terminer Soin', 'Complete Session', 'Concluir Consulta')}</span>
+                <span>{txt('Terminer la Séance', 'Complete Session', 'Concluir Consulta')}</span>
               </button>
             )}
 

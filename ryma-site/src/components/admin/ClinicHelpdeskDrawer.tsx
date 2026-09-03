@@ -43,6 +43,12 @@ export function ClinicHelpdeskDrawer({
   const [issueDescription, setIssueDescription] = useState('');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
+  const txt = (fr: string, en: string, pt: string) => {
+    if (lang === 'fr') return fr;
+    if (lang === 'en') return en;
+    return pt;
+  };
+
   // Auto diagnostic details
   const [clientDiag, setClientDiag] = useState<{
     userAgent: string;
@@ -249,10 +255,10 @@ export function ClinicHelpdeskDrawer({
                     </div>
                     <div>
                       <div className="font-semibold text-xs text-[#166534]">
-                        WhatsApp Direto — Suporte IT
+                        {txt('WhatsApp Direct — Support IT', 'Direct WhatsApp — IT Support', 'WhatsApp Direto — Suporte IT')}
                       </div>
                       <div className="text-[11px] text-[#15803D] font-mono">
-                        +351 912 000 000 (Tempo resposta: &lt; 5 min)
+                        +351 912 000 000 ({txt('Réponse : < 5 min', 'Response: < 5 min', 'Tempo resposta: < 5 min')})
                       </div>
                     </div>
                   </div>
@@ -291,7 +297,7 @@ export function ClinicHelpdeskDrawer({
                     </div>
                     <div>
                       <div className="font-semibold text-xs text-[#0F172A]">
-                        Email do Administrador
+                        {txt('Email du Support IT', 'IT Administrator Email', 'Email do Administrador')}
                       </div>
                       <div className="text-[11px] text-[#64748B] font-mono">
                         support@digitalclinica.pt
@@ -305,16 +311,18 @@ export function ClinicHelpdeskDrawer({
               {/* Status Box */}
               <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-[#64748B]">{lang === 'fr' ? 'État des Serveurs' : lang === 'en' ? 'Server Cluster' : 'Servidor Central'}:</span>
+                  <span className="text-[#64748B]">{txt('État des Serveurs', 'Server Cluster', 'Servidor Central')}:</span>
                   <span className="inline-flex items-center gap-1.5 font-semibold text-[#166534]">
                     <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-                    Lisboa DC-01 (100% Operacional)
+                    Lisboa DC-01 ({txt('100% Opérationnel', '100% Operational', '100% Operacional')})
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[#64748B]">SSE Live Sync:</span>
                   <span className={`font-semibold ${isLiveConnected ? 'text-[#166534]' : 'text-[#DC2626]'}`}>
-                    {isLiveConnected ? 'Ativo & Sincronizado' : 'Reconectando...'}
+                    {isLiveConnected
+                      ? txt('Actif & Synchronisé', 'Active & Synchronized', 'Ativo & Sincronizado')
+                      : txt('Reconnexion...', 'Reconnecting...', 'A reconectar...')}
                   </span>
                 </div>
               </div>
@@ -376,7 +384,11 @@ export function ClinicHelpdeskDrawer({
                   className="w-full py-2 px-4 rounded-xl border border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] text-[#334155] text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
                 >
                   {copiedKey === 'diag_json' ? <IconCheck size={15} className="text-[#22C55E]" /> : <IconCopy size={15} />}
-                  <span>{copiedKey === 'diag_json' ? 'Copiado para a área de transferência !' : 'Copiar Relatório Completo (JSON)'}</span>
+                  <span>
+                    {copiedKey === 'diag_json'
+                      ? txt('Copié dans le presse-papiers !', 'Copied to clipboard!', 'Copiado para a área de transferência!')
+                      : txt('Copier Rapport Complet (JSON)', 'Copy Full Report (JSON)', 'Copiar Relatório Completo (JSON)')}
+                  </span>
                 </button>
               </div>
             </div>
@@ -429,13 +441,13 @@ export function ClinicHelpdeskDrawer({
               <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5">
                 <div className="flex items-center gap-2 font-semibold text-xs text-[#0F172A]">
                   <IconCreditCard size={16} className="text-[#C49A3C]" />
-                  <span>Terminal TPA / Multibanco (Fecho Diário)</span>
+                  <span>{txt('Terminal TPA / Carte Bancaire (Clôture)', 'POS / Card Terminal (Daily Close)', 'Terminal TPA / Multibanco (Fecho Diário)')}</span>
                 </div>
                 <ol className="text-xs text-[#475569] space-y-1.5 list-decimal pl-4">
-                  <li>Pressionar a tecla <strong>AMARELA</strong> no terminal TPA.</li>
-                  <li>Digitar o código de menu <strong>9</strong> (Fecho do Dia / Totais).</li>
-                  <li>Confirmar com a tecla <strong>VERDE</strong>.</li>
-                  <li>Guardar o talão emitido junto dos recibos diários da clínica.</li>
+                  <li>{txt('Appuyer sur la touche JAUNE sur le terminal TPA.', 'Press the YELLOW key on the card terminal.', 'Pressionar a tecla AMARELA no terminal TPA.')}</li>
+                  <li>{txt('Entrer le code de menu 9 (Clôture du Jour / Totaux).', 'Enter menu code 9 (Day Close / Totals).', 'Digitar o código de menu 9 (Fecho do Dia / Totais).')}</li>
+                  <li>{txt('Confirmer avec la touche VERTE.', 'Confirm with the GREEN key.', 'Confirmar com a tecla VERDE.')}</li>
+                  <li>{txt('Conserver le ticket imprimé avec les reçus journaliers de la clinique.', 'Keep printed receipt with daily clinic records.', 'Guardar o talão emitido junto dos recibos diários da clínica.')}</li>
                 </ol>
               </div>
 
@@ -443,10 +455,14 @@ export function ClinicHelpdeskDrawer({
               <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] shadow-2xs space-y-2">
                 <div className="flex items-center gap-2 font-semibold text-xs text-[#0F172A]">
                   <IconFileText size={16} className="text-[#C49A3C]" />
-                  <span>Política de Cancelamentos</span>
+                  <span>{txt('Politique d’Annulation', 'Cancellation Policy', 'Política de Cancelamentos')}</span>
                 </div>
                 <p className="text-xs text-[#64748B] leading-relaxed">
-                  Os cancelamentos de consultas devem ser comunicados com um mínimo de <strong>24 horas</strong> de antecedência para permitir a libertação do horário a outros utentes na lista de espera.
+                  {txt(
+                    'Les annulations de rendez-vous doivent être communiquées au moins 24 heures à l’avance pour permettre de libérer le créneau aux patients en attente.',
+                    'Appointment cancellations must be communicated at least 24 hours in advance to release the slot for waiting patients.',
+                    'Os cancelamentos de consultas devem ser comunicados com um mínimo de 24 horas de antecedência para permitir a libertação do horário a outros utentes na lista de espera.'
+                  )}
                 </p>
               </div>
             </div>

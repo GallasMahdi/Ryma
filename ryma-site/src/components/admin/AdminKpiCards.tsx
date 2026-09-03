@@ -148,7 +148,7 @@ export function AdminKpiCards({
       id: 'revenue',
       label: isAnalyticsUnlocked
         ? txt('Revenu Estimé', 'Est. Revenue', 'Receita Estimada')
-        : txt('Receita (Proprietário)', 'Revenue (Owner)', 'Receita (Proprietário)'),
+        : txt('Revenu (Propriétaire)', 'Revenue (Owner)', 'Receita (Proprietário)'),
       value: isAnalyticsUnlocked ? stats.revenue : '•••• €',
       badge: isAnalyticsUnlocked
         ? txt('Déverrouillé', 'Unlocked', 'Desbloqueado')
