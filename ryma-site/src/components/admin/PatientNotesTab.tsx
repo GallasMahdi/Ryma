@@ -224,7 +224,7 @@ export function PatientNotesTab({
     referringDoctor: '',
     pathologyTags: '',
     medicalHistory: '',
-    totalPrescribedSessions: 10,
+    totalPrescribedSessionsStr: '',
   });
 
   const [editPatientForm, setEditPatientForm] = useState({
@@ -462,10 +462,18 @@ export function PatientNotesTab({
     e.preventDefault();
     setSubmitting(true);
     try {
+      const parsedSessions = parseInt(newPatientForm.totalPrescribedSessionsStr, 10);
+      const totalPrescribedSessions = !isNaN(parsedSessions) && parsedSessions > 0
+        ? Math.min(100, Math.max(1, parsedSessions))
+        : 10;
+
       const res = await fetch('/api/admin/patients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPatientForm),
+        body: JSON.stringify({
+          ...newPatientForm,
+          totalPrescribedSessions,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao criar paciente');
@@ -483,7 +491,7 @@ export function PatientNotesTab({
         referringDoctor: '',
         pathologyTags: '',
         medicalHistory: '',
-        totalPrescribedSessions: 10,
+        totalPrescribedSessionsStr: '',
       });
 
       if (onRefreshPatients) onRefreshPatients();
@@ -1838,8 +1846,22 @@ export function PatientNotesTab({
                 type="number"
                 min={1}
                 max={100}
-                value={newPatientForm.totalPrescribedSessions}
-                onChange={e => setNewPatientForm(p => ({ ...p, totalPrescribedSessions: Number(e.target.value) }))}
+                value={newPatientForm.totalPrescribedSessionsStr}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (val === '') {
+                    setNewPatientForm(p => ({ ...p, totalPrescribedSessionsStr: '' }));
+                    return;
+                  }
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num)) {
+                    setNewPatientForm(p => ({
+                      ...p,
+                      totalPrescribedSessionsStr: num <= 0 ? '' : String(Math.min(100, num)),
+                    }));
+                  }
+                }}
+                placeholder="10"
                 className="w-full bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] rounded-xl p-3 text-sm sm:text-xs focus:outline-none focus:border-[#0F172A]"
               />
             </div>
@@ -1956,7 +1978,21 @@ export function PatientNotesTab({
                 min={1}
                 max={100}
                 value={editPatientForm.totalPrescribedSessionsStr}
-                onChange={e => setEditPatientForm(p => ({ ...p, totalPrescribedSessionsStr: e.target.value }))}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (val === '') {
+                    setEditPatientForm(p => ({ ...p, totalPrescribedSessionsStr: '' }));
+                    return;
+                  }
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num)) {
+                    setEditPatientForm(p => ({
+                      ...p,
+                      totalPrescribedSessionsStr: num <= 0 ? '' : String(Math.min(100, num)),
+                    }));
+                  }
+                }}
+                placeholder="10"
                 className="w-full bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] rounded-xl p-3 text-sm sm:text-xs focus:outline-none focus:border-[#0F172A]"
               />
             </div>
