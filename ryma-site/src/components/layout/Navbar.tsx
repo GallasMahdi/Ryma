@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES, getLocalizedText } from '@/data/services';
 import { Button } from '@/components/ui/Button';
 import { LogoIcon } from '@/components/ui/Logo';
+import { playSoftClick } from '@/lib/sound';
 import {
   IconMenu2,
   IconX,
@@ -32,9 +33,12 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
 export function Navbar() {
   const { lang, t, toggleLang, setLang } = useLanguage();
   const pathname = usePathname();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const [optimisticTab, setOptimisticTab] = useState<string | null>(null);
+  const [navigatingHref, setNavigatingHref] = useState<string | null>(null);
 
   useEffect(() => {
     let ticking = false;
@@ -55,7 +59,17 @@ export function Navbar() {
   useEffect(() => {
     setMobileOpen(false);
     setServicesDropdownOpen(false);
+    setOptimisticTab(null);
+    setNavigatingHref(null);
   }, [pathname]);
+
+  // Clear optimistic tab if drawer is dismissed
+  useEffect(() => {
+    if (!mobileOpen) {
+      setOptimisticTab(null);
+      setNavigatingHref(null);
+    }
+  }, [mobileOpen]);
 
   // Close drawer on Escape key & manage scroll lock
   useEffect(() => {
@@ -77,14 +91,56 @@ export function Navbar() {
     };
   }, [mobileOpen]);
 
+  const isActive = useCallback(
+    (href: string) => {
+      if (href === '/') return pathname === '/';
+      return pathname?.startsWith(href) ?? false;
+    },
+    [pathname]
+  );
+
+  const isDrawerTabActive = useCallback(
+    (href: string) => {
+      if (optimisticTab !== null) {
+        if (href === '/') return optimisticTab === '/';
+        return optimisticTab.startsWith(href);
+      }
+      return isActive(href);
+    },
+    [optimisticTab, isActive]
+  );
+
+  const handleDrawerNav = useCallback(
+    (e: React.MouseEvent, href: string) => {
+      const isCurrent = isActive(href);
+      if (isCurrent && (!optimisticTab || optimisticTab === href)) {
+        e.preventDefault();
+        playSoftClick();
+        setMobileOpen(false);
+        return;
+      }
+
+      e.preventDefault();
+      playSoftClick();
+
+      // 1. Instantly move the active gold selection pill to the newly tapped tab
+      setOptimisticTab(href);
+      setNavigatingHref(href);
+
+      // 2. Trigger Next.js router transition
+      router.push(href);
+
+      // 3. Keep drawer visible for a buttery 170ms so the spring glides seamlessly into place
+      setTimeout(() => {
+        setMobileOpen(false);
+      }, 170);
+    },
+    [isActive, optimisticTab, router]
+  );
+
   if (pathname?.startsWith('/admin')) {
     return null;
   }
-
-  const isActive = (href: string) => {
-    if (href === '/') return pathname === '/';
-    return pathname?.startsWith(href);
-  };
 
   const navLinks = [
     { href: '/', label: t.nav.home },
@@ -374,7 +430,7 @@ export function Navbar() {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               className="fixed right-0 top-0 bottom-0 z-50 w-[88vw] max-w-[380px] bg-[#FAF5EC] shadow-[-12px_0_40px_rgba(26,20,18,0.25)] xl:hidden flex flex-col border-l border-[#C49A3C]/35 overflow-hidden font-sans transform-gpu will-change-transform contain-paint"
             >
               {/* ── Drawer Header ──────────────────────── */}
@@ -417,25 +473,38 @@ export function Navbar() {
                   <span>{lang === 'pt' ? 'Clínica Aberta' : lang === 'en' ? 'Clinic Open' : 'Cabinet Ouvert'}</span>
                 </div>
 
-                <div className="inline-flex items-center gap-1 bg-white p-0.5 rounded-full border border-[#C49A3C]/30 shadow-2xs">
-                  {(['pt', 'en', 'fr'] as const).map((l) => (
-                    <button
-                      key={l}
-                      type="button"
-                      onClick={() => setLang(l)}
-                      className={`px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase transition-all touch-manipulation ${
-                        lang === l
-                          ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] shadow-xs font-black'
-                          : 'text-[#8A6A24] hover:text-[#1A1412]'
-                      }`}
-                    >
-                      {l}
-                    </button>
-                  ))}
+                <div className="relative inline-flex items-center gap-1 bg-white p-0.5 rounded-full border border-[#C49A3C]/30 shadow-2xs">
+                  {(['pt', 'en', 'fr'] as const).map((l) => {
+                    const isSelected = lang === l;
+                    return (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => {
+                          playSoftClick();
+                          setLang(l);
+                        }}
+                        className={`relative px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase transition-colors touch-manipulation z-10 ${
+                          isSelected
+                            ? 'text-[#1A1412] font-black'
+                            : 'text-[#8A6A24] hover:text-[#1A1412]'
+                        }`}
+                      >
+                        {isSelected && (
+                          <motion.div
+                            layoutId="activeDrawerLangPill"
+                            className="absolute inset-0 rounded-full bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] shadow-xs -z-10"
+                            transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                          />
+                        )}
+                        <span>{l}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* ── Navigation Tabs (Smooth & Instant Scroll) ── */}
+              {/* ── Navigation Tabs (Ultra-Fluid 60/120 FPS Gliding Pill) ── */}
               <nav className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-2.5">
                 {[
                   {
@@ -472,26 +541,37 @@ export function Navbar() {
                   },
                 ].map((tab) => {
                   const Icon = tab.icon;
-                  const active = isActive(tab.href);
+                  const active = isDrawerTabActive(tab.href);
+                  const isTargetNav = navigatingHref === tab.href;
 
                   return (
-                    <div key={tab.href}>
+                    <div key={tab.href} className="relative">
+                      {/* Fluid Animated Gold Selection Indicator (Spring Physics) */}
+                      {active && (
+                        <motion.div
+                          layoutId="activeDrawerNavPill"
+                          className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#F5E9C8] via-[#FAF3E0] to-[#EEDBB2] border border-[#C49A3C]/70 shadow-[0_4px_16px_rgba(196,154,60,0.18)] -z-10"
+                          transition={{ type: 'spring', stiffness: 440, damping: 32, mass: 0.8 }}
+                        />
+                      )}
+
                       <Link
                         href={tab.href}
-                        onClick={() => setMobileOpen(false)}
-                        className={`group relative flex items-center justify-between p-3 rounded-2xl border transition-all duration-150 active:scale-[0.98] touch-manipulation ${
+                        prefetch={true}
+                        onClick={(e) => handleDrawerNav(e, tab.href)}
+                        className={`group relative flex items-center justify-between p-3 rounded-2xl border transition-all duration-200 active:scale-[0.98] touch-manipulation select-none ${
                           active
-                            ? 'bg-gradient-to-r from-[#F5E9C8] via-[#FAF3E0] to-[#EEDBB2] border-[#C49A3C]/70 shadow-[0_4px_16px_rgba(196,154,60,0.18)]'
+                            ? 'border-transparent text-[#1A1412]'
                             : 'bg-white hover:bg-[#FAF5EC] border-[#C49A3C]/20 hover:border-[#C49A3C]/45 shadow-2xs'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           {/* Luxury Gold Icon Pill */}
                           <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-150 ${
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
                               active
-                                ? 'bg-gradient-to-br from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] shadow-[0_2px_8px_rgba(196,154,60,0.35)] border border-[#FFF8E7]'
-                                : 'bg-[#F5E9C8] text-[#8A6A24] border border-[#C49A3C]/30'
+                                ? 'bg-gradient-to-br from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] shadow-[0_2px_8px_rgba(196,154,60,0.35)] border border-[#FFF8E7] scale-105'
+                                : 'bg-[#F5E9C8] text-[#8A6A24] border border-[#C49A3C]/30 scale-100'
                             }`}
                           >
                             <Icon size={20} strokeWidth={active ? 2.3 : 1.8} />
@@ -499,7 +579,7 @@ export function Navbar() {
 
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className={`text-sm tracking-tight truncate ${active ? 'font-bold text-[#1A1412]' : 'font-semibold text-[#1A1412]'}`}>
+                              <span className={`text-sm tracking-tight truncate transition-colors duration-150 ${active ? 'font-bold text-[#1A1412]' : 'font-semibold text-[#1A1412]'}`}>
                                 {tab.label}
                               </span>
                               {tab.badge && (
@@ -514,15 +594,19 @@ export function Navbar() {
                           </div>
                         </div>
 
-                        {/* Trailing Gold Arrow */}
+                        {/* Trailing Gold Arrow / Active Spinner Indicator */}
                         <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
                             active
-                              ? 'bg-gradient-to-br from-[#C49A3C] to-[#E8C97A] text-[#1A1412] shadow-2xs translate-x-0.5'
-                              : 'text-[#9A7428] group-hover:text-[#1A1412]'
+                              ? 'bg-gradient-to-br from-[#C49A3C] to-[#E8C97A] text-[#1A1412] shadow-2xs translate-x-1'
+                              : 'text-[#9A7428] group-hover:text-[#1A1412] translate-x-0'
                           }`}
                         >
-                          <IconChevronRight size={16} strokeWidth={active ? 2.5 : 2} />
+                          {isTargetNav ? (
+                            <span className="w-3.5 h-3.5 border-2 border-[#1A1412] border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <IconChevronRight size={16} strokeWidth={active ? 2.5 : 2} />
+                          )}
                         </div>
                       </Link>
                     </div>
@@ -538,7 +622,8 @@ export function Navbar() {
                   <div className="grid grid-cols-2 gap-2">
                     <Link
                       href="/services#kinesitherapie"
-                      onClick={() => setMobileOpen(false)}
+                      prefetch={true}
+                      onClick={(e) => handleDrawerNav(e, '/services#kinesitherapie')}
                       className="flex flex-col p-2.5 rounded-xl bg-gradient-to-br from-[#FAF5EC] via-[#FDF9F2] to-[#F5E9C8] border border-[#C49A3C]/35 active:scale-95 transition-transform touch-manipulation shadow-2xs"
                     >
                       <div className="flex items-center gap-1.5 text-[#1A1412] font-bold text-xs">
@@ -554,7 +639,8 @@ export function Navbar() {
 
                     <Link
                       href="/services#minceur"
-                      onClick={() => setMobileOpen(false)}
+                      prefetch={true}
+                      onClick={(e) => handleDrawerNav(e, '/services#minceur')}
                       className="flex flex-col p-2.5 rounded-xl bg-gradient-to-br from-[#FAF5EC] via-[#FDF9F2] to-[#F5E9C8] border border-[#C49A3C]/35 active:scale-95 transition-transform touch-manipulation shadow-2xs"
                     >
                       <div className="flex items-center gap-1.5 text-[#1A1412] font-bold text-xs">
@@ -576,7 +662,8 @@ export function Navbar() {
                 {/* Primary Booking CTA */}
                 <Link
                   href="/rendez-vous"
-                  onClick={() => setMobileOpen(false)}
+                  prefetch={true}
+                  onClick={(e) => handleDrawerNav(e, '/rendez-vous')}
                   className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#AA771C] text-[#1A1412] font-bold text-sm shadow-[0_4px_16px_rgba(196,154,60,0.35)] border border-[#F5E9C8] active:scale-[0.98] transition-transform touch-manipulation"
                 >
                   <IconCalendarEvent size={19} className="text-[#1A1412]" />

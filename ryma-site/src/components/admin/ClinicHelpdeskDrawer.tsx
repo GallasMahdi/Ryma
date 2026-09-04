@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lang } from '@/lib/i18n';
+import { playSoftClick } from '@/lib/sound';
 import {
   IconX,
   IconLifebuoy,
@@ -185,50 +186,53 @@ export function ClinicHelpdeskDrawer({
 
         {/* Drawer Navigation Tabs */}
         <div className="flex items-center border-b border-[#E2E8F0] bg-[#F8FAFC] px-3 pt-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => setSelectedTab('emergency')}
-            className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-all flex items-center justify-center gap-1.5 ${
-              selectedTab === 'emergency'
-                ? 'border-[#0F172A] text-[#0F172A] font-semibold bg-white rounded-t-lg'
-                : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
-            }`}
-          >
-            <IconPhone size={15} />
-            <span>{lang === 'fr' ? 'Contact Direct' : lang === 'en' ? 'Direct Channels' : 'Contacto Direto'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedTab('diagnostic')}
-            className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-all flex items-center justify-center gap-1.5 ${
-              selectedTab === 'diagnostic'
-                ? 'border-[#0F172A] text-[#0F172A] font-semibold bg-white rounded-t-lg'
-                : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
-            }`}
-          >
-            <IconBug size={15} />
-            <span>{lang === 'fr' ? 'Diagnostic' : lang === 'en' ? 'Diagnostic' : 'Diagnóstico'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedTab('cheatsheet')}
-            className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-all flex items-center justify-center gap-1.5 ${
-              selectedTab === 'cheatsheet'
-                ? 'border-[#0F172A] text-[#0F172A] font-semibold bg-white rounded-t-lg'
-                : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
-            }`}
-          >
-            <IconWifi size={15} />
-            <span>{lang === 'fr' ? 'Aide-Mémoire' : lang === 'en' ? 'Cheatsheet' : 'Recepção'}</span>
-          </button>
+          {[
+            { id: 'emergency', icon: IconPhone, label: lang === 'fr' ? 'Contact Direct' : lang === 'en' ? 'Direct Channels' : 'Contacto Direto' },
+            { id: 'diagnostic', icon: IconBug, label: lang === 'fr' ? 'Diagnostic' : lang === 'en' ? 'Diagnostic' : 'Diagnóstico' },
+            { id: 'cheatsheet', icon: IconWifi, label: lang === 'fr' ? 'Aide-Mémoire' : lang === 'en' ? 'Cheatsheet' : 'Recepção' },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isSelected = selectedTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  playSoftClick();
+                  setSelectedTab(tab.id as typeof selectedTab);
+                }}
+                className={`relative flex-1 py-2.5 text-xs font-medium transition-colors flex items-center justify-center gap-1.5 z-10 touch-manipulation ${
+                  isSelected
+                    ? 'text-[#0F172A] font-semibold'
+                    : 'text-[#64748B] hover:text-[#0F172A]'
+                }`}
+              >
+                {isSelected && (
+                  <motion.div
+                    layoutId="activeHelpdeskTabIndicator"
+                    className="absolute inset-0 bg-white rounded-t-lg border-t-2 border-x border-[#E2E8F0] border-t-[#0F172A] shadow-xs -z-10"
+                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                  />
+                )}
+                <Icon size={15} className={isSelected ? 'text-[#0F172A]' : 'text-[#64748B]'} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Drawer Body */}
         <div className="flex-1 p-5 overflow-y-auto space-y-5 text-xs sm:text-sm text-[#334155]">
-          {/* TAB 1: EMERGENCY CONTACTS */}
-          {selectedTab === 'emergency' && (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedTab}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.16, ease: 'easeOut' }}
+            >
+              {/* TAB 1: EMERGENCY CONTACTS */}
+              {selectedTab === 'emergency' && (
             <div className="space-y-4">
               <div className="p-3.5 rounded-2xl bg-[#FEF2F2] border border-[#FCA5A5] text-[#991B1B]">
                 <div className="font-semibold text-xs flex items-center gap-1.5 mb-1">
@@ -479,7 +483,9 @@ export function ClinicHelpdeskDrawer({
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
 
         {/* Drawer Footer */}
         <div className="p-4 bg-[#F8FAFC] border-t border-[#E2E8F0] text-center text-xs text-[#64748B] shrink-0">

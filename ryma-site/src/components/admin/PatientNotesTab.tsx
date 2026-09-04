@@ -43,6 +43,8 @@ import {
 import { SERVICES } from '@/data/services';
 import { Lang } from '@/lib/i18n';
 import { phonesMatch } from '@/lib/phone';
+import { motion, AnimatePresence } from 'framer-motion';
+import { playSoftClick } from '@/lib/sound';
 import dynamic from 'next/dynamic';
 import { ResponsiveModal } from './ResponsiveModal';
 import { EvaScorePicker, getEvaColor } from './EvaScorePicker';
@@ -1228,6 +1230,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                         key={t.id}
                         type="button"
                         onClick={() => {
+                          playSoftClick();
                           setActiveDossierTab(t.id as typeof activeDossierTab);
                           if (t.id === 'invoices' && activePatient) {
                             fetchActivePatientInvoices(activePatient.phone);
@@ -1236,11 +1239,18 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                             fetchActivePatientPrescriptions(activePatient.phone);
                           }
                         }}
-                        className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap select-none touch-target ${isActive
-                          ? 'bg-[#0F172A] text-white shadow-sm'
+                        className={`relative shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 whitespace-nowrap select-none touch-target z-10 ${isActive
+                          ? 'text-white'
                           : 'text-[#475569] hover:text-[#0F172A] hover:bg-white/80 active:scale-95'
                           }`}
                       >
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeDossierTabPill"
+                            className="absolute inset-0 rounded-xl bg-[#0F172A] shadow-sm -z-10"
+                            transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                          />
+                        )}
                         <Icon size={15} className={isActive ? 'text-[#E8C97A]' : 'text-[#64748B]'} />
                         <span>{t.label}</span>
                         {t.count !== null && (
@@ -1259,7 +1269,15 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
               {/* Tab Content Body */}
               <div className="space-y-4 pt-1">
-                {activeDossierTab === 'overview' && (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeDossierTab}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.16, ease: 'easeOut' }}
+                  >
+                    {activeDossierTab === 'overview' && (
                   <div className="space-y-3.5">
                     {/* Pathologies & Tags */}
                     <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-2xl space-y-2">
@@ -1781,8 +1799,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
           ) : (
             <div className="flex flex-col items-center justify-center text-center p-8 sm:p-12 text-[#64748B] space-y-3 bg-[#F8FAFC] rounded-2xl border border-dashed border-[#CBD5E1]">
               <div className="w-14 h-14 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex items-center justify-center text-[#94A3B8]">
