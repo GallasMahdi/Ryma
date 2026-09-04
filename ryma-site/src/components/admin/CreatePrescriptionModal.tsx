@@ -36,7 +36,7 @@ interface CreatePrescriptionModalProps {
   onCreated: (prescription: any) => void;
 }
 
-export function CreatePrescriptionModal({
+export const CreatePrescriptionModal = React.memo(function CreatePrescriptionModal({
   isOpen,
   onClose,
   patientId,
@@ -490,4 +490,4 @@ export function CreatePrescriptionModal({
       )}
     </AnimatePresence>
   );
-}
+});

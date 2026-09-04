@@ -36,7 +36,7 @@ interface AddAppointmentModalProps {
   onSubmit: (e: React.FormEvent) => void;
 }
 
-export function AddAppointmentModal({
+export const AddAppointmentModal = React.memo(function AddAppointmentModal({
   isOpen,
   onClose,
   lang,
@@ -189,4 +189,4 @@ export function AddAppointmentModal({
       </form>
     </ResponsiveModal>
   );
-}
+});

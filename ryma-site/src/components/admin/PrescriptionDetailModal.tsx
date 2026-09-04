@@ -22,7 +22,7 @@ interface PrescriptionDetailModalProps {
   lang: Lang;
 }
 
-export function PrescriptionDetailModal({
+export const PrescriptionDetailModal = React.memo(function PrescriptionDetailModal({
   prescription,
   isOpen,
   onClose,
@@ -260,4 +260,4 @@ export function PrescriptionDetailModal({
       )}
     </AnimatePresence>
   );
-}
+});

@@ -32,7 +32,7 @@ export interface WhatsAppModalProps {
   lang: Lang;
 }
 
-export function WhatsAppCommunicationModal({
+export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicationModal({
   isOpen,
   onClose,
   appointment,
@@ -386,4 +386,4 @@ export function WhatsAppCommunicationModal({
       )}
     </AnimatePresence>
   );
-}
+});

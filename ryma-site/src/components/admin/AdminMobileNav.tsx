@@ -26,7 +26,7 @@ interface AdminMobileNavProps {
   onOpenAddModal: () => void;
 }
 
-export function AdminMobileNav({
+export const AdminMobileNav = React.memo(function AdminMobileNav({
   activeTab,
   setActiveTab,
   lang,
@@ -145,4 +145,4 @@ export function AdminMobileNav({
       </div>
     </nav>
   );
-}
+});

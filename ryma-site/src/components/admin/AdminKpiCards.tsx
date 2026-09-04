@@ -34,12 +34,6 @@ interface AdminKpiCardsProps {
  * Animated luxury counter that smoothly transitions values on arrival
  */
 function AnimatedCounter({ value, isCurrency = false }: { value: number | string; isCurrency?: boolean }) {
-  const [displayValue, setDisplayValue] = useState<number | string>(value);
-
-  useEffect(() => {
-    setDisplayValue(value);
-  }, [value]);
-
   if (typeof value === 'string') {
     return <span>{value}</span>;
   }
@@ -57,7 +51,7 @@ function AnimatedCounter({ value, isCurrency = false }: { value: number | string
   );
 }
 
-export function AdminKpiCards({
+export const AdminKpiCards = React.memo(function AdminKpiCards({
   stats,
   lang,
   isLoading = false,
@@ -277,4 +271,4 @@ export function AdminKpiCards({
       })}
     </div>
   );
-}
+});

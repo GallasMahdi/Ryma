@@ -20,7 +20,7 @@ interface ChangeOwnerPasswordModalProps {
   lang: Lang;
 }
 
-export function ChangeOwnerPasswordModal({
+export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordModal({
   isOpen,
   onClose,
   onSuccessToast,
@@ -230,4 +230,4 @@ export function ChangeOwnerPasswordModal({
       )}
     </AnimatePresence>
   );
-}
+});

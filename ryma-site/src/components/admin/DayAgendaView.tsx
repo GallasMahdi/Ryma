@@ -48,7 +48,7 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-export function DayAgendaView({
+export const DayAgendaView = React.memo(function DayAgendaView({
   appointments,
   lang,
   updateStatus,
@@ -393,4 +393,4 @@ export function DayAgendaView({
       />
     </div>
   );
-}
+});

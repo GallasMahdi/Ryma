@@ -36,7 +36,7 @@ interface CreateInvoiceModalProps {
   prefilledData?: Partial<CreateInvoiceInput> | null;
 }
 
-export function CreateInvoiceModal({
+export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
   isOpen,
   onClose,
   onCreated,
@@ -78,6 +78,7 @@ export function CreateInvoiceModal({
 
   // Filter patients by query
   const filteredPatients = useMemo(() => {
+    if (!isOpen) return [];
     const q = patientSearchQuery.toLowerCase().trim();
     if (!q) return patients.slice(0, 30);
     return patients
@@ -91,10 +92,11 @@ export function CreateInvoiceModal({
         );
       })
       .slice(0, 30);
-  }, [patients, patientSearchQuery]);
+  }, [isOpen, patients, patientSearchQuery]);
 
   // Close dropdown on outside click
   useEffect(() => {
+    if (!isOpen || !isPatientDropdownOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (patientDropdownRef.current && !patientDropdownRef.current.contains(e.target as Node)) {
         setIsPatientDropdownOpen(false);
@@ -102,7 +104,7 @@ export function CreateInvoiceModal({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen, isPatientDropdownOpen]);
 
   // Sync prefilled data whenever modal opens
   useEffect(() => {
@@ -723,4 +725,4 @@ export function CreateInvoiceModal({
       )}
     </AnimatePresence>
   );
-}
+});

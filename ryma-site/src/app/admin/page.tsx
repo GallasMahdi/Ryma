@@ -25,24 +25,38 @@ import {
 import { playNotificationChime } from '@/lib/sound';
 import { phonesMatch } from '@/lib/phone';
 
+import dynamic from 'next/dynamic';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminMobileNav, AdminTab } from '@/components/admin/AdminMobileNav';
 import { AdminKpiCards } from '@/components/admin/AdminKpiCards';
 import { AppointmentsTab } from '@/components/admin/AppointmentsTab';
-import { SlotsTab } from '@/components/admin/SlotsTab';
-import { AnalyticsTab } from '@/components/admin/AnalyticsTab';
-import { PatientNotesTab } from '@/components/admin/PatientNotesTab';
-import { InvoicesTab } from '@/components/admin/InvoicesTab';
-import { ReviewsTab } from '@/components/admin/ReviewsTab';
-import { AddAppointmentModal } from '@/components/admin/AddAppointmentModal';
-import { MultipleSessionsModal } from '@/components/admin/MultipleSessionsModal';
-import { CreateInvoiceModal } from '@/components/admin/CreateInvoiceModal';
-import { AdminCommandPalette } from '@/components/admin/AdminCommandPalette';
-import { ClinicHelpdeskDrawer } from '@/components/admin/ClinicHelpdeskDrawer';
-import { OwnerAuthModal } from '@/components/admin/OwnerAuthModal';
-import { ChangeOwnerPasswordModal } from '@/components/admin/ChangeOwnerPasswordModal';
 import { LuxuryToastContainer, LuxuryProgressBar, LuxuryToast } from '@/components/admin/LuxuryFeedback';
+
+// Code-split secondary tabs and heavy dialogs for fast initial dashboard charging
+const SlotsTab = dynamic(() => import('@/components/admin/SlotsTab').then(m => m.SlotsTab), {
+  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar horários...</div>,
+});
+const PatientNotesTab = dynamic(() => import('@/components/admin/PatientNotesTab').then(m => m.PatientNotesTab), {
+  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar pacientes...</div>,
+});
+const InvoicesTab = dynamic(() => import('@/components/admin/InvoicesTab').then(m => m.InvoicesTab), {
+  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar faturação...</div>,
+});
+const ReviewsTab = dynamic(() => import('@/components/admin/ReviewsTab').then(m => m.ReviewsTab), {
+  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar avaliações...</div>,
+});
+const AnalyticsTab = dynamic(() => import('@/components/admin/AnalyticsTab').then(m => m.AnalyticsTab), {
+  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar métricas...</div>,
+});
+
+const AddAppointmentModal = dynamic(() => import('@/components/admin/AddAppointmentModal').then(m => m.AddAppointmentModal));
+const MultipleSessionsModal = dynamic(() => import('@/components/admin/MultipleSessionsModal').then(m => m.MultipleSessionsModal));
+const CreateInvoiceModal = dynamic(() => import('@/components/admin/CreateInvoiceModal').then(m => m.CreateInvoiceModal));
+const AdminCommandPalette = dynamic(() => import('@/components/admin/AdminCommandPalette').then(m => m.AdminCommandPalette));
+const ClinicHelpdeskDrawer = dynamic(() => import('@/components/admin/ClinicHelpdeskDrawer').then(m => m.ClinicHelpdeskDrawer));
+const OwnerAuthModal = dynamic(() => import('@/components/admin/OwnerAuthModal').then(m => m.OwnerAuthModal));
+const ChangeOwnerPasswordModal = dynamic(() => import('@/components/admin/ChangeOwnerPasswordModal').then(m => m.ChangeOwnerPasswordModal));
 
 async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...opts, credentials: 'same-origin', cache: 'no-store' });
@@ -656,15 +670,27 @@ function AdminDashboardContent() {
     };
   }, [handleNewIncomingAppointment]);
 
-  // ── Auto-refresh & window focus sync ───────────────────────────────────────
+  // ── Auto-refresh & window focus sync (Optimized for Fast Charging) ─────────
   useEffect(() => {
-    Promise.all([fetchAppointments(false), fetchPatientNotes(), fetchInvoices(), fetchAdminMetadata()]);
+    // 1. Critical initial data: Appointments & Metadata for immediate display
+    fetchAppointments(false);
+    fetchAdminMetadata();
 
+    // 2. Staggered background prefetch for patients & invoices (zero-lag initial render)
+    const prefetchTimer = setTimeout(() => {
+      fetchPatientNotes();
+      fetchInvoices();
+    }, 450);
+
+    // 3. Fallback sync polling: SSE handles real-time live events.
+    // When SSE is connected, poll only every 35s as a safety sync.
+    // When SSE is disconnected, poll every 8s until reconnected.
+    const pollInterval = isLiveConnected ? 35000 : 8000;
     const interval = setInterval(() => {
       if (!document.hidden) {
         fetchAppointments(true);
       }
-    }, 6000);
+    }, pollInterval);
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -682,11 +708,21 @@ function AdminDashboardContent() {
     window.addEventListener('focus', handleWindowFocus);
 
     return () => {
+      clearTimeout(prefetchTimer);
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleWindowFocus);
     };
-  }, [fetchAppointments, fetchPatientNotes, fetchAdminMetadata]);
+  }, [fetchAppointments, fetchPatientNotes, fetchInvoices, fetchAdminMetadata, isLiveConnected]);
+
+  // If user immediately switches to patients or invoices tab before prefetch, fetch instantly
+  useEffect(() => {
+    if (activeTab === 'patients' && patientsList.length === 0) {
+      fetchPatientNotes();
+    } else if (activeTab === 'invoices' && invoices.length === 0) {
+      fetchInvoices();
+    }
+  }, [activeTab, patientsList.length, invoices.length, fetchPatientNotes, fetchInvoices]);
 
   // ── Cached Slot Fetching ───────────────────────────────────────────────────
   const fetchSlots = useCallback(async (date: string, forceRefresh = false) => {

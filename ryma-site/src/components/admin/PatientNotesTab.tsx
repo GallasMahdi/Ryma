@@ -43,13 +43,25 @@ import {
 import { SERVICES } from '@/data/services';
 import { Lang } from '@/lib/i18n';
 import { phonesMatch } from '@/lib/phone';
+import dynamic from 'next/dynamic';
 import { ResponsiveModal } from './ResponsiveModal';
-import { CreateInvoiceModal } from './CreateInvoiceModal';
-import { InvoiceDetailModal } from './InvoiceDetailModal';
-import { CreatePrescriptionModal } from './CreatePrescriptionModal';
-import { PrescriptionDetailModal } from './PrescriptionDetailModal';
-import { MultipleSessionsModal } from './MultipleSessionsModal';
 import { EvaScorePicker, getEvaColor } from './EvaScorePicker';
+
+const CreateInvoiceModal = dynamic(
+  () => import('./CreateInvoiceModal').then(m => m.CreateInvoiceModal)
+);
+const InvoiceDetailModal = dynamic(
+  () => import('./InvoiceDetailModal').then(m => m.InvoiceDetailModal)
+);
+const CreatePrescriptionModal = dynamic(
+  () => import('./CreatePrescriptionModal').then(m => m.CreatePrescriptionModal)
+);
+const PrescriptionDetailModal = dynamic(
+  () => import('./PrescriptionDetailModal').then(m => m.PrescriptionDetailModal)
+);
+const MultipleSessionsModal = dynamic(
+  () => import('./MultipleSessionsModal').then(m => m.MultipleSessionsModal)
+);
 import { formatPrescriptionWhatsAppMessage } from '@/lib/prescriptionPdf';
 import { SITE } from '@/lib/site';
 
@@ -73,7 +85,7 @@ interface PatientNotesTabProps {
   onActionToast?: (toast: { type: 'success' | 'error' | 'info' | 'loading'; title: string; message?: string }) => void;
 }
 
-export function PatientNotesTab({
+export const PatientNotesTab = React.memo(function PatientNotesTab({
   lang,
   patientNotes,
   patientsList = [],
@@ -259,9 +271,18 @@ export function PatientNotesTab({
   // Consolidated Patient Record List (Merge structured + legacy notes)
   const unifiedPatients: PatientRecord[] = useMemo(() => {
     const list: PatientRecord[] = [...patientsList];
+    const knownDigits = new Set<string>();
+    patientsList.forEach(p => {
+      const d = p.phone.replace(/\D/g, '');
+      if (d) {
+        knownDigits.add(d);
+        if (d.length >= 9) knownDigits.add(d.slice(-9));
+      }
+    });
 
     patientNotes.forEach(note => {
-      const exists = list.some(p => phonesMatch(p.phone, note.phone));
+      const nd = note.phone.replace(/\D/g, '');
+      const exists = knownDigits.has(nd) || (nd.length >= 9 && knownDigits.has(nd.slice(-9)));
       if (!exists) {
         list.push({
           id: 'legacy_' + note.phone,
@@ -273,6 +294,10 @@ export function PatientNotesTab({
           createdAt: note.updatedAt,
           updatedAt: note.updatedAt,
         });
+        if (nd) {
+          knownDigits.add(nd);
+          if (nd.length >= 9) knownDigits.add(nd.slice(-9));
+        }
       }
     });
 
@@ -2255,4 +2280,4 @@ export function PatientNotesTab({
       />
     </div>
   );
-}
+});

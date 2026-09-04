@@ -29,7 +29,7 @@ interface ReviewsTabProps {
   onAddToast?: (toast: { message: string; type: 'success' | 'error' | 'info' }) => void;
 }
 
-export function ReviewsTab({ lang, onAddToast }: ReviewsTabProps) {
+export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast }: ReviewsTabProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -667,4 +667,4 @@ export function ReviewsTab({ lang, onAddToast }: ReviewsTabProps) {
       </AnimatePresence>
     </div>
   );
-}
+});

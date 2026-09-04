@@ -65,7 +65,7 @@ export function getEvaColor(score: number): {
   };
 }
 
-export function EvaScorePicker({
+export const EvaScorePicker = React.memo(function EvaScorePicker({
   value,
   onChange,
   lang = 'pt',
@@ -131,4 +131,4 @@ export function EvaScorePicker({
       )}
     </div>
   );
-}
+});

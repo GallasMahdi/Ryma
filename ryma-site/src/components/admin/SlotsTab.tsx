@@ -46,7 +46,7 @@ const AFTERNOON_TIMES = ['14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '
 
 type BatchActionType = 'block_morning' | 'block_afternoon' | 'block_all' | 'unblock_all' | 'range' | null;
 
-export function SlotsTab({
+export const SlotsTab = React.memo(function SlotsTab({
   lang,
   selectedDateForSlots,
   setSelectedDateForSlots,
@@ -222,6 +222,12 @@ export function SlotsTab({
     }
   };
 
+  const apptMap = useMemo(() => {
+    const map = new Map<string, Appointment>();
+    appointments.forEach((a) => map.set(a.id, a));
+    return map;
+  }, [appointments]);
+
   const filterSlotItem = (st: SlotInfo) => {
     if (slotFilter === 'available') return st.available && st.reason !== 'blocked';
     if (slotFilter === 'booked') return !st.available && st.reason === 'booked';
@@ -231,7 +237,7 @@ export function SlotsTab({
 
   const renderSlotCard = (st: SlotInfo) => {
     const bookedAppt = st.appointmentId
-      ? appointments.find((a) => a.id === st.appointmentId)
+      ? apptMap.get(st.appointmentId) || null
       : null;
 
     const isBlocked = st.reason === 'blocked';
@@ -808,4 +814,4 @@ export function SlotsTab({
       </ResponsiveModal>
     </div>
   );
-}
+});

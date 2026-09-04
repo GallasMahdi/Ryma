@@ -38,8 +38,14 @@ import {
   Appointment,
   CreateInvoiceInput,
 } from '@/types/admin';
-import { CreateInvoiceModal } from './CreateInvoiceModal';
-import { InvoiceDetailModal } from './InvoiceDetailModal';
+import dynamic from 'next/dynamic';
+
+const CreateInvoiceModal = dynamic(
+  () => import('./CreateInvoiceModal').then(m => m.CreateInvoiceModal)
+);
+const InvoiceDetailModal = dynamic(
+  () => import('./InvoiceDetailModal').then(m => m.InvoiceDetailModal)
+);
 
 interface InvoicesTabProps {
   invoices: Invoice[];
@@ -56,7 +62,7 @@ interface InvoicesTabProps {
   lang: Lang;
 }
 
-export function InvoicesTab({
+export const InvoicesTab = React.memo(function InvoicesTab({
   invoices,
   stats,
   loading,
@@ -771,4 +777,4 @@ export function InvoicesTab({
       />
     </div>
   );
-}
+});

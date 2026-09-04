@@ -22,7 +22,7 @@ interface FilterSheetProps {
   totalResults: number;
 }
 
-export function FilterSheet({
+export const FilterSheet = React.memo(function FilterSheet({
   isOpen,
   onClose,
   lang,
@@ -201,4 +201,4 @@ export function FilterSheet({
       </div>
     </ResponsiveModal>
   );
-}
+});

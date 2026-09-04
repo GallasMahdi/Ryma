@@ -105,8 +105,9 @@ export function AdminCommandPalette({
     }
   }, [isOpen]);
 
-  // Combine unified patients list
+  // Combine unified patients list (computed only when palette is open)
   const unifiedPatients = useMemo(() => {
+    if (!isOpen) return [];
     const list: PatientRecord[] = [...patientsList];
     const existingPhones = new Set(list.map((p) => p.phone));
 
@@ -126,10 +127,11 @@ export function AdminCommandPalette({
     });
 
     return list;
-  }, [patientsList, patientNotes, lang]);
+  }, [isOpen, patientsList, patientNotes, lang]);
 
-  // Compute all available items
+  // Compute all available items (computed only when palette is open)
   const items = useMemo<PaletteItem[]>(() => {
+    if (!isOpen) return [];
     const q = query.toLowerCase().trim();
     const result: PaletteItem[] = [];
 

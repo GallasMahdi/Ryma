@@ -30,7 +30,7 @@ interface AdminSidebarProps {
   onOpenHelpdesk?: () => void;
 }
 
-export function AdminSidebar({
+export const AdminSidebar = React.memo(function AdminSidebar({
   activeTab,
   setActiveTab,
   lang,
@@ -230,4 +230,4 @@ export function AdminSidebar({
       </div>
     </aside>
   );
-}
+});

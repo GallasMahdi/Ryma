@@ -63,6 +63,7 @@ export function ClinicHelpdeskDrawer({
   });
 
   useEffect(() => {
+    if (!isOpen) return;
     if (typeof window !== 'undefined') {
       setClientDiag({
         userAgent: navigator.userAgent,
@@ -81,19 +82,30 @@ export function ClinicHelpdeskDrawer({
 
   // Full technical diagnostic payload
   const fullDiagnosticReport = useMemo(() => {
+    if (!isOpen) {
+      return {
+        activeTab: '',
+        sseLiveSync: '',
+        timestamp: '',
+        screenResolution: '',
+        browser: '',
+        networkStatus: '',
+        issueNotes: '',
+      };
+    }
     return {
       portal: 'Digital Clínica Admin Portal',
       version: 'v2.4',
       environment: process.env.NODE_ENV || 'production',
       activeTab,
-      sseLiveSync: isLiveConnected ? 'CONNECTED' : 'DISCONNECTED',
+      sseLiveSync: isLiveConnected ? 'CONNECTED (REAL-TIME ACTIVE)' : 'DISCONNECTED (FALLBACK MODE)',
       timestamp: new Date().toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' }),
       screenResolution: clientDiag.screen,
       browser: clientDiag.userAgent,
       networkStatus: clientDiag.online ? 'ONLINE' : 'OFFLINE',
       issueNotes: issueDescription.trim() || 'N/A',
     };
-  }, [activeTab, isLiveConnected, clientDiag, issueDescription]);
+  }, [isOpen, activeTab, isLiveConnected, clientDiag, issueDescription]);
 
   const handleSendDiagnosticViaWhatsApp = () => {
     const reportText = `🚨 *[RELATÓRIO DE SUPORTE - DIGITAL CLÍNICA]*\n` +

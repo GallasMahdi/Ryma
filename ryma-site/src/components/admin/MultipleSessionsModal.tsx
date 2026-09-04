@@ -65,7 +65,7 @@ const WEEKDAYS = [
   { day: 6, labelPt: 'Sáb', fullPt: 'Sábado',        labelFr: 'Sam', labelEn: 'Sat' },
 ];
 
-export function MultipleSessionsModal({
+export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
   isOpen,
   onClose,
   lang,
@@ -886,4 +886,4 @@ export function MultipleSessionsModal({
       </div>
     </ResponsiveModal>
   );
-}
+});

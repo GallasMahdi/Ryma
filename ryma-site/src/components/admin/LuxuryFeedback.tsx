@@ -23,7 +23,9 @@ interface LuxuryToastContainerProps {
   onDismiss: (id: string) => void;
 }
 
-export function LuxuryToastContainer({ toasts, onDismiss }: LuxuryToastContainerProps) {
+export const LuxuryToastContainer = React.memo(function LuxuryToastContainer({ toasts, onDismiss }: LuxuryToastContainerProps) {
+  if (toasts.length === 0) return null;
+
   return (
     <div className="fixed top-20 right-6 z-[999999] flex flex-col gap-2.5 max-w-sm sm:max-w-md w-full pointer-events-none px-4 sm:px-0">
       <AnimatePresence mode="popLayout">
@@ -94,7 +96,7 @@ export function LuxuryToastContainer({ toasts, onDismiss }: LuxuryToastContainer
       </AnimatePresence>
     </div>
   );
-}
+});
 
 /**
  * Top Global Progress Bar for Async Operations
@@ -103,7 +105,7 @@ interface LuxuryProgressBarProps {
   isLoading: boolean;
 }
 
-export function LuxuryProgressBar({ isLoading }: LuxuryProgressBarProps) {
+export const LuxuryProgressBar = React.memo(function LuxuryProgressBar({ isLoading }: LuxuryProgressBarProps) {
   return (
     <AnimatePresence>
       {isLoading && (
@@ -127,4 +129,4 @@ export function LuxuryProgressBar({ isLoading }: LuxuryProgressBarProps) {
       )}
     </AnimatePresence>
   );
-}
+});

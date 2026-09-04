@@ -31,10 +31,11 @@ export function ResponsiveModal({
   maxWidth = 'lg',
   showCloseButton = true,
 }: ResponsiveModalProps) {
-  // Close on Escape key
+  // Close on Escape key (attached only when open)
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape') {
         onClose();
       }
     };

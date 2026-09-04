@@ -29,7 +29,7 @@ interface InvoiceDetailModalProps {
   lang: Lang;
 }
 
-export function InvoiceDetailModal({
+export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
   invoice,
   isOpen,
   onClose,
@@ -479,4 +479,4 @@ export function InvoiceDetailModal({
       )}
     </AnimatePresence>
   );
-}
+});

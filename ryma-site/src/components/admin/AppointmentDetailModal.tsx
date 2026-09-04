@@ -48,7 +48,7 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-export function AppointmentDetailModal({
+export const AppointmentDetailModal = React.memo(function AppointmentDetailModal({
   isOpen,
   onClose,
   appointment,
@@ -397,4 +397,4 @@ export function AppointmentDetailModal({
       </div>
     </ResponsiveModal>
   );
-}
+});

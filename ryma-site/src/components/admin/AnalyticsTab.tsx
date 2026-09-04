@@ -39,7 +39,7 @@ interface AnalyticsTabProps {
   onOpenChangePassword?: () => void;
 }
 
-export function AnalyticsTab({
+export const AnalyticsTab = React.memo(function AnalyticsTab({
   lang,
   stats,
   analyticsData,
@@ -379,4 +379,4 @@ export function AnalyticsTab({
       </div>
     </div>
   );
-}
+});

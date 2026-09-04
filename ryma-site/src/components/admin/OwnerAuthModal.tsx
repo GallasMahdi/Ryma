@@ -20,7 +20,7 @@ interface OwnerAuthModalProps {
   lang: Lang;
 }
 
-export function OwnerAuthModal({
+export const OwnerAuthModal = React.memo(function OwnerAuthModal({
   isOpen,
   onSuccess,
   onCancel,
@@ -237,4 +237,4 @@ export function OwnerAuthModal({
       )}
     </AnimatePresence>
   );
-}
+});

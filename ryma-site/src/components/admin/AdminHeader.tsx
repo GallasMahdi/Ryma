@@ -33,7 +33,7 @@ interface AdminHeaderProps {
   onOpenHelpdesk?: () => void;
 }
 
-export function AdminHeader({
+export const AdminHeader = React.memo(function AdminHeader({
   lang,
   toggleLang,
   loadingAppointments,
@@ -242,4 +242,4 @@ export function AdminHeader({
       </div>
     </header>
   );
-}
+});

@@ -48,7 +48,7 @@ const WEEKDAY_NAMES: Record<Lang, string[]> = {
   en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
 };
 
-export function AdminDateJumpPicker({
+export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
   selectedDate,
   onSelectDate,
   lang,
@@ -168,6 +168,7 @@ export function AdminDateJumpPicker({
 
   // Generate calendar days for viewYear / viewMonth
   const calendarDays = useMemo(() => {
+    if (!isOpen) return [];
     const firstDayOfMonth = new Date(viewYear, viewMonth, 1, 12, 0, 0);
     const lastDayOfMonth = new Date(viewYear, viewMonth + 1, 0, 12, 0, 0);
     const daysInMonth = lastDayOfMonth.getDate();
@@ -236,7 +237,7 @@ export function AdminDateJumpPicker({
     }
 
     return days;
-  }, [viewYear, viewMonth, selectedDate, todayStr, appointmentDatesMap]);
+  }, [isOpen, viewYear, viewMonth, selectedDate, todayStr, appointmentDatesMap]);
 
   // Formatted date label for trigger button
   const formattedTriggerLabel = useMemo(() => {
@@ -539,4 +540,4 @@ export function AdminDateJumpPicker({
       </AnimatePresence>
     </div>
   );
-}
+});

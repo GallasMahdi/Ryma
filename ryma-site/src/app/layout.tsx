@@ -134,11 +134,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`notranslate ${cormorant.variable} ${plusJakartaSans.variable} ${fraunces.variable}`}
       suppressHydrationWarning
     >
-      <head>
+      <head suppressHydrationWarning>
         <meta name="google" content="notranslate" />
         {/* Schema.org LocalBusiness / MedicalBusiness */}
         <script
           type="application/ld+json"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
@@ -174,6 +175,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         {/* Instant synchronous language cookie sync from localStorage to eliminate flicker */}
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
@@ -192,6 +194,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         {/* Instant synchronous check: skip splash for bots, reduced motion, or returning users without flashing */}
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
@@ -209,6 +212,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         {/* Prevent browser extensions (Bitdefender bis_skin_checked, etc.) from causing React hydration mismatches */}
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

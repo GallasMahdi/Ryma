@@ -35,10 +35,16 @@ import {
   formatLocalDate,
 } from '@/types/admin';
 import { Lang } from '@/lib/i18n';
+import dynamic from 'next/dynamic';
 import { DayAgendaView } from './DayAgendaView';
 import { FilterSheet } from './FilterSheet';
-import { CreateInvoiceModal } from './CreateInvoiceModal';
-import { WhatsAppCommunicationModal } from './WhatsAppCommunicationModal';
+
+const CreateInvoiceModal = dynamic(
+  () => import('./CreateInvoiceModal').then(m => m.CreateInvoiceModal)
+);
+const WhatsAppCommunicationModal = dynamic(
+  () => import('./WhatsAppCommunicationModal').then(m => m.WhatsAppCommunicationModal)
+);
 
 // ─── Week Calendar View (Desktop / Tablet) ───────────────────────────────────
 
@@ -124,6 +130,7 @@ function WeekCalendarView({
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!selectedAppt) return;
     const handler = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         setSelectedAppt(null);
@@ -131,7 +138,7 @@ function WeekCalendarView({
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  }, [selectedAppt]);
 
   const weekDays = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -377,7 +384,7 @@ interface AppointmentsTabProps {
   recentNewIds?: Set<string>;
 }
 
-export function AppointmentsTab({
+export const AppointmentsTab = React.memo(function AppointmentsTab({
   lang,
   searchQuery,
   setSearchQuery,
@@ -1227,4 +1234,4 @@ export function AppointmentsTab({
       />
     </div>
   );
-}
+});
