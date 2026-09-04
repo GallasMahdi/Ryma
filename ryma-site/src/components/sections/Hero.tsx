@@ -177,7 +177,7 @@ export function Hero() {
                 fill
                 priority={index === 0}
                 loading={index === 0 ? 'eager' : 'lazy'}
-                quality={isActive ? 92 : 60}
+                quality={85}
                 sizes="100vw"
                 className="object-cover object-center"
               />

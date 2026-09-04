@@ -59,9 +59,12 @@
 }
 
 html {
-  scroll-behavior: smooth;
   scrollbar-width: thin;
   scrollbar-color: rgba(196, 154, 60, 0.35) transparent;
+}
+
+html[data-scroll-behavior="smooth"] {
+  scroll-behavior: smooth;
 }
 
 html.skip-splash #splash-screen-root {

@@ -130,6 +130,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang={initialLang}
       dir="ltr"
       translate="no"
+      data-scroll-behavior="smooth"
       className={`notranslate ${cormorant.variable} ${plusJakartaSans.variable} ${fraunces.variable}`}
       suppressHydrationWarning
     >

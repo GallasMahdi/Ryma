@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
       { reviews },
       {
         status: 200,
-        headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
+        headers: {
+          'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600',
+        },
       }
     );
   } catch (err) {

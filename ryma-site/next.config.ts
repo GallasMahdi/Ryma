@@ -51,7 +51,7 @@ const nextConfig: NextConfig = {
   compress: true,
   images: {
     formats: ['image/avif', 'image/webp'],
-    qualities: [70, 75, 85],
+    qualities: [60, 70, 75, 80, 85, 90, 92],
     minimumCacheTTL: 31536000,
   },
   experimental: {
@@ -115,6 +115,15 @@ const nextConfig: NextConfig = {
           {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/api/reviews',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, s-maxage=120, stale-while-revalidate=600',
           },
         ],
       },
