@@ -138,7 +138,7 @@ export function PatientNotesTab({
             setPatientInvoices(data.invoices);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
       return;
     }
 
@@ -174,7 +174,7 @@ export function PatientNotesTab({
             setPatientPrescriptions(data.prescriptions);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
       return;
     }
 
@@ -791,9 +791,8 @@ export function PatientNotesTab({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-start">
         {/* Patient Master List (Hidden on mobile when detail is open) */}
         <div
-          className={`lg:col-span-4 bg-white border border-[#E2E8F0] rounded-2xl p-3 sm:p-4 flex flex-col shadow-xs ${
-            isMobileDetailOpen ? 'hidden lg:flex' : 'flex'
-          }`}
+          className={`lg:col-span-4 bg-white border border-[#E2E8F0] rounded-2xl p-3 sm:p-4 flex flex-col shadow-xs ${isMobileDetailOpen ? 'hidden lg:flex' : 'flex'
+            }`}
         >
           {/* Search Box */}
           <div className="relative mb-3">
@@ -828,17 +827,15 @@ export function PatientNotesTab({
                 key={f.id}
                 type="button"
                 onClick={() => setQuickFilter(f.id)}
-                className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                  quickFilter === f.id
-                    ? 'bg-[#0F172A] text-white shadow-2xs'
-                    : 'bg-[#F1F5F9] text-[#64748B] hover:text-[#0F172A] hover:bg-[#E2E8F0]'
-                }`}
+                className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${quickFilter === f.id
+                  ? 'bg-[#0F172A] text-white shadow-2xs'
+                  : 'bg-[#F1F5F9] text-[#64748B] hover:text-[#0F172A] hover:bg-[#E2E8F0]'
+                  }`}
               >
                 <span>{f.label}</span>
                 <span
-                  className={`px-1 py-0.2 rounded text-[10px] font-mono ${
-                    quickFilter === f.id ? 'bg-white/20 text-white' : 'bg-[#E2E8F0] text-[#475569]'
-                  }`}
+                  className={`px-1 py-0.2 rounded text-[10px] font-mono ${quickFilter === f.id ? 'bg-white/20 text-white' : 'bg-[#E2E8F0] text-[#475569]'
+                    }`}
                 >
                   {f.count}
                 </span>
@@ -894,19 +891,17 @@ export function PatientNotesTab({
                   <button
                     key={p.id}
                     onClick={() => handleSelectPatient(p)}
-                    className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between group touch-target ${
-                      isSelected
-                        ? 'bg-[#F8FAFC] border-[#0F172A] shadow-xs ring-1 ring-[#0F172A]'
-                        : 'bg-white border-[#E2E8F0] hover:bg-[#F8FAFC] hover:border-[#CBD5E1]'
-                    }`}
+                    className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between group touch-target ${isSelected
+                      ? 'bg-[#F8FAFC] border-[#0F172A] shadow-xs ring-1 ring-[#0F172A]'
+                      : 'bg-white border-[#E2E8F0] hover:bg-[#F8FAFC] hover:border-[#CBD5E1]'
+                      }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border transition-colors ${
-                          isSelected
-                            ? 'bg-[#0F172A] text-white border-[#0F172A]'
-                            : 'bg-[#F1F5F9] text-[#334155] border-[#E2E8F0]'
-                        }`}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border transition-colors ${isSelected
+                          ? 'bg-[#0F172A] text-white border-[#0F172A]'
+                          : 'bg-[#F1F5F9] text-[#334155] border-[#E2E8F0]'
+                          }`}
                       >
                         {p.patientName.charAt(0).toUpperCase()}
                       </div>
@@ -931,9 +926,8 @@ export function PatientNotesTab({
                     </div>
                     <IconChevronRight
                       size={18}
-                      className={`shrink-0 ml-2 transition-transform group-hover:translate-x-0.5 ${
-                        isSelected ? 'text-[#0F172A]' : 'text-[#CBD5E1]'
-                      }`}
+                      className={`shrink-0 ml-2 transition-transform group-hover:translate-x-0.5 ${isSelected ? 'text-[#0F172A]' : 'text-[#CBD5E1]'
+                        }`}
                     />
                   </button>
                 );
@@ -983,11 +977,10 @@ export function PatientNotesTab({
                       key={`page-${num}`}
                       type="button"
                       onClick={() => setCurrentPage(Number(num))}
-                      className={`w-7 h-7 rounded-lg text-xs font-bold font-mono transition-all flex items-center justify-center ${
-                        isCurrent
-                          ? 'bg-[#0F172A] text-white shadow-2xs ring-1 ring-[#0F172A]'
-                          : 'bg-[#F8FAFC] border border-[#CBD5E1] text-[#475569] hover:bg-[#E2E8F0] hover:text-[#0F172A]'
-                      }`}
+                      className={`w-7 h-7 rounded-lg text-xs font-bold font-mono transition-all flex items-center justify-center ${isCurrent
+                        ? 'bg-[#0F172A] text-white shadow-2xs ring-1 ring-[#0F172A]'
+                        : 'bg-[#F8FAFC] border border-[#CBD5E1] text-[#475569] hover:bg-[#E2E8F0] hover:text-[#0F172A]'
+                        }`}
                     >
                       {num}
                     </button>
@@ -1022,9 +1015,8 @@ export function PatientNotesTab({
 
         {/* Patient Detail Dossier View */}
         <div
-          className={`lg:col-span-8 bg-white border border-[#E2E8F0] rounded-2xl p-3.5 sm:p-5 flex flex-col shadow-xs ${
-            !isMobileDetailOpen ? 'hidden lg:flex' : 'flex'
-          }`}
+          className={`lg:col-span-8 bg-white border border-[#E2E8F0] rounded-2xl p-3.5 sm:p-5 flex flex-col shadow-xs ${!isMobileDetailOpen ? 'hidden lg:flex' : 'flex'
+            }`}
         >
           {activePatient ? (
             <div className="flex flex-col space-y-4">
@@ -1219,19 +1211,17 @@ export function PatientNotesTab({
                             fetchActivePatientPrescriptions(activePatient.phone);
                           }
                         }}
-                        className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap select-none touch-target ${
-                          isActive
-                            ? 'bg-[#0F172A] text-white shadow-sm'
-                            : 'text-[#475569] hover:text-[#0F172A] hover:bg-white/80 active:scale-95'
-                        }`}
+                        className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap select-none touch-target ${isActive
+                          ? 'bg-[#0F172A] text-white shadow-sm'
+                          : 'text-[#475569] hover:text-[#0F172A] hover:bg-white/80 active:scale-95'
+                          }`}
                       >
                         <Icon size={15} className={isActive ? 'text-[#E8C97A]' : 'text-[#64748B]'} />
                         <span>{t.label}</span>
                         {t.count !== null && (
                           <span
-                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                              isActive ? 'bg-white/20 text-white' : 'bg-[#E2E8F0] text-[#334155]'
-                            }`}
+                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-[#E2E8F0] text-[#334155]'
+                              }`}
                           >
                             {t.count}
                           </span>
@@ -1293,11 +1283,10 @@ export function PatientNotesTab({
                           </div>
                         </div>
                         <div
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center justify-center ${
-                            evaAnalytics.diff > 0
-                              ? 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]'
-                              : 'bg-white text-[#64748B] border border-[#E2E8F0]'
-                          }`}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center justify-center ${evaAnalytics.diff > 0
+                            ? 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]'
+                            : 'bg-white text-[#64748B] border border-[#E2E8F0]'
+                            }`}
                         >
                           {evaAnalytics.diff > 0 ? `-${evaAnalytics.diff} pts (${txt('Amélioration', 'Improvement', 'Melhoria')})` : txt('Stable', 'Stable', 'Estável')}
                         </div>
@@ -1333,19 +1322,18 @@ export function PatientNotesTab({
                               <span className="font-bold text-[#0F172A] font-mono">{item.date}</span>
                               {item.time && <span className="text-[#64748B] font-mono">{item.time}</span>}
                               <span
-                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                                  item.source === 'online'
-                                    ? 'bg-[#DBEAFE] text-[#1E40AF] border border-[#BFDBFE]'
-                                    : item.source === 'paper'
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${item.source === 'online'
+                                  ? 'bg-[#DBEAFE] text-[#1E40AF] border border-[#BFDBFE]'
+                                  : item.source === 'paper'
                                     ? 'bg-[#FEF9C3] text-[#854D0E] border border-[#FEF08A]'
                                     : 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]'
-                                }`}
+                                  }`}
                               >
                                 {item.source === 'online'
                                   ? txt('En ligne', 'Online', 'Online')
                                   : item.source === 'paper'
-                                  ? txt('Ordonnance papier', 'Paper Rx', 'Papel')
-                                  : txt('Presencial', 'Clinic', 'Presencial')}
+                                    ? txt('Ordonnance papier', 'Paper Rx', 'Papel')
+                                    : txt('Presencial', 'Clinic', 'Presencial')}
                               </span>
                             </div>
 
@@ -1403,19 +1391,18 @@ export function PatientNotesTab({
                               </div>
                             </div>
                             <span
-                              className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                                evaAnalytics.diff > 0
-                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                  : evaAnalytics.diff < 0
+                              className={`px-2 py-1 rounded-lg text-xs font-bold ${evaAnalytics.diff > 0
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                : evaAnalytics.diff < 0
                                   ? 'bg-rose-50 text-rose-800 border border-rose-200'
                                   : 'bg-slate-50 text-slate-700 border border-slate-200'
-                              }`}
+                                }`}
                             >
                               {evaAnalytics.diff > 0
                                 ? `-${evaAnalytics.diff} pts (${Math.round((evaAnalytics.diff / (evaAnalytics.initial || 1)) * 100)}%)`
                                 : evaAnalytics.diff < 0
-                                ? `+${Math.abs(evaAnalytics.diff)} pts`
-                                : txt('Estável', 'Stable', 'Stable')}
+                                  ? `+${Math.abs(evaAnalytics.diff)} pts`
+                                  : txt('Estável', 'Stable', 'Stable')}
                             </span>
                           </div>
                         )}
@@ -1502,11 +1489,10 @@ export function PatientNotesTab({
                                             key={num}
                                             type="button"
                                             onClick={() => handleUpdateSessionEva(s.id, num)}
-                                            className={`py-1.5 rounded-lg font-bold text-xs text-center transition-all ${
-                                              isCurrent
-                                                ? `${c.bg} text-white shadow-sm ring-2 ring-[#0F172A] ring-offset-1`
-                                                : 'bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#CBD5E1] text-[#334155]'
-                                            }`}
+                                            className={`py-1.5 rounded-lg font-bold text-xs text-center transition-all ${isCurrent
+                                              ? `${c.bg} text-white shadow-sm ring-2 ring-[#0F172A] ring-offset-1`
+                                              : 'bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#CBD5E1] text-[#334155]'
+                                              }`}
                                           >
                                             {num}
                                           </button>
@@ -1579,11 +1565,10 @@ export function PatientNotesTab({
                                     {inv.invoiceNumber}
                                   </span>
                                   <span
-                                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
-                                      inv.paymentStatus === 'PAID'
-                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                        : 'bg-amber-50 text-amber-700 border border-amber-200'
-                                    }`}
+                                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${inv.paymentStatus === 'PAID'
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                      }`}
                                   >
                                     {inv.paymentStatus === 'PAID' ? 'Pago' : 'Pendente'}
                                   </span>

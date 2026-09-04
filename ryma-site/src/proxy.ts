@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Next.js Edge Middleware.
+ * Next.js Edge Proxy (migrated from deprecated middleware convention in Next.js 16).
  *
  * Protects all /admin/* routes (except /admin/login itself):
  *  - Unauthenticated (no session cookie) → immediate 307 redirect to /admin/login
@@ -9,9 +9,9 @@ import { NextRequest, NextResponse } from 'next/server';
  *
  * NOTE: Full cryptographic unsealing and session TTL validation is enforced
  * inside each protected API route handler via requireAdmin() / requireOwnerAnalytics().
- * This edge middleware ensures unauthenticated users never download or render the /admin HTML/JS bundle.
+ * This edge proxy ensures unauthenticated users never download or render the /admin HTML/JS bundle.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Let the login page through with no-store headers
