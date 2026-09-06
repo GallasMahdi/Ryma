@@ -24,6 +24,7 @@ import { LogoIcon } from '@/components/ui/Logo';
 import { SITE } from '@/lib/site';
 import { playSoftClick } from '@/lib/sound';
 import { getRecaptchaToken } from '@/lib/recaptcha-client';
+import { validateAndNormalizePhone } from '@/lib/phone';
 
 function formatFullConfirmationDate(dateStr: string, lang = 'pt'): string {
   try {
@@ -556,9 +557,9 @@ function BookingWizardContent() {
       return;
     }
 
-    // Basic phone format sanity check (must have at least 7 digits)
-    const digitsOnly = phoneTrimmed.replace(/\D/g, '');
-    if (digitsOnly.length < 7) {
+    // Authoritative phone format validation according to selected language
+    const phoneCheck = validateAndNormalizePhone(phoneTrimmed, lang);
+    if (!phoneCheck.isValid) {
       markFieldError('phone');
       showToast({
         type: 'error',
@@ -567,9 +568,11 @@ function BookingWizardContent() {
             lang === 'en' ? 'Invalid phone number' :
               'Numéro invalide',
         message:
-          lang === 'pt' ? 'O número de telefone parece inválido. Exemplo: +351 912 345 678' :
-            lang === 'en' ? 'The phone number looks invalid. Example: +351 912 345 678' :
-              'Le numéro de téléphone semble invalide. Exemple: +351 912 345 678',
+          phoneCheck.error || (
+            lang === 'pt' ? 'Por favor, insira um número de telefone válido (ex: 912 345 678 ou +351 912 345 678).' :
+              lang === 'en' ? 'Please enter a valid phone number (e.g. 912 345 678 or +351 912 345 678).' :
+                'Veuillez entrer un numéro de téléphone valide (ex: 912 345 678 ou +351 912 345 678).'
+          ),
         field: 'phone',
       });
       return;
@@ -626,6 +629,7 @@ function BookingWizardContent() {
           date: selectedDate,
           startTime: selectedSlot,
           recaptchaToken: recaptchaToken || undefined,
+          lang,
         }),
       });
 
@@ -666,13 +670,42 @@ function BookingWizardContent() {
             duration: 6000,
           });
         } else {
+          // Translate known server error messages or error codes to the active language
+          let errorMsg = data.error;
+          if (
+            data.errorCode === 'INVALID_PHONE' ||
+            data.errorCode === 'PHONE_REQUIRED' ||
+            errorMsg?.includes('número de telefone válido') ||
+            errorMsg?.includes('telefone')
+          ) {
+            errorMsg =
+              lang === 'pt' ? 'Por favor, insira um número de telefone válido (ex: 912 345 678 ou +351 912 345 678).' :
+                lang === 'en' ? 'Please enter a valid phone number (e.g. 912 345 678 or +351 912 345 678).' :
+                  'Veuillez entrer un numéro de téléphone valide (ex: 912 345 678 ou +351 912 345 678).';
+          } else if (data.errorCode === 'PATIENT_NAME_REQUIRED' || errorMsg?.includes('nome do utente')) {
+            errorMsg =
+              lang === 'pt' ? 'O nome do utente é obrigatório (mínimo 2 caracteres).' :
+                lang === 'en' ? 'Patient name is required (minimum 2 characters).' :
+                  'Le nom du patient est obligatoire (minimum 2 caractères).';
+          } else if (data.errorCode === 'INVALID_EMAIL' || errorMsg?.includes('email')) {
+            errorMsg =
+              lang === 'pt' ? 'Endereço de email inválido.' :
+                lang === 'en' ? 'Invalid email address.' :
+                  'Adresse e-mail invalide.';
+          } else if (data.errorCode === 'PAST_DATE' || data.errorCode === 'PAST_TIME' || errorMsg?.includes('passado')) {
+            errorMsg =
+              lang === 'pt' ? 'A data ou horário da consulta não pode ser no passado.' :
+                lang === 'en' ? 'The appointment date or time cannot be in the past.' :
+                  'La date ou l’heure du rendez-vous ne peut pas être dans le passé.';
+          }
+
           showToast({
             type: 'error',
             title:
               lang === 'pt' ? 'Erro no agendamento' :
                 lang === 'en' ? 'Booking error' :
                   'Erreur de réservation',
-            message: data.error ?? (
+            message: errorMsg ?? (
               lang === 'pt' ? 'Ocorreu um erro. Por favor tente novamente.' :
                 lang === 'en' ? 'An error occurred. Please try again.' :
                   'Une erreur est survenue. Veuillez réessayer.'

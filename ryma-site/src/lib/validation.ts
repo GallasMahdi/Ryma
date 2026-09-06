@@ -1,5 +1,6 @@
 import { SERVICES } from '@/data/services';
 import { validateAndNormalizePhone } from '@/lib/phone';
+import type { Lang } from '@/lib/i18n';
 
 // Shared server-side validation utilities.
 // These are the ONLY valid values — they are enforced here, not in frontend code.
@@ -20,6 +21,7 @@ interface ValidationResult {
 interface ValidationError {
   ok: false;
   error: string;
+  errorCode?: string;
 }
 
 /**
@@ -27,51 +29,135 @@ interface ValidationError {
  * This runs SERVER-SIDE — it is the authoritative source of truth.
  */
 export function validateAppointmentInput(
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  preferredLang?: Lang
 ): ValidationResult | ValidationError {
+  const lang: Lang = (body.lang as Lang) || preferredLang || 'pt';
   const { patientName, phone, service, date, startTime } = body;
 
   // Required string fields
   if (!patientName || typeof patientName !== 'string' || patientName.trim().length < 2) {
-    return { ok: false, error: 'O nome do utente é obrigatório (mínimo 2 caracteres).' };
+    return {
+      ok: false,
+      errorCode: 'PATIENT_NAME_REQUIRED',
+      error:
+        lang === 'fr'
+          ? 'Le nom du patient est obligatoire (minimum 2 caractères).'
+          : lang === 'en'
+          ? 'Patient name is required (minimum 2 characters).'
+          : 'O nome do utente é obrigatório (mínimo 2 caracteres).',
+    };
   }
 
   // Reject malicious HTML tags, script injection, and CSV formula prefixes in patient name
   if (/[<>]|javascript:|data:/i.test(patientName)) {
-    return { ok: false, error: 'O nome do utente contém caracteres ou formatação inválida.' };
+    return {
+      ok: false,
+      errorCode: 'PATIENT_NAME_INVALID',
+      error:
+        lang === 'fr'
+          ? 'Le nom du patient contient des caractères non autorisés.'
+          : lang === 'en'
+          ? 'Patient name contains invalid characters or formatting.'
+          : 'O nome do utente contém caracteres ou formatação inválida.',
+    };
   }
   if (/^[=\+\-@\t\r]/.test(patientName.trim())) {
-    return { ok: false, error: 'O nome do utente não pode iniciar com símbolos de fórmula (=, @, +, -).' };
+    return {
+      ok: false,
+      errorCode: 'PATIENT_NAME_FORMULA',
+      error:
+        lang === 'fr'
+          ? 'Le nom du patient ne peut pas commencer par un symbole de formule (=, @, +, -).'
+          : lang === 'en'
+          ? 'Patient name cannot start with formula symbols (=, @, +, -).'
+          : 'O nome do utente não pode iniciar com símbolos de fórmula (=, @, +, -).',
+    };
   }
 
   if (!phone || typeof phone !== 'string') {
-    return { ok: false, error: 'O número de telefone é obrigatório.' };
+    return {
+      ok: false,
+      errorCode: 'PHONE_REQUIRED',
+      error:
+        lang === 'fr'
+          ? 'Le numéro de téléphone est obligatoire.'
+          : lang === 'en'
+          ? 'Phone number is required.'
+          : 'O número de telefone é obrigatório.',
+    };
   }
 
-  const phoneValidation = validateAndNormalizePhone(phone);
+  const phoneValidation = validateAndNormalizePhone(phone, lang);
   if (!phoneValidation.isValid) {
-    return { ok: false, error: phoneValidation.error || 'Número de telefone inválido (ex: 912 345 678).' };
+    return {
+      ok: false,
+      errorCode: phoneValidation.errorCode || 'INVALID_PHONE',
+      error:
+        phoneValidation.error ||
+        (lang === 'fr'
+          ? 'Veuillez entrer un numéro de téléphone valide (ex: 912 345 678 ou +351 912 345 678).'
+          : lang === 'en'
+          ? 'Please enter a valid phone number (e.g. 912 345 678 or +351 912 345 678).'
+          : 'Por favor, insira um número de telefone válido (ex: 912 345 678 ou +351 912 345 678).'),
+    };
   }
 
   // Service must be in the allowed list
   if (!service || typeof service !== 'string' || !VALID_SERVICES.includes(service.trim())) {
-    return { ok: false, error: 'Tratamento / cuidado não reconhecido.' };
+    return {
+      ok: false,
+      errorCode: 'INVALID_SERVICE',
+      error:
+        lang === 'fr'
+          ? 'Soin / prestation non reconnu.'
+          : lang === 'en'
+          ? 'Unrecognized treatment / service.'
+          : 'Tratamento / cuidado não reconhecido.',
+    };
   }
 
   // Date format
   if (!date || typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return { ok: false, error: 'Formato de data inválido (AAAA-MM-DD).' };
+    return {
+      ok: false,
+      errorCode: 'INVALID_DATE_FORMAT',
+      error:
+        lang === 'fr'
+          ? 'Format de date invalide (AAAA-MM-JJ).'
+          : lang === 'en'
+          ? 'Invalid date format (YYYY-MM-DD).'
+          : 'Formato de data inválido (AAAA-MM-DD).',
+    };
   }
 
   // Date must not be in the past
   const todayStr = new Date().toISOString().split('T')[0];
   if (date < todayStr) {
-    return { ok: false, error: 'A data da consulta não pode ser no passado.' };
+    return {
+      ok: false,
+      errorCode: 'PAST_DATE',
+      error:
+        lang === 'fr'
+          ? 'La date du rendez-vous ne peut pas être dans le passé.'
+          : lang === 'en'
+          ? 'The appointment date cannot be in the past.'
+          : 'A data da consulta não pode ser no passado.',
+    };
   }
 
   // Time must be in the allowed slots
   if (!startTime || !VALID_TIME_SLOTS.includes(startTime as typeof VALID_TIME_SLOTS[number])) {
-    return { ok: false, error: 'Horário selecionado inválido.' };
+    return {
+      ok: false,
+      errorCode: 'INVALID_SLOT',
+      error:
+        lang === 'fr'
+          ? 'Créneau horaire sélectionné invalide.'
+          : lang === 'en'
+          ? 'Selected time slot is invalid.'
+          : 'Horário selecionado inválido.',
+    };
   }
 
   // If date is today, slot must not be in the past
@@ -79,7 +165,16 @@ export function validateAppointmentInput(
     const now = new Date();
     const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     if (String(startTime) <= currentHHMM) {
-      return { ok: false, error: 'Este horário já passou para o dia de hoje.' };
+      return {
+        ok: false,
+        errorCode: 'PAST_TIME',
+        error:
+          lang === 'fr'
+            ? 'Ce créneau est déjà passé pour aujourd’hui.'
+            : lang === 'en'
+            ? 'This time slot has already passed for today.'
+            : 'Este horário já passou para o dia de hoje.',
+      };
     }
   }
 
@@ -87,13 +182,31 @@ export function validateAppointmentInput(
   if (body.email && typeof body.email === 'string' && body.email.trim().length > 0) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(body.email.trim())) {
-      return { ok: false, error: 'Endereço de email inválido.' };
+      return {
+        ok: false,
+        errorCode: 'INVALID_EMAIL',
+        error:
+          lang === 'fr'
+            ? 'Adresse e-mail invalide.'
+            : lang === 'en'
+            ? 'Invalid email address.'
+            : 'Endereço de email inválido.',
+      };
     }
   }
 
   // Notes length limit (prevent oversized input)
   if (body.notes && typeof body.notes === 'string' && body.notes.length > 1000) {
-    return { ok: false, error: 'As notas clínicas não podem exceder 1000 caracteres.' };
+    return {
+      ok: false,
+      errorCode: 'NOTES_TOO_LONG',
+      error:
+        lang === 'fr'
+          ? 'Les notes ne peuvent pas dépasser 1000 caractères.'
+          : lang === 'en'
+          ? 'Clinical notes cannot exceed 1000 characters.'
+          : 'As notas clínicas não podem exceder 1000 caracteres.',
+    };
   }
 
   return { ok: true };

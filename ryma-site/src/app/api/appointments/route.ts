@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Server-side validation — never trust client values
     const validation = validateAppointmentInput(body);
     if (!validation.ok) {
-      return NextResponse.json({ error: validation.error }, { status: 422 });
+      return NextResponse.json({ error: validation.error, errorCode: validation.errorCode }, { status: 422 });
     }
 
     // Per-phone rate limit: 3 bookings per phone number per hour

@@ -16,24 +16,33 @@
  *    and at least 7-15 digits (E.164 standard), they are accepted to accommodate international patients in Lisbon.
  */
 
+import type { Lang } from '@/lib/i18n';
+
 export interface PhoneValidationResult {
   isValid: boolean;
   normalized: string; // Clean normalized string with E.164 '+351...' or international prefix
   formatted: string;  // User-friendly display format (e.g. "+351 912 345 678")
   error?: string;
+  errorCode?: 'PHONE_REQUIRED' | 'INVALID_PHONE';
 }
 
 /**
  * Normalizes and validates a phone input string.
  */
-export function validateAndNormalizePhone(rawPhone: string): PhoneValidationResult {
+export function validateAndNormalizePhone(rawPhone: string, lang: Lang = 'pt'): PhoneValidationResult {
+  const getRequiredError = () => {
+    if (lang === 'fr') return 'Le numéro de téléphone est obligatoire.';
+    if (lang === 'en') return 'Phone number is required.';
+    return 'O número de telefone é obrigatório.';
+  };
+
   if (!rawPhone || typeof rawPhone !== 'string') {
-    return { isValid: false, normalized: '', formatted: '', error: 'O número de telefone é obrigatório.' };
+    return { isValid: false, normalized: '', formatted: '', errorCode: 'PHONE_REQUIRED', error: getRequiredError() };
   }
 
   const trimmed = rawPhone.trim();
   if (trimmed.length === 0) {
-    return { isValid: false, normalized: '', formatted: '', error: 'O número de telefone é obrigatório.' };
+    return { isValid: false, normalized: '', formatted: '', errorCode: 'PHONE_REQUIRED', error: getRequiredError() };
   }
 
   // Strip all whitespace, dots, dashes, parentheses
@@ -84,7 +93,13 @@ export function validateAndNormalizePhone(rawPhone: string): PhoneValidationResu
     isValid: false,
     normalized: '',
     formatted: '',
-    error: 'Por favor, insira um número de telefone válido (ex: 912 345 678 ou +351 912 345 678).',
+    errorCode: 'INVALID_PHONE',
+    error:
+      lang === 'fr'
+        ? 'Veuillez entrer un numéro de téléphone valide (ex: 912 345 678 ou +351 912 345 678).'
+        : lang === 'en'
+        ? 'Please enter a valid phone number (e.g. 912 345 678 or +351 912 345 678).'
+        : 'Por favor, insira um número de telefone válido (ex: 912 345 678 ou +351 912 345 678).',
   };
 }
 
