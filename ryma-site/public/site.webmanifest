@@ -4,8 +4,8 @@
   "description": "Clínica de fisioterapia médica e estética avançada em Lisboa.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1A1412",
-  "theme_color": "#1A1412",
+  "background_color": "#0A0E14",
+  "theme_color": "#0A0E14",
   "icons": [
     {
       "src": "/icon-192.png",

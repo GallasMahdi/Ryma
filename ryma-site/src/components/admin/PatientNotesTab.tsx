@@ -2297,6 +2297,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           if (activePatient) fetchActivePatientPrescriptions(activePatient.phone);
         }}
         lang={lang}
+        setConfirmDialog={setConfirmDialog}
       />
     </div>
   );

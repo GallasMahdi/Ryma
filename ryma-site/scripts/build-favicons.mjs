@@ -6,64 +6,50 @@ const ROOT_DIR = process.cwd();
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const APP_DIR = path.join(ROOT_DIR, 'src', 'app');
 
-// 1. Read light logo mark (white / warm silhouette)
-const logoLightPath = path.join(PUBLIC_DIR, 'logo-mark-light.png');
-const logoDarkPath = path.join(PUBLIC_DIR, 'logo-mark.png');
+// Ensure directories exist
+if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+if (!fs.existsSync(APP_DIR)) fs.mkdirSync(APP_DIR, { recursive: true });
 
+// Read the official light/white logo mark from public/logo-mark-light.png
+const logoLightPath = path.join(PUBLIC_DIR, 'logo-mark-light.png');
 if (!fs.existsSync(logoLightPath)) {
-  console.error('Missing logo-mark-light.png');
+  console.error('Missing logo-mark-light.png at', logoLightPath);
   process.exit(1);
 }
 
 const logoLightBase64 = fs.readFileSync(logoLightPath).toString('base64');
 
-// High-resolution Vector/SVG Master Favicon
-// Luxury dark squircle (#1A1412) with subtle radial gradient, dual-stop gold border (#F5E9C8 -> #C49A3C -> #8A6A24),
-// and the crisp white/gold monogram emblem centered perfectly.
+// High-resolution SVG Master Favicon
+// White and Black luxury design: Deep obsidian black badge (#0A0E14) with crisp white border (#FFFFFF)
+// and the iconic navbar D C monogram & silhouette in pure white (#FFFFFF).
 const masterSvg = `<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="badgeBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#241C18" />
-      <stop offset="50%" stop-color="#1A1412" />
-      <stop offset="100%" stop-color="#0E0A09" />
-    </linearGradient>
-    <linearGradient id="goldBorder" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FCEFC7" />
-      <stop offset="35%" stop-color="#E8C97A" />
-      <stop offset="70%" stop-color="#C49A3C" />
-      <stop offset="100%" stop-color="#8A6A24" />
-    </linearGradient>
-    <filter id="goldGlow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#C49A3C" flood-opacity="0.25" />
-    </filter>
-  </defs>
+  <!-- Outer Rounded Squircle Badge with crisp white border -->
+  <rect x="20" y="20" width="472" height="472" rx="116" fill="#0A0E14" stroke="#FFFFFF" stroke-width="16" stroke-opacity="0.88" />
   
-  <!-- Outer Rounded Squircle Badge with Glow & Gold Bezel -->
-  <rect x="20" y="20" width="472" height="472" rx="116" fill="url(#badgeBg)" stroke="url(#goldBorder)" stroke-width="18" filter="url(#goldGlow)" />
+  <!-- Subtle inner platinum rim -->
+  <rect x="36" y="36" width="440" height="440" rx="100" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.25" />
   
-  <!-- Inner subtle gold border accent -->
-  <rect x="36" y="36" width="440" height="440" rx="100" fill="none" stroke="#C49A3C" stroke-width="2" stroke-opacity="0.35" />
-  
-  <!-- Emblem Centerpiece -->
-  <image x="72" y="72" width="368" height="368" href="data:image/png;base64,${logoLightBase64}" />
+  <!-- Iconic D C Emblem Centerpiece (exact navbar logo mark) -->
+  <image x="64" y="64" width="384" height="384" href="data:image/png;base64,${logoLightBase64}" />
 </svg>`;
 
 async function main() {
-  console.log('Generating production-ready luxury favicons...');
+  console.log('Generating white and black D C luxury favicons...');
 
   const svgBuffer = Buffer.from(masterSvg);
 
-  // Write SVGs
-  fs.writeFileSync(path.join(PUBLIC_DIR, 'favicon.svg'), masterSvg);
-  fs.writeFileSync(path.join(PUBLIC_DIR, 'icon.svg'), masterSvg);
-  fs.writeFileSync(path.join(APP_DIR, 'icon.svg'), masterSvg);
+  // 1. Write SVG favicons
+  fs.writeFileSync(path.join(PUBLIC_DIR, 'favicon.svg'), masterSvg, 'utf8');
+  fs.writeFileSync(path.join(PUBLIC_DIR, 'icon.svg'), masterSvg, 'utf8');
+  fs.writeFileSync(path.join(APP_DIR, 'icon.svg'), masterSvg, 'utf8');
   console.log('✓ Written SVG favicons (public/favicon.svg, public/icon.svg, src/app/icon.svg)');
 
-  // Generate PNG sizes with sharp
+  // 2. Generate PNG sizes with sharp
   const sizes = [
     { size: 16, name: 'favicon-16x16.png', publicOnly: true },
     { size: 32, name: 'favicon-32x32.png', appName: 'icon.png' },
     { size: 48, name: 'favicon-48x48.png', appName: 'favicon-48x48.png' },
+    { size: 48, name: 'logo-48x48.png', publicOnly: true },
     { size: 180, name: 'apple-touch-icon.png', appName: 'apple-icon.png' },
     { size: 192, name: 'icon-192.png', publicOnly: true },
     { size: 512, name: 'icon-512.png', publicOnly: true },
@@ -72,11 +58,14 @@ async function main() {
   const pngBuffers = {};
 
   for (const { size, name, appName, publicOnly } of sizes) {
-    const buf = await sharp(svgBuffer)
-      .resize(size, size, { fit: 'contain' })
-      .png({ compressionLevel: 9, quality: 100 })
-      .toBuffer();
+    let pipeline = sharp(svgBuffer).resize(size, size, { fit: 'contain' });
+    
+    // For small favicon sizes, enhance sharpness for crisp visibility
+    if (size <= 32) {
+      pipeline = pipeline.sharpen({ sigma: 1.1, m1: 1.5, m2: 0.7 });
+    }
 
+    const buf = await pipeline.png({ compressionLevel: 9, quality: 100 }).toBuffer();
     pngBuffers[size] = buf;
 
     // Write to public
@@ -90,10 +79,10 @@ async function main() {
     }
   }
 
-  // Also write 32x32 to src/app/favicon-32x32.png if it exists
+  // Also write 32x32 to src/app/favicon-32x32.png
   fs.writeFileSync(path.join(APP_DIR, 'favicon-32x32.png'), pngBuffers[32]);
 
-  // Create multi-image ICO file (16x16, 32x32, 48x48)
+  // 3. Create multi-image ICO file (16x16, 32x32, 48x48)
   const icoBuffer = createIco([
     { size: 16, buffer: pngBuffers[16] },
     { size: 32, buffer: pngBuffers[32] },
@@ -104,15 +93,15 @@ async function main() {
   fs.writeFileSync(path.join(APP_DIR, 'favicon.ico'), icoBuffer);
   console.log('✓ Generated multi-res favicon.ico (16, 32, 48px) for public/ and src/app/');
 
-  // Web App Manifest
+  // 4. Update site.webmanifest
   const manifest = {
     name: 'Digital Clínica — Fisioterapia & Estética Avançada',
     short_name: 'Digital Clínica',
     description: 'Clínica de fisioterapia médica e estética avançada em Lisboa.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#1A1412',
-    theme_color: '#1A1412',
+    background_color: '#0A0E14',
+    theme_color: '#0A0E14',
     icons: [
       {
         src: '/icon-192.png',
@@ -143,16 +132,11 @@ async function main() {
  * Creates standard ICO binary buffer embedding PNG images
  */
 function createIco(images) {
-  // ICO header: 6 bytes
-  // Reserved (2 bytes) = 0
-  // Type (2 bytes) = 1 (ICO)
-  // Count (2 bytes) = images.length
   const header = Buffer.alloc(6);
   header.writeUInt16LE(0, 0);
   header.writeUInt16LE(1, 2);
   header.writeUInt16LE(images.length, 4);
 
-  // Directory entries: 16 bytes each
   const dirSize = images.length * 16;
   const dir = Buffer.alloc(dirSize);
   let currentOffset = 6 + dirSize;

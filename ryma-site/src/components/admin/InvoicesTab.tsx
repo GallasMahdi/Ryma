@@ -60,6 +60,13 @@ interface InvoicesTabProps {
   isAnalyticsUnlocked?: boolean;
   onUnlockClick?: () => void;
   lang: Lang;
+  setConfirmDialog?: (dlg: {
+    title: string;
+    description?: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+  } | null) => void;
 }
 
 export const InvoicesTab = React.memo(function InvoicesTab({
@@ -75,6 +82,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
   isAnalyticsUnlocked = false,
   onUnlockClick,
   lang,
+  setConfirmDialog,
 }: InvoicesTabProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | InvoicePaymentStatus>('all');
@@ -774,6 +782,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
         onUpdateStatus={onUpdateStatus}
         onDelete={onDelete}
         lang={lang}
+        setConfirmDialog={setConfirmDialog}
       />
     </div>
   );

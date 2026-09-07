@@ -27,6 +27,13 @@ interface InvoiceDetailModalProps {
   onUpdateStatus?: (id: string, newStatus: InvoicePaymentStatus, newMethod?: PaymentMethod) => void;
   onDelete?: (id: string) => void;
   lang: Lang;
+  setConfirmDialog?: (dlg: {
+    title: string;
+    description?: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+  } | null) => void;
 }
 
 export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
@@ -36,6 +43,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
   onUpdateStatus,
   onDelete,
   lang,
+  setConfirmDialog,
 }: InvoiceDetailModalProps) {
   const txt = (frStr: string, enStr: string, ptStr: string) => {
     if (lang === 'fr') return frStr;
@@ -451,17 +459,30 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                 <button
                   type="button"
                   onClick={() => {
-                    if (
-                      confirm(
-                        txt(
-                          'Êtes-vous sûr de vouloir annuler ce reçu ?',
-                          'Are you sure you want to void this invoice?',
-                          'Tem a certeza que deseja anular esta fatura/recibo?'
-                        )
-                      )
-                    ) {
+                    const title = txt(
+                      'Êtes-vous sûr de vouloir annuler ce reçu ?',
+                      'Are you sure you want to void this invoice?',
+                      'Tem a certeza que deseja anular esta fatura/recibo?'
+                    );
+                    const desc = txt(
+                      'Cette action marquera définitivement ce reçu comme annulé.',
+                      'This action will permanently mark this invoice as voided.',
+                      'Esta ação irá anular permanentemente este documento.'
+                    );
+                    const doVoid = () => {
                       onDelete(invoice.id);
                       onClose();
+                    };
+                    if (setConfirmDialog) {
+                      setConfirmDialog({
+                        title,
+                        description: desc,
+                        confirmText: txt('Annuler le Reçu', 'Void Invoice', 'Anular'),
+                        cancelText: txt('Fermer', 'Cancel', 'Cancelar'),
+                        onConfirm: doVoid,
+                      });
+                    } else {
+                      doVoid();
                     }
                   }}
                   className="text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 transition-colors"

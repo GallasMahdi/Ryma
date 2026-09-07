@@ -25,6 +25,7 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconThumbUp,
+  IconAlertTriangle,
 } from '@tabler/icons-react';
 import { Review, ReviewStatus } from '@/types/admin';
 import { SERVICES } from '@/data/services';
@@ -35,12 +36,19 @@ import { ResponsiveModal } from './ResponsiveModal';
 interface ReviewsTabProps {
   lang: Lang;
   onAddToast?: (toast: { message: string; type: 'success' | 'error' | 'info' }) => void;
+  setConfirmDialog?: (dlg: {
+    title: string;
+    description?: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+  } | null) => void;
 }
 
 type SortOption = 'recent' | 'oldest' | 'rating_desc' | 'rating_asc';
 type FilterStatusOption = ReviewStatus | 'ALL' | 'FEATURED';
 
-export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast }: ReviewsTabProps) {
+export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast, setConfirmDialog }: ReviewsTabProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +66,23 @@ export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast }: R
   const [busyId, setBusyId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [localConfirm, setLocalConfirm] = useState<{
+    title: string;
+    description?: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  // Close local confirm dialog on Escape key
+  useEffect(() => {
+    if (!localConfirm) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLocalConfirm(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [localConfirm]);
 
   // Modal Form State
   const [formName, setFormName] = useState('');
@@ -133,33 +158,60 @@ export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast }: R
   };
 
   // Delete Review
-  const handleDelete = async (id: string, name: string) => {
-    const confirmMsg = txt(
+  const handleDelete = (id: string, name: string) => {
+    playSoftClick();
+    const title = txt(
       `Tem a certeza que deseja remover permanentemente a avaliação de "${name}"?`,
       `Are you sure you want to permanently delete the review by "${name}"?`,
       `Êtes-vous sûr de vouloir supprimer définitivement l'avis de "${name}" ?`
     );
-    if (!window.confirm(confirmMsg)) return;
+    const description = txt(
+      'Esta ação não pode ser revertida e removerá este testemunho do website.',
+      'This action cannot be undone and will permanently remove this review from your website.',
+      'Cette action est irréversible et supprimera cet avis de votre site web.'
+    );
+    const confirmText = txt('Eliminar', 'Delete', 'Supprimer');
+    const cancelText = txt('Cancelar', 'Cancel', 'Annuler');
 
-    setBusyId(id);
-    playSoftClick();
-    try {
-      const res = await fetch(`/api/admin/reviews?id=${id}`, {
-        method: 'DELETE',
+    const executeDelete = async () => {
+      setBusyId(id);
+      playSoftClick();
+      try {
+        const res = await fetch(`/api/admin/reviews?id=${id}`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) throw new Error(txt('Falha ao remover avaliação.', 'Failed to delete review.', 'Échec de la suppression de l\'avis.'));
+        setReviews((prev) => prev.filter((r) => r.id !== id));
+        onAddToast?.({
+          message: txt('Avaliação removida.', 'Review deleted.', 'Avis supprimé.'),
+          type: 'info',
+        });
+      } catch (err: any) {
+        onAddToast?.({
+          message: err.message || txt('Erro ao remover.', 'Error deleting.', 'Erreur de suppression.'),
+          type: 'error',
+        });
+      } finally {
+        setBusyId(null);
+      }
+    };
+
+    if (setConfirmDialog) {
+      setConfirmDialog({
+        title,
+        description,
+        confirmText,
+        cancelText,
+        onConfirm: executeDelete,
       });
-      if (!res.ok) throw new Error(txt('Falha ao remover avaliação.', 'Failed to delete review.', 'Échec de la suppression de l\'avis.'));
-      setReviews((prev) => prev.filter((r) => r.id !== id));
-      onAddToast?.({
-        message: txt('Avaliação removida.', 'Review deleted.', 'Avis supprimé.'),
-        type: 'info',
+    } else {
+      setLocalConfirm({
+        title,
+        description,
+        confirmText,
+        cancelText,
+        onConfirm: executeDelete,
       });
-    } catch (err: any) {
-      onAddToast?.({
-        message: err.message || txt('Erro ao remover.', 'Error deleting.', 'Erreur de suppression.'),
-        type: 'error',
-      });
-    } finally {
-      setBusyId(null);
     }
   };
 
@@ -181,6 +233,32 @@ export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast }: R
     e.preventDefault();
     if (!formName.trim() || !formComment.trim()) return;
 
+    if (formComment.trim().length < 5) {
+      playSoftClick();
+      const title = txt('Atenção', 'Attention', 'Attention');
+      const description = txt(
+        'Por favor, partilhe um comentário com pelo menos 5 caracteres.',
+        'Please share a comment with at least 5 characters.',
+        'Veuillez partager un commentaire d\'au moins 5 caractères.'
+      );
+      if (setConfirmDialog) {
+        setConfirmDialog({
+          title,
+          description,
+          confirmText: txt('Entendido', 'Understood', 'Compris'),
+          onConfirm: () => {},
+        });
+      } else {
+        setLocalConfirm({
+          title,
+          description,
+          confirmText: txt('Entendido', 'Understood', 'Compris'),
+          onConfirm: () => {},
+        });
+      }
+      return;
+    }
+
     setFormSubmitting(true);
     try {
       const res = await fetch('/api/reviews', {
@@ -198,7 +276,18 @@ export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast }: R
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || txt('Falha ao guardar.', 'Failed to save.', 'Échec de l\'enregistrement.'));
+        const errMsg = data.error || txt('Falha ao guardar.', 'Failed to save.', 'Échec de l\'enregistrement.');
+        if (setConfirmDialog) {
+          setConfirmDialog({
+            title: txt('Atenção', 'Attention', 'Attention'),
+            description: errMsg,
+            confirmText: txt('Entendido', 'Understood', 'Compris'),
+            onConfirm: () => {},
+          });
+          return;
+        } else {
+          throw new Error(errMsg);
+        }
       }
 
       const data = await res.json();
@@ -1446,6 +1535,63 @@ export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast }: R
           </div>
         </form>
       </ResponsiveModal>
+
+      {/* ── 7. Delete Confirmation Dialog Fallback ───────────────────────── */}
+      <AnimatePresence>
+        {!setConfirmDialog && localConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setLocalConfirm(null)}
+            className="fixed inset-0 z-[999998] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white border border-[#E2E8F0] p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-xl text-center font-sans"
+            >
+              <div className="w-12 h-12 rounded-xl bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] flex items-center justify-center mx-auto shadow-xs">
+                <IconAlertTriangle size={24} />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-semibold text-base text-[#0F172A] leading-snug">
+                  {localConfirm.title}
+                </h3>
+                {localConfirm.description && (
+                  <p className="text-xs text-[#64748B] leading-relaxed">
+                    {localConfirm.description}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2.5 justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setLocalConfirm(null)}
+                  className="px-4 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target"
+                >
+                  {localConfirm.cancelText || txt('Cancelar', 'Cancel', 'Annuler')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const action = localConfirm.onConfirm;
+                    setLocalConfirm(null);
+                    action();
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold shadow-xs transition-colors touch-target"
+                >
+                  {localConfirm.confirmText || txt('Eliminar', 'Delete', 'Supprimer')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });

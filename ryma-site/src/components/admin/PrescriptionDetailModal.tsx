@@ -20,6 +20,13 @@ interface PrescriptionDetailModalProps {
   onClose: () => void;
   onDelete?: (id: string) => void;
   lang: Lang;
+  setConfirmDialog?: (dlg: {
+    title: string;
+    description?: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+  } | null) => void;
 }
 
 export const PrescriptionDetailModal = React.memo(function PrescriptionDetailModal({
@@ -28,6 +35,7 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
   onClose,
   onDelete,
   lang,
+  setConfirmDialog,
 }: PrescriptionDetailModalProps) {
   if (!prescription) return null;
 
@@ -240,15 +248,36 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm('Eliminar esta ficha de recomendações?')) {
+                    const title = lang === 'fr' 
+                      ? 'Supprimer cette fiche de recommandations ?' 
+                      : lang === 'en' 
+                      ? 'Delete this recommendation sheet?' 
+                      : 'Eliminar esta ficha de recomendações?';
+                    const desc = lang === 'fr'
+                      ? 'Cette action est irréversible et supprimera définitivement cette fiche.'
+                      : lang === 'en'
+                      ? 'This action cannot be undone and will permanently delete this sheet.'
+                      : 'Esta ação é irreversível e eliminará permanentemente esta ficha.';
+                    const doDelete = () => {
                       onDelete(prescription.id);
                       onClose();
+                    };
+                    if (setConfirmDialog) {
+                      setConfirmDialog({
+                        title,
+                        description: desc,
+                        confirmText: lang === 'fr' ? 'Supprimer' : lang === 'en' ? 'Delete' : 'Eliminar',
+                        cancelText: lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar',
+                        onConfirm: doDelete,
+                      });
+                    } else {
+                      doDelete();
                     }
                   }}
                   className="text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 transition-colors"
                 >
                   <IconTrash size={14} />
-                  <span>Eliminar Ficha</span>
+                  <span>{lang === 'fr' ? 'Supprimer Fiche' : lang === 'en' ? 'Delete Sheet' : 'Eliminar Ficha'}</span>
                 </button>
                 <span className="text-[11px] text-[#94A3B8]">
                   ID: {prescription.id}

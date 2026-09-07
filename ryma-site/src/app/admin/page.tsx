@@ -398,8 +398,21 @@ function AdminDashboardContent() {
 
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
+    description?: string;
+    confirmText?: string;
+    cancelText?: string;
     onConfirm: () => void;
   } | null>(null);
+
+  // Close confirm dialog on Escape key
+  useEffect(() => {
+    if (!confirmDialog) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmDialog(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [confirmDialog]);
 
   // ── Fetch appointments ─────────────────────────────────────────────────────
   const fetchAppointments = useCallback(async (isSilent = false) => {
@@ -1123,6 +1136,7 @@ function AdminDashboardContent() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
+            onClick={() => setConfirmDialog(null)}
             className="fixed inset-0 z-[999998] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4"
           >
             <motion.div
@@ -1130,21 +1144,29 @@ function AdminDashboardContent() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.15 }}
+              onClick={(e) => e.stopPropagation()}
               className="bg-white border border-[#E2E8F0] p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-xl text-center font-sans"
             >
-              <div className="w-12 h-12 rounded-xl bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 rounded-xl bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] flex items-center justify-center mx-auto shadow-xs">
                 <IconAlertTriangle size={24} />
               </div>
-              <h3 className="font-semibold text-base text-[#0F172A] leading-snug">
-                {confirmDialog.title}
-              </h3>
+              <div className="space-y-1.5">
+                <h3 className="font-semibold text-base text-[#0F172A] leading-snug">
+                  {confirmDialog.title}
+                </h3>
+                {confirmDialog.description && (
+                  <p className="text-xs text-[#64748B] leading-relaxed">
+                    {confirmDialog.description}
+                  </p>
+                )}
+              </div>
               <div className="flex gap-2.5 justify-center pt-2">
                 <button
                   type="button"
                   onClick={() => setConfirmDialog(null)}
                   className="px-4 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target"
                 >
-                  {lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar'}
+                  {confirmDialog.cancelText || (lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar')}
                 </button>
                 <button
                   type="button"
@@ -1155,7 +1177,7 @@ function AdminDashboardContent() {
                   }}
                   className="px-4 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold shadow-xs transition-colors touch-target"
                 >
-                  {lang === 'fr' ? 'Confirmer' : lang === 'en' ? 'Confirm' : 'Confirmar'}
+                  {confirmDialog.confirmText || (lang === 'fr' ? 'Confirmer' : lang === 'en' ? 'Confirm' : 'Confirmar')}
                 </button>
               </div>
             </motion.div>
@@ -1284,6 +1306,7 @@ function AdminDashboardContent() {
                 isAnalyticsUnlocked={isAnalyticsUnlocked}
                 onUnlockClick={() => setIsOwnerAuthModalOpen(true)}
                 lang={lang}
+                setConfirmDialog={setConfirmDialog}
               />
             )}
 
@@ -1291,6 +1314,7 @@ function AdminDashboardContent() {
               <ReviewsTab
                 lang={lang}
                 onAddToast={(t) => addToast({ title: 'Avaliações', message: t.message, type: t.type })}
+                setConfirmDialog={setConfirmDialog}
               />
             )}
 

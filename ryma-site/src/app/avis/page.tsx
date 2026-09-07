@@ -23,6 +23,7 @@ import {
   IconBrandGoogle,
   IconFilter,
   IconLoader2,
+  IconAlertTriangle,
 } from '@tabler/icons-react';
 
 export default function AvisPage() {
@@ -32,6 +33,23 @@ export default function AvisPage() {
   const [userVoted, setUserVoted] = useState<Record<string, boolean>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalSuccess, setModalSuccess] = useState(false);
+
+  // Alert Dialog state matching dashboard styling
+  const [alertDialog, setAlertDialog] = useState<{
+    title: string;
+    description: string;
+    confirmText?: string;
+  } | null>(null);
+
+  // Close alert dialog on Escape key
+  useEffect(() => {
+    if (!alertDialog) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAlertDialog(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [alertDialog]);
 
   // Modal form states
   const [formName, setFormName] = useState('');
@@ -90,7 +108,32 @@ export default function AvisPage() {
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName.trim() || !formComment.trim()) return;
+    if (!formName.trim()) {
+      playSoftClick();
+      setAlertDialog({
+        title: lang === 'pt' ? 'Nome Obrigatório' : lang === 'en' ? 'Name Required' : 'Nom Requis',
+        description: lang === 'pt'
+          ? 'Por favor, indique o seu nome antes de submeter a sua avaliação.'
+          : lang === 'en'
+          ? 'Please enter your name before submitting your review.'
+          : 'Veuillez saisir votre nom avant de soumettre votre avis.',
+      });
+      return;
+    }
+
+    if (!formComment.trim() || formComment.trim().length < 5) {
+      playSoftClick();
+      setAlertDialog({
+        title: lang === 'pt' ? 'Atenção' : lang === 'en' ? 'Attention' : 'Attention',
+        description: lang === 'pt'
+          ? 'Por favor, partilhe um comentário com pelo menos 5 caracteres.'
+          : lang === 'en'
+          ? 'Please share a comment with at least 5 characters.'
+          : 'Veuillez partager un commentaire d\'au moins 5 caractères.',
+        confirmText: lang === 'pt' ? 'Entendido' : lang === 'en' ? 'Understood' : 'Compris',
+      });
+      return;
+    }
 
     setSubmittingReview(true);
     try {
@@ -119,10 +162,30 @@ export default function AvisPage() {
         }, 2200);
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || 'Erro ao submeter avaliação.');
+        playSoftClick();
+        setAlertDialog({
+          title: lang === 'pt' ? 'Atenção' : lang === 'en' ? 'Attention' : 'Attention',
+          description: data.error || (
+            lang === 'pt'
+              ? 'Por favor, partilhe um comentário com pelo menos 5 caracteres.'
+              : lang === 'en'
+              ? 'Please share a comment with at least 5 characters.'
+              : 'Veuillez partager un commentaire d\'au moins 5 caractères.'
+          ),
+          confirmText: lang === 'pt' ? 'Entendido' : lang === 'en' ? 'Understood' : 'Compris',
+        });
       }
     } catch {
-      alert('Erro de rede ao enviar avaliação.');
+      playSoftClick();
+      setAlertDialog({
+        title: lang === 'pt' ? 'Erro de Ligação' : lang === 'en' ? 'Connection Error' : 'Erreur de Connexion',
+        description: lang === 'pt'
+          ? 'Ocorreu um erro ao enviar a sua avaliação. Por favor, verifique a sua ligação e tente novamente.'
+          : lang === 'en'
+          ? 'An error occurred while submitting your review. Please check your connection and try again.'
+          : 'Une erreur est survenue lors de l\'envoi de votre avis. Veuillez réessayer.',
+        confirmText: lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer',
+      });
     } finally {
       setSubmittingReview(false);
     }
@@ -533,6 +596,12 @@ export default function AvisPage() {
                       placeholder={lang === 'pt' ? 'Descreva os resultados e a sua experiência clínica...' : lang === 'en' ? 'Describe your results and clinical experience...' : 'Décrivez vos résultats...'}
                       className="w-full px-3.5 py-2 rounded-xl border border-[#E8E2D8] text-xs text-[#1A1412] focus:border-[#C49A3C] outline-none"
                     />
+                    <div className="flex justify-between items-center mt-1 text-[10px] text-[#8A8078]">
+                      <span>{lang === 'pt' ? 'Mínimo 5 caracteres' : lang === 'en' ? 'Minimum 5 characters' : 'Minimum 5 caractères'}</span>
+                      <span className={formComment.trim().length > 0 && formComment.trim().length < 5 ? 'text-rose-600 font-semibold' : ''}>
+                        {formComment.trim().length} / 5+
+                      </span>
+                    </div>
                   </div>
 
                   <button
@@ -563,6 +632,50 @@ export default function AvisPage() {
               )}
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Dialog matching dashboard style ── */}
+      <AnimatePresence>
+        {alertDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => { playSoftClick(); setAlertDialog(null); }}
+            className="fixed inset-0 z-[999999] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white border border-[#E2E8F0] p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-xl text-center font-sans"
+            >
+              <div className="w-12 h-12 rounded-xl bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] flex items-center justify-center mx-auto shadow-xs">
+                <IconAlertTriangle size={24} />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-semibold text-base text-[#0F172A] leading-snug">
+                  {alertDialog.title}
+                </h3>
+                <p className="text-xs text-[#64748B] leading-relaxed">
+                  {alertDialog.description}
+                </p>
+              </div>
+              <div className="flex justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => { playSoftClick(); setAlertDialog(null); }}
+                  className="px-6 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold shadow-xs transition-colors touch-target"
+                >
+                  {alertDialog.confirmText || (lang === 'fr' ? 'Compris' : lang === 'en' ? 'Understood' : 'Entendido')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
