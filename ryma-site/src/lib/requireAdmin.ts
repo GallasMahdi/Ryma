@@ -4,30 +4,23 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { SESSION_OPTIONS, type SessionData } from './session';
 import { getClientIp } from './validation';
-import { dbLogSecurityAudit } from './db';
+import { dbLogSecurityAudit, dbIsSessionRevoked, dbIsOwnerStepUpActive } from './db';
 
 /**
  * Server-side admin authorization guard.
  * Call at the top of every protected API route handler.
  *
- * Returns { ok: true } if the request carries a valid admin session.
- * Returns a 401 NextResponse if not authenticated — return this directly.
- *
- * Usage:
- *   const auth = await requireAdmin(request);
- *   if ('status' in auth) return auth; // 401
- *   // proceed with admin logic
- *
- * NOTE: Uses unsealData() directly instead of getIronSession() to avoid
- * a type incompatibility between iron-session v8's CookieStore interface
- * and Next.js 15+'s ReadonlyRequestCookies.
+ * Returns { ok: true, session: SessionData } if the request carries a valid, unrevoked admin session.
+ * Returns a 401 NextResponse if not authenticated or session was revoked.
  */
 export async function requireAdmin(
-  _request?: NextRequest
-): Promise<{ ok: true } | NextResponse> {
+  request?: NextRequest
+): Promise<{ ok: true; session: SessionData } | NextResponse> {
   try {
     const cookieStore = await cookies();
-    const cookieValue = cookieStore.get(SESSION_OPTIONS.cookieName)?.value;
+    const cookieValue =
+      request?.cookies.get(SESSION_OPTIONS.cookieName)?.value ||
+      cookieStore.get(SESSION_OPTIONS.cookieName)?.value;
 
     if (!cookieValue) {
       return NextResponse.json(
@@ -40,14 +33,23 @@ export async function requireAdmin(
       password: SESSION_OPTIONS.password as string,
     });
 
-    if (!session.isAdmin) {
+    if (!session || !session.isAdmin || !session.sessionId) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    return { ok: true };
+    // Stateful revocation check: ensure session was not revoked via logout
+    const isRevoked = await dbIsSessionRevoked(session.sessionId);
+    if (isRevoked) {
+      return NextResponse.json(
+        { error: 'Session has been revoked. Please log in again.' },
+        { status: 401 }
+      );
+    }
+
+    return { ok: true, session };
   } catch {
     return NextResponse.json(
       { error: 'Authentication required' },
@@ -61,11 +63,12 @@ export async function requireAdmin(
  * Call at the top of every sensitive analytics and business reporting API route.
  *
  * Verifies:
- * 1. Admin session is valid (isAdmin === true)
+ * 1. Admin session is valid and unrevoked (isAdmin === true, dbIsSessionRevoked === false)
  * 2. analyticsUnlockedUntil exists and Date.now() < analyticsUnlockedUntil (15-min TTL)
+ * 3. Server-side step-up grant is active (dbIsOwnerStepUpActive === true)
  *
  * If not authenticated as admin: returns 401 Unauthorized.
- * If admin but analytics step-up not completed/expired: returns 403 Forbidden with code 'OWNER_AUTH_REQUIRED'.
+ * If admin but analytics step-up not completed, expired, or revoked: returns 403 Forbidden with code 'OWNER_AUTH_REQUIRED'.
  */
 export async function requireOwnerAnalytics(
   request?: NextRequest
@@ -75,7 +78,9 @@ export async function requireOwnerAnalytics(
 
   try {
     const cookieStore = await cookies();
-    const cookieValue = cookieStore.get(SESSION_OPTIONS.cookieName)?.value;
+    const cookieValue =
+      request?.cookies.get(SESSION_OPTIONS.cookieName)?.value ||
+      cookieStore.get(SESSION_OPTIONS.cookieName)?.value;
 
     if (!cookieValue) {
       return NextResponse.json(
@@ -88,15 +93,29 @@ export async function requireOwnerAnalytics(
       password: SESSION_OPTIONS.password as string,
     });
 
-    if (!session.isAdmin) {
+    if (!session || !session.isAdmin || !session.sessionId) {
       return NextResponse.json(
         { error: 'Authentication required', code: 'UNAUTHENTICATED' },
         { status: 401 }
       );
     }
 
+    // Stateful revocation check
+    const isRevoked = await dbIsSessionRevoked(session.sessionId);
+    if (isRevoked) {
+      return NextResponse.json(
+        { error: 'Session has been revoked. Please log in again.', code: 'UNAUTHENTICATED' },
+        { status: 401 }
+      );
+    }
+
     const now = Date.now();
-    const isUnlocked = Boolean(session.analyticsUnlockedUntil && now < session.analyticsUnlockedUntil);
+    const isStepUpActive = await dbIsOwnerStepUpActive(session.sessionId);
+    const isUnlocked = Boolean(
+      session.analyticsUnlockedUntil &&
+      now < session.analyticsUnlockedUntil &&
+      isStepUpActive
+    );
 
     if (!isUnlocked) {
       // Log security audit for denied attempt
@@ -104,14 +123,14 @@ export async function requireOwnerAnalytics(
         session.analyticsUnlockedUntil ? 'ANALYTICS_SESSION_EXPIRED' : 'ANALYTICS_ACCESS_DENIED',
         ip,
         userAgent,
-        { reason: session.analyticsUnlockedUntil ? 'Step-up session expired' : 'Step-up authorization not provided' }
+        { reason: session.analyticsUnlockedUntil ? 'Step-up session expired or manually locked' : 'Step-up authorization not provided' }
       );
 
       return NextResponse.json(
         {
           error: 'Autorisation Propriétaire requise pour accéder aux statistiques.',
           code: 'OWNER_AUTH_REQUIRED',
-          expired: Boolean(session.analyticsUnlockedUntil && now >= session.analyticsUnlockedUntil),
+          expired: Boolean(session.analyticsUnlockedUntil && (now >= session.analyticsUnlockedUntil || !isStepUpActive)),
         },
         { status: 403 }
       );

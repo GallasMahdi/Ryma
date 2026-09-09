@@ -137,13 +137,17 @@ export async function PATCH(
   const evaPainScore = typeof body.evaPainScore === 'number' ? Math.min(10, Math.max(0, body.evaPainScore)) : undefined;
   const notes = body.notes !== undefined ? (body.notes ? String(body.notes).trim() : null) : undefined;
 
-  const updatedSession = await dbUpdatePatientSession(sessionId, {
-    evaPainScore,
-    notes,
-  });
+  const updatedSession = await dbUpdatePatientSession(
+    sessionId,
+    {
+      evaPainScore,
+      notes,
+    },
+    patientId
+  );
 
   if (!updatedSession) {
-    return NextResponse.json({ error: 'Session introuvable' }, { status: 404 });
+    return NextResponse.json({ error: 'Session introuvable pour ce patient' }, { status: 404 });
   }
 
   return NextResponse.json({ session: updatedSession });
@@ -157,14 +161,18 @@ export async function DELETE(
   const auth = await requireAdmin(request);
   if ('status' in auth) return auth;
 
+  const { id: patientId } = await params;
   const sessionId = request.nextUrl.searchParams.get('sessionId');
   if (!sessionId) {
     return NextResponse.json({ error: 'sessionId requis' }, { status: 422 });
   }
 
-  const aptId = 'apt_' + sessionId;
-  await dbDeletePatientSession(sessionId);
+  const deleted = await dbDeletePatientSession(sessionId, patientId);
+  if (!deleted) {
+    return NextResponse.json({ error: 'Session introuvable pour ce patient' }, { status: 404 });
+  }
 
+  const aptId = 'apt_' + sessionId;
   try {
     await executeQuery('DELETE FROM appointments WHERE id = ?', [aptId]);
     broadcastAppointmentDeleted(aptId);

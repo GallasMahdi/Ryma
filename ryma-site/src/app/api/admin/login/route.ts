@@ -10,6 +10,9 @@ import { env } from '@/lib/env';
 // Constant-time generic error — never reveals whether username or password is wrong
 const GENERIC_ERROR = { error: 'Invalid credentials' };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
 
@@ -57,7 +60,8 @@ export async function POST(request: NextRequest) {
   // Valid — seal the session data and set it as an HTTP-only cookie.
   // Uses sealData() directly to avoid iron-session's CookieStore type incompatibility
   // with Next.js 15+'s ReadonlyRequestCookies.
-  const sessionData: SessionData = { isAdmin: true, loginAt: Date.now() };
+  const sessionId = crypto.randomUUID();
+  const sessionData: SessionData = { sessionId, isAdmin: true, loginAt: Date.now() };
   const sealed = await sealData(sessionData, {
     password: SESSION_OPTIONS.password as string,
   });

@@ -37,8 +37,8 @@ function validateEnv() {
 
   return {
     SESSION_SECRET: sessionSecret || (isProd ? '' : 'development_only_session_secret_key_32bytes_minimum'),
-    ADMIN_PASSWORD_HASH: adminHash || (isProd ? '' : '$2b$12$mZ3/r/MFfB0bC14buxvXUuk5podIpggQ7sfis2Iyt5MnoZWeUh/Eu'),
-    OWNER_ANALYTICS_PASSWORD_HASH: ownerHash || (isProd ? '' : '$2b$12$o9xduoDVUtaft5YD4d7hfuyVMNKI.NXxCOUmcttbn16L52/TCbE5W'),
+    ADMIN_PASSWORD_HASH: adminHash || '',
+    OWNER_ANALYTICS_PASSWORD_HASH: ownerHash || '',
     DATABASE_PATH: process.env.DATABASE_PATH ?? '',
     NODE_ENV: process.env.NODE_ENV ?? 'development',
   };

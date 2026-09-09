@@ -38,22 +38,17 @@ export async function GET(request: NextRequest) {
 
       adminEventBus.on('admin_event', onAdminEvent);
 
-      // Keepalive ping every 20 seconds to prevent proxy/browser timeout
-      const pingInterval = setInterval(() => {
-        try {
-          controller.enqueue(encoder.encode(`: ping\n\n`));
-        } catch {
-          clearInterval(pingInterval);
-        }
-      }, 20000);
-
-      // Clean up when client disconnects
+      // Clean up when client disconnects or stream drops
       let cleanedUp = false;
+      let pingInterval: NodeJS.Timeout | null = null;
       const cleanup = () => {
         if (cleanedUp) return;
         cleanedUp = true;
-        clearInterval(pingInterval);
-        if (onAdminEvent) adminEventBus.off('admin_event', onAdminEvent);
+        if (pingInterval) clearInterval(pingInterval);
+        if (onAdminEvent) {
+          adminEventBus.off('admin_event', onAdminEvent);
+          onAdminEvent = null;
+        }
         try {
           controller.close();
         } catch {
@@ -61,11 +56,23 @@ export async function GET(request: NextRequest) {
         }
       };
 
+      // Keepalive ping every 20 seconds to prevent proxy/browser timeout
+      pingInterval = setInterval(() => {
+        try {
+          controller.enqueue(encoder.encode(`: ping\n\n`));
+        } catch {
+          cleanup();
+        }
+      }, 20000);
+
       request.signal.addEventListener('abort', cleanup);
     },
     cancel() {
       // Called when consumer closes stream
-      if (onAdminEvent) adminEventBus.off('admin_event', onAdminEvent);
+      if (onAdminEvent) {
+        adminEventBus.off('admin_event', onAdminEvent);
+        onAdminEvent = null;
+      }
     },
   });
 

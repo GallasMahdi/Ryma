@@ -8,21 +8,27 @@ function sanitizeCsvField(val: unknown): string {
   if (typeof val === 'number') return String(val);
 
   let str = String(val);
-  if (/^[=\+\-@\t\r]/.test(str)) {
-    str = `'${str}`;
+  if (/^\s*[=\+\-@\t\r]/.test(str)) {
+    str = `'${str.trimStart()}`;
   }
   return `"${str.replace(/"/g, '""')}"`;
 }
 
 export async function GET(request: NextRequest) {
+  // Block top-level cross-site GET link hijacking for billing CSV downloads
+  const secFetchSite = request.headers.get('sec-fetch-site');
+  if (secFetchSite === 'cross-site') {
+    return NextResponse.json({ error: 'Cross-site request forbidden' }, { status: 403 });
+  }
+
   const auth = await requireOwnerAnalytics(request);
   if ('status' in auth) return auth;
 
   const { searchParams } = request.nextUrl;
-  const status   = searchParams.get('status') ?? undefined;
-  const search   = searchParams.get('search') ?? undefined;
+  const status = searchParams.get('status') ?? undefined;
+  const search = searchParams.get('search') ?? undefined;
   const dateFrom = searchParams.get('dateFrom') ?? undefined;
-  const dateTo   = searchParams.get('dateTo') ?? undefined;
+  const dateTo = searchParams.get('dateTo') ?? undefined;
 
   const invoices = await dbGetInvoices({ status, search, dateFrom, dateTo });
 
@@ -52,6 +58,7 @@ export async function GET(request: NextRequest) {
     ];
     csv += row.join(';') + '\n';
   });
+
 
   return new NextResponse(csv, {
     status: 200,

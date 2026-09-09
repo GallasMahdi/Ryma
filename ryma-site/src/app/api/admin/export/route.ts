@@ -8,14 +8,20 @@ function sanitizeCsvField(val: unknown): string {
   if (typeof val === 'number') return String(val);
 
   let str = String(val);
-  // Neutralize CSV formula injection if string starts with =, +, -, @, \t, or \r
-  if (/^[=\+\-@\t\r]/.test(str)) {
-    str = `'${str}`;
+  // Neutralize CSV formula injection even if preceded by whitespace, tabs, or control chars
+  if (/^\s*[=\+\-@\t\r]/.test(str)) {
+    str = `'${str.trimStart()}`;
   }
   return `"${str.replace(/"/g, '""')}"`;
 }
 
 export async function GET(request: NextRequest) {
+  // Block top-level cross-site GET link hijacking for database/CSV downloads
+  const secFetchSite = request.headers.get('sec-fetch-site');
+  if (secFetchSite === 'cross-site') {
+    return NextResponse.json({ error: 'Cross-site request forbidden' }, { status: 403 });
+  }
+
   const auth = await requireOwnerAnalytics(request);
   if ('status' in auth) return auth;
 

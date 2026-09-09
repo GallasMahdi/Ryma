@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sealData, unsealData } from 'iron-session';
 import { cookies } from 'next/headers';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
-import { dbLogSecurityAudit } from '@/lib/db';
+import { dbLogSecurityAudit, dbRevokeOwnerStepUp } from '@/lib/db';
 import { getClientIp } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
   const userAgent = request.headers.get('user-agent');
 
   const cookieStore = await cookies();
-  const cookieValue = cookieStore.get(SESSION_OPTIONS.cookieName)?.value;
+  const cookieValue =
+    request.cookies.get(SESSION_OPTIONS.cookieName)?.value ||
+    cookieStore.get(SESSION_OPTIONS.cookieName)?.value;
 
   if (!cookieValue) {
     return NextResponse.json({ success: true });
@@ -25,7 +27,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (session.isAdmin) {
+      if (session.sessionId) {
+        await dbRevokeOwnerStepUp(session.sessionId);
+      }
+
       const updatedSession: SessionData = {
+        sessionId: session.sessionId,
         isAdmin: true,
         loginAt: session.loginAt,
         analyticsUnlockedUntil: undefined,

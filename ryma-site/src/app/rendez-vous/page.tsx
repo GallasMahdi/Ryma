@@ -374,6 +374,8 @@ function BookingWizardContent() {
     coverageProvider: '',
   });
   const [loading, setLoading] = useState(false);
+  const formRenderedAt = useRef<number>(Date.now());
+  const [formHoneypot, setFormHoneypot] = useState('');
 
   // Auto-sync treatment from URL query parameter
   const initialSyncDone = useRef(false);
@@ -629,6 +631,8 @@ function BookingWizardContent() {
           date: selectedDate,
           startTime: selectedSlot,
           recaptchaToken: recaptchaToken || undefined,
+          _form_rendered_at: formRenderedAt.current,
+          _hp_company: formHoneypot,
           lang,
         }),
       });
@@ -1559,6 +1563,17 @@ function BookingWizardContent() {
                   onSubmit={e => { e.preventDefault(); handleSubmit(); }}
                   className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-sm space-y-5"
                 >
+                  {/* Invisible Honeypot Trap for automated spam bots */}
+                  <input
+                    type="text"
+                    name="_hp_company"
+                    value={formHoneypot}
+                    onChange={e => setFormHoneypot(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="opacity-0 absolute -z-50 pointer-events-none w-0 h-0 overflow-hidden"
+                  />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                       <label className="font-mono text-xs font-semibold text-[#8A8078] uppercase tracking-wide block mb-2">

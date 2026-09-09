@@ -400,7 +400,9 @@ export function Navbar() {
                   type="button"
                   onClick={() => setMobileOpen(!mobileOpen)}
                   className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl text-[#1A1412] hover:bg-[#F5E9C8] active:scale-95 transition-all touch-manipulation"
-                  aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
+                  aria-label={mobileOpen ? (lang === 'pt' ? 'Fechar menu' : lang === 'en' ? 'Close menu' : 'Fermer le menu') : (lang === 'pt' ? 'Abrir menu' : lang === 'en' ? 'Open menu' : 'Ouvrir le menu')}
+                  aria-expanded={mobileOpen}
+                  aria-controls="mobile-navigation-drawer"
                 >
                   {mobileOpen ? <IconX size={24} /> : <IconMenu2 size={24} />}
                 </button>
@@ -427,6 +429,10 @@ export function Navbar() {
 
             {/* Hardware-Accelerated Slide-in Luxury Drawer */}
             <motion.div
+              id="mobile-navigation-drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-label={lang === 'pt' ? 'Menu de navegação' : lang === 'en' ? 'Navigation menu' : 'Menu de navigation'}
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
@@ -457,7 +463,7 @@ export function Navbar() {
                   type="button"
                   onClick={() => setMobileOpen(false)}
                   className="p-2 rounded-xl text-[#8A6A24] active:scale-90 bg-[#F5E9C8] hover:bg-[#EEDBB2] border border-[#C49A3C]/30 transition-transform flex items-center justify-center shadow-2xs touch-manipulation"
-                  aria-label="Fermer le menu"
+                  aria-label={lang === 'pt' ? 'Fechar menu' : lang === 'en' ? 'Close menu' : 'Fermer le menu'}
                 >
                   <IconX size={20} />
                 </button>

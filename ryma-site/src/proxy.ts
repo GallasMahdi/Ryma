@@ -39,7 +39,7 @@ export async function proxy(request: NextRequest) {
       password: secret,
     });
 
-    if (!session || !session.isAdmin) {
+    if (!session || !session.isAdmin || !session.sessionId) {
       return redirectToLogin(request, pathname);
     }
   } catch {

@@ -9,6 +9,7 @@ import {
   dbResetRateLimit,
   dbGetOwnerAnalyticsPasswordHash,
   dbLogSecurityAudit,
+  dbGrantOwnerStepUp,
 } from '@/lib/db';
 import { getClientIp } from '@/lib/validation';
 
@@ -23,7 +24,9 @@ export async function POST(request: NextRequest) {
 
   // 1. Verify that user is already an authenticated Admin
   const cookieStore = await cookies();
-  const cookieValue = cookieStore.get(SESSION_OPTIONS.cookieName)?.value;
+  const cookieValue =
+    request.cookies.get(SESSION_OPTIONS.cookieName)?.value ||
+    cookieStore.get(SESSION_OPTIONS.cookieName)?.value;
 
   if (!cookieValue) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -91,8 +94,11 @@ export async function POST(request: NextRequest) {
   // Reset rate limit on success
   await dbResetRateLimit(ip, 'owner_analytics_auth');
 
-  // 5. Grant 15-Minute Step-Up Authorization in Server-Sealed Session Cookie
+  // 5. Grant 15-Minute Step-Up Authorization in Server-Sealed Session Cookie & Persistent DB Registry
   const expiresAt = Date.now() + STEP_UP_DURATION_MS;
+  if (session.sessionId) {
+    await dbGrantOwnerStepUp(session.sessionId, expiresAt);
+  }
   const updatedSession: SessionData = {
     ...session,
     analyticsUnlockedUntil: expiresAt,

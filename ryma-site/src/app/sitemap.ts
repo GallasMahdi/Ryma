@@ -15,6 +15,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/avis`, priority: 0.7 },
     { url: `${baseUrl}/contact`, priority: 0.8 },
     { url: `${baseUrl}/rendez-vous`, priority: 0.9 },
+    { url: `${baseUrl}/mentions-legales`, priority: 0.3 },
+    { url: `${baseUrl}/confidentialite`, priority: 0.3 },
+    { url: `${baseUrl}/conditions-utilisation`, priority: 0.3 },
   ].map(p => ({ ...p, lastModified, changeFrequency: 'monthly' as const }));
 
   const servicePages = SERVICES.map(s => ({

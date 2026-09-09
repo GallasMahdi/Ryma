@@ -2,6 +2,7 @@ import type { SessionOptions } from 'iron-session';
 import { env } from './env';
 
 export interface SessionData {
+  sessionId: string; // Cryptographically random UUID per active login session
   isAdmin: boolean;
   loginAt: number;
   analyticsUnlockedUntil?: number; // Epoch timestamp (ms) until which owner analytics step-up is valid

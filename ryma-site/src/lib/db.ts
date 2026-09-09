@@ -4,7 +4,7 @@
 import { createClient, type Client as LibSqlClient } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
-import type { PatientRecord, PatientSession, Invoice, CreateInvoiceInput, InvoiceStats, PatientPrescription, PrescriptionItem, Review, ReviewStatus, CreateReviewInput } from '@/types/admin';
+import { getServicePrice, type PatientRecord, type PatientSession, type Invoice, type CreateInvoiceInput, type InvoiceStats, type PatientPrescription, type PrescriptionItem, type Review, type ReviewStatus, type CreateReviewInput } from '@/types/admin';
 import { TESTIMONIALS } from '@/data/testimonials';
 import { SITE } from '@/lib/site';
 import { phonesMatch } from '@/lib/phone';
@@ -142,6 +142,40 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
         details   TEXT,
         createdAt TEXT NOT NULL
       )`,
+      `CREATE TABLE IF NOT EXISTS revoked_sessions (
+        sessionId  TEXT PRIMARY KEY,
+        revokedAt  INTEGER NOT NULL,
+        expiresAt  INTEGER NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS owner_step_up_grants (
+        sessionId  TEXT PRIMARY KEY,
+        unlockedAt INTEGER NOT NULL,
+        expiresAt  INTEGER NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS invoice_sequences (
+        year         INTEGER PRIMARY KEY,
+        lastSequence INTEGER NOT NULL DEFAULT 0
+      )`,
+      `CREATE TABLE IF NOT EXISTS idempotency_keys (
+        key          TEXT PRIMARY KEY,
+        scope        TEXT NOT NULL,
+        statusCode   INTEGER NOT NULL,
+        responseBody TEXT NOT NULL,
+        createdAt    INTEGER NOT NULL,
+        expiresAt    INTEGER NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_revoked_sessions_expiry ON revoked_sessions(expiresAt)`,
+      `CREATE INDEX IF NOT EXISTS idx_owner_step_up_expiry ON owner_step_up_grants(expiresAt)`,
+      `CREATE INDEX IF NOT EXISTS idx_idempotency_expiry ON idempotency_keys(expiresAt)`,
+      `CREATE TRIGGER IF NOT EXISTS trg_prevent_blocked_booking
+       BEFORE INSERT ON appointments
+       FOR EACH ROW
+       WHEN EXISTS (
+         SELECT 1 FROM blocked_slots WHERE date = NEW.date AND time = NEW.startTime
+       )
+       BEGIN
+         SELECT RAISE(ABORT, 'slot_blocked');
+       END`,
       `CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED'`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
@@ -563,6 +597,46 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
       createdAt TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS revoked_sessions (
+      sessionId  TEXT PRIMARY KEY,
+      revokedAt  INTEGER NOT NULL,
+      expiresAt  INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS owner_step_up_grants (
+      sessionId  TEXT PRIMARY KEY,
+      unlockedAt INTEGER NOT NULL,
+      expiresAt  INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS invoice_sequences (
+      year         INTEGER PRIMARY KEY,
+      lastSequence INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS idempotency_keys (
+      key          TEXT PRIMARY KEY,
+      scope        TEXT NOT NULL,
+      statusCode   INTEGER NOT NULL,
+      responseBody TEXT NOT NULL,
+      createdAt    INTEGER NOT NULL,
+      expiresAt    INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_revoked_sessions_expiry ON revoked_sessions(expiresAt);
+    CREATE INDEX IF NOT EXISTS idx_owner_step_up_expiry ON owner_step_up_grants(expiresAt);
+    CREATE INDEX IF NOT EXISTS idx_idempotency_expiry ON idempotency_keys(expiresAt);
+
+    CREATE TRIGGER IF NOT EXISTS trg_prevent_blocked_booking
+    BEFORE INSERT ON appointments
+    FOR EACH ROW
+    WHEN EXISTS (
+      SELECT 1 FROM blocked_slots WHERE date = NEW.date AND time = NEW.startTime
+    )
+    BEGIN
+      SELECT RAISE(ABORT, 'slot_blocked');
+    END;
+
     CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED';
     CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
     CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
@@ -720,14 +794,21 @@ export async function executeQuery<T = any>(sql: string, args: any[] = []): Prom
       return rows;
     }
 
+    // In production, never silently fall back to ephemeral SQLite unless explicitly configured
+    if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_SQLITE_FALLBACK) {
+      throw new Error('[CRITICAL DB SAFETY] Turso database query failed in production. Silent fallback to local ephemeral SQLite is blocked to prevent data loss.');
+    }
+
     // On serverless, never fall back to SQLite — it will crash on a read-only filesystem.
-    // Turso failures on Vercel should surface as actual errors.
     if (isServerless) {
       throw new Error('[DB] Turso query failed in serverless environment with no fallback available.');
     }
 
     return executeSqliteQuery<T>(sql, args);
   } else {
+    if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_SQLITE_FALLBACK) {
+      throw new Error('[FATAL DB CONFIG] TURSO_DATABASE_URL is not configured in production runtime. Cannot fall back to ephemeral SQLite.');
+    }
     // Turso not configured — local dev only path
     return executeSqliteQuery<T>(sql, args);
   }
@@ -979,6 +1060,9 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
 
     return { success: true, appointment };
   } catch (err: any) {
+    if (err?.message?.includes('slot_blocked')) {
+      return { success: false, error: 'slot_blocked' };
+    }
     if (err?.message?.includes('UNIQUE') || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       return { success: false, error: 'slot_taken' };
     }
@@ -1280,6 +1364,8 @@ export async function dbGetAppointments(filters?: {
   status?: string;
   date?: string;
   search?: string;
+  limit?: number;
+  offset?: number;
 }): Promise<Appointment[]> {
   let sql = 'SELECT * FROM appointments WHERE 1=1';
   const params: (string | number)[] = [];
@@ -1299,7 +1385,74 @@ export async function dbGetAppointments(filters?: {
   }
 
   sql += ' ORDER BY date DESC, startTime ASC';
+
+  if (typeof filters?.limit === 'number' && filters.limit > 0) {
+    sql += ' LIMIT ?';
+    params.push(filters.limit);
+    if (typeof filters?.offset === 'number' && filters.offset >= 0) {
+      sql += ' OFFSET ?';
+      params.push(filters.offset);
+    }
+  }
+
   return executeQuery<Appointment>(sql, params);
+}
+
+export async function dbGetAppointmentsPaginated(options: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  date?: string;
+  search?: string;
+}): Promise<{
+  appointments: Appointment[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}> {
+  const page = Math.max(1, options.page ?? 1);
+  const limit = Math.min(100, Math.max(1, options.limit ?? 50));
+  const offset = (page - 1) * limit;
+
+  let countSql = 'SELECT COUNT(*) as cnt FROM appointments WHERE 1=1';
+  const countParams: (string | number)[] = [];
+
+  if (options.status && options.status !== 'all') {
+    countSql += ' AND status = ?';
+    countParams.push(options.status.toUpperCase());
+  }
+  if (options.date) {
+    countSql += ' AND date = ?';
+    countParams.push(options.date);
+  }
+  if (options.search) {
+    countSql += ' AND (patientName LIKE ? OR phone LIKE ? OR service LIKE ?)';
+    const q = `%${options.search}%`;
+    countParams.push(q, q, q);
+  }
+
+  const [countRes, appointments] = await Promise.all([
+    executeQuery<{ cnt: number }>(countSql, countParams),
+    dbGetAppointments({
+      status: options.status,
+      date: options.date,
+      search: options.search,
+      limit,
+      offset,
+    }),
+  ]);
+
+  const total = Number(countRes[0]?.cnt ?? 0);
+  const totalPages = Math.ceil(total / limit) || 1;
+
+  return {
+    appointments,
+    total,
+    page,
+    limit,
+    totalPages,
+  };
 }
 
 export async function dbGetAppointmentById(id: string): Promise<Appointment | null> {
@@ -1438,6 +1591,136 @@ export async function dbLogSecurityAudit(
     );
   } catch (err) {
     console.warn('[Security Audit Log Error]:', err);
+  }
+}
+
+// ─── Stateful Session Revocation & Owner Step-Up Token Registry (v2) ──────────
+
+export async function dbRevokeSession(sessionId: string, expiresAt: number): Promise<void> {
+  if (!sessionId) return;
+  const now = Date.now();
+  try {
+    await executeQuery(
+      'INSERT OR REPLACE INTO revoked_sessions (sessionId, revokedAt, expiresAt) VALUES (?, ?, ?)',
+      [sessionId, now, expiresAt]
+    );
+  } catch (err) {
+    console.error('[dbRevokeSession Error]:', err);
+  }
+}
+
+export async function dbIsSessionRevoked(sessionId: string): Promise<boolean> {
+  if (!sessionId) return true;
+  try {
+    const rows = await executeQuery<{ cnt: number }>(
+      'SELECT COUNT(*) as cnt FROM revoked_sessions WHERE sessionId = ?',
+      [sessionId]
+    );
+    return (rows[0]?.cnt ?? 0) > 0;
+  } catch (err) {
+    console.error('[dbIsSessionRevoked Error]:', err);
+    return false;
+  }
+}
+
+export async function dbGrantOwnerStepUp(sessionId: string, expiresAt: number): Promise<void> {
+  if (!sessionId) return;
+  const now = Date.now();
+  try {
+    await executeQuery(
+      'INSERT OR REPLACE INTO owner_step_up_grants (sessionId, unlockedAt, expiresAt) VALUES (?, ?, ?)',
+      [sessionId, now, expiresAt]
+    );
+  } catch (err) {
+    console.error('[dbGrantOwnerStepUp Error]:', err);
+  }
+}
+
+export async function dbRevokeOwnerStepUp(sessionId: string): Promise<void> {
+  if (!sessionId) return;
+  try {
+    await executeQuery(
+      'DELETE FROM owner_step_up_grants WHERE sessionId = ?',
+      [sessionId]
+    );
+  } catch (err) {
+    console.error('[dbRevokeOwnerStepUp Error]:', err);
+  }
+}
+
+export async function dbIsOwnerStepUpActive(sessionId: string): Promise<boolean> {
+  if (!sessionId) return false;
+  const now = Date.now();
+  try {
+    const rows = await executeQuery<{ cnt: number }>(
+      'SELECT COUNT(*) as cnt FROM owner_step_up_grants WHERE sessionId = ? AND expiresAt > ?',
+      [sessionId, now]
+    );
+    return (rows[0]?.cnt ?? 0) > 0;
+  } catch (err) {
+    console.error('[dbIsOwnerStepUpActive Error]:', err);
+    return false;
+  }
+}
+
+// ─── Idempotency Key Registry ─────────────────────────────────────────────────
+
+export interface IdempotencyRecord {
+  key: string;
+  scope: string;
+  statusCode: number;
+  responseBody: any;
+  createdAt: number;
+  expiresAt: number;
+}
+
+export async function dbGetIdempotencyKey(
+  key: string,
+  scope: string
+): Promise<{ statusCode: number; responseBody: any } | null> {
+  if (!key) return null;
+  const now = Date.now();
+  try {
+    const rows = await executeQuery<{ statusCode: number; responseBody: string; expiresAt: number }>(
+      'SELECT statusCode, responseBody, expiresAt FROM idempotency_keys WHERE key = ? AND scope = ?',
+      [key, scope]
+    );
+    if (rows.length > 0) {
+      const row = rows[0];
+      if (now < row.expiresAt) {
+        return {
+          statusCode: row.statusCode,
+          responseBody: JSON.parse(row.responseBody),
+        };
+      } else {
+        // Expired — delete asynchronously
+        executeQuery('DELETE FROM idempotency_keys WHERE key = ?', [key]).catch(() => {});
+      }
+    }
+  } catch (err) {
+    console.warn('[dbGetIdempotencyKey Warning]:', err);
+  }
+  return null;
+}
+
+export async function dbSaveIdempotencyKey(
+  key: string,
+  scope: string,
+  statusCode: number,
+  responseBody: any,
+  ttlSeconds: number = 86400 // 24 hours default
+): Promise<void> {
+  if (!key) return;
+  const now = Date.now();
+  const expiresAt = now + ttlSeconds * 1000;
+  try {
+    await executeQuery(
+      `INSERT OR REPLACE INTO idempotency_keys (key, scope, statusCode, responseBody, createdAt, expiresAt)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [key, scope, statusCode, JSON.stringify(responseBody), now, expiresAt]
+    );
+  } catch (err) {
+    console.warn('[dbSaveIdempotencyKey Warning]:', err);
   }
 }
 
@@ -1729,18 +2012,53 @@ export async function dbDeletePatientRecord(idOrPhone: string): Promise<void> {
     // Clinical Governance & Audit Trail: Never delete past consultations.
     // Only cancel future pending appointments.
     const today = new Date().toISOString().split('T')[0];
-    await executeQuery(
-      "UPDATE appointments SET status = 'CANCELLED', notes = COALESCE(notes || ' | ', '') || 'Paciente removido do sistema' WHERE (phone = ? OR phone = ?) AND date >= ? AND status = 'PENDING'",
-      [p.phone, normPhone, today]
-    );
 
-    await executeQuery('DELETE FROM patient_sessions WHERE patientId = ?', [p.id]);
-    await executeQuery('DELETE FROM patients WHERE id = ?', [p.id]);
-    await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ? OR phone = ?', [p.phone, normPhone, idOrPhone]);
+    const queries: { sql: string; args: any[] }[] = [
+      {
+        sql: "UPDATE appointments SET status = 'CANCELLED', notes = COALESCE(notes || ' | ', '') || 'Paciente removido do sistema' WHERE (phone = ? OR phone = ?) AND date >= ? AND status = 'PENDING'",
+        args: [p.phone, normPhone, today],
+      },
+      {
+        sql: 'DELETE FROM patient_sessions WHERE patientId = ?',
+        args: [p.id],
+      },
+      {
+        sql: 'DELETE FROM prescriptions WHERE patientId = ? OR patientPhone = ? OR patientPhone = ?',
+        args: [p.id, p.phone, normPhone],
+      },
+      {
+        sql: 'DELETE FROM patient_notes WHERE phone = ? OR phone = ? OR phone = ?',
+        args: [p.phone, normPhone, idOrPhone],
+      },
+      {
+        // Preserve invoices for tax audit trail, but annotate them clearly
+        sql: "UPDATE invoices SET notes = COALESCE(notes || ' | ', '') || 'Paciente removido do sistema' WHERE patientId = ? OR patientPhone = ? OR patientPhone = ?",
+        args: [p.id, p.phone, normPhone],
+      },
+      {
+        sql: 'DELETE FROM patients WHERE id = ?',
+        args: [p.id],
+      },
+    ];
+
+    if (isTursoEnabled()) {
+      const client = getTursoClient();
+      await ensureTursoSchema(client);
+      await client.batch(queries, 'write');
+    } else {
+      const db = getDb();
+      const runTx = db.transaction(() => {
+        for (const q of queries) {
+          db.prepare(q.sql).run(...q.args);
+        }
+      });
+      runTx();
+    }
   } else {
     const phoneValidation = validateAndNormalizePhone(idOrPhone);
     const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : idOrPhone.trim();
     await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ?', [idOrPhone, normalizedPhone]);
+    await executeQuery('DELETE FROM prescriptions WHERE patientPhone = ? OR patientPhone = ?', [idOrPhone, normalizedPhone]);
   }
 }
 
@@ -1780,14 +2098,36 @@ export async function dbAddPatientSession(input: {
   return rows[0];
 }
 
-export async function dbDeletePatientSession(sessionId: string): Promise<void> {
-  await executeQuery('DELETE FROM patient_sessions WHERE id = ?', [sessionId]);
+export async function dbGetPatientSessionById(sessionId: string): Promise<PatientSession | null> {
+  const rows = await executeQuery<PatientSession>('SELECT * FROM patient_sessions WHERE id = ?', [sessionId]);
+  return rows[0] || null;
 }
 
-export async function dbUpdatePatientSession(sessionId: string, updates: {
-  evaPainScore?: number;
-  notes?: string | null;
-}): Promise<PatientSession | null> {
+export async function dbDeletePatientSession(sessionId: string, patientId?: string): Promise<boolean> {
+  if (patientId) {
+    const existing = await dbGetPatientSessionById(sessionId);
+    if (!existing || existing.patientId !== patientId) {
+      return false;
+    }
+  }
+  await executeQuery('DELETE FROM patient_sessions WHERE id = ?', [sessionId]);
+  return true;
+}
+
+export async function dbUpdatePatientSession(
+  sessionId: string,
+  updates: {
+    evaPainScore?: number;
+    notes?: string | null;
+  },
+  patientId?: string
+): Promise<PatientSession | null> {
+  if (patientId) {
+    const existing = await dbGetPatientSessionById(sessionId);
+    if (!existing || existing.patientId !== patientId) {
+      return null;
+    }
+  }
   if (typeof updates.evaPainScore === 'number') {
     await executeQuery('UPDATE patient_sessions SET evaPainScore = ? WHERE id = ?', [
       Math.min(10, Math.max(0, updates.evaPainScore)),
@@ -1868,25 +2208,66 @@ export async function dbGetNoShowCounts(): Promise<Record<string, number>> {
 
 export async function dbGenerateInvoiceNumber(): Promise<string> {
   const currentYear = new Date().getFullYear();
-  const prefix = `FR ${currentYear}/`;
+  const prefix = `FT ${currentYear}/`;
   
-  const rows = await executeQuery<{ invoiceNumber: string }>(
-    `SELECT invoiceNumber FROM invoices WHERE invoiceNumber LIKE ? ORDER BY LENGTH(invoiceNumber) DESC, invoiceNumber DESC LIMIT 1`,
-    [`${prefix}%`]
-  );
+  let nextSeq = 1;
+  try {
+    const existing = await executeQuery<{ lastSequence: number }>(
+      'SELECT lastSequence FROM invoice_sequences WHERE year = ?',
+      [currentYear]
+    );
 
-  let nextSequence = 1;
-  if (rows.length > 0 && rows[0]?.invoiceNumber) {
-    const parts = rows[0].invoiceNumber.split('/');
-    if (parts[1]) {
-      const parsed = parseInt(parts[1], 10);
-      if (!isNaN(parsed)) {
-        nextSequence = parsed + 1;
+    if (existing.length === 0) {
+      // Find current highest sequence in invoices table for this year
+      const maxRow = await executeQuery<{ invoiceNumber: string }>(
+        `SELECT invoiceNumber FROM invoices WHERE invoiceNumber LIKE ? ORDER BY LENGTH(invoiceNumber) DESC, invoiceNumber DESC LIMIT 1`,
+        [`%${currentYear}/%`]
+      );
+      let startingSeq = 0;
+      if (maxRow.length > 0 && maxRow[0]?.invoiceNumber) {
+        const parts = maxRow[0].invoiceNumber.split('/');
+        if (parts[1]) {
+          const parsed = parseInt(parts[1], 10);
+          if (!isNaN(parsed)) startingSeq = parsed;
+        }
+      }
+      await executeQuery(
+        'INSERT OR IGNORE INTO invoice_sequences (year, lastSequence) VALUES (?, ?)',
+        [currentYear, startingSeq]
+      );
+    }
+
+    // Atomic increment
+    const updated = await executeQuery<{ lastSequence: number }>(
+      'UPDATE invoice_sequences SET lastSequence = lastSequence + 1 WHERE year = ? RETURNING lastSequence',
+      [currentYear]
+    );
+
+    if (updated.length > 0 && typeof updated[0]?.lastSequence === 'number') {
+      nextSeq = updated[0].lastSequence;
+    } else {
+      const fallbackRow = await executeQuery<{ lastSequence: number }>(
+        'SELECT lastSequence FROM invoice_sequences WHERE year = ?',
+        [currentYear]
+      );
+      nextSeq = fallbackRow[0]?.lastSequence || 1;
+    }
+  } catch (seqErr) {
+    console.warn('[dbGenerateInvoiceNumber Sequence Warning, falling back to MAX query]:', seqErr);
+    const rows = await executeQuery<{ invoiceNumber: string }>(
+      `SELECT invoiceNumber FROM invoices WHERE invoiceNumber LIKE ? ORDER BY LENGTH(invoiceNumber) DESC, invoiceNumber DESC LIMIT 1`,
+      [`${prefix}%`]
+    );
+    if (rows.length > 0 && rows[0]?.invoiceNumber) {
+      const parts = rows[0].invoiceNumber.split('/');
+      if (parts[1]) {
+        const parsed = parseInt(parts[1], 10);
+        if (!isNaN(parsed)) nextSeq = parsed + 1;
       }
     }
   }
 
-  const padded = String(nextSequence).padStart(4, '0');
+  const padded = String(nextSeq).padStart(4, '0');
   return `${prefix}${padded}`;
 }
 
@@ -1907,7 +2288,7 @@ export async function dbCreateInvoice(input: CreateInvoiceInput): Promise<Invoic
   const paymentStatus = input.paymentStatus || 'PAID';
 
   let lastError: any = null;
-  for (let attempt = 1; attempt <= 5; attempt++) {
+  for (let attempt = 1; attempt <= 10; attempt++) {
     const id = 'inv_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
     const now = new Date().toISOString();
     const paidAt = paymentStatus === 'PAID' ? now : null;
@@ -1955,7 +2336,7 @@ export async function dbCreateInvoice(input: CreateInvoiceInput): Promise<Invoic
       lastError = err;
       if (err?.message?.includes('UNIQUE') || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
         // Small backoff before retrying to let concurrent insert finish and increment sequence
-        await new Promise(r => setTimeout(r, 25 * attempt + Math.floor(Math.random() * 25)));
+        await new Promise(r => setTimeout(r, 20 * Math.pow(1.5, attempt) + Math.floor(Math.random() * 30)));
         continue;
       }
       throw err;
@@ -1971,6 +2352,8 @@ export async function dbGetInvoices(filters?: {
   dateTo?: string;
   patientPhone?: string;
   paymentMethod?: string;
+  limit?: number;
+  offset?: number;
 }): Promise<Invoice[]> {
   let sql = 'SELECT * FROM invoices WHERE 1=1';
   const params: (string | number)[] = [];
@@ -2004,7 +2387,85 @@ export async function dbGetInvoices(filters?: {
   }
 
   sql += ' ORDER BY createdAt DESC';
+
+  if (typeof filters?.limit === 'number' && filters.limit > 0) {
+    sql += ' LIMIT ?';
+    params.push(filters.limit);
+    if (typeof filters?.offset === 'number' && filters.offset >= 0) {
+      sql += ' OFFSET ?';
+      params.push(filters.offset);
+    }
+  }
+
   return executeQuery<Invoice>(sql, params);
+}
+
+export async function dbGetInvoicesPaginated(options: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  patientPhone?: string;
+  paymentMethod?: string;
+}): Promise<{
+  invoices: Invoice[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}> {
+  const page = Math.max(1, options.page ?? 1);
+  const limit = Math.min(100, Math.max(1, options.limit ?? 50));
+  const offset = (page - 1) * limit;
+
+  let countSql = 'SELECT COUNT(*) as cnt FROM invoices WHERE 1=1';
+  const countParams: (string | number)[] = [];
+
+  if (options.status && options.status !== 'all') {
+    countSql += ' AND paymentStatus = ?';
+    countParams.push(options.status.toUpperCase());
+  }
+  if (options.paymentMethod && options.paymentMethod !== 'all') {
+    countSql += ' AND paymentMethod = ?';
+    countParams.push(options.paymentMethod.toUpperCase());
+  }
+  if (options.patientPhone) {
+    const phoneValidation = validateAndNormalizePhone(options.patientPhone);
+    const norm = phoneValidation.isValid ? phoneValidation.normalized : options.patientPhone.trim();
+    countSql += ' AND (patientPhone = ? OR patientPhone = ?)';
+    countParams.push(options.patientPhone, norm);
+  }
+  if (options.dateFrom) {
+    countSql += ' AND createdAt >= ?';
+    countParams.push(options.dateFrom);
+  }
+  if (options.dateTo) {
+    countSql += ' AND createdAt <= ?';
+    countParams.push(options.dateTo + 'T23:59:59.999Z');
+  }
+  if (options.search) {
+    countSql += ' AND (patientName LIKE ? OR patientNif LIKE ? OR invoiceNumber LIKE ? OR serviceName LIKE ? OR patientPhone LIKE ?)';
+    const q = `%${options.search}%`;
+    countParams.push(q, q, q, q, q);
+  }
+
+  const [countRes, invoices] = await Promise.all([
+    executeQuery<{ cnt: number }>(countSql, countParams),
+    dbGetInvoices({ ...options, limit, offset }),
+  ]);
+
+  const total = Number(countRes[0]?.cnt ?? 0);
+  const totalPages = Math.ceil(total / limit) || 1;
+
+  return {
+    invoices,
+    total,
+    page,
+    limit,
+    totalPages,
+  };
 }
 
 export async function dbGetInvoiceById(id: string): Promise<Invoice | null> {
@@ -2204,7 +2665,7 @@ export async function dbGetPrescriptionsByPatientPhone(patientPhone: string): Pr
   });
 }
 
-// ─── Full Database Snapshot Export ────────────────────────────────────────────
+// ─── Full Database Snapshot Export & Restore ─────────────────────────────────
 export async function dbExportFullDatabaseBackup(): Promise<{
   version: string;
   exportedAt: string;
@@ -2216,9 +2677,23 @@ export async function dbExportFullDatabaseBackup(): Promise<{
     prescriptions: any[];
     blocked_slots: any[];
     patient_notes: any[];
+    security_settings: any[];
+    security_audit_logs: any[];
+    reviews: any[];
   };
 }> {
-  const [appointments, patients, sessions, invoices, prescriptions, blockedSlots, notes] = await Promise.all([
+  const [
+    appointments,
+    patients,
+    sessions,
+    invoices,
+    prescriptions,
+    blockedSlots,
+    notes,
+    securitySettings,
+    securityLogs,
+    reviews,
+  ] = await Promise.all([
     dbGetAppointments(),
     dbGetAllPatients(),
     executeQuery('SELECT * FROM patient_sessions ORDER BY createdAt DESC'),
@@ -2226,6 +2701,9 @@ export async function dbExportFullDatabaseBackup(): Promise<{
     executeQuery('SELECT * FROM prescriptions ORDER BY createdAt DESC'),
     executeQuery('SELECT * FROM blocked_slots ORDER BY date, time'),
     executeQuery('SELECT * FROM patient_notes ORDER BY updatedAt DESC'),
+    executeQuery('SELECT * FROM security_settings'),
+    executeQuery('SELECT * FROM security_audit_logs ORDER BY createdAt DESC LIMIT 1000'),
+    executeQuery('SELECT * FROM reviews ORDER BY createdAt DESC'),
   ]);
 
   return {
@@ -2239,6 +2717,233 @@ export async function dbExportFullDatabaseBackup(): Promise<{
       prescriptions,
       blocked_slots: blockedSlots,
       patient_notes: notes,
+      security_settings: securitySettings,
+      security_audit_logs: securityLogs,
+      reviews,
+    },
+  };
+}
+
+export async function dbRestoreFullDatabaseBackup(backupData: any): Promise<{
+  success: boolean;
+  restoredCounts: Record<string, number>;
+}> {
+  if (!backupData || !backupData.tables || typeof backupData.tables !== 'object') {
+    throw new Error('Invalid backup data structure: missing tables object');
+  }
+
+  const {
+    patients = [],
+    patient_sessions = [],
+    appointments = [],
+    invoices = [],
+    prescriptions = [],
+    blocked_slots = [],
+    patient_notes = [],
+    security_settings = [],
+    security_audit_logs = [],
+    reviews = [],
+  } = backupData.tables;
+
+  const queries: { sql: string; args: any[] }[] = [];
+
+  // Clear existing data in reverse dependency order
+  queries.push({ sql: 'DELETE FROM patient_sessions', args: [] });
+  queries.push({ sql: 'DELETE FROM prescriptions', args: [] });
+  queries.push({ sql: 'DELETE FROM patient_notes', args: [] });
+  queries.push({ sql: 'DELETE FROM appointments', args: [] });
+  queries.push({ sql: 'DELETE FROM invoices', args: [] });
+  queries.push({ sql: 'DELETE FROM blocked_slots', args: [] });
+  queries.push({ sql: 'DELETE FROM patients', args: [] });
+  if (reviews.length > 0) queries.push({ sql: 'DELETE FROM reviews', args: [] });
+
+  // Insert patients
+  for (const p of patients) {
+    queries.push({
+      sql: `INSERT INTO patients (id, patientName, phone, email, gender, dob, coverageType, coverageProvider, coverageNumber, referringDoctor, pathologyTags, medicalHistory, totalPrescribedSessions, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        p.id,
+        p.patientName,
+        p.phone,
+        p.email ?? null,
+        p.gender ?? null,
+        p.dob ?? null,
+        p.coverageType ?? 'PARTICULAR',
+        p.coverageProvider ?? null,
+        p.coverageNumber ?? null,
+        p.referringDoctor ?? null,
+        p.pathologyTags ?? '',
+        p.medicalHistory ?? '',
+        p.totalPrescribedSessions ?? 10,
+        p.createdAt,
+        p.updatedAt,
+      ],
+    });
+  }
+
+  // Insert appointments
+  for (const a of appointments) {
+    queries.push({
+      sql: `INSERT INTO appointments (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        a.id,
+        a.patientName,
+        a.email ?? null,
+        a.phone,
+        a.service,
+        a.date,
+        a.startTime,
+        a.status,
+        a.notes ?? null,
+        a.coverageType ?? 'PARTICULAR',
+        a.coverageProvider ?? null,
+        a.coverageNumber ?? null,
+        a.createdAt,
+        a.updatedAt,
+      ],
+    });
+  }
+
+  // Insert patient_sessions
+  for (const s of patient_sessions) {
+    queries.push({
+      sql: `INSERT INTO patient_sessions (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        s.id,
+        s.patientId,
+        s.date,
+        s.time ?? null,
+        s.serviceSlug,
+        s.evaPainScore ?? 5,
+        s.sessionType ?? 'MANUAL',
+        s.notes ?? null,
+        s.practitioner ?? null,
+        s.createdAt,
+      ],
+    });
+  }
+
+  // Insert invoices
+  for (const inv of invoices) {
+    queries.push({
+      sql: `INSERT INTO invoices (id, invoiceNumber, appointmentId, patientId, patientName, patientNif, patientEmail, patientPhone, patientAddress, coverageType, coverageProvider, coverageNumber, serviceSlug, serviceName, practitioner, amount, vatRate, vatExemptionReason, paymentMethod, paymentStatus, paidAt, notes, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        inv.id,
+        inv.invoiceNumber,
+        inv.appointmentId ?? null,
+        inv.patientId ?? null,
+        inv.patientName,
+        inv.patientNif ?? '999999990',
+        inv.patientEmail ?? null,
+        inv.patientPhone,
+        inv.patientAddress ?? 'Lisboa, Portugal',
+        inv.coverageType ?? 'PARTICULAR',
+        inv.coverageProvider ?? null,
+        inv.coverageNumber ?? null,
+        inv.serviceSlug,
+        inv.serviceName,
+        inv.practitioner ?? '',
+        inv.amount,
+        inv.vatRate ?? 0,
+        inv.vatExemptionReason ?? null,
+        inv.paymentMethod ?? 'MULTIBANCO',
+        inv.paymentStatus ?? 'PAID',
+        inv.paidAt ?? null,
+        inv.notes ?? null,
+        inv.createdAt,
+        inv.updatedAt,
+      ],
+    });
+  }
+
+  // Insert prescriptions
+  for (const pr of prescriptions) {
+    queries.push({
+      sql: `INSERT INTO prescriptions (id, patientId, patientPhone, patientName, practitioner, date, diagnosisOrGoal, itemsJson, generalNotes, createdAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        pr.id,
+        pr.patientId ?? null,
+        pr.patientPhone,
+        pr.patientName,
+        pr.practitioner,
+        pr.date,
+        pr.diagnosisOrGoal ?? null,
+        typeof pr.itemsJson === 'string' ? pr.itemsJson : JSON.stringify(pr.itemsJson || []),
+        pr.generalNotes ?? null,
+        pr.createdAt,
+      ],
+    });
+  }
+
+  // Insert blocked_slots
+  for (const b of blocked_slots) {
+    queries.push({
+      sql: `INSERT OR IGNORE INTO blocked_slots (id, date, time) VALUES (?, ?, ?)`,
+      args: [b.id || ('blk_' + Math.random().toString(36).slice(2)), b.date, b.time],
+    });
+  }
+
+  // Insert patient_notes
+  for (const n of patient_notes) {
+    queries.push({
+      sql: `INSERT OR REPLACE INTO patient_notes (phone, patientName, content, tags, updatedAt) VALUES (?, ?, ?, ?, ?)`,
+      args: [n.phone, n.patientName, n.content ?? '', n.tags ?? '', n.updatedAt],
+    });
+  }
+
+  // Insert reviews if any
+  for (const r of reviews) {
+    queries.push({
+      sql: `INSERT OR REPLACE INTO reviews (id, patientName, patientEmail, rating, serviceSlug, comment, location, status, verified, isFeatured, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        r.id,
+        r.patientName,
+        r.patientEmail ?? null,
+        r.rating,
+        r.serviceSlug,
+        r.comment,
+        r.location ?? 'Lisboa',
+        r.status ?? 'APPROVED',
+        r.verified ?? 1,
+        r.isFeatured ?? 0,
+        r.createdAt,
+        r.updatedAt,
+      ],
+    });
+  }
+
+  // Execute in single transaction
+  if (isTursoEnabled()) {
+    const client = getTursoClient();
+    await ensureTursoSchema(client);
+    await client.batch(queries, 'write');
+  } else {
+    const db = getDb();
+    const runTx = db.transaction(() => {
+      for (const q of queries) {
+        db.prepare(q.sql).run(...q.args);
+      }
+    });
+    runTx();
+  }
+
+  return {
+    success: true,
+    restoredCounts: {
+      patients: patients.length,
+      appointments: appointments.length,
+      patient_sessions: patient_sessions.length,
+      invoices: invoices.length,
+      prescriptions: prescriptions.length,
+      blocked_slots: blocked_slots.length,
+      patient_notes: patient_notes.length,
+      reviews: reviews.length,
     },
   };
 }
@@ -2447,6 +3152,178 @@ export async function dbUpdateReviewStatus(
 export async function dbDeleteReview(id: string): Promise<boolean> {
   await executeQuery('DELETE FROM reviews WHERE id = ?', [id]);
   return true;
+}
+
+/**
+ * Highly optimized SQL-level analytics aggregation.
+ * Eliminates in-memory data serialization and full-table array processing.
+ */
+export async function dbGetAnalyticsStats(lang: string = 'fr'): Promise<{
+  stats: {
+    total: number;
+    confirmed: number;
+    pending: number;
+    completed: number;
+    cancelled: number;
+    noShow: number;
+    revenue: number;
+    invoicesCount: number;
+    paidInvoicesRevenue: number;
+  };
+  analyticsData: {
+    dowLabels: string[];
+    dowCounts: number[];
+    topServices: [string, number][];
+    peakHours: [string, number][];
+    cancelRate: number;
+    completionRate: number;
+  };
+}> {
+  const [
+    statusCounts,
+    invoiceAgg,
+    serviceCounts,
+    hourCounts,
+    dowData,
+    completedServiceCounts,
+  ] = await Promise.all([
+    executeQuery<{ status: string; cnt: number }>(
+      'SELECT status, COUNT(*) as cnt FROM appointments GROUP BY status'
+    ),
+    executeQuery<{ totalInvoices: number; paidRevenue: number }>(
+      `SELECT
+         COUNT(*) as totalInvoices,
+         COALESCE(SUM(CASE WHEN paymentStatus = 'PAID' THEN amount ELSE 0 END), 0) as paidRevenue
+       FROM invoices`
+    ),
+    executeQuery<{ service: string; cnt: number }>(
+      'SELECT service, COUNT(*) as cnt FROM appointments GROUP BY service ORDER BY cnt DESC LIMIT 6'
+    ),
+    executeQuery<{ startTime: string; cnt: number }>(
+      'SELECT startTime, COUNT(*) as cnt FROM appointments GROUP BY startTime ORDER BY cnt DESC LIMIT 8'
+    ),
+    executeQuery<{ dow: number; cnt: number }>(
+      `SELECT CAST(strftime('%w', date) AS INTEGER) as dow, COUNT(*) as cnt
+       FROM appointments
+       WHERE date IS NOT NULL AND date != ''
+       GROUP BY dow`
+    ),
+    executeQuery<{ service: string; cnt: number }>(
+      `SELECT service, COUNT(*) as cnt
+       FROM appointments
+       WHERE status IN ('CONFIRMED', 'COMPLETED')
+       GROUP BY service`
+    ),
+  ]);
+
+  let total = 0;
+  let confirmed = 0;
+  let pending = 0;
+  let completed = 0;
+  let cancelled = 0;
+  let noShow = 0;
+
+  for (const row of statusCounts) {
+    const c = Number(row.cnt);
+    total += c;
+    const s = String(row.status).toUpperCase();
+    if (s === 'CONFIRMED') confirmed = c;
+    else if (s === 'PENDING') pending = c;
+    else if (s === 'COMPLETED') completed = c;
+    else if (s === 'CANCELLED') cancelled = c;
+    else if (s === 'NO_SHOW') noShow = c;
+  }
+
+  const invoicesCount = Number(invoiceAgg[0]?.totalInvoices ?? 0);
+  const paidInvoicesRevenue = Number(invoiceAgg[0]?.paidRevenue ?? 0);
+
+  let appointmentsRevenue = 0;
+  for (const row of completedServiceCounts) {
+    const price = getServicePrice(row.service);
+    appointmentsRevenue += price * Number(row.cnt);
+  }
+
+  const revenue = Math.max(paidInvoicesRevenue, appointmentsRevenue);
+
+  const dowLabels =
+    lang === 'pt'
+      ? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+      : lang === 'en'
+      ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+      : ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+  const dowCounts = Array(7).fill(0);
+  for (const row of dowData) {
+    const dow = Number(row.dow);
+    const idx = (dow + 6) % 7;
+    dowCounts[idx] = Number(row.cnt);
+  }
+
+  const topServices: [string, number][] = serviceCounts.map(s => [s.service, Number(s.cnt)]);
+  const peakHours: [string, number][] = hourCounts.map(h => [h.startTime, Number(h.cnt)]);
+
+  const cancelRate = total > 0 ? Math.round(((cancelled + noShow) / total) * 100) : 0;
+  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return {
+    stats: {
+      total,
+      confirmed,
+      pending,
+      completed,
+      cancelled,
+      noShow,
+      revenue,
+      invoicesCount,
+      paidInvoicesRevenue,
+    },
+    analyticsData: {
+      dowLabels,
+      dowCounts,
+      topServices,
+      peakHours,
+      cancelRate,
+      completionRate,
+    },
+  };
+}
+
+/**
+ * Health check validation verifying live read and write readiness
+ */
+export async function dbHealthCheck(): Promise<{
+  status: 'connected';
+  engine: 'turso_cloud' | 'local_sqlite';
+  latencyMs: number;
+  writable: boolean;
+}> {
+  const start = Date.now();
+  await executeQuery('SELECT 1 as ok');
+  const latencyMs = Date.now() - start;
+
+  const engine = isTursoEnabled() ? 'turso_cloud' : 'local_sqlite';
+
+  let writable = true;
+  try {
+    const now = Date.now();
+    await executeQuery(
+      'INSERT INTO rate_limit_log (ip, action, timestamp) VALUES (?, ?, ?)',
+      ['health_check', 'ping', now]
+    );
+    await executeQuery(
+      'DELETE FROM rate_limit_log WHERE ip = ? AND action = ? AND timestamp = ?',
+      ['health_check', 'ping', now]
+    );
+  } catch {
+    writable = false;
+  }
+
+  return {
+    status: 'connected',
+    engine,
+    latencyMs,
+    writable,
+  };
 }
 
 

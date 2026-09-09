@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { executeQuery } from '@/lib/db';
+import { dbHealthCheck } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -7,27 +7,24 @@ export const revalidate = 0;
 /**
  * GET /api/health
  * Public healthcheck endpoint for 24/7 uptime monitors (e.g. UptimeRobot, BetterStack).
- * Tests database read readiness and server vitality.
+ * Tests database read and write readiness and server vitality.
  */
 export async function GET() {
   const startTime = Date.now();
 
   try {
-    // 1. Verify Database connectivity and read readiness
-    await executeQuery('SELECT 1 as ok');
-    const latencyMs = Date.now() - startTime;
-
-    const isTurso = Boolean(process.env.TURSO_DATABASE_URL);
+    const dbStatus = await dbHealthCheck();
+    const memory = process.memoryUsage();
 
     return NextResponse.json(
       {
-        status: 'healthy',
+        status: dbStatus.writable ? 'healthy' : 'degraded',
         timestamp: new Date().toISOString(),
         uptimeSeconds: Math.floor(process.uptime()),
-        database: {
-          status: 'connected',
-          engine: isTurso ? 'turso_cloud' : 'local_sqlite',
-          latencyMs,
+        database: dbStatus,
+        memory: {
+          heapUsedMb: Math.round((memory.heapUsed / (1024 * 1024)) * 100) / 100,
+          rssMb: Math.round((memory.rss / (1024 * 1024)) * 100) / 100,
         },
         environment: process.env.NODE_ENV || 'development',
       },

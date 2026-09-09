@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import {
   dbGetAppointments,
+  dbGetAppointmentsPaginated,
   dbCreateAppointment,
 } from '@/lib/db';
 import { VALID_SERVICES, VALID_TIME_SLOTS, validateAppointmentInput } from '@/lib/validation';
@@ -20,6 +21,21 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status') ?? undefined;
   const date   = searchParams.get('date')   ?? undefined;
   const search = searchParams.get('search') ?? undefined;
+  const pageParam = searchParams.get('page');
+  const limitParam = searchParams.get('limit');
+
+  if (pageParam !== null || limitParam !== null) {
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(limitParam || '50', 10)));
+    const res = await dbGetAppointmentsPaginated({ status, date, search, page, limit });
+    return NextResponse.json(
+      res,
+      {
+        status: 200,
+        headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
+      }
+    );
+  }
 
   const appointments = await dbGetAppointments({ status, date, search });
   return NextResponse.json(
