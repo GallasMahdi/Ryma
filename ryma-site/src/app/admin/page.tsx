@@ -255,9 +255,8 @@ function AdminDashboardContent() {
     } catch { /* silent */ }
   }, []);
 
-  useEffect(() => {
-    fetchAdminMetadata();
-  }, [fetchAdminMetadata]);
+  // NOTE: fetchAdminMetadata is called in the main data-loading effect below.
+  // Removed the standalone useEffect here to prevent a duplicate /api/admin/me call on mount.
 
   const [selectedNote, setSelectedNote] = useState<PatientNote | null>(null);
   const [noteForm, setNoteForm] = useState({ content: '', tags: '' });
@@ -433,9 +432,13 @@ function AdminDashboardContent() {
   }, [confirmDialog]);
 
   // ── Fetch appointments ─────────────────────────────────────────────────────
+  // Stable ref so fetchAppointments doesn't recreate on every data update
+  const appointmentsRef = useRef<Appointment[]>(appointments);
+  useEffect(() => { appointmentsRef.current = appointments; }, [appointments]);
+
   const fetchAppointments = useCallback(async (isSilent = false) => {
     if (!isSilent) {
-      setLoadingAppointments(prev => prev || appointments.length === 0);
+      setLoadingAppointments(prev => prev || appointmentsRef.current.length === 0);
     }
     setAppointmentsError(null);
     try {
@@ -480,7 +483,7 @@ function AdminDashboardContent() {
     } finally {
       setLoadingAppointments(false);
     }
-  }, [lang, handleNewIncomingAppointment, appointments.length]);
+  }, [lang, handleNewIncomingAppointment]);
 
   // ── Fetch patient notes ────────────────────────────────────────────────────
   const fetchPatientNotes = useCallback(async () => {
@@ -714,7 +717,13 @@ function AdminDashboardContent() {
     };
   }, [handleNewIncomingAppointment]);
 
+  // Ref to track live connection status without making it a useEffect dependency
+  const isLiveConnectedRef = useRef(isLiveConnected);
+  useEffect(() => { isLiveConnectedRef.current = isLiveConnected; }, [isLiveConnected]);
+
   // ── Auto-refresh & window focus sync (Optimized for Fast Charging) ─────────
+  // NOTE: isLiveConnected intentionally NOT in deps — we use isLiveConnectedRef so the
+  // polling interval dynamically adjusts without tearing down/re-mounting this whole effect.
   useEffect(() => {
     // 1. Critical initial data: Appointments & Metadata for immediate display
     fetchAppointments(false);
@@ -742,17 +751,24 @@ function AdminDashboardContent() {
     });
 
     // 4. Fallback sync polling: SSE handles real-time live events.
-    // When SSE is connected, poll only every 35s as a safety sync.
-    // When SSE is disconnected, poll every 8s until reconnected.
-    const pollInterval = isLiveConnected ? 35000 : 8000;
+    // Read live status from ref so interval callback is always up-to-date without
+    // needing isLiveConnected in the effect's dependency array.
     const interval = setInterval(() => {
       if (!document.hidden) {
         fetchAppointments(true);
       }
-    }, pollInterval);
+    }, isLiveConnectedRef.current ? 35000 : 8000);
+
+    // 5. Throttled focus/visibility sync — only refetch if data is ≥30s old.
+    // Prevents hammering the API every time DevTools opens or the user briefly alt-tabs.
+    const MIN_FOCUS_REFRESH_MS = 30_000;
+    let lastFocusRefreshAt = Date.now(); // initialised at mount time (initial fetch just ran)
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
+        const now = Date.now();
+        if (now - lastFocusRefreshAt < MIN_FOCUS_REFRESH_MS) return;
+        lastFocusRefreshAt = now;
         fetchAppointments(true);
         fetchInvoices();
         fetchReviews();
@@ -761,6 +777,9 @@ function AdminDashboardContent() {
     };
 
     const handleWindowFocus = () => {
+      const now = Date.now();
+      if (now - lastFocusRefreshAt < MIN_FOCUS_REFRESH_MS) return;
+      lastFocusRefreshAt = now;
       fetchAppointments(true);
     };
 
@@ -776,7 +795,8 @@ function AdminDashboardContent() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleWindowFocus);
     };
-  }, [fetchAppointments, fetchPatientNotes, fetchInvoices, fetchReviews, fetchAdminMetadata, isLiveConnected]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchAppointments, fetchPatientNotes, fetchInvoices, fetchReviews, fetchAdminMetadata]);
 
   // If user immediately switches to patients, invoices, or reviews tab before prefetch, fetch instantly
   useEffect(() => {
