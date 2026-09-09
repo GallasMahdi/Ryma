@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbGetApprovedReviews, dbCreateReview } from '@/lib/db';
+import { dbGetApprovedReviews, dbCreateReview, dbCheckRateLimit, dbRecordRateLimitAttempt } from '@/lib/db';
 import { SERVICES } from '@/data/services';
+import { getClientIp } from '@/lib/validation';
+import { verifyRecaptchaToken } from '@/lib/recaptcha';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -36,6 +38,17 @@ export async function GET(request: NextRequest) {
 // ─── POST /api/reviews ───────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+
+    // Rate Limiting: max 5 review submissions per IP per hour
+    const allowed = await dbCheckRateLimit(ip, 'review_post', 5, 3600);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Demasiadas tentativas. Por favor aguarde antes de enviar outra avaliação.' },
+        { status: 429 }
+      );
+    }
+
     let body: Record<string, unknown>;
     try {
       body = await request.json();
@@ -51,6 +64,7 @@ export async function POST(request: NextRequest) {
       comment,
       location,
       honeypot,
+      recaptchaToken,
     } = body;
 
     // Bot detection honeypot field
@@ -58,11 +72,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Spam detectado.' }, { status: 400 });
     }
 
+    // Google reCAPTCHA v3 bot verification
+    const token = typeof recaptchaToken === 'string' ? recaptchaToken : null;
+    const recaptchaResult = await verifyRecaptchaToken(token);
+    if (!recaptchaResult.valid) {
+      return NextResponse.json(
+        { error: 'Verificação de segurança falhou (atividade automatizada detetada).' },
+        { status: 403 }
+      );
+    }
+
     if (!patientName || typeof patientName !== 'string' || patientName.trim().length < 2) {
       return NextResponse.json(
         { error: 'Por favor, indique o seu nome (mínimo 2 caracteres).' },
         { status: 400 }
       );
+    }
+
+    const cleanName = patientName.trim().slice(0, 80);
+
+    // Reject HTML tags, script injection, and formula injection
+    if (/[<>]|javascript:|data:/i.test(cleanName)) {
+      return NextResponse.json({ error: 'Caracteres não permitidos detetados no nome.' }, { status: 422 });
+    }
+    if (/^[=\+\-@\t\r]/.test(cleanName)) {
+      return NextResponse.json({ error: 'Formato inválido no nome.' }, { status: 422 });
     }
 
     const numRating = Number(rating);
@@ -87,26 +121,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const cleanComment = comment.trim().slice(0, 1500);
+
+    if (/[<>]|javascript:|data:/i.test(cleanComment)) {
+      return NextResponse.json({ error: 'Caracteres não permitidos detetados no comentário.' }, { status: 422 });
+    }
+    if (/^[=\+\-@\t\r]/.test(cleanComment)) {
+      return NextResponse.json({ error: 'Formato inválido no comentário.' }, { status: 422 });
+    }
+
     const validSlug = typeof serviceSlug === 'string' && serviceSlug.trim() ? serviceSlug.trim() : 'reeducation-posturale';
 
-    // Auto-approve user submission as requested
+    // Anti-defacement: Reviews require moderation (PENDING) before appearing publicly
     const review = await dbCreateReview({
-      patientName: patientName.trim(),
-      patientEmail: typeof patientEmail === 'string' && patientEmail.trim() ? patientEmail.trim() : null,
+      patientName: cleanName,
+      patientEmail: typeof patientEmail === 'string' && patientEmail.trim() ? patientEmail.trim().slice(0, 254) : null,
       rating: Math.round(numRating),
       serviceSlug: validSlug,
-      comment: comment.trim(),
-      location: typeof location === 'string' && location.trim() ? location.trim() : 'Lisboa',
-      status: 'APPROVED',
-      verified: true,
+      comment: cleanComment,
+      location: typeof location === 'string' && location.trim() ? location.trim().slice(0, 60) : 'Lisboa',
+      status: 'PENDING',
+      verified: false,
       isFeatured: false,
     });
+
+    await dbRecordRateLimitAttempt(ip, 'review_post');
 
     return NextResponse.json(
       {
         success: true,
-        message: 'A sua avaliação foi registada e publicada com sucesso. Obrigado!',
-        review,
+        message: 'A sua avaliação foi submetida com sucesso e será publicada após moderação da clínica. Obrigado!',
+        review: {
+          id: review.id,
+          patientName: review.patientName,
+          rating: review.rating,
+          serviceSlug: review.serviceSlug,
+          comment: review.comment,
+          location: review.location,
+          status: review.status,
+          createdAt: review.createdAt,
+        },
       },
       { status: 201 }
     );

@@ -131,8 +131,8 @@ export function validateAppointmentInput(
     };
   }
 
-  // Date must not be in the past
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Date must not be in the past (enforced in Europe/Lisbon clinic timezone)
+  const { todayStr, currentHHMM } = getLisbonDateTime();
   if (date < todayStr) {
     return {
       ok: false,
@@ -160,10 +160,8 @@ export function validateAppointmentInput(
     };
   }
 
-  // If date is today, slot must not be in the past
+  // If date is today, slot must not be in the past (Europe/Lisbon time)
   if (date === todayStr) {
-    const now = new Date();
-    const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     if (String(startTime) <= currentHHMM) {
       return {
         ok: false,
@@ -213,23 +211,59 @@ export function validateAppointmentInput(
 }
 
 /**
+ * Authoritative Lisbon Clinic Timezone Helper.
+ * Computes calendar date ('YYYY-MM-DD') and 24h clock ('HH:MM') in Europe/Lisbon.
+ */
+export function getLisbonDateTime(dateObj: Date = new Date()): { todayStr: string; currentHHMM: string } {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Lisbon',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(dateObj);
+  const getPart = (type: string) => parts.find(p => p.type === type)?.value || '00';
+  const todayStr = `${getPart('year')}-${getPart('month')}-${getPart('day')}`;
+  const currentHHMM = `${getPart('hour')}:${getPart('minute')}`;
+
+  return { todayStr, currentHHMM };
+}
+
+/**
  * Extracts and sanitizes the client IP address from request headers.
- * Prioritizes edge-verified headers (Cloudflare, Vercel) before falling back to X-Forwarded-For.
+ * Prioritizes edge-verified infrastructure headers (Cloudflare, Vercel) that cannot be spoofed by clients.
+ * In production, ignores raw X-Real-IP to prevent rate-limit bypass.
  */
 export function getClientIp(request: { headers: { get: (name: string) => string | null } }): string {
+  const IP_REGEX = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^[a-fA-F0-9:]{2,45}$/;
+
+  // Edge-verified proxy headers (Cloudflare, Vercel) are authoritative
   const cfIp = request.headers.get('cf-connecting-ip');
-  if (cfIp && cfIp.trim() !== '') return cfIp.trim();
+  if (cfIp && IP_REGEX.test(cfIp.trim())) return cfIp.trim();
 
   const vercelIp = request.headers.get('x-vercel-ip');
-  if (vercelIp && vercelIp.trim() !== '') return vercelIp.trim();
+  if (vercelIp && IP_REGEX.test(vercelIp.trim())) return vercelIp.trim();
 
-  const realIp = request.headers.get('x-real-ip');
-  if (realIp && realIp.trim() !== '') return realIp.trim();
+  const isDev = process.env.NODE_ENV !== 'production';
 
+  // In development/test mode only, permit x-real-ip for local simulation
+  if (isDev) {
+    const realIp = request.headers.get('x-real-ip');
+    if (realIp && IP_REGEX.test(realIp.trim())) return realIp.trim();
+  }
+
+  // For x-forwarded-for, take the rightmost IP in production (closest trusted hop)
   const xForwardedFor = request.headers.get('x-forwarded-for');
   if (xForwardedFor) {
     const ips = xForwardedFor.split(',').map(ip => ip.trim()).filter(Boolean);
-    if (ips.length > 0 && ips[0] !== '') return ips[0];
+    const candidate = isDev ? ips[0] : ips[ips.length - 1];
+    if (candidate && IP_REGEX.test(candidate) && candidate !== 'unknown') {
+      return candidate.slice(0, 45);
+    }
   }
 
   return '127.0.0.1';

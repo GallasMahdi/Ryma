@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unsealData } from 'iron-session';
+import type { SessionData } from '@/lib/session';
 
 /**
  * Next.js Edge Proxy (migrated from deprecated middleware convention in Next.js 16).
  *
  * Protects all /admin/* routes (except /admin/login itself):
- *  - Unauthenticated (no session cookie) → immediate 307 redirect to /admin/login
- *  - Authenticated (cookie present) → allow through to server component
+ *  - Unauthenticated, forged, or expired session → immediate 307 redirect to /admin/login
+ *  - Authenticated (cryptographically valid session) → allow through to server component
  *
- * NOTE: Full cryptographic unsealing and session TTL validation is enforced
- * inside each protected API route handler via requireAdmin() / requireOwnerAnalytics().
- * This edge proxy ensures unauthenticated users never download or render the /admin HTML/JS bundle.
+ * NOTE: Full cryptographic unsealing and session TTL validation is enforced here
+ * at the Edge to prevent unauthenticated users from downloading the /admin client bundle.
  */
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Let the login page through with no-store headers
@@ -22,16 +23,28 @@ export function proxy(request: NextRequest) {
     return res;
   }
 
-  // Check for the session cookie presence
+  // Check for the session cookie
   const sessionCookie = request.cookies.get('ryma_admin_session');
-
   if (!sessionCookie?.value) {
-    const loginUrl = new URL('/admin/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
-    const redirectRes = NextResponse.redirect(loginUrl);
-    redirectRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    redirectRes.headers.set('X-Robots-Tag', 'noindex, nofollow');
-    return redirectRes;
+    return redirectToLogin(request, pathname);
+  }
+
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    return redirectToLogin(request, pathname);
+  }
+
+  try {
+    const session = await unsealData<SessionData>(sessionCookie.value, {
+      password: secret,
+    });
+
+    if (!session || !session.isAdmin) {
+      return redirectToLogin(request, pathname);
+    }
+  } catch {
+    // Cookie was forged, tampered with, or expired
+    return redirectToLogin(request, pathname);
   }
 
   const res = NextResponse.next();
@@ -40,6 +53,16 @@ export function proxy(request: NextRequest) {
   return res;
 }
 
+function redirectToLogin(request: NextRequest, from: string) {
+  const loginUrl = new URL('/admin/login', request.url);
+  loginUrl.searchParams.set('from', from);
+  const redirectRes = NextResponse.redirect(loginUrl);
+  redirectRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  redirectRes.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  return redirectRes;
+}
+
 export const config = {
   matcher: ['/admin', '/admin/:path*'],
 };
+

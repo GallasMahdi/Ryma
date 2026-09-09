@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/requireAdmin';
+import { requireAdmin, requireOwnerAnalytics } from '@/lib/requireAdmin';
 import {
   dbGetInvoices,
   dbCreateInvoice,
@@ -23,10 +23,29 @@ export async function GET(request: NextRequest) {
   const patientPhone  = searchParams.get('patientPhone') ?? undefined;
   const paymentMethod = searchParams.get('paymentMethod') ?? undefined;
 
-  const [invoices, stats] = await Promise.all([
+  // Determine whether caller holds Owner Analytics step-up privilege
+  const ownerAuth = await requireOwnerAnalytics(request);
+  const isOwner = Boolean('ok' in ownerAuth && (ownerAuth as any).ok === true && !(ownerAuth instanceof NextResponse));
+
+  const [invoices, rawStats] = await Promise.all([
     dbGetInvoices({ status, search, dateFrom, dateTo, patientPhone, paymentMethod }),
     dbGetInvoiceStats(),
   ]);
+
+  // Owner Separation: Non-owner staff cannot see clinic revenue totals
+  const stats = isOwner
+    ? rawStats
+    : {
+        totalRevenue: 0,
+        totalPaid: 0,
+        totalPending: 0,
+        countPaid: rawStats.countPaid,
+        countPending: rawStats.countPending,
+        countTotal: rawStats.countTotal,
+        avgTicket: 0,
+        insuranceShare: rawStats.insuranceShare,
+        isOwnerCensored: true,
+      };
 
   return NextResponse.json(
     { invoices, stats },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/requireAdmin';
+import { requireOwnerAnalytics } from '@/lib/requireAdmin';
 import { dbGetInvoices } from '@/lib/db';
 import { calculateVatBreakdown } from '@/types/admin';
 
@@ -15,7 +15,7 @@ function sanitizeCsvField(val: unknown): string {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin(request);
+  const auth = await requireOwnerAnalytics(request);
   if ('status' in auth) return auth;
 
   const { searchParams } = request.nextUrl;

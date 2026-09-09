@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/requireAdmin';
+import { requireAdmin, requireOwnerAnalytics } from '@/lib/requireAdmin';
 import {
   dbGetInvoiceById,
   dbUpdateInvoice,
@@ -68,7 +68,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdmin(request);
+  const auth = await requireOwnerAnalytics(request);
   if ('status' in auth) return auth;
 
   const { id } = await params;

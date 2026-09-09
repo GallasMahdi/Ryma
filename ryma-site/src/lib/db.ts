@@ -9,7 +9,7 @@ import { TESTIMONIALS } from '@/data/testimonials';
 import { SITE } from '@/lib/site';
 import { phonesMatch } from '@/lib/phone';
 import { broadcastAppointmentCreated, broadcastMultipleAppointmentsCreated } from '@/lib/events';
-import { VALID_TIME_SLOTS } from '@/lib/validation';
+import { VALID_TIME_SLOTS, getLisbonDateTime } from '@/lib/validation';
 import { env } from '@/lib/env';
 
 // ─── Dual Storage Engine: Dynamic Turso (Cloud) with Local Fallback ───────────
@@ -807,14 +807,12 @@ export async function dbCheckSlotAvailability(date: string, startTime: string): 
     return { available: false, reason: 'sunday' };
   }
 
-  // 2. Past slot check
-  const todayStr = new Date().toISOString().split('T')[0];
+  // 2. Past slot check (strictly evaluated in Europe/Lisbon clinic timezone)
+  const { todayStr, currentHHMM } = getLisbonDateTime();
   if (date < todayStr) {
     return { available: false, reason: 'past' };
   }
   if (date === todayStr) {
-    const now = new Date();
-    const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     if (startTime <= currentHHMM) {
       return { available: false, reason: 'past' };
     }
@@ -873,9 +871,7 @@ export async function dbCheckMultipleDatesAvailability(
   const bookedSet = new Set(bookedRows.map(r => `${r.date}_${r.startTime}`));
   const blockedSet = new Set(blockedRows.map(r => `${r.date}_${r.time}`));
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const now = new Date();
-  const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const { todayStr, currentHHMM } = getLisbonDateTime();
 
   for (const date of uniqueDates) {
     const dayOfWeek = new Date(date + 'T12:00:00').getDay();
@@ -1729,9 +1725,16 @@ export async function dbDeletePatientRecord(idOrPhone: string): Promise<void> {
   if (p) {
     const phoneValidation = validateAndNormalizePhone(p.phone);
     const normPhone = phoneValidation.isValid ? phoneValidation.normalized : p.phone.trim();
+    
+    // Clinical Governance & Audit Trail: Never delete past consultations.
+    // Only cancel future pending appointments.
+    const today = new Date().toISOString().split('T')[0];
+    await executeQuery(
+      "UPDATE appointments SET status = 'CANCELLED', notes = COALESCE(notes || ' | ', '') || 'Paciente removido do sistema' WHERE (phone = ? OR phone = ?) AND date >= ? AND status = 'PENDING'",
+      [p.phone, normPhone, today]
+    );
+
     await executeQuery('DELETE FROM patient_sessions WHERE patientId = ?', [p.id]);
-    await executeQuery('DELETE FROM appointments WHERE phone = ? OR phone = ?', [p.phone, normPhone]);
-    await executeQuery('UPDATE invoices SET patientId = NULL WHERE patientId = ? OR patientPhone = ? OR patientPhone = ?', [p.id, p.phone, normPhone]);
     await executeQuery('DELETE FROM patients WHERE id = ?', [p.id]);
     await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ? OR phone = ?', [p.phone, normPhone, idOrPhone]);
   } else {
@@ -1868,7 +1871,7 @@ export async function dbGenerateInvoiceNumber(): Promise<string> {
   const prefix = `FR ${currentYear}/`;
   
   const rows = await executeQuery<{ invoiceNumber: string }>(
-    `SELECT invoiceNumber FROM invoices WHERE invoiceNumber LIKE ? ORDER BY invoiceNumber DESC LIMIT 1`,
+    `SELECT invoiceNumber FROM invoices WHERE invoiceNumber LIKE ? ORDER BY LENGTH(invoiceNumber) DESC, invoiceNumber DESC LIMIT 1`,
     [`${prefix}%`]
   );
 
@@ -2045,7 +2048,12 @@ export async function dbUpdateInvoice(
 }
 
 export async function dbDeleteInvoice(id: string): Promise<void> {
-  await executeQuery('DELETE FROM invoices WHERE id = ?', [id]);
+  // Portuguese Tax Compliance (CIVA / SAF-T): Issued sequential medical invoices
+  // cannot be physically deleted. They must be annulled/cancelled to preserve sequence audit trails.
+  await executeQuery(
+    "UPDATE invoices SET paymentStatus = 'CANCELLED', notes = COALESCE(notes || ' | ', '') || 'Anulado administrativamente', updatedAt = ? WHERE id = ?",
+    [new Date().toISOString(), id]
+  );
 }
 
 export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
@@ -2059,6 +2067,9 @@ export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
   let insuranceCount = 0;
 
   for (const inv of invoices) {
+    // Portuguese Accounting Rule: Cancelled / annulled invoices must not count toward clinic revenue
+    if (inv.paymentStatus === 'CANCELLED') continue;
+
     totalRevenue += Number(inv.amount || 0);
     if (inv.paymentStatus === 'PAID') {
       totalPaid += Number(inv.amount || 0);
@@ -2072,7 +2083,8 @@ export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
     }
   }
 
-  const countTotal = invoices.length;
+  const activeInvoices = invoices.filter(i => i.paymentStatus !== 'CANCELLED');
+  const countTotal = activeInvoices.length;
   const avgTicket = countTotal > 0 ? Math.round(totalRevenue / countTotal) : 0;
   const insuranceShare = countTotal > 0 ? Math.round((insuranceCount / countTotal) * 100) : 0;
 
@@ -2297,7 +2309,7 @@ export async function dbGetApprovedReviews(options?: {
   return rows.map((r) => ({
     id: String(r.id),
     patientName: String(r.patientName),
-    patientEmail: r.patientEmail ? String(r.patientEmail) : null,
+    patientEmail: null, // Privacy & GDPR: Never leak patient email addresses on public endpoints
     rating: Number(r.rating),
     serviceSlug: String(r.serviceSlug),
     comment: String(r.comment),

@@ -4,6 +4,7 @@ import { validateAppointmentInput, getClientIp } from '@/lib/validation';
 import { broadcastAppointmentCreated } from '@/lib/events';
 import { sendAppointmentConfirmationEmail, sendAdminNewBookingNotification } from '@/lib/email';
 import { verifyRecaptchaToken } from '@/lib/recaptcha';
+import { validateAndNormalizePhone } from '@/lib/phone';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -56,11 +57,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error, errorCode: validation.errorCode }, { status: 422 });
     }
 
-    // Per-phone rate limit: 3 bookings per phone number per hour
-    const phone = String(body.phone ?? '').trim();
-    if (phone) {
-      await dbRecordRateLimitAttempt(`phone:${phone}`, 'booking_phone');
-      const phoneAllowed = await dbCheckRateLimit(`phone:${phone}`, 'booking_phone', 3, 60 * 60);
+    // Per-phone rate limit: 3 bookings per normalized phone number per hour
+    const rawPhone = String(body.phone ?? '').trim();
+    const phoneVal = validateAndNormalizePhone(rawPhone);
+    const normalizedPhone = phoneVal.isValid ? phoneVal.normalized : rawPhone;
+
+    if (normalizedPhone) {
+      const phoneAllowed = await dbCheckRateLimit(`phone:${normalizedPhone}`, 'booking_phone', 3, 60 * 60);
       if (!phoneAllowed) {
         return NextResponse.json(
           { error: 'Vous avez déjà effectué plusieurs réservations. Veuillez patienter avant d\'en faire une nouvelle.' },
@@ -72,7 +75,7 @@ export async function POST(request: NextRequest) {
     const result = await dbCreateAppointment({
       patientName:      String(body.patientName).trim().slice(0, 100),
       email:            body.email ? String(body.email).trim().slice(0, 254) : undefined,
-      phone:            String(body.phone).trim().slice(0, 30),
+      phone:            normalizedPhone,
       service:          String(body.service).trim(),
       date:             String(body.date).trim(),
       startTime:        String(body.startTime).trim(),
@@ -96,6 +99,11 @@ export async function POST(request: NextRequest) {
         );
       }
       return NextResponse.json({ error: 'Données invalides' }, { status: 422 });
+    }
+
+    // Record legitimate successful booking rate limit against the normalized phone number
+    if (normalizedPhone) {
+      await dbRecordRateLimitAttempt(`phone:${normalizedPhone}`, 'booking_phone');
     }
 
     // Broadcast the new appointment in real-time to active admin calendar dashboards

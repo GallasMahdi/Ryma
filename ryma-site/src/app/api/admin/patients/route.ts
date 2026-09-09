@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/requireAdmin';
+import { requireAdmin, requireOwnerAnalytics } from '@/lib/requireAdmin';
 import {
   dbGetAllPatients,
   dbGetPatientsPaginated,
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/admin/patients?id=xxx OR ?phone=xxx
 export async function DELETE(request: NextRequest) {
-  const auth = await requireAdmin(request);
+  const auth = await requireOwnerAnalytics(request);
   if ('status' in auth) return auth;
 
   const id = request.nextUrl.searchParams.get('id');

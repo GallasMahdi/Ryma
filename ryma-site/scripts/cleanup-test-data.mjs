@@ -36,7 +36,7 @@ async function clean() {
   }
 
   const testAppts = await client.execute(
-    "SELECT id, patientName FROM appointments WHERE patientName LIKE '%<script%' OR patientName LIKE '%=cmd%' OR patientName LIKE '%Audit%' OR patientName LIKE '%Contender%' OR patientName LIKE '%Race%'"
+    "SELECT id, patientName FROM appointments WHERE patientName LIKE '%<script%' OR patientName LIKE '%=cmd%' OR patientName LIKE '%Audit%' OR patientName LIKE '%Contender%' OR patientName LIKE '%Race%' OR patientName LIKE '%Test RateLimit%'"
   );
   console.log(`Found ${testAppts.rows.length} test appointments.`);
   for (const a of testAppts.rows) {

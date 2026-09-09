@@ -17,8 +17,13 @@ export async function verifyRecaptchaToken(
 ): Promise<{ valid: boolean; score?: number; reason?: string }> {
   const secretKey = process.env.RECAPTCHA_SECRET_KEY;
 
-  // If reCAPTCHA is not configured (e.g. in local development without keys), gracefully pass
+  // If reCAPTCHA is not configured in local development, permit pass for ease of testing.
+  // In production, missing secret is blocked to prevent bot denial of service.
   if (!secretKey || secretKey.trim() === '') {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[SECURITY ERROR] RECAPTCHA_SECRET_KEY is missing in production. Rejecting unverified request.');
+      return { valid: false, reason: 'unconfigured_production_recaptcha' };
+    }
     return { valid: true, reason: 'skipped_no_secret' };
   }
 
@@ -41,7 +46,7 @@ export async function verifyRecaptchaToken(
 
     if (!response.ok) {
       console.warn('[reCAPTCHA API HTTP Error]:', response.status);
-      return { valid: true, reason: 'api_http_fallback' };
+      return { valid: false, reason: 'api_http_error' };
     }
 
     const data: RecaptchaVerifyResponse = await response.json();
@@ -62,7 +67,6 @@ export async function verifyRecaptchaToken(
     return { valid: true, score };
   } catch (error) {
     console.error('[reCAPTCHA Exception]:', error);
-    // In case of transient network issue with Google, avoid blocking real patients
-    return { valid: true, reason: 'network_fallback' };
+    return { valid: false, reason: 'network_error' };
   }
 }

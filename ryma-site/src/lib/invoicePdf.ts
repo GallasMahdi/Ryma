@@ -385,7 +385,7 @@ export function generateInvoiceHtml(invoice: Invoice): string {
             ? 'Serviço de saúde e fisioterapia isento de IVA nos termos do Artigo 9.º do Código do IVA (CIVA).'
             : `Taxa de IVA a ${vatRate}% incluída (${vatAmount.toFixed(2)} € de imposto sobre incidência tributável de ${incidence.toFixed(2)} €).`
         }<br>
-        Documento processado por programa certificado. Válido para efeitos de dedução em IRS e reembolso junto de seguradoras de saúde e subsistemas (ADSE, Médis, Multicare, AdvanceCare).
+        Comprovativo interno de ato clínico / recibo de consulta médica e fisioterapia. Válido para efeitos de dedução em IRS e reembolso junto de seguradoras de saúde e subsistemas (ADSE, Médis, Multicare, AdvanceCare) ao abrigo do art.º 9.º do CIVA. Não substitui fatura fiscal emitida nos termos do art.º 29.º do CIVA.
       </div>
 
       <div class="totals-box">
