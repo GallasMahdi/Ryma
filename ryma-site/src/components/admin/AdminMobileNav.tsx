@@ -76,6 +76,13 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
     },
   ];
 
+  const handlePrefetch = (tabId: AdminTab) => {
+    if (tabId === 'slots') import('@/components/admin/SlotsTab');
+    else if (tabId === 'patients') import('@/components/admin/PatientNotesTab');
+    else if (tabId === 'invoices') import('@/components/admin/InvoicesTab');
+    else if (tabId === 'reviews') import('@/components/admin/ReviewsTab');
+  };
+
   return (
     <nav
       aria-label="Navigation mobile"
@@ -90,6 +97,8 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              onTouchStart={() => handlePrefetch(tab.id)}
+              onMouseEnter={() => handlePrefetch(tab.id)}
               className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all relative min-h-[50px] touch-target select-none ${
                 isActive
                   ? 'text-[#8A6A24] font-bold'

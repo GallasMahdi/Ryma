@@ -35,6 +35,10 @@ import { ResponsiveModal } from './ResponsiveModal';
 
 interface ReviewsTabProps {
   lang: Lang;
+  reviews?: Review[];
+  setReviews?: React.Dispatch<React.SetStateAction<Review[]>>;
+  loading?: boolean;
+  onRefresh?: () => Promise<void>;
   onAddToast?: (toast: { message: string; type: 'success' | 'error' | 'info' }) => void;
   setConfirmDialog?: (dlg: {
     title: string;
@@ -48,9 +52,21 @@ interface ReviewsTabProps {
 type SortOption = 'recent' | 'oldest' | 'rating_desc' | 'rating_asc';
 type FilterStatusOption = ReviewStatus | 'ALL' | 'FEATURED';
 
-export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast, setConfirmDialog }: ReviewsTabProps) {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+export const ReviewsTab = React.memo(function ReviewsTab({
+  lang,
+  reviews: parentReviews,
+  setReviews: parentSetReviews,
+  loading: parentLoading,
+  onRefresh,
+  onAddToast,
+  setConfirmDialog,
+}: ReviewsTabProps) {
+  const [localReviews, setLocalReviews] = useState<Review[]>([]);
+  const reviews = parentReviews ?? localReviews;
+  const setReviews = parentSetReviews ?? setLocalReviews;
+
+  const [localLoading, setLocalLoading] = useState(parentReviews ? false : true);
+  const loading = parentLoading !== undefined ? parentLoading : localLoading;
   const [error, setError] = useState<string | null>(null);
 
   // Filters & Controls
@@ -107,8 +123,12 @@ export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast, set
   );
 
   const fetchReviews = useCallback(async () => {
+    if (onRefresh) {
+      await onRefresh();
+      return;
+    }
     try {
-      setLoading(true);
+      setLocalLoading(true);
       setError(null);
       const res = await fetch('/api/admin/reviews', { cache: 'no-store' });
       if (!res.ok) throw new Error(txt('Falha ao carregar as avaliações.', 'Failed to load reviews.', 'Échec du chargement des avis.'));
@@ -117,13 +137,17 @@ export const ReviewsTab = React.memo(function ReviewsTab({ lang, onAddToast, set
     } catch (err: any) {
       setError(err.message || txt('Erro inesperado.', 'Unexpected error.', 'Erreur inattendue.'));
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
-  }, [txt]);
+  }, [txt, onRefresh, setReviews]);
 
   useEffect(() => {
-    fetchReviews();
-  }, [fetchReviews]);
+    // Only auto-fetch if we don't have parent reviews already provided
+    if (parentReviews && parentReviews.length > 0) return;
+    if (!parentReviews) {
+      fetchReviews();
+    }
+  }, [parentReviews, fetchReviews]);
 
   // Update Status / Verified / Featured
   const handleUpdate = async (

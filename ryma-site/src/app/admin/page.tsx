@@ -17,6 +17,7 @@ import {
   InvoiceStats,
   InvoicePaymentStatus,
   PaymentMethod,
+  Review,
   getServiceName,
   getServicePrice,
   getNext7Days,
@@ -120,11 +121,28 @@ function AdminDashboardContent() {
     } catch {}
   }, []);
 
+  // ── Ultra-Fast Tab Switching: Visited Tabs In-Memory Preservation ─────────
+  // Keeps already mounted tabs alive in the DOM using CSS visibility (0ms warm transitions)
+  const [visitedTabs, setVisitedTabs] = useState<Set<AdminTab>>(() => new Set([activeTab]));
+
+  useEffect(() => {
+    setVisitedTabs(prev => {
+      if (prev.has(activeTab)) return prev;
+      const next = new Set(prev);
+      next.add(activeTab);
+      return next;
+    });
+  }, [activeTab]);
+
   // ── State ──────────────────────────────────────────────────────────────────
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
   const [isGlobalBusy, setIsGlobalBusy] = useState(false);
+
+  // Hoisted Reviews State (eliminates re-fetching bottleneck on every tab navigation)
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   // Real-time synchronization state
   const [recentNewIds, setRecentNewIds] = useState<Set<string>>(new Set());
@@ -487,6 +505,19 @@ function AdminDashboardContent() {
     }
   }, []);
 
+  // ── Fetch patient reviews ──────────────────────────────────────────────────
+  const fetchReviews = useCallback(async () => {
+    setLoadingReviews(true);
+    try {
+      const data = await apiFetch<{ reviews: Review[] }>('/api/admin/reviews');
+      setReviews(data.reviews ?? []);
+    } catch (err) {
+      console.warn('[Reviews Fetch Error]:', err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, []);
+
   const handleInvoiceCreated = useCallback((newInv: Invoice) => {
     setInvoices(prev => [newInv, ...prev]);
     fetchInvoices();
@@ -689,13 +720,28 @@ function AdminDashboardContent() {
     fetchAppointments(false);
     fetchAdminMetadata();
 
-    // 2. Staggered background prefetch for patients & invoices (zero-lag initial render)
+    // 2. Staggered background prefetch for patients, invoices & reviews (zero-lag initial render)
     const prefetchTimer = setTimeout(() => {
       fetchPatientNotes();
       fetchInvoices();
+      fetchReviews();
     }, 450);
 
-    // 3. Fallback sync polling: SSE handles real-time live events.
+    // 3. Preload secondary tab bundles & drawers during idle time to eliminate chunk download delay
+    const idleCallback =
+      typeof window !== 'undefined' && 'requestIdleCallback' in window
+        ? (window as any).requestIdleCallback
+        : (cb: () => void) => setTimeout(cb, 1200);
+
+    const idleHandle = idleCallback(() => {
+      import('@/components/admin/SlotsTab');
+      import('@/components/admin/PatientNotesTab');
+      import('@/components/admin/InvoicesTab');
+      import('@/components/admin/ReviewsTab');
+      import('@/components/admin/ClinicHelpdeskDrawer');
+    });
+
+    // 4. Fallback sync polling: SSE handles real-time live events.
     // When SSE is connected, poll only every 35s as a safety sync.
     // When SSE is disconnected, poll every 8s until reconnected.
     const pollInterval = isLiveConnected ? 35000 : 8000;
@@ -709,6 +755,7 @@ function AdminDashboardContent() {
       if (!document.hidden) {
         fetchAppointments(true);
         fetchInvoices();
+        fetchReviews();
         fetchAdminMetadata();
       }
     };
@@ -722,20 +769,25 @@ function AdminDashboardContent() {
 
     return () => {
       clearTimeout(prefetchTimer);
+      if (typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(idleHandle);
+      }
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleWindowFocus);
     };
-  }, [fetchAppointments, fetchPatientNotes, fetchInvoices, fetchAdminMetadata, isLiveConnected]);
+  }, [fetchAppointments, fetchPatientNotes, fetchInvoices, fetchReviews, fetchAdminMetadata, isLiveConnected]);
 
-  // If user immediately switches to patients or invoices tab before prefetch, fetch instantly
+  // If user immediately switches to patients, invoices, or reviews tab before prefetch, fetch instantly
   useEffect(() => {
     if (activeTab === 'patients' && patientsList.length === 0) {
       fetchPatientNotes();
     } else if (activeTab === 'invoices' && invoices.length === 0) {
       fetchInvoices();
+    } else if (activeTab === 'reviews' && reviews.length === 0) {
+      fetchReviews();
     }
-  }, [activeTab, patientsList.length, invoices.length, fetchPatientNotes, fetchInvoices]);
+  }, [activeTab, patientsList.length, invoices.length, reviews.length, fetchPatientNotes, fetchInvoices, fetchReviews]);
 
   // ── Cached Slot Fetching ───────────────────────────────────────────────────
   const fetchSlots = useCallback(async (date: string, forceRefresh = false) => {
@@ -1210,6 +1262,7 @@ function AdminDashboardContent() {
           totalAppointments={stats.total}
           totalNotes={Math.max(patientsList.length, patientNotes.length)}
           totalInvoices={invoices.length}
+          totalReviews={reviews.length}
           isLoading={loadingAppointments}
           isAnalyticsUnlocked={isAnalyticsUnlocked}
           isCollapsed={isSidebarCollapsed}
@@ -1219,8 +1272,9 @@ function AdminDashboardContent() {
 
         <main className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8 touch-pan-y">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-            {activeTab === 'appointments' && (
-              <>
+            {/* Appointments Tab (Preserved in memory for 0ms transitions) */}
+            {visitedTabs.has('appointments') && (
+              <div className={activeTab === 'appointments' ? 'space-y-4 sm:space-y-6' : 'hidden'} aria-hidden={activeTab !== 'appointments'}>
                 <AdminKpiCards
                   stats={stats}
                   lang={lang}
@@ -1245,112 +1299,131 @@ function AdminDashboardContent() {
                   noShowCounts={noShowCounts}
                   recentNewIds={recentNewIds}
                 />
-              </>
+              </div>
             )}
 
-            {activeTab === 'slots' && (
-              <SlotsTab
-                lang={lang}
-                selectedDateForSlots={selectedDateForSlots}
-                setSelectedDateForSlots={setSelectedDateForSlots}
-                todayStr={todayStr}
-                next7Days={next7Days}
-                slotList={slotList}
-                loadingSlots={loadingSlots}
-                appointments={appointments}
-                toggleSlot={toggleSlot}
-                refreshSlots={(date) => {
-                  delete slotCacheRef.current[date];
-                  fetchSlots(date, true);
-                }}
-                onActionToast={addToast}
-              />
-            )}
-
-            {activeTab === 'patients' && (
-              <PatientNotesTab
-                lang={lang}
-                patientNotes={patientNotes}
-                patientsList={patientsList}
-                onRefreshPatients={() => {
-                  fetchPatientNotes();
-                  fetchAppointments(true);
-                }}
-                noteSearch={noteSearch}
-                setNoteSearch={setNoteSearch}
-                selectedNote={selectedNote}
-                setSelectedNote={setSelectedNote}
-                noteForm={noteForm}
-                setNoteForm={setNoteForm}
-                savingNote={savingNote}
-                saveNote={saveNote}
-                deleteNote={deleteNote}
-                appointments={appointments}
-                setConfirmDialog={setConfirmDialog}
-                createDirectPatientNote={createDirectPatientNote}
-                onActionToast={addToast}
-              />
-            )}
-
-            {activeTab === 'invoices' && (
-              <InvoicesTab
-                invoices={invoices}
-                stats={invoiceStats}
-                loading={loadingInvoices}
-                onRefresh={fetchInvoices}
-                onCreated={handleInvoiceCreated}
-                onUpdateStatus={handleUpdateInvoiceStatus}
-                onDelete={handleDeleteInvoice}
-                patients={patientsList}
-                appointments={appointments}
-                isAnalyticsUnlocked={isAnalyticsUnlocked}
-                onUnlockClick={() => setIsOwnerAuthModalOpen(true)}
-                lang={lang}
-                setConfirmDialog={setConfirmDialog}
-              />
-            )}
-
-            {activeTab === 'reviews' && (
-              <ReviewsTab
-                lang={lang}
-                onAddToast={(t) => addToast({ title: 'Avaliações', message: t.message, type: t.type })}
-                setConfirmDialog={setConfirmDialog}
-              />
-            )}
-
-            {activeTab === 'analytics' && (
-              isAnalyticsUnlocked && serverAnalytics ? (
-                <AnalyticsTab
+            {/* Slots Tab (Preserved in memory once loaded) */}
+            {visitedTabs.has('slots') && (
+              <div className={activeTab === 'slots' ? 'block' : 'hidden'} aria-hidden={activeTab !== 'slots'}>
+                <SlotsTab
                   lang={lang}
-                  stats={serverAnalytics.stats}
-                  analyticsData={serverAnalytics.analyticsData}
-                  expiresAt={analyticsExpiresAt}
-                  onLock={handleLockAnalytics}
-                  onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
+                  selectedDateForSlots={selectedDateForSlots}
+                  setSelectedDateForSlots={setSelectedDateForSlots}
+                  todayStr={todayStr}
+                  next7Days={next7Days}
+                  slotList={slotList}
+                  loadingSlots={loadingSlots}
+                  appointments={appointments}
+                  toggleSlot={toggleSlot}
+                  refreshSlots={(date) => {
+                    delete slotCacheRef.current[date];
+                    fetchSlots(date, true);
+                  }}
+                  onActionToast={addToast}
                 />
-              ) : (
-                <div className="bg-white p-8 sm:p-12 rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-lg mx-auto my-8 sm:my-16 font-sans">
-                  <div className="w-16 h-16 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-inner">
-                    <IconLock size={32} />
+              </div>
+            )}
+
+            {/* Patients / EMR Tab (Preserved in memory with active filters & scroll) */}
+            {visitedTabs.has('patients') && (
+              <div className={activeTab === 'patients' ? 'block' : 'hidden'} aria-hidden={activeTab !== 'patients'}>
+                <PatientNotesTab
+                  lang={lang}
+                  patientNotes={patientNotes}
+                  patientsList={patientsList}
+                  onRefreshPatients={() => {
+                    fetchPatientNotes();
+                    fetchAppointments(true);
+                  }}
+                  noteSearch={noteSearch}
+                  setNoteSearch={setNoteSearch}
+                  selectedNote={selectedNote}
+                  setSelectedNote={setSelectedNote}
+                  noteForm={noteForm}
+                  setNoteForm={setNoteForm}
+                  savingNote={savingNote}
+                  saveNote={saveNote}
+                  deleteNote={deleteNote}
+                  appointments={appointments}
+                  setConfirmDialog={setConfirmDialog}
+                  createDirectPatientNote={createDirectPatientNote}
+                  onActionToast={addToast}
+                />
+              </div>
+            )}
+
+            {/* Invoices Tab (Preserved in memory) */}
+            {visitedTabs.has('invoices') && (
+              <div className={activeTab === 'invoices' ? 'block' : 'hidden'} aria-hidden={activeTab !== 'invoices'}>
+                <InvoicesTab
+                  invoices={invoices}
+                  stats={invoiceStats}
+                  loading={loadingInvoices}
+                  onRefresh={fetchInvoices}
+                  onCreated={handleInvoiceCreated}
+                  onUpdateStatus={handleUpdateInvoiceStatus}
+                  onDelete={handleDeleteInvoice}
+                  patients={patientsList}
+                  appointments={appointments}
+                  isAnalyticsUnlocked={isAnalyticsUnlocked}
+                  onUnlockClick={() => setIsOwnerAuthModalOpen(true)}
+                  lang={lang}
+                  setConfirmDialog={setConfirmDialog}
+                />
+              </div>
+            )}
+
+            {/* Reviews Tab (Preserved with hoisted state & prefetch) */}
+            {visitedTabs.has('reviews') && (
+              <div className={activeTab === 'reviews' ? 'block' : 'hidden'} aria-hidden={activeTab !== 'reviews'}>
+                <ReviewsTab
+                  lang={lang}
+                  reviews={reviews}
+                  setReviews={setReviews}
+                  loading={loadingReviews}
+                  onRefresh={fetchReviews}
+                  onAddToast={(t) => addToast({ title: 'Avaliações', message: t.message, type: t.type })}
+                  setConfirmDialog={setConfirmDialog}
+                />
+              </div>
+            )}
+
+            {/* Analytics Tab */}
+            {visitedTabs.has('analytics') && (
+              <div className={activeTab === 'analytics' ? 'block' : 'hidden'} aria-hidden={activeTab !== 'analytics'}>
+                {isAnalyticsUnlocked && serverAnalytics ? (
+                  <AnalyticsTab
+                    lang={lang}
+                    stats={serverAnalytics.stats}
+                    analyticsData={serverAnalytics.analyticsData}
+                    expiresAt={analyticsExpiresAt}
+                    onLock={handleLockAnalytics}
+                    onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
+                  />
+                ) : (
+                  <div className="bg-white p-8 sm:p-12 rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-lg mx-auto my-8 sm:my-16 font-sans">
+                    <div className="w-16 h-16 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center shadow-inner">
+                      <IconLock size={32} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-[#0F172A]">
+                        {lang === 'pt' ? 'Autorização de Proprietário Necessária' : lang === 'en' ? 'Owner Authorization Required' : 'Autorisation Propriétaire Requise'}
+                      </h3>
+                      <p className="text-xs text-[#64748B] mt-1.5 max-w-sm leading-relaxed">
+                        {lang === 'pt' ? 'Esta secção contém métricas de faturação e relatórios confidenciais.' : lang === 'en' ? 'This section contains restricted financial performance and business metrics.' : 'Cette section contient des indicateurs financiers et de chiffre d’affaires confidentiels.'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsOwnerAuthModalOpen(true)}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] hover:from-[#6D28D9] hover:to-[#4C1D95] text-white text-xs font-bold shadow-md shadow-[#7C3AED]/25 transition-all cursor-pointer"
+                    >
+                      <IconLock size={16} />
+                      <span>{lang === 'pt' ? 'Desbloquear Estatísticas' : lang === 'en' ? 'Unlock Analytics' : 'Déverrouiller les Statistiques'}</span>
+                    </button>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-[#0F172A]">
-                      {lang === 'pt' ? 'Autorização de Proprietário Necessária' : lang === 'en' ? 'Owner Authorization Required' : 'Autorisation Propriétaire Requise'}
-                    </h3>
-                    <p className="text-xs text-[#64748B] mt-1.5 max-w-sm leading-relaxed">
-                      {lang === 'pt' ? 'Esta secção contém métricas de faturação e relatórios confidenciais.' : lang === 'en' ? 'This section contains restricted financial performance and business metrics.' : 'Cette section contient des indicateurs financiers et de chiffre d’affaires confidentiels.'}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsOwnerAuthModalOpen(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] hover:from-[#6D28D9] hover:to-[#4C1D95] text-white text-xs font-bold shadow-md shadow-[#7C3AED]/25 transition-all cursor-pointer"
-                  >
-                    <IconLock size={16} />
-                    <span>{lang === 'pt' ? 'Desbloquear Estatísticas' : lang === 'en' ? 'Unlock Analytics' : 'Déverrouiller les Statistiques'}</span>
-                  </button>
-                </div>
-              )
+                )}
+              </div>
             )}
           </div>
         </main>
@@ -1364,6 +1437,7 @@ function AdminDashboardContent() {
         totalAppointments={stats.total}
         totalNotes={Math.max(patientsList.length, patientNotes.length)}
         totalInvoices={invoices.length}
+        totalReviews={reviews.length}
         isAnalyticsUnlocked={isAnalyticsUnlocked}
         onOpenAddModal={() => setIsAddModalOpen(true)}
       />
@@ -1437,6 +1511,7 @@ function AdminDashboardContent() {
           fetchAppointments(false);
           fetchPatientNotes();
           fetchInvoices();
+          fetchReviews();
           fetchAdminMetadata();
         }}
         toggleLang={toggleLang}

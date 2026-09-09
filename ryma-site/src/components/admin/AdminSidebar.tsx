@@ -92,6 +92,13 @@ export const AdminSidebar = React.memo(function AdminSidebar({
     },
   ];
 
+  const handlePrefetch = (tabId: AdminTab) => {
+    if (tabId === 'slots') import('@/components/admin/SlotsTab');
+    else if (tabId === 'patients') import('@/components/admin/PatientNotesTab');
+    else if (tabId === 'invoices') import('@/components/admin/InvoicesTab');
+    else if (tabId === 'reviews') import('@/components/admin/ReviewsTab');
+  };
+
   return (
     <aside
       className={`bg-[#FAFAF9] border-e border-[#E2E8F0] hidden md:flex flex-col justify-between shrink-0 z-20 select-none font-sans transition-all duration-300 ease-in-out ${
@@ -137,6 +144,8 @@ export const AdminSidebar = React.memo(function AdminSidebar({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
+                onMouseEnter={() => handlePrefetch(item.id)}
+                onTouchStart={() => handlePrefetch(item.id)}
                 title={isCollapsed ? `${item.label} (${item.sublabel})` : undefined}
                 className={`w-full flex items-center ${
                   isCollapsed ? 'justify-center px-2 py-3' : 'justify-between px-3 py-2.5'
@@ -198,6 +207,8 @@ export const AdminSidebar = React.memo(function AdminSidebar({
           <button
             type="button"
             onClick={onOpenHelpdesk}
+            onMouseEnter={() => import('@/components/admin/ClinicHelpdeskDrawer')}
+            onTouchStart={() => import('@/components/admin/ClinicHelpdeskDrawer')}
             className={`w-full flex items-center ${
               isCollapsed ? 'justify-center p-2' : 'gap-2.5 px-3 py-2'
             } rounded-xl text-xs font-medium text-[#9A7428] hover:text-[#1A1412] bg-[#FAFAF8] hover:bg-[#C49A3C]/10 border border-[#C49A3C]/30 transition-colors shadow-2xs`}

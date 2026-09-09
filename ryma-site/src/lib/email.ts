@@ -96,29 +96,110 @@ function getGoogleCalendarUrl(appointment: AppointmentData, serviceName: string)
   }
 }
 
+const EMAIL_TRANSLATIONS = {
+  pt: {
+    tagline: 'Clínica de Fisioterapia & Estética Avançada',
+    badge: '✓ Consulta Confirmada',
+    greeting: (name: string) => `Olá ${escapeHtml(name)},`,
+    intro: 'A sua consulta foi agendada com sucesso na Digital Clínica em Lisboa. Abaixo encontra todos os detalhes do seu agendamento e informações úteis.',
+    detailsTitle: 'Detalhes da Consulta',
+    treatment: 'Tratamento',
+    durationPrice: 'Duração & Preço',
+    date: 'Data',
+    time: 'Horário',
+    locationTitle: '📍 Localização da Clínica',
+    openMaps: '→ Abrir itinerário no Google Maps',
+    tipsTitle: '💡 Recomendações para a sua consulta:',
+    tip1: 'Venha com roupa confortável e prática.',
+    tip2: 'Traga exames médicos, relatórios ou prescrições recentes, se disponíveis.',
+    tip3: 'Por favor, compareça 5 minutos antes do horário agendado.',
+    addToCalendar: '📅 Adicionar ao Google Calendar',
+    whatsappHelp: '💬 Dúvidas? Fale connosco pelo WhatsApp',
+    footerName: 'Digital Clínica — Fisioterapia & Estética Avançada',
+    footerPhone: 'Telefone',
+    footerDisclaimer: 'Este é um e-mail automático de confirmação. Para desmarcar ou alterar a sua consulta, contacte-nos com pelo menos 24h de antecedência.',
+    subject: (service: string, date: string, time: string) => `Confirmação de Consulta — ${service} (${date} às ${time})`,
+    fromName: 'Digital Clínica — Fisioterapia & Cuidados',
+  },
+  fr: {
+    tagline: 'Clinique de Kinésithérapie & Soins Avancés',
+    badge: '✓ Rendez-vous Confirmé',
+    greeting: (name: string) => `Bonjour ${escapeHtml(name)},`,
+    intro: 'Votre rendez-vous a été enregistré avec succès à la Digital Clínica à Lisbonne. Retrouvez ci-dessous les détails de votre consultation et les accès.',
+    detailsTitle: 'Détails du Rendez-vous',
+    treatment: 'Soin / Consultation',
+    durationPrice: 'Durée & Tarif',
+    date: 'Date',
+    time: 'Heure',
+    locationTitle: '📍 Adresse du Cabinet',
+    openMaps: '→ Ouvrir l\'itinéraire dans Google Maps',
+    tipsTitle: '💡 Conseils pratiques avant votre séance :',
+    tip1: 'Prévoyez une tenue souple et confortable.',
+    tip2: 'Apportez vos examens médicaux, bilans ou ordonnances récentes si vous en disposez.',
+    tip3: 'Merci d\'arriver 5 minutes avant l\'heure prévue.',
+    addToCalendar: '📅 Ajouter à Google Calendar',
+    whatsappHelp: '💬 Une question ? Écrivez-nous sur WhatsApp',
+    footerName: 'Digital Clínica — Kinésithérapie & Soins Avancés',
+    footerPhone: 'Téléphone',
+    footerDisclaimer: 'Ceci est un e-mail de confirmation automatique. Pour modifier ou annuler votre séance, merci de nous prévenir au moins 24h à l\'avance.',
+    subject: (service: string, date: string, time: string) => `Confirmation de Rendez-vous — ${service} (${date} à ${time})`,
+    fromName: 'Digital Clínica — Kinésithérapie & Soins',
+  },
+  en: {
+    tagline: 'Physiotherapy & Advanced Aesthetics Clinic',
+    badge: '✓ Appointment Confirmed',
+    greeting: (name: string) => `Hello ${escapeHtml(name)},`,
+    intro: 'Your appointment has been successfully scheduled with Digital Clínica in Lisbon. Below you will find your appointment details and directions.',
+    detailsTitle: 'Appointment Details',
+    treatment: 'Treatment',
+    durationPrice: 'Duration & Price',
+    date: 'Date',
+    time: 'Time',
+    locationTitle: '📍 Consultation Location',
+    openMaps: '→ Open route in Google Maps',
+    tipsTitle: '💡 Tips for your appointment:',
+    tip1: 'Please wear comfortable and flexible clothing.',
+    tip2: 'Bring any medical prescriptions, doctor referrals, or recent imaging results if available.',
+    tip3: 'Please arrive 5 minutes before your scheduled appointment time.',
+    addToCalendar: '📅 Add to Google Calendar',
+    whatsappHelp: '💬 Have a question? Contact us on WhatsApp',
+    footerName: 'Digital Clínica — Physiotherapy & Advanced Aesthetics',
+    footerPhone: 'Phone',
+    footerDisclaimer: 'This is an automated confirmation email. To reschedule or cancel your session, please contact us at least 24 hours in advance.',
+    subject: (service: string, date: string, time: string) => `Appointment Confirmation — ${service} (${date} at ${time})`,
+    fromName: 'Digital Clínica — Physiotherapy & Care',
+  },
+};
+
 /**
- * Build Luxury Responsive HTML Email Template (English)
+ * Build Luxury Responsive HTML Email Template
  */
-function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en') {
+function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'pt') {
+  const normLang = (lang === 'fr' || lang === 'en' || lang === 'pt') ? lang : 'pt';
+  const t = EMAIL_TRANSLATIONS[normLang];
   const serviceObj = SERVICES.find(s => s.slug === appointment.service);
-  const serviceName = serviceObj ? getLocalizedText(serviceObj.name, 'en') || getLocalizedText(serviceObj.name, 'fr') : appointment.service;
-  const servicePrice = serviceObj?.price ? `${serviceObj.price} €` : 'Custom Quote';
+  const serviceName = serviceObj ? getLocalizedText(serviceObj.name, normLang) : appointment.service;
+  const servicePrice = serviceObj?.price ? `${serviceObj.price} €` : (normLang === 'pt' ? 'Sob Consulta' : normLang === 'fr' ? 'Sur Devis' : 'Custom Quote');
   const duration = serviceObj?.duration || '50 min';
-  const formattedDate = formatHumanDate(appointment.date, 'en');
+  const formattedDate = formatHumanDate(appointment.date, normLang);
   const googleCalendarUrl = getGoogleCalendarUrl(appointment, serviceName);
-  const clinicAddress = SITE.address.en || SITE.address.fr || 'Avenida da Liberdade 120, 1250-146 Lisbon, Portugal';
+  const clinicAddress = SITE.address[normLang] || SITE.address.pt || 'Avenida da Liberdade 120, 1250-146 Lisboa, Portugal';
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinicAddress)}`;
   const whatsappUrl = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(
-    `Hello Digital Clínica, I have booked a session for ${serviceName} on ${appointment.date} at ${appointment.startTime}.`
+    normLang === 'pt'
+      ? `Olá Digital Clínica, agendei uma consulta para ${serviceName} no dia ${appointment.date} às ${appointment.startTime}.`
+      : normLang === 'fr'
+      ? `Bonjour Digital Clínica, j'ai réservé un soin pour ${serviceName} le ${appointment.date} à ${appointment.startTime}.`
+      : `Hello Digital Clínica, I have booked a session for ${serviceName} on ${appointment.date} at ${appointment.startTime}.`
   )}`;
 
   return `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${normLang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Appointment Confirmation — Digital Clinica</title>
+  <title>${t.badge} — Digital Clínica</title>
   <style>
     body {
       margin: 0;
@@ -308,42 +389,40 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
       <!-- Header -->
       <div class="header-bar">
         <h1 class="clinic-name">Digital Clínica</h1>
-        <div class="clinic-tagline">Physiotherapy & Advanced Care Clinic</div>
+        <div class="clinic-tagline">${t.tagline}</div>
       </div>
 
       <!-- Main Body -->
       <div class="content-body">
         <div style="text-align: center;">
-          <div class="badge-confirmed">✓ Appointment Confirmed</div>
+          <div class="badge-confirmed">${t.badge}</div>
         </div>
 
-        <h2 class="greeting">Hello ${escapeHtml(appointment.patientName)},</h2>
-        <p class="intro-text">
-          Your appointment has been successfully scheduled. We look forward to welcoming you for your consultation.
-        </p>
+        <h2 class="greeting">${t.greeting(appointment.patientName)}</h2>
+        <p class="intro-text">${t.intro}</p>
 
         <!-- Appointment Details Box -->
         <div class="appointment-box">
-          <div class="box-title">Appointment Details</div>
+          <div class="box-title">${t.detailsTitle}</div>
 
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td style="padding-bottom: 12px;" width="50%">
-                <div class="detail-label">Treatment</div>
+                <div class="detail-label">${t.treatment}</div>
                 <div class="detail-val detail-val-highlight">${escapeHtml(serviceName)}</div>
               </td>
               <td style="padding-bottom: 12px;" width="50%">
-                <div class="detail-label">Duration & Price</div>
+                <div class="detail-label">${t.durationPrice}</div>
                 <div class="detail-val">${escapeHtml(duration)} · ${escapeHtml(servicePrice)}</div>
               </td>
             </tr>
             <tr>
               <td style="padding-top: 6px;">
-                <div class="detail-label">Date</div>
+                <div class="detail-label">${t.date}</div>
                 <div class="detail-val">${escapeHtml(formattedDate)}</div>
               </td>
               <td style="padding-top: 6px;">
-                <div class="detail-label">Time</div>
+                <div class="detail-label">${t.time}</div>
                 <div class="detail-val">${escapeHtml(appointment.startTime)}</div>
               </td>
             </tr>
@@ -352,7 +431,7 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
 
         <!-- Location Box -->
         <div class="location-box">
-          <div class="detail-label" style="margin-bottom: 6px;">📍 Consultation Location</div>
+          <div class="detail-label" style="margin-bottom: 6px;">${t.locationTitle}</div>
           <div style="font-size: 14px; font-weight: 600; color: #1A1412; margin-bottom: 6px;">
             Digital Clínica
           </div>
@@ -360,36 +439,36 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
             ${escapeHtml(clinicAddress)}
           </div>
           <a href="${mapsUrl}" target="_blank" style="color: #9B793A; font-size: 12px; font-weight: 700; text-decoration: none;">
-            → Open route in Google Maps
+            ${t.openMaps}
           </a>
         </div>
 
         <!-- Practical Advice -->
         <div class="advice-list">
-          <strong>💡 Tips for your appointment:</strong>
+          <strong>${t.tipsTitle}</strong>
           <ul style="margin: 6px 0 0 0; padding-left: 20px;">
-            <li>Please wear comfortable and flexible clothing.</li>
-            <li>Bring any medical prescriptions, doctor referrals, or recent imaging results if available.</li>
-            <li>Please arrive 5 minutes before your scheduled appointment time.</li>
+            <li>${t.tip1}</li>
+            <li>${t.tip2}</li>
+            <li>${t.tip3}</li>
           </ul>
         </div>
 
         <!-- Call to actions -->
         <a href="${googleCalendarUrl}" target="_blank" class="action-button-primary">
-          📅 Add to Google Calendar
+          ${t.addToCalendar}
         </a>
 
         <a href="${whatsappUrl}" target="_blank" class="action-button-secondary">
-          💬 Have a question? Contact us on WhatsApp
+          ${t.whatsappHelp}
         </a>
       </div>
 
       <!-- Footer -->
       <div class="footer">
-        <div><strong>Digital Clínica — Physiotherapy & Advanced Aesthetics</strong></div>
-        <div>Phone: <a href="tel:${SITE.phone}">${SITE.phone}</a> · Lisbon, Portugal</div>
+        <div><strong>${t.footerName}</strong></div>
+        <div>${t.footerPhone}: <a href="tel:${SITE.phone}">${SITE.phone}</a> · Lisboa, Portugal</div>
         <div style="margin-top: 10px; font-size: 11px; color: #A6A095;">
-          This is an automated confirmation email. To reschedule or cancel your session, please contact us at least 24 hours in advance.
+          ${t.footerDisclaimer}
         </div>
       </div>
       <div class="gold-line"></div>
@@ -401,11 +480,11 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'en')
 }
 
 /**
- * Send Patient Booking Confirmation Email (English)
+ * Send Patient Booking Confirmation Email (Localized: PT, FR, EN)
  */
 export async function sendAppointmentConfirmationEmail(
   appointment: AppointmentData,
-  lang = 'en'
+  lang = 'pt'
 ): Promise<{ success: boolean; error?: string; skipped?: boolean }> {
   if (!appointment.email || !appointment.email.includes('@')) {
     return { success: true, skipped: true };
@@ -417,14 +496,15 @@ export async function sendAppointmentConfirmationEmail(
     return { success: true, skipped: true };
   }
 
+  const normLang = (lang === 'fr' || lang === 'en' || lang === 'pt') ? lang : 'pt';
+  const t = EMAIL_TRANSLATIONS[normLang];
   const serviceObj = SERVICES.find(s => s.slug === appointment.service);
-  const serviceName = serviceObj ? getLocalizedText(serviceObj.name, 'en') || getLocalizedText(serviceObj.name, 'fr') : appointment.service;
-  const fromName = process.env.SMTP_FROM_NAME || 'Digital Clínica — Physiotherapy & Care';
+  const serviceName = serviceObj ? getLocalizedText(serviceObj.name, normLang) : appointment.service;
+  const fromName = process.env.SMTP_FROM_NAME || t.fromName;
   const fromAddress = process.env.SMTP_USER;
 
-  const subject = `Appointment Confirmation — ${serviceName} (${appointment.date} at ${appointment.startTime})`;
-
-  const html = buildPatientConfirmationHtml(appointment, lang);
+  const subject = t.subject(serviceName, appointment.date, appointment.startTime);
+  const html = buildPatientConfirmationHtml(appointment, normLang);
 
   try {
     const info = await transporter.sendMail({
@@ -434,7 +514,7 @@ export async function sendAppointmentConfirmationEmail(
       html,
     });
 
-    console.log(`[Email Engine] ✅ Patient confirmation email sent successfully to ${appointment.email} (MessageID: ${info.messageId})`);
+    console.log(`[Email Engine] ✅ Patient confirmation email sent successfully (${normLang.toUpperCase()}) to ${appointment.email} (MessageID: ${info.messageId})`);
     return { success: true };
   } catch (err) {
     console.error('[Email Engine] ❌ Failed to send confirmation email:', err);
