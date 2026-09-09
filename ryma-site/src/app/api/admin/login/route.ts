@@ -19,12 +19,16 @@ export async function POST(request: NextRequest) {
   // Rate limiting: 10 attempts in prod (100 in dev) per 15 minutes per IP
   const isDev = process.env.NODE_ENV !== 'production';
   const maxAttempts = isDev ? 100 : 10;
-  const allowed = await dbCheckRateLimit(ip, 'login', maxAttempts, 15 * 60);
-  if (!allowed) {
-    return NextResponse.json(
-      { error: 'Trop de tentatives. Veuillez attendre 15 minutes.' },
-      { status: 429 }
-    );
+  try {
+    const allowed = await dbCheckRateLimit(ip, 'login', maxAttempts, 15 * 60);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Trop de tentatives. Veuillez attendre 15 minutes.' },
+        { status: 429 }
+      );
+    }
+  } catch (err) {
+    console.warn('[LOGIN RATE LIMIT CHECK WARNING]:', err);
   }
 
   let body: { password?: string };
@@ -37,21 +41,26 @@ export async function POST(request: NextRequest) {
   const { password } = body;
 
   if (!password || typeof password !== 'string' || password.length > 128) {
-    await dbRecordRateLimitAttempt(ip, 'login');
+    try { await dbRecordRateLimitAttempt(ip, 'login'); } catch {}
     return NextResponse.json(GENERIC_ERROR, { status: 401 });
   }
 
   const storedHash = (env.ADMIN_PASSWORD_HASH ?? '').replace(/\\/g, '').trim();
   if (!storedHash) {
-    // Server is misconfigured — do not reveal details to client
-    console.error('[SECURITY] ADMIN_PASSWORD_HASH environment variable is not set.');
+    console.error('[SECURITY] ADMIN_PASSWORD_HASH is empty.');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
-  const valid = await bcrypt.compare(password, storedHash);
+  let valid = false;
+  try {
+    valid = await bcrypt.compare(password, storedHash);
+  } catch (bcryptErr) {
+    console.error('[BCRYPT ERROR]:', bcryptErr);
+    return NextResponse.json(GENERIC_ERROR, { status: 401 });
+  }
 
   if (!valid) {
-    await dbRecordRateLimitAttempt(ip, 'login');
+    try { await dbRecordRateLimitAttempt(ip, 'login'); } catch {}
     // Add a small delay to further slow brute-force attempts
     await new Promise(r => setTimeout(r, 500));
     return NextResponse.json(GENERIC_ERROR, { status: 401 });

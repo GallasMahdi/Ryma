@@ -112,6 +112,14 @@ export default function AdminLoginPage() {
                 ? 'Too many attempts. Please wait 15 minutes.'
                 : 'Muitas tentativas. Por favor aguarde 15 minutos.'
           );
+        } else if (res.status >= 500) {
+          setError(
+            lang === 'fr'
+              ? 'Erreur serveur (500). Vérifiez la configuration de Vercel.'
+              : lang === 'en'
+                ? 'Server configuration error (500). Check Vercel environment variables.'
+                : 'Erro de configuração do servidor (500). Verifique o Vercel.'
+          );
         } else {
           setError(
             lang === 'fr'
