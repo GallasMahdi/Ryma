@@ -74,13 +74,16 @@ async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
 
 const VALID_ADMIN_TABS: AdminTab[] = ['appointments', 'slots', 'patients', 'invoices', 'reviews', 'analytics'];
 
-function AdminDashboardContent() {
+// AdminDashboardContent no longer calls useSearchParams() itself — that hook
+// lives in the thin AdminPageShell wrapper below, which is the component that
+// actually sits inside the Suspense boundary. This prevents Suspense from
+// unmounting+remounting the dashboard (and all its effects) during hydration.
+function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) {
   const { lang, toggleLang } = useLanguage();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // Read initial tab directly from URL query synchronously — no flash!
-  const tabFromUrl = searchParams.get('tab') as AdminTab | null;
+  // Read initial tab from the prop passed by the shell — no flash!
+  const tabFromUrl = initialTab;
   const [activeTab, setActiveTabState] = useState<AdminTab>(() => {
     if (tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl)) {
       return tabFromUrl;
@@ -1591,6 +1594,17 @@ function AdminDashboardContent() {
   );
 }
 
+// Thin shell: owns useSearchParams() so that AdminDashboardContent itself is
+// never suspended mid-render. Suspense resolves here, then the dashboard mounts
+// exactly once with a stable initialTab prop.
+function AdminPageShell() {
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') as AdminTab | null;
+  const initialTab =
+    tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl) ? tabFromUrl : null;
+  return <AdminDashboardContent initialTab={initialTab} />;
+}
+
 export default function AdminPage() {
   return (
     <Suspense
@@ -1603,7 +1617,7 @@ export default function AdminPage() {
         </div>
       }
     >
-      <AdminDashboardContent />
+      <AdminPageShell />
     </Suspense>
   );
 }
