@@ -8,6 +8,7 @@ import { useLanguage } from '@/lib/i18n';
 import { SERVICES, getLocalizedText } from '@/data/services';
 import { Button } from '@/components/ui/Button';
 import { LogoIcon } from '@/components/ui/Logo';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { playSoftClick } from '@/lib/sound';
 import {
   IconMenu2,
@@ -357,22 +358,8 @@ export function Navbar() {
 
               {/* ── Right Actions ── */}
               <div className="hidden xl:flex items-center gap-2.5 shrink-0">
-                {/* Multi-Language Selector */}
-                <div className="inline-flex items-center gap-0.5 p-1 bg-[#F4F0E8] rounded-full border border-[#C49A3C]/25 text-xs font-mono font-bold">
-                  {(['pt', 'en', 'fr'] as const).map((l) => (
-                    <button
-                      key={l}
-                      onClick={() => setLang(l)}
-                      className={`px-2.5 py-0.5 rounded-full transition-all uppercase ${
-                        lang === l
-                          ? 'bg-[#C49A3C] text-white shadow-sm font-extrabold'
-                          : 'text-[#8A8078] hover:text-[#C49A3C]'
-                      }`}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
+                {/* Multi-Language Dropdown with Flags */}
+                <LanguageSwitcher variant="dropdown" />
 
                 {/* Booking Button */}
                 <Button
@@ -388,14 +375,7 @@ export function Navbar() {
 
               {/* ── Mobile & Tablet Menu Controls ── */}
               <div className="flex xl:hidden items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={toggleLang}
-                  aria-label={lang === 'pt' ? 'Mudar idioma' : lang === 'en' ? 'Change language' : 'Changer de langue'}
-                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-xs font-mono font-extrabold text-[#9A7428] bg-[#F5E9C8] border border-[#C49A3C]/30 px-3 py-1.5 rounded-full uppercase transition-transform active:scale-95 touch-manipulation"
-                >
-                  {lang}
-                </button>
+                <LanguageSwitcher variant="dropdown" />
                 <button
                   type="button"
                   onClick={() => setMobileOpen(!mobileOpen)}
@@ -660,6 +640,11 @@ export function Navbar() {
                       </span>
                     </Link>
                   </div>
+                </div>
+
+                {/* ── Mobile Drawer Language Strip ─────────── */}
+                <div className="pt-2 px-1">
+                  <LanguageSwitcher variant="drawer" />
                 </div>
               </nav>
 
