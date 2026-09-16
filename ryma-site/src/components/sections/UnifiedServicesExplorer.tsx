@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useTransition } from 'react';
+import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { playSoftClick } from '@/lib/sound';
 import { BodyMap } from './BodyMap';
@@ -9,7 +9,6 @@ import { ServicesHub } from './ServicesHub';
 import {
   IconBodyScan,
   IconSparkles,
-  IconLayersIntersect,
 } from '@tabler/icons-react';
 
 export type ExplorerViewMode = 'anatomy' | 'carousel';
@@ -17,12 +16,20 @@ export type ExplorerViewMode = 'anatomy' | 'carousel';
 export function UnifiedServicesExplorer() {
   const { lang } = useLanguage();
   const [viewMode, setViewMode] = useState<ExplorerViewMode>('anatomy');
+  const [, startTransition] = useTransition();
 
   const handleModeChange = (mode: ExplorerViewMode) => {
     if (mode === viewMode) return;
     playSoftClick();
-    setViewMode(mode);
+    startTransition(() => {
+      setViewMode(mode);
+    });
   };
+
+  useEffect(() => {
+    // Notify any canvas/carousel listeners of the dimension update
+    window.dispatchEvent(new Event('resize'));
+  }, [viewMode]);
 
   return (
     <section
@@ -193,30 +200,28 @@ export function UnifiedServicesExplorer() {
           </div>
         </motion.div>
 
-        {/* ── Animated Content Area ───────────────────────────────────── */}
-        <AnimatePresence mode="wait">
-          {viewMode === 'anatomy' ? (
-            <motion.div
-              key="anatomy-mode"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
-            >
-              <BodyMap embedded hideHeader />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="carousel-mode"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
-            >
-              <ServicesHub embedded hideHeader />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* ── Zero-Lag Persistent Dual Panels (Pre-rendered & Kept Alive) ── */}
+        <div className="relative w-full">
+          {/* Panel 1: 3D Anatomical Explorer */}
+          <div
+            role="tabpanel"
+            id="explorer-panel-anatomy"
+            aria-hidden={viewMode !== 'anatomy'}
+            className={viewMode === 'anatomy' ? 'block' : 'hidden'}
+          >
+            <BodyMap embedded hideHeader />
+          </div>
+
+          {/* Panel 2: Carousel Gallery */}
+          <div
+            role="tabpanel"
+            id="explorer-panel-carousel"
+            aria-hidden={viewMode !== 'carousel'}
+            className={viewMode === 'carousel' ? 'block' : 'hidden'}
+          >
+            <ServicesHub embedded hideHeader />
+          </div>
+        </div>
 
       </div>
     </section>

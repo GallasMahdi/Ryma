@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect, memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -90,7 +90,7 @@ export interface ServicesHubProps {
   hideHeader?: boolean;
 }
 
-export function ServicesHub({ embedded = false, hideHeader = false }: ServicesHubProps = {}) {
+export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHeader = false }: ServicesHubProps = {}) {
   const { lang, t } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -148,7 +148,7 @@ export function ServicesHub({ embedded = false, hideHeader = false }: ServicesHu
   useEffect(() => {
     setCurrentSlideIndex(0);
     if (carouselRef.current) {
-      carouselRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      carouselRef.current.scrollLeft = 0;
     }
   }, [activeCategory, searchQuery]);
 
@@ -570,4 +570,4 @@ export function ServicesHub({ embedded = false, hideHeader = false }: ServicesHu
       {hubContent}
     </section>
   );
-}
+});

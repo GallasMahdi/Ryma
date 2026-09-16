@@ -1349,7 +1349,7 @@ export interface BodyMapProps {
   hideHeader?: boolean;
 }
 
-export function BodyMap({ embedded = false, hideHeader = false }: BodyMapProps = {}) {
+export const BodyMap = memo(function BodyMap({ embedded = false, hideHeader = false }: BodyMapProps = {}) {
   const { lang, t } = useLanguage();
   const reduced = useReducedMotion() ?? false;
 
@@ -1841,4 +1841,4 @@ export function BodyMap({ embedded = false, hideHeader = false }: BodyMapProps =
       {sectionContent}
     </section>
   );
-}
+});
