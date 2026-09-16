@@ -233,6 +233,7 @@ export function WhatsAppBubble() {
     setCustomMsg('');
   };
 
+  if (pathname?.startsWith('/admin')) return null;
   if (!visible) return null;
 
   return (

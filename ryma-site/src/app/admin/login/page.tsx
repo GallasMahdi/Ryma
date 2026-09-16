@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -17,7 +17,6 @@ import {
   IconLoader2,
   IconCheck,
   IconShieldLock,
-  IconClock,
   IconHelpCircle,
   IconX,
   IconMail,
@@ -26,23 +25,13 @@ import {
   IconKey,
 } from '@tabler/icons-react';
 
-export default function AdminLoginPage() {
-  const { lang, setLang } = useLanguage();
-  const router = useRouter();
-  const [pwd, setPwd] = useState('');
-  const [showPwd, setShowPwd] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
-  const [capsLockActive, setCapsLockActive] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
+/**
+ * Isolated Lisbon Time Pill
+ * Isolates the 1-second interval so clock ticks never re-render the login page or form.
+ */
+const LisbonTimePill = React.memo(function LisbonTimePill() {
   const [currentTime, setCurrentTime] = useState<string>('');
 
-  // Mouse spotlight position
-  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
-
-  // Update Lisbon time clock
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -60,27 +49,43 @@ export default function AdminLoginPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Track mouse for ambient spotlight
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-  };
+  return (
+    <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md border border-[#C49A3C]/20 text-[11px] text-[#4A4540] shadow-2xs">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
+      <span className="font-medium">Lisboa:</span>
+      <span className="font-mono text-[#1A1412] font-semibold">{currentTime || '--:--:--'}</span>
+      <span className="text-[#8A8078]">WET</span>
+    </div>
+  );
+});
 
-  // Detect Caps Lock
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.getModifierState) {
-      setCapsLockActive(e.getModifierState('CapsLock'));
-    }
-  };
+interface LoginFormProps {
+  lang: Lang;
+  onOpenHelp: () => void;
+}
 
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.getModifierState) {
-      setCapsLockActive(e.getModifierState('CapsLock'));
+/**
+ * Isolated Admin Login Form
+ * Encapsulates password state, CapsLock detection, and submission handling
+ * with zero-lag responsiveness and scoped CSS transitions.
+ */
+const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: LoginFormProps) {
+  const router = useRouter();
+  const [pwd, setPwd] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [capsLockActive, setCapsLockActive] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  // Optimized CapsLock detection with state diffing (avoids redundant re-renders)
+  const handleModifierState = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (typeof e.getModifierState === 'function') {
+      const isCaps = e.getModifierState('CapsLock');
+      setCapsLockActive((prev) => (prev !== isCaps ? isCaps : prev));
     }
-  };
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +149,187 @@ export default function AdminLoginPage() {
     }
   };
 
+  return (
+    <form onSubmit={handleLogin} className="space-y-4">
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="admin-password"
+            className="block text-[11px] font-semibold text-[#4A4540] tracking-wide uppercase font-mono"
+          >
+            {lang === 'fr' ? 'Mot de passe maître' : lang === 'en' ? 'Master Password' : 'Palavra-passe'}
+          </label>
+
+          <button
+            type="button"
+            onClick={onOpenHelp}
+            className="text-[11px] text-[#9A7428] hover:text-[#1A1412] font-medium inline-flex items-center gap-1 transition-colors"
+          >
+            <IconHelpCircle size={12} />
+            <span>{lang === 'fr' ? 'Aide' : lang === 'en' ? 'Need help?' : 'Ajuda'}</span>
+          </button>
+        </div>
+
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8A8078] group-focus-within:text-[#C49A3C] transition-colors">
+            <IconShieldLock size={18} />
+          </div>
+
+          <input
+            id="admin-password"
+            type={showPwd ? 'text' : 'password'}
+            value={pwd}
+            onChange={(e) => {
+              if (error) setError(null);
+              setPwd(e.target.value);
+            }}
+            onKeyDown={handleModifierState}
+            onKeyUp={handleModifierState}
+            placeholder="••••••••••••"
+            autoComplete="current-password"
+            maxLength={128}
+            required
+            autoFocus
+            spellCheck={false}
+            className={`w-full bg-[#FAFAF8] text-[#1A1412] placeholder:text-[#B8B0A8] rounded-xl pl-10 pr-12 py-3.5 text-sm transition-[border-color,background-color,box-shadow] duration-150 outline-hidden ${
+              error
+                ? 'border-2 border-[#DC2626] bg-[#FEF2F2]/50 ring-2 ring-[#DC2626]/10'
+                : 'border border-[#C49A3C]/30 focus:border-[#C49A3C] focus:bg-white focus:ring-3 focus:ring-[#C49A3C]/15 shadow-inner'
+            }`}
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPwd(!showPwd)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-[#8A8078] hover:text-[#1A1412] rounded-lg transition-colors focus:outline-none"
+            tabIndex={-1}
+            aria-label={showPwd ? 'Hide password' : 'Show password'}
+          >
+            {showPwd ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+          </button>
+        </div>
+
+        {/* Caps Lock Alert */}
+        <AnimatePresence>
+          {capsLockActive && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="text-[11px] text-[#D97706] font-medium flex items-center gap-1.5 pt-1 px-1"
+            >
+              <IconAlertCircle size={13} />
+              <span>
+                {lang === 'fr'
+                  ? 'Touche Verrouillage Majuscule activée'
+                  : lang === 'en'
+                    ? 'Caps Lock is ON'
+                    : 'Aviso: Caps Lock está ativo'}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Remember session toggle */}
+      <div className="flex items-center justify-between pt-0.5 pb-1">
+        <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-3.5 h-3.5 rounded border-[#C49A3C]/40 text-[#1A1412] focus:ring-[#C49A3C] accent-[#1A1412] cursor-pointer"
+          />
+          <span className="text-[11px] text-[#64748B]">
+            {lang === 'fr' ? 'Garder la session active (8h)' : lang === 'en' ? 'Keep session active (8h)' : 'Manter sessão iniciada (8h)'}
+          </span>
+        </label>
+      </div>
+
+      {/* Error Message */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="p-3 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-[#DC2626] text-xs font-medium flex items-center gap-2 shadow-xs"
+            role="alert"
+          >
+            <IconAlertCircle size={16} className="shrink-0 text-[#DC2626]" />
+            <span>{error}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Unlock Button */}
+      <button
+        type="submit"
+        disabled={loading || !pwd || success}
+        className="w-full relative group overflow-hidden py-3.5 px-6 rounded-xl bg-[#1A1412] hover:bg-[#2C2420] active:scale-[0.99] text-white font-medium text-sm shadow-md hover:shadow-lg transition-[background-color,box-shadow,transform,opacity] duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+      >
+        {/* Subtle gold hover border shimmer */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#E8C97A]/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
+
+        {loading ? (
+          <>
+            <IconLoader2 size={18} className="animate-spin text-[#E8C97A]" />
+            <span>
+              {lang === 'fr'
+                ? 'Vérification sécurisée...'
+                : lang === 'en'
+                  ? 'Verifying credentials...'
+                  : 'A verificar credenciais...'}
+            </span>
+          </>
+        ) : success ? (
+          <>
+            <IconCheck size={18} className="text-[#22C55E]" />
+            <span>
+              {lang === 'fr'
+                ? 'Accès autorisé'
+                : lang === 'en'
+                  ? 'Access Granted'
+                  : 'Acesso Autorizado'}
+            </span>
+          </>
+        ) : (
+          <>
+            <IconLock size={16} className="text-[#E8C97A]" />
+            <span>
+              {lang === 'fr'
+                ? 'Déverrouiller le Portail'
+                : lang === 'en'
+                  ? 'Unlock Management Portal'
+                  : 'Desbloquear Portal de Gestão'}
+            </span>
+          </>
+        )}
+      </button>
+    </form>
+  );
+});
+
+export default function AdminLoginPage() {
+  const { lang, setLang } = useLanguage();
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  // Zero-cost GPU ambient spotlight via CSS custom properties and RAF (0 React re-renders)
+  const spotlightRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const x = e.clientX;
+    const y = e.clientY;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      if (spotlightRef.current) {
+        spotlightRef.current.style.setProperty('--mouse-x', `${x}px`);
+        spotlightRef.current.style.setProperty('--mouse-y', `${y}px`);
+      }
+    });
+  }, []);
+
   const languages: { code: Lang; label: string; flag: string }[] = [
     { code: 'pt', label: 'Português', flag: '🇵🇹' },
     { code: 'fr', label: 'Français', flag: '🇫🇷' },
@@ -155,11 +341,13 @@ export default function AdminLoginPage() {
       onMouseMove={handleMouseMove}
       className="relative min-h-screen w-full bg-[#FAFAF8] text-[#1A1412] flex flex-col justify-between overflow-x-hidden font-sans selection:bg-[#C49A3C]/20 selection:text-[#1A1412]"
     >
-      {/* Dynamic Ambient Spotlight */}
+      {/* Dynamic Ambient Spotlight (hardware accelerated, zero React re-render) */}
       <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-300 opacity-60 hidden md:block"
+        ref={spotlightRef}
+        className="pointer-events-none fixed inset-0 transition-opacity duration-300 opacity-60 hidden md:block"
         style={{
-          background: `radial-gradient(650px circle at ${mousePos.x}px ${mousePos.y}px, rgba(196, 154, 60, 0.08), transparent 80%)`,
+          background:
+            'radial-gradient(650px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px), rgba(196, 154, 60, 0.08), transparent 80%)',
         }}
       />
 
@@ -190,12 +378,7 @@ export default function AdminLoginPage() {
         {/* Right side widgets: Live Status & Language */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Live Clinic Time & Status Pill */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md border border-[#C49A3C]/20 text-[11px] text-[#4A4540] shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
-            <span className="font-medium">Lisboa:</span>
-            <span className="font-mono text-[#1A1412] font-semibold">{currentTime || '--:--:--'}</span>
-            <span className="text-[#8A8078]">WET</span>
-          </div>
+          <LisbonTimePill />
 
           {/* Minimalist Language Switcher */}
           <div className="flex items-center bg-white/80 backdrop-blur-md p-1 rounded-full border border-[#C49A3C]/20 shadow-2xs">
@@ -227,7 +410,7 @@ export default function AdminLoginPage() {
           className="w-full max-w-[425px]"
         >
           {/* Card */}
-          <div className="relative rounded-3xl bg-white/95 backdrop-blur-xl border border-[#C49A3C]/25 p-7 sm:p-9 shadow-[0_20px_50px_rgba(26,20,18,0.06),0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="relative rounded-3xl bg-white/95 backdrop-blur-xl border border-[#C49A3C]/25 p-7 sm:p-9 shadow-[0_20px_50px_rgba(26,20,18,0.06),0_1px_3px_rgba(0,0,0,0.04)] gpu-layer">
             {/* Top decorative subtle badge */}
             <div className="flex items-center justify-between mb-5">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#C49A3C]/10 border border-[#C49A3C]/20 text-[10px] font-mono font-semibold tracking-wider text-[#9A7428] uppercase">
@@ -269,160 +452,8 @@ export default function AdminLoginPage() {
               </p>
             </div>
 
-            {/* Login Form */}
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="admin-password"
-                    className="block text-[11px] font-semibold text-[#4A4540] tracking-wide uppercase font-mono"
-                  >
-                    {lang === 'fr' ? 'Mot de passe maître' : lang === 'en' ? 'Master Password' : 'Palavra-passe'}
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={() => setHelpOpen(true)}
-                    className="text-[11px] text-[#9A7428] hover:text-[#1A1412] font-medium inline-flex items-center gap-1 transition-colors"
-                  >
-                    <IconHelpCircle size={12} />
-                    <span>{lang === 'fr' ? 'Aide' : lang === 'en' ? 'Need help?' : 'Ajuda'}</span>
-                  </button>
-                </div>
-
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8A8078] group-focus-within:text-[#C49A3C] transition-colors">
-                    <IconShieldLock size={18} />
-                  </div>
-
-                  <input
-                    id="admin-password"
-                    type={showPwd ? 'text' : 'password'}
-                    value={pwd}
-                    onChange={(e) => setPwd(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    onKeyUp={handleKeyUp}
-                    placeholder="••••••••••••"
-                    autoComplete="current-password"
-                    maxLength={128}
-                    required
-                    autoFocus
-                    className={`w-full bg-[#FAFAF8] text-[#1A1412] placeholder:text-[#B8B0A8] rounded-xl pl-10 pr-12 py-3.5 text-sm transition-all outline-hidden ${
-                      error
-                        ? 'border-2 border-[#DC2626] bg-[#FEF2F2]/50 ring-2 ring-[#DC2626]/10'
-                        : 'border border-[#C49A3C]/30 focus:border-[#C49A3C] focus:bg-white focus:ring-3 focus:ring-[#C49A3C]/15 shadow-inner'
-                    }`}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPwd(!showPwd)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-[#8A8078] hover:text-[#1A1412] rounded-lg transition-colors focus:outline-none"
-                    tabIndex={-1}
-                    aria-label={showPwd ? 'Hide password' : 'Show password'}
-                  >
-                    {showPwd ? <IconEyeOff size={18} /> : <IconEye size={18} />}
-                  </button>
-                </div>
-
-                {/* Caps Lock Alert */}
-                <AnimatePresence>
-                  {capsLockActive && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="text-[11px] text-[#D97706] font-medium flex items-center gap-1.5 pt-1 px-1"
-                    >
-                      <IconAlertCircle size={13} />
-                      <span>
-                        {lang === 'fr'
-                          ? 'Touche Verrouillage Majuscule activée'
-                          : lang === 'en'
-                            ? 'Caps Lock is ON'
-                            : 'Aviso: Caps Lock está ativo'}
-                      </span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Remember session toggle */}
-              <div className="flex items-center justify-between pt-0.5 pb-1">
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-[#C49A3C]/40 text-[#1A1412] focus:ring-[#C49A3C] accent-[#1A1412] cursor-pointer"
-                  />
-                  <span className="text-[11px] text-[#64748B]">
-                    {lang === 'fr' ? 'Garder la session active (8h)' : lang === 'en' ? 'Keep session active (8h)' : 'Manter sessão iniciada (8h)'}
-                  </span>
-                </label>
-              </div>
-
-              {/* Error Message */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    className="p-3 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-[#DC2626] text-xs font-medium flex items-center gap-2 shadow-xs"
-                    role="alert"
-                  >
-                    <IconAlertCircle size={16} className="shrink-0 text-[#DC2626]" />
-                    <span>{error}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Unlock Button */}
-              <button
-                type="submit"
-                disabled={loading || !pwd || success}
-                className="w-full relative group overflow-hidden py-3.5 px-6 rounded-xl bg-[#1A1412] hover:bg-[#2C2420] active:scale-[0.99] text-white font-medium text-sm shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
-              >
-                {/* Subtle gold hover border shimmer */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#E8C97A]/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
-
-                {loading ? (
-                  <>
-                    <IconLoader2 size={18} className="animate-spin text-[#E8C97A]" />
-                    <span>
-                      {lang === 'fr'
-                        ? 'Vérification sécurisée...'
-                        : lang === 'en'
-                          ? 'Verifying credentials...'
-                          : 'A verificar credenciais...'}
-                    </span>
-                  </>
-                ) : success ? (
-                  <>
-                    <IconCheck size={18} className="text-[#22C55E]" />
-                    <span>
-                      {lang === 'fr'
-                        ? 'Accès autorisé'
-                        : lang === 'en'
-                          ? 'Access Granted'
-                          : 'Acesso Autorizado'}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <IconLock size={16} className="text-[#E8C97A]" />
-                    <span>
-                      {lang === 'fr'
-                        ? 'Déverrouiller le Portail'
-                        : lang === 'en'
-                          ? 'Unlock Management Portal'
-                          : 'Desbloquear Portal de Gestão'}
-                    </span>
-                  </>
-                )}
-              </button>
-            </form>
+            {/* Optimized Login Form */}
+            <AdminLoginForm lang={lang} onOpenHelp={() => setHelpOpen(true)} />
 
             {/* Keyboard shortcut hint */}
             <div className="mt-5 text-center">
