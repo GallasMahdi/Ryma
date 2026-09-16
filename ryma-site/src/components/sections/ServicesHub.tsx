@@ -85,7 +85,12 @@ function getServiceIcon(iconKey: string, size = 18) {
   }
 }
 
-export function ServicesHub() {
+export interface ServicesHubProps {
+  embedded?: boolean;
+  hideHeader?: boolean;
+}
+
+export function ServicesHub({ embedded = false, hideHeader = false }: ServicesHubProps = {}) {
   const { lang, t } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -207,50 +212,41 @@ export function ServicesHub() {
     carouselRef.current.scrollLeft = scrollLeftState - walk;
   };
 
-  return (
-    <section id="services" className="relative py-14 sm:py-20 bg-[#FAFAF8] overflow-hidden select-none">
-
-      {/* Ambient background light glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[500px]"
-          style={{ background: 'radial-gradient(ellipse 70% 45% at 50% 30%, rgba(245,233,200,0.35) 0%, transparent 70%)' }}
-        />
-        <div className="absolute -left-20 top-1/2 h-80 w-80 rounded-full bg-[#C49A3C]/6 blur-3xl" />
-        <div className="absolute -right-20 top-2/3 h-80 w-80 rounded-full bg-[#E8C97A]/8 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 md:px-10">
+  const hubContent = (
+    <div className={embedded ? 'relative mx-auto max-w-7xl px-0' : 'relative mx-auto max-w-7xl px-4 sm:px-6 md:px-10'}>
 
         {/* ── Section Header ───────────────────────────────────────────── */}
-        <ScrollReveal className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md border border-[#C49A3C]/40 px-4 py-1.5 rounded-full mb-3 sm:mb-4 shadow-xs">
-            <IconSparkles size={14} className="text-[#C49A3C]" />
-            <span className="font-sans text-[11px] sm:text-xs tracking-[0.22em] text-[#9A7428] uppercase font-bold">
-              {lang === 'pt' ? 'Polos Clínicos de Excelência' : lang === 'en' ? 'Centers of Clinical Excellence' : "Pôles de Soins d'Excellence"}
-            </span>
-          </div>
+        {!hideHeader && (
+          <ScrollReveal className="text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md border border-[#C49A3C]/40 px-4 py-1.5 rounded-full mb-3 sm:mb-4 shadow-xs">
+              <IconSparkles size={14} className="text-[#C49A3C]" />
+              <span className="font-sans text-[11px] sm:text-xs tracking-[0.22em] text-[#9A7428] uppercase font-bold">
+                {lang === 'pt' ? 'Polos Clínicos de Excelência' : lang === 'en' ? 'Centers of Clinical Excellence' : "Pôles de Soins d'Excellence"}
+              </span>
+            </div>
 
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#1A1412] mb-3 sm:mb-4 tracking-tight">
-            {lang === 'pt' ? (
-              <>Cuidados Clínicos & <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">Tratamentos Especializados</span></>
-            ) : lang === 'en' ? (
-              <>Clinical Care & <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">Specialized Treatments</span></>
-            ) : (
-              <>Soins Médicaux & <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">Protocoles Spécialisés</span></>
-            )}
-          </h2>
+            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#1A1412] mb-3 sm:mb-4 tracking-tight">
+              {lang === 'pt' ? (
+                <>Cuidados Clínicos & <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">Tratamentos Especializados</span></>
+              ) : lang === 'en' ? (
+                <>Clinical Care & <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">Specialized Treatments</span></>
+              ) : (
+                <>Soins Médicaux & <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">Protocoles Spécialisés</span></>
+              )}
+            </h2>
 
-          <p className="text-[#6B6058] max-w-2xl mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-normal">
-            {lang === 'pt'
-              ? '13 protocolos clínicos estruturados para postura, alívio de dor e remodelação corporal não invasiva.'
-              : lang === 'en'
-              ? '13 tailored clinical protocols for spinal posture, joint relief, and non-invasive body contouring.'
-              : '13 protocoles médicaux sur-mesure alliant précision biomécanique et technologies esthétiques de pointe.'}
-          </p>
+            <p className="text-[#6B6058] max-w-2xl mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-normal">
+              {lang === 'pt'
+                ? '13 protocolos clínicos estruturados para postura, alívio de dor e remodelação corporal não invasiva.'
+                : lang === 'en'
+                ? '13 tailored clinical protocols for spinal posture, joint relief, and non-invasive body contouring.'
+                : '13 protocoles médicaux sur-mesure alliant précision biomécanique et technologies esthétiques de pointe.'}
+            </p>
+          </ScrollReveal>
+        )}
 
-          {/* ── Single-Tier Clean Category Navigation + Search ── */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 max-w-5xl mx-auto mt-6">
+        {/* ── Single-Tier Clean Category Navigation + Search ── */}
+        <div className={`flex flex-col md:flex-row items-center justify-between gap-3 max-w-5xl mx-auto ${hideHeader ? 'mt-0 mb-6' : 'mt-6'}`}>
             
             {/* Category Segmenter Pills */}
             <div className="flex items-center gap-1.5 p-1.5 bg-white border border-[#C49A3C]/30 rounded-2xl sm:rounded-full shadow-xs w-full md:w-auto overflow-x-auto no-scrollbar">
@@ -303,7 +299,6 @@ export function ServicesHub() {
               )}
             </div>
           </div>
-        </ScrollReveal>
 
         {/* ── Carousel Header Controls ── */}
         <div className="flex items-center justify-between px-2 mb-4">
@@ -533,6 +528,29 @@ export function ServicesHub() {
           </ScrollReveal>
         </div>
       </div>
+  );
+
+  if (embedded) {
+    return (
+      <div id="services-carousel" className="relative select-none">
+        {hubContent}
+      </div>
+    );
+  }
+
+  return (
+    <section id="services" className="relative py-14 sm:py-20 bg-[#FAFAF8] overflow-hidden select-none">
+      {/* Ambient background light glows */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[500px]"
+          style={{ background: 'radial-gradient(ellipse 70% 45% at 50% 30%, rgba(245,233,200,0.35) 0%, transparent 70%)' }}
+        />
+        <div className="absolute -left-20 top-1/2 h-80 w-80 rounded-full bg-[#C49A3C]/6 blur-3xl" />
+        <div className="absolute -right-20 top-2/3 h-80 w-80 rounded-full bg-[#E8C97A]/8 blur-3xl" />
+      </div>
+
+      {hubContent}
     </section>
   );
 }

@@ -1344,7 +1344,12 @@ function ViewToggle({
 /*  Main BodyMap Component                                              */
 /* ------------------------------------------------------------------ */
 
-export function BodyMap() {
+export interface BodyMapProps {
+  embedded?: boolean;
+  hideHeader?: boolean;
+}
+
+export function BodyMap({ embedded = false, hideHeader = false }: BodyMapProps = {}) {
   const { lang, t } = useLanguage();
   const reduced = useReducedMotion() ?? false;
 
@@ -1460,14 +1465,12 @@ export function BodyMap() {
     [currentPoints, selPoint, handlePointSelect],
   );
 
-  return (
-    <section
-      id="body-map"
-      className="relative py-20 md:py-28 overflow-hidden bg-gradient-to-b from-[#FDFBF7] via-[#FAF7F0] to-[#FDFBF7]"
-    >
-      <div className="mx-auto max-w-7xl px-5 md:px-10">
+  const sectionContent = (
+    <>
+      <div className={embedded ? 'w-full' : 'mx-auto max-w-7xl px-5 md:px-10'}>
 
-        {/* ── Section Header ── */}
+      {/* ── Section Header ── */}
+      {!hideHeader && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -1498,6 +1501,7 @@ export function BodyMap() {
             {t.bodyMap.subtitle}
           </p>
         </motion.div>
+      )}
 
         {/* ── Mobile Compact Filter Bar (hidden on lg+) ── */}
         <motion.div
@@ -1818,6 +1822,23 @@ export function BodyMap() {
         onReset={handleResetFilters}
         activeCount={activeFilterCount}
       />
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div id="body-map" className="relative">
+        {sectionContent}
+      </div>
+    );
+  }
+
+  return (
+    <section
+      id="body-map"
+      className="relative py-20 md:py-28 overflow-hidden bg-gradient-to-b from-[#FDFBF7] via-[#FAF7F0] to-[#FDFBF7]"
+    >
+      {sectionContent}
     </section>
   );
 }
