@@ -384,7 +384,15 @@ export function ServicesHub({ embedded = false, hideHeader = false }: ServicesHu
                     }`}
                   >
                     {/* Top Image Preview with Gold Tag */}
-                    <div className="relative h-40 sm:h-44 w-full rounded-2xl overflow-hidden mb-3.5 bg-[#F5EFE6]">
+                    <Link
+                      href={`/services/${service.slug}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playSoftClick();
+                      }}
+                      className="block relative h-40 sm:h-44 w-full rounded-2xl overflow-hidden mb-3.5 bg-[#F5EFE6] cursor-pointer"
+                      title={getLocalizedText(service.name, lang)}
+                    >
                       <Image
                         src={getServiceHeroImage(service)}
                         alt={getLocalizedText(service.name, lang)}
@@ -417,15 +425,24 @@ export function ServicesHub({ embedded = false, hideHeader = false }: ServicesHu
                           {service.price} {t.common.currency} <span className="text-[10px] text-white/80 font-normal">/ sessão</span>
                         </span>
                       </div>
-                    </div>
+                    </Link>
 
                     {/* Content Section */}
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
                         {/* Title */}
-                        <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors leading-snug mb-1.5 truncate">
-                          {getLocalizedText(service.name, lang)}
-                        </h3>
+                        <Link
+                          href={`/services/${service.slug}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            playSoftClick();
+                          }}
+                          className="block group-hover:text-[#9A7428] transition-colors"
+                        >
+                          <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412] leading-snug mb-1.5 truncate">
+                            {getLocalizedText(service.name, lang)}
+                          </h3>
+                        </Link>
 
                         {/* Short Description */}
                         <p className="text-xs sm:text-sm text-[#6B6058] leading-relaxed line-clamp-2 mb-3 font-normal">
@@ -455,10 +472,10 @@ export function ServicesHub({ embedded = false, hideHeader = false }: ServicesHu
                             e.stopPropagation();
                             playSoftClick();
                           }}
-                          className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl border border-[#E8E2D8] hover:border-[#C49A3C] text-[#554C42] hover:text-[#9A7428] font-bold text-xs transition-all bg-white hover:bg-[#FAF8F5]"
+                          className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl border border-[#C49A3C]/30 hover:border-[#C49A3C] bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-white font-bold text-xs transition-all shadow-2xs group/btn"
                         >
-                          <span>{lang === 'pt' ? 'Detalhes' : lang === 'en' ? 'Details' : 'Détails'}</span>
-                          <IconArrowRight size={13} />
+                          <span>{lang === 'pt' ? 'Selecionar' : lang === 'en' ? 'Select' : 'Sélectionner'}</span>
+                          <IconArrowRight size={13} className="group-hover/btn:translate-x-0.5 transition-transform" />
                         </Link>
 
                         <Link

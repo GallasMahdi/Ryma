@@ -20,7 +20,21 @@ import {
   IconCalendarEvent,
   IconBrandWhatsapp,
   IconSparkles,
+  IconChevronRight,
+  IconArrowRight,
 } from '@tabler/icons-react';
+
+function getServiceHeroImage(s: { slug: string; pole: string }): string {
+  if (['reeducation-posturale', 'massage-therapeutique', 'electrostimulation'].includes(s.slug))
+    return '/hero/therapy.jpg';
+  if (s.slug === 'drainage-lymphatique') return '/results/before_after_drainage.png';
+  if (s.slug === 'reeducation-post-partum') return '/results/before_after_postpartum.png';
+  if (s.slug === 'cryolipolyse') return '/results/before_after_cryolipolyse.png';
+  if (s.slug === 'radiofrequence') return '/results/before_after_radiofrequence.png';
+  if (['cavitation', 'laser-lipo', 'pressotherapie'].includes(s.slug)) return '/hero/slimming.jpg';
+  if (s.slug === 'massage-drainant') return '/results/before_after_cellulite.png';
+  return s.pole === 'kinesitherapie' ? '/hero/therapy.jpg' : '/hero/slimming.jpg';
+}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -322,27 +336,79 @@ export default function ServiceDetailPage({ params }: Props) {
                   )}
                 </div>
 
-                {/* Related services */}
+                {/* Related services - Interactive Luxury Selector */}
                 {relatedServices.length > 0 && (
-                  <div className="bg-white border border-[#E8E2D8] rounded-2xl p-5">
-                    <div className="font-mono text-[10px] text-[#8A8078] mb-4 uppercase tracking-widest">
-                      {lang === 'pt' ? 'Tratamentos Semelhantes' : lang === 'en' ? 'Similar Treatments' : 'Soins similaires'}
+                  <div className="bg-white border border-[#E8E2D8] rounded-2xl p-4 sm:p-5 shadow-xs">
+                    {/* Header */}
+                    <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-[#F0EBE1]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-[#FAF5EA] border border-[#C49A3C]/30 flex items-center justify-center text-[#C49A3C]">
+                          <IconSparkles size={13} />
+                        </div>
+                        <h4 className="font-mono text-xs font-bold text-[#1A1412] uppercase tracking-wider">
+                          {lang === 'pt' ? 'Tratamentos Semelhantes' : lang === 'en' ? 'Similar Treatments' : 'Soins similaires'}
+                        </h4>
+                      </div>
+                      <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FAF5EA] text-[#8A6A24] border border-[#C49A3C]/20">
+                        {relatedServices.length}
+                      </span>
                     </div>
-                    <div className="space-y-1">
-                      {relatedServices.map((s) => (
-                        <Link
-                          key={s.slug}
-                          href={`/services/${s.slug}`}
-                          className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[#FAF6EE] transition-colors group"
-                        >
-                          <span className="text-sm text-[#4A4540] group-hover:text-[#9A7428] transition-colors line-clamp-1">
-                            {s.name[lang] || s.name.pt || s.name.fr}
-                          </span>
-                          <span className="font-mono text-xs text-[#C49A3C] font-bold ml-2 shrink-0">
-                            {s.price} {t.common.currency}
-                          </span>
-                        </Link>
-                      ))}
+
+                    <p className="text-[11px] text-[#8A8078] mb-3 leading-snug">
+                      {lang === 'pt'
+                        ? 'Toque para selecionar e consultar outro protocolo:'
+                        : lang === 'en'
+                        ? 'Tap to select and explore another treatment:'
+                        : 'Cliquez pour sélectionner un soin complémentaire :'}
+                    </p>
+
+                    {/* Selectable Cards List */}
+                    <div className="space-y-2.5">
+                      {relatedServices.map((s) => {
+                        const sName = s.name[lang] || s.name.pt || s.name.fr;
+                        const sThumb = getServiceHeroImage(s);
+
+                        return (
+                          <Link
+                            key={s.slug}
+                            href={`/services/${s.slug}`}
+                            className="group relative flex items-center gap-3 p-2.5 rounded-xl border border-[#E8E2D8] hover:border-[#C49A3C] bg-[#FAF8F5]/60 hover:bg-white transition-all duration-200 shadow-2xs hover:shadow-sm active:scale-[0.98] cursor-pointer"
+                            title={`${sName} (${s.price} ${t.common.currency})`}
+                          >
+                            {/* Service Image Thumbnail */}
+                            <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-[#F5EFE6] border border-[#E8E2D8] group-hover:border-[#C49A3C]/50 transition-colors">
+                              <Image
+                                src={sThumb}
+                                alt={sName}
+                                fill
+                                sizes="48px"
+                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+
+                            {/* Service Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors truncate">
+                                {sName}
+                              </div>
+                              <div className="flex items-center gap-2 text-[11px] text-[#8A8078] mt-0.5 font-mono">
+                                <span className="flex items-center gap-1">
+                                  <IconClock size={11} className="text-[#C49A3C]" />
+                                  <span>{s.duration}</span>
+                                </span>
+                                <span className="text-[#C49A3C] font-bold">
+                                  {s.price} {t.common.currency}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Interactive Selection Action Chip */}
+                            <div className="w-7 h-7 rounded-full bg-white group-hover:bg-[#C49A3C] text-[#8A8078] group-hover:text-white border border-[#E8E2D8] group-hover:border-[#C49A3C] flex items-center justify-center transition-all shadow-2xs shrink-0">
+                              <IconChevronRight size={14} strokeWidth={2.5} />
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -352,6 +418,138 @@ export default function ServiceDetailPage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      {/* ── Full Showcase Section for Similar Treatments (Mobile & Desktop) ── */}
+      {relatedServices.length > 0 && (
+        <section className="py-16 sm:py-20 bg-[#F5EFE6] border-t border-[#E8E2D8]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-10">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#C49A3C]/30 text-[10px] font-mono font-bold text-[#8A6A24] uppercase tracking-wider mb-2.5 shadow-2xs">
+                  <IconSparkles size={12} className="text-[#C49A3C]" />
+                  <span>
+                    {service.pole === 'kinesitherapie'
+                      ? lang === 'pt' ? 'Polo Fisioterapia & Reabilitação' : lang === 'en' ? 'Physiotherapy Department' : 'Pôle Kinésithérapie & Rééducation'
+                      : lang === 'pt' ? 'Polo Minceur & Estética' : lang === 'en' ? 'Slimming & Body Care' : 'Pôle Minceur & Esthétique'}
+                  </span>
+                </div>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1412]">
+                  {lang === 'pt'
+                    ? 'Tratamentos Semelhantes & Protocolos Alternativos'
+                    : lang === 'en'
+                    ? 'Similar Treatments & Alternative Protocols'
+                    : 'Soins similaires & protocoles alternatifs'}
+                </h2>
+                <p className="text-sm text-[#6B6058] mt-1.5 max-w-2xl">
+                  {lang === 'pt'
+                    ? 'Selecione e explore outros tratamentos especializados concebidos para complementar o seu plano clínico.'
+                    : lang === 'en'
+                    ? 'Select and explore other specialized treatments tailored to complement your clinical recovery plan.'
+                    : 'Sélectionnez et explorez d’autres soins spécialisés conçus pour compléter votre parcours de soin.'}
+                </p>
+              </div>
+
+              <Link
+                href="/services"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#9A7428] hover:text-[#C49A3C] transition-colors group shrink-0"
+              >
+                <span>{lang === 'pt' ? 'Ver todos os tratamentos' : lang === 'en' ? 'View all treatments' : 'Voir tous les soins'}</span>
+                <IconArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            {/* Grid of Interactive Treatment Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+              {relatedServices.map((rel) => {
+                const relName = rel.name[lang] || rel.name.pt || rel.name.fr;
+                const relDesc = rel.shortDesc[lang] || rel.shortDesc.pt || rel.shortDesc.fr;
+                const relThumb = getServiceHeroImage(rel);
+                const relIndications = getLocalizedList(rel.indications, lang).slice(0, 2);
+
+                return (
+                  <div
+                    key={rel.slug}
+                    className="flex flex-col justify-between bg-white rounded-2xl border border-[#E8E2D8] hover:border-[#C49A3C] p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 group"
+                  >
+                    <div>
+                      {/* Photographic Preview */}
+                      <Link
+                        href={`/services/${rel.slug}`}
+                        className="block relative h-40 w-full rounded-xl overflow-hidden mb-3.5 bg-[#F5EFE6] cursor-pointer"
+                        title={relName}
+                      >
+                        <Image
+                          src={relThumb}
+                          alt={relName}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A05]/80 via-transparent to-transparent" />
+
+                        {/* Badges on Image */}
+                        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between text-[10px] font-mono">
+                          <span className="inline-flex items-center gap-1 bg-white/95 backdrop-blur-md px-2 py-0.5 rounded-full text-[#1A1412] font-semibold border border-white/40 shadow-2xs">
+                            <IconClock size={11} className="text-[#C49A3C]" />
+                            <span>{rel.duration}</span>
+                          </span>
+                          <span className="bg-[#1A1412]/85 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[#E8C97A] font-bold border border-white/20">
+                            {rel.price} {t.common.currency}
+                          </span>
+                        </div>
+                      </Link>
+
+                      {/* Title & Short Description */}
+                      <Link href={`/services/${rel.slug}`} className="block">
+                        <h3 className="font-serif text-base font-bold text-[#1A1412] group-hover:text-[#9A7428] transition-colors line-clamp-1 mb-1.5">
+                          {relName}
+                        </h3>
+                        <p className="text-xs text-[#6B6058] line-clamp-2 leading-relaxed mb-3">
+                          {relDesc}
+                        </p>
+                      </Link>
+
+                      {/* Clinical indications checklist */}
+                      {relIndications.length > 0 && (
+                        <div className="space-y-1 mb-3.5 pt-2 border-t border-[#F0EBE1]">
+                          {relIndications.map((ind, idx) => (
+                            <div key={idx} className="flex items-center gap-1.5 text-[11px] text-[#554C42]">
+                              <div className="w-3.5 h-3.5 rounded-full bg-[#FAF5EA] border border-[#C49A3C]/40 flex items-center justify-center shrink-0">
+                                <IconCheck size={10} className="text-[#9A7428]" />
+                              </div>
+                              <span className="truncate">{ind}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action buttons: Primary Select + Direct Booking */}
+                    <div className="pt-3 border-t border-[#F0EBE1] flex items-center gap-2">
+                      <Link
+                        href={`/services/${rel.slug}`}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-white border border-[#C49A3C]/30 text-xs font-bold transition-all shadow-2xs group/btn"
+                      >
+                        <span>{lang === 'pt' ? 'Selecionar' : lang === 'en' ? 'Select' : 'Sélectionner'}</span>
+                        <IconChevronRight size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
+                      </Link>
+
+                      <Link
+                        href={`/rendez-vous?service=${rel.slug}`}
+                        className="p-2 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#1A1412] hover:text-[#9A7428] border border-[#E8E2D8] hover:border-[#C49A3C] transition-all shadow-2xs shrink-0"
+                        title={t.common.bookAppointment}
+                        aria-label={t.common.bookAppointment}
+                      >
+                        <IconCalendarEvent size={16} />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
     </>
   );
 }
