@@ -296,10 +296,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   const [analyticsExpiresAt, setAnalyticsExpiresAt] = useState<number | null>(null);
   const [isOwnerAuthModalOpen, setIsOwnerAuthModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
-  const [serverAnalytics, setServerAnalytics] = useState<{
-    stats: any;
-    analyticsData: any;
-  } | null>(null);
+  const [serverAnalytics, setServerAnalytics] = useState<any>(null);
+  const [analyticsRefreshTrigger, setAnalyticsRefreshTrigger] = useState(0);
   const [loadingServerAnalytics, setLoadingServerAnalytics] = useState(false);
 
   const fetchServerAnalytics = useCallback(async () => {
@@ -322,10 +320,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       }
 
       const data = await res.json();
-      setServerAnalytics({
-        stats: data.stats,
-        analyticsData: data.analyticsData,
-      });
+      setServerAnalytics(data);
       setIsAnalyticsUnlocked(true);
       setAnalyticsExpiresAt(data.expiresAt);
     } catch {
@@ -337,22 +332,25 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     }
   }, [lang]);
 
-  // When tab switches to analytics, attempt fetch or prompt unlock
+  // When tab switches to analytics, attempt fetch or prompt unlock (cached in memory for instant tab switching)
   useEffect(() => {
     if (activeTab === 'analytics') {
       if (isAnalyticsUnlocked) {
-        fetchServerAnalytics();
+        if (!serverAnalytics) {
+          fetchServerAnalytics();
+        }
       } else {
         setIsOwnerAuthModalOpen(true);
       }
     }
-  }, [activeTab, isAnalyticsUnlocked, fetchServerAnalytics]);
+  }, [activeTab, isAnalyticsUnlocked, serverAnalytics, fetchServerAnalytics]);
 
   const handleOwnerAuthSuccess = (expiresAt: number) => {
     setIsAnalyticsUnlocked(true);
     setAnalyticsExpiresAt(expiresAt);
     setIsOwnerAuthModalOpen(false);
     fetchServerAnalytics();
+    fetchInvoices();
     addToast({
       type: 'success',
       title: lang === 'pt' ? 'Autorização Confirmada' : lang === 'en' ? 'Owner Authorization Confirmed' : 'Autorisation Propriétaire Confirmée',
@@ -625,6 +623,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                 return [appt, ...prev];
               });
               handleNewIncomingAppointment(appt, false);
+              setAnalyticsRefreshTrigger(prev => prev + 1);
             }
           } catch { /* silent */ }
         });
@@ -667,6 +666,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                   message: toastMsg,
                   duration: 7000,
                 });
+                setAnalyticsRefreshTrigger(prev => prev + 1);
               }
             }
           } catch { /* silent */ }
@@ -681,6 +681,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                 prev.map(a => (a.id === updated.id ? { ...a, ...updated } : a))
               );
               slotCacheRef.current = {};
+              setAnalyticsRefreshTrigger(prev => prev + 1);
             }
           } catch { /* silent */ }
         });
@@ -692,6 +693,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
             if (id) {
               setAppointments(prev => prev.filter(a => a.id !== id));
               slotCacheRef.current = {};
+              setAnalyticsRefreshTrigger(prev => prev + 1);
             }
           } catch { /* silent */ }
         });
@@ -1419,7 +1421,9 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                     lang={lang}
                     stats={serverAnalytics.stats}
                     analyticsData={serverAnalytics.analyticsData}
+                    initialData={serverAnalytics}
                     expiresAt={analyticsExpiresAt}
+                    refreshTrigger={analyticsRefreshTrigger}
                     onLock={handleLockAnalytics}
                     onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
                   />

@@ -1,30 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { getServiceName } from '@/types/admin';
+'use client';
+
+import React, { useState, useEffect, useCallback, useTransition } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Lang } from '@/lib/i18n';
 import {
   IconCalendarEvent,
   IconClock,
   IconFileSpreadsheet,
-  IconStethoscope,
   IconShieldCheck,
   IconLock,
   IconKey,
   IconLoader2,
+  IconRefresh,
+  IconPrinter,
+  IconFilter,
+  IconTrendingUp,
+  IconTrendingDown,
+  IconCurrencyEuro,
+  IconBuildingHospital,
+  IconUsers,
+  IconAlertCircle,
+  IconCalendar,
+  IconCheck,
+  IconChevronRight,
+  IconX,
 } from '@tabler/icons-react';
-
-interface AnalyticsData {
-  dowLabels: string[];
-  dowCounts: number[];
-  topServices: [string, number][];
-  peakHours: [string, number][];
-  cancelRate: number;
-  completionRate: number;
-}
+import {
+  TimelineSplineChart,
+  DepartmentDonutChart,
+  OccupancyHeatmap,
+  AttendanceFunnel,
+  PaymentDistributionVisualizer,
+} from './AnalyticsInteractiveCharts';
 
 interface AnalyticsTabProps {
   lang: Lang;
-  stats: {
+  stats?: {
     total: number;
     confirmed: number;
     pending: number;
@@ -32,23 +43,43 @@ interface AnalyticsTabProps {
     cancelled: number;
     noShow: number;
     revenue: number;
+    invoicesCount?: number;
+    paidInvoicesRevenue?: number;
+    avgTicket?: number;
+    occupancyRate?: number;
+    lostRevenue?: number;
+    uniquePatients?: number;
   };
-  analyticsData: AnalyticsData;
+  analyticsData?: {
+    dowLabels: string[];
+    dowCounts: number[];
+    topServices: [string, number][];
+    peakHours: [string, number][];
+    cancelRate: number;
+    completionRate: number;
+  };
+  initialData?: any;
   expiresAt?: number | null;
+  refreshTrigger?: number;
   onLock?: () => void;
   onOpenChangePassword?: () => void;
 }
 
 export const AnalyticsTab = React.memo(function AnalyticsTab({
   lang,
-  stats,
-  analyticsData,
+  stats: initialStats,
+  analyticsData: initialAnalyticsData,
+  initialData,
   expiresAt,
+  refreshTrigger = 0,
   onLock,
   onOpenChangePassword,
 }: AnalyticsTabProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = useCallback(
+    (fr: string, en: string, pt: string) =>
+      lang === 'fr' ? fr : lang === 'en' ? en : pt,
+    [lang]
+  );
 
   // Countdown timer for 15-minute step-up expiration
   const [timeLeft, setTimeLeft] = useState<string>('');
@@ -68,18 +99,202 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
     return () => clearInterval(interval);
   }, [expiresAt]);
 
-  const confirmationRate = stats.total > 0 ? Math.round((stats.confirmed / stats.total) * 100) : 0;
+  // Filter States
+  const [selectedRange, setSelectedRange] = useState<string>('30d');
+  const [selectedPole, setSelectedPole] = useState<string>('all');
+  const [customStart, setCustomStart] = useState<string>('');
+  const [customEnd, setCustomEnd] = useState<string>('');
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+
+  // Live Data & Loading State
+  const [analyticsPayload, setAnalyticsPayload] = useState<any>(initialData || null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date>(new Date());
+  const [isPendingTransition, startTransition] = useTransition();
+
+  // Fast In-Memory Client Cache to ensure 0ms instantaneous navigation between filters
+  const cacheRef = React.useRef<Record<string, any>>({});
+
+  // Seed cache with initialData on mount
+  useEffect(() => {
+    if (initialData && !cacheRef.current['30d_all__']) {
+      cacheRef.current['30d_all__'] = initialData;
+    }
+  }, [initialData]);
+
+  // Fetch Filtered Analytics from API
+  const fetchFilteredData = useCallback(
+    async (
+      rangeParam = selectedRange,
+      poleParam = selectedPole,
+      startParam = customStart,
+      endParam = customEnd,
+      isSilent = false
+    ) => {
+      const cacheKey = `${rangeParam}_${poleParam}_${startParam}_${endParam}`;
+
+      // ⚡ INSTANT CACHE HIT: 0ms UI switch
+      if (cacheRef.current[cacheKey] && !isSilent) {
+        startTransition(() => {
+          setAnalyticsPayload(cacheRef.current[cacheKey]);
+          setIsLoading(false);
+        });
+        isSilent = true; // non-blocking background revalidation
+      }
+
+      if (!isSilent) setIsLoading(true);
+      try {
+        const queryParams = new URLSearchParams({
+          lang,
+          range: rangeParam,
+          pole: poleParam,
+        });
+        if (rangeParam === 'custom' && startParam && endParam) {
+          queryParams.set('startDate', startParam);
+          queryParams.set('endDate', endParam);
+        }
+
+        const res = await fetch(`/api/admin/analytics?${queryParams.toString()}`, {
+          credentials: 'same-origin',
+          cache: 'no-store',
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          cacheRef.current[cacheKey] = json;
+          startTransition(() => {
+            setAnalyticsPayload(json);
+            setLastSyncedAt(new Date());
+          });
+        }
+      } catch (err) {
+        console.error('[AnalyticsTab Fetch Error]:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [lang, selectedRange, selectedPole, customStart, customEnd]
+  );
+
+  // Trigger fetch whenever filters change
+  const handleRangeChange = (newRange: string) => {
+    setSelectedRange(newRange);
+    if (newRange === 'custom') {
+      setIsCustomModalOpen(true);
+    } else {
+      fetchFilteredData(newRange, selectedPole);
+    }
+  };
+
+  const handlePoleChange = (newPole: string) => {
+    setSelectedPole(newPole);
+    fetchFilteredData(selectedRange, newPole);
+  };
+
+  const handleApplyCustomDate = () => {
+    if (customStart && customEnd) {
+      setIsCustomModalOpen(false);
+      fetchFilteredData('custom', selectedPole, customStart, customEnd);
+    }
+  };
+
+  const handleManualRefresh = () => {
+    cacheRef.current = {}; // bust client cache for guaranteed live accuracy
+    fetchFilteredData(selectedRange, selectedPole, customStart, customEnd, false);
+  };
+
+  // Real-Time auto-refresh when SSE trigger increments or periodic 60s pulse
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      cacheRef.current = {}; // bust client cache on real-time event arrival
+      fetchFilteredData(selectedRange, selectedPole, customStart, customEnd, true);
+    }
+  }, [refreshTrigger, fetchFilteredData, selectedRange, selectedPole, customStart, customEnd]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchFilteredData(selectedRange, selectedPole, customStart, customEnd, true);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [fetchFilteredData, selectedRange, selectedPole, customStart, customEnd]);
+
+  // Merge payload with initial fallback
+  const currentStats = analyticsPayload?.stats || initialStats || {
+    total: 0,
+    confirmed: 0,
+    pending: 0,
+    completed: 0,
+    cancelled: 0,
+    noShow: 0,
+    revenue: 0,
+    invoicesCount: 0,
+    paidInvoicesRevenue: 0,
+    avgTicket: 0,
+    occupancyRate: 0,
+    lostRevenue: 0,
+    uniquePatients: 0,
+  };
+
+  const comparison = analyticsPayload?.comparison || {
+    revenueGrowthPct: 0,
+    appointmentsGrowthPct: 0,
+    priorRevenue: 0,
+    priorAppointments: 0,
+  };
+
+  const timeline = analyticsPayload?.timeline || {
+    granularity: 'day',
+    points: [],
+  };
+
+  const departmentData = analyticsPayload?.departmentData || {
+    poles: [],
+    topServices: [],
+  };
+
+  const heatmap = analyticsPayload?.heatmap || {
+    dowLabels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'],
+    hours: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'],
+    matrix: [],
+    maxCount: 0,
+    peakSlot: { dow: 'Lun', hour: '10:00', count: 0 },
+  };
+
+  const funnel = analyticsPayload?.funnel || {
+    stages: [],
+    cancellationsCount: currentStats.cancelled || 0,
+    noShowsCount: currentStats.noShow || 0,
+    lostRevenue: currentStats.lostRevenue || 0,
+    retentionRate: 0,
+  };
+
+  const payments = analyticsPayload?.payments || {
+    byMethod: [],
+    byCoverage: [],
+    unpaidCount: 0,
+    unpaidAmount: 0,
+  };
+
+  const activeRange = analyticsPayload?.range || {
+    startDate: new Date().toISOString().slice(0, 10),
+    endDate: new Date().toISOString().slice(0, 10),
+  };
+
+  const attendanceRate =
+    currentStats.total > 0
+      ? Math.round((currentStats.completed / currentStats.total) * 100)
+      : 0;
 
   return (
-    <div className="space-y-4 font-sans">
-      {/* Security Status Bar (Owner Authenticated) */}
-      <div className="bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#0F172A] text-white p-3.5 sm:p-4 rounded-xl border border-[#334155] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#7C3AED]/30 border border-[#A78BFA]/40 text-[#C4B5FD] flex items-center justify-center shrink-0">
-            <IconShieldCheck size={18} />
+    <div className="space-y-4 font-sans print:space-y-6">
+      {/* ── 1. OWNER SECURITY STATUS & REAL-TIME BAR ────────────────────── */}
+      <div className="bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#0F172A] text-white p-3.5 sm:p-4 rounded-2xl border border-[#334155] shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#7C3AED]/30 border border-[#A78BFA]/40 text-[#C4B5FD] flex items-center justify-center shrink-0 shadow-inner">
+            <IconShieldCheck size={20} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold tracking-tight text-white">
                 {txt('Session Propriétaire Active', 'Owner Session Active', 'Sessão do Proprietário Ativa')}
               </span>
@@ -88,23 +303,32 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
                   ⏱ {timeLeft}
                 </span>
               )}
+              {/* Live Real-Time Pulse Indicator */}
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-400/10 border border-emerald-400/30 text-emerald-300 text-[10px] font-semibold">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>{txt('En Direct', 'Live Stream', 'Em Direto')}</span>
+              </div>
             </div>
-            <p className="text-[11px] text-[#94A3B8]">
+            <p className="text-[11px] text-[#94A3B8] mt-0.5">
               {txt(
-                'Données financières déverrouillées temporairement pour 15 minutes.',
-                'Financial and statistical data temporarily unlocked for 15 minutes.',
-                'Dados financeiros desbloqueados temporariamente por 15 minutos.'
+                'Données consolidées en temps réel · Synchronisation automatique des encaissements et réservations.',
+                'Real-time consolidated intelligence · Automatic synchronization of appointments and cashflow.',
+                'Inteligência consolidada em tempo real · Sincronização de pagamentos e consultas.'
               )}
             </p>
           </div>
         </div>
 
+        {/* Top Actions: Change Password + Lock */}
         <div className="flex items-center gap-2 self-end sm:self-center">
           {onOpenChangePassword && (
             <button
               type="button"
               onClick={onOpenChangePassword}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-medium transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-medium transition-colors cursor-pointer"
             >
               <IconKey size={14} className="text-[#C4B5FD]" />
               <span>{txt('Mot de passe', 'Password', 'Palavra-passe')}</span>
@@ -115,7 +339,7 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
             <button
               type="button"
               onClick={onLock}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 text-xs font-semibold transition-colors cursor-pointer"
             >
               <IconLock size={14} />
               <span>{txt('Verrouiller', 'Lock Analytics', 'Bloquear')}</span>
@@ -124,259 +348,383 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
         </div>
       </div>
 
-      {/* Top Banner & CSV Export Actions */}
-      <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h3 className="font-semibold text-base sm:text-lg text-[#0F172A]">
-            {txt('Statistiques & Rapports d’Activité', 'Analytics & Activity Reports', 'Estatísticas & Relatórios')}
-          </h3>
-          <p className="text-xs text-[#64748B] mt-0.5">
-            {txt('Performances du cabinet, fréquentation et analyses de rentabilité', 'Clinic performance, attendance and revenue trends', 'Desempenho da clínica e faturação')}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <a
-            href="/api/admin/export?type=appointments"
-            target="_blank"
-            download
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0F172A] text-xs font-medium transition-colors touch-target"
-          >
-            <IconFileSpreadsheet size={15} className="text-[#64748B]" />
-            <span>{txt('Export RDV (CSV)', 'Export Appts (CSV)', 'Exportar Consultas')}</span>
-          </a>
-
-          <a
-            href="/api/admin/export?type=patients"
-            target="_blank"
-            download
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0F172A] text-xs font-medium transition-colors touch-target"
-          >
-            <IconFileSpreadsheet size={15} className="text-[#64748B]" />
-            <span>{txt('Export Patients (CSV)', 'Export Patients (CSV)', 'Exportar Utentes')}</span>
-          </a>
-        </div>
-      </div>
-
-      {/* KPI Rate Metrics Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        {[
-          {
-            label: txt('Taux de Confirmation', 'Confirmation Rate', 'Taxa de Confirmação'),
-            value: `${confirmationRate}%`,
-            color: 'text-[#166534]',
-          },
-          {
-            label: txt('Taux d’Annulation', 'Cancellation Rate', 'Taxa de Cancelamento'),
-            value: `${analyticsData.cancelRate}%`,
-            color: 'text-[#991B1B]',
-          },
-          {
-            label: txt('Taux d’Achèvement', 'Completion Rate', 'Taxa de Conclusão'),
-            value: `${analyticsData.completionRate}%`,
-            color: 'text-[#1E40AF]',
-          },
-          {
-            label: txt('Revenu Estimé Total', 'Total Est. Revenue', 'Receita Estimada Total'),
-            value: `${stats.revenue} €`,
-            color: 'text-[#0F172A]',
-          },
-        ].map(kpi => (
-          <div
-            key={kpi.label}
-            className="p-4 rounded-xl bg-white border border-[#E2E8F0] flex flex-col justify-between min-h-[90px] shadow-xs"
-          >
-            <div className="text-[11px] font-medium uppercase tracking-wider text-[#64748B]">
-              {kpi.label}
-            </div>
-            <div className={`text-2xl font-bold tracking-tight ${kpi.color}`}>
-              {kpi.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Charts Row 1: Day of Week + Top Services */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Day of Week Distribution */}
-        <div className="p-4 sm:p-5 rounded-xl bg-white border border-[#E2E8F0] space-y-4 shadow-xs">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#E2E8F0]">
-            <IconCalendarEvent size={18} className="text-[#64748B]" />
-            <div>
-              <h4 className="font-semibold text-sm sm:text-base text-[#0F172A]">
-                {txt('Répartition par Jour de Semaine', 'Day of Week Distribution', 'Distribuição por Dia da Semana')}
-              </h4>
-              <div className="text-xs text-[#64748B]">
-                {txt('Jours de plus forte activité', 'Peak activity days', 'Dias mais ativos')}
-              </div>
-            </div>
-          </div>
-
-          {(() => {
-            const max = Math.max(...analyticsData.dowCounts, 1);
-            return (
-              <div className="space-y-2.5 pt-1">
-                {analyticsData.dowLabels.map((label, i) => {
-                  const pct = Math.round((analyticsData.dowCounts[i] / max) * 100);
-                  const isPeak = analyticsData.dowCounts[i] === Math.max(...analyticsData.dowCounts) && analyticsData.dowCounts[i] > 0;
-
-                  return (
-                    <div key={label} className="flex items-center gap-3">
-                      <div className="text-xs font-semibold text-[#64748B] w-9 shrink-0">
-                        {label}
-                      </div>
-                      <div className="flex-1 bg-[#F1F5F9] rounded-full h-3 overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.5, delay: i * 0.04, ease: 'easeOut' }}
-                          className={`h-full rounded-full ${
-                            isPeak ? 'bg-[#0F172A]' : 'bg-[#64748B]'
-                          }`}
-                        />
-                      </div>
-                      <div
-                        className={`text-xs font-bold w-6 text-right ${
-                          isPeak ? 'text-[#0F172A]' : 'text-[#64748B]'
-                        }`}
-                      >
-                        {analyticsData.dowCounts[i]}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* Top Treatments */}
-        <div className="p-4 sm:p-5 rounded-xl bg-white border border-[#E2E8F0] space-y-4 shadow-xs">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#E2E8F0]">
-            <IconStethoscope size={18} className="text-[#64748B]" />
-            <div>
-              <h4 className="font-semibold text-sm sm:text-base text-[#0F172A]">
-                {txt('Soins les Plus Demandés', 'Most Requested Treatments', 'Tratamentos Mais Solicitados')}
-              </h4>
-              <div className="text-xs text-[#64748B]">
-                {txt('Demande par acte médical', 'Demand by clinical care', 'Procura por tratamento')}
-              </div>
-            </div>
-          </div>
-
-          {analyticsData.topServices.length === 0 ? (
-            <div className="text-center text-[#64748B] text-xs py-8">
-              {txt('Aucune donnée', 'No data', 'Sem dados')}
-            </div>
-          ) : (() => {
-            const max = Math.max(...analyticsData.topServices.map(s => s[1]), 1);
-            return (
-              <div className="space-y-2.5 pt-1">
-                {analyticsData.topServices.map(([slug, count], i) => {
-                  const pct = Math.round((count / max) * 100);
-                  return (
-                    <div key={slug} className="flex items-center gap-3">
-                      <div className="text-xs font-medium text-[#0F172A] w-32 sm:w-36 shrink-0 truncate">
-                        {getServiceName(slug, lang)}
-                      </div>
-                      <div className="flex-1 bg-[#F1F5F9] rounded-full h-3 overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.5, delay: i * 0.04, ease: 'easeOut' }}
-                          className="h-full rounded-full bg-[#0F172A]"
-                        />
-                      </div>
-                      <div className="text-xs font-bold text-[#0F172A] w-6 text-right">
-                        {count}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* Charts Row 2: Peak Hours */}
-      <div className="p-4 sm:p-5 rounded-xl bg-white border border-[#E2E8F0] space-y-4 shadow-xs">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#E2E8F0]">
-          <IconClock size={18} className="text-[#64748B]" />
+      {/* ── 2. EXECUTIVE FILTER & COMMAND BAR ───────────────────────────── */}
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E2E8F0] shadow-xs space-y-4">
+        {/* Title, Sync Timestamp & Refresh Action */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F1F5F9]">
           <div>
-            <h4 className="font-semibold text-sm sm:text-base text-[#0F172A]">
-              {txt('Heures de Pointe', 'Peak Hours', 'Horários de Ponta')}
-            </h4>
-            <div className="text-xs text-[#64748B]">
-              {txt('Fréquentation par tranche horaire', 'Attendance per time slot', 'Horários de maior afluência')}
+            <h3 className="font-bold text-base sm:text-lg text-[#0F172A] flex items-center gap-2">
+              <IconBuildingHospital size={20} className="text-[#C49A3C]" />
+              <span>{txt('Tableau de Bord Exécutif & Analyses d’Activité', 'Executive Analytics & Clinic Intelligence', 'Painel Executivo & Relatórios')}</span>
+            </h3>
+            <div className="flex items-center gap-2 text-xs text-[#64748B] mt-0.5">
+              <span>{txt('Dernière synchronisation :', 'Last synchronized:', 'Última sincronização:')} {lastSyncedAt.toLocaleTimeString('pt-PT')}</span>
+              {isLoading && (
+                <span className="flex items-center gap-1 text-[#C49A3C] font-semibold animate-pulse">
+                  <IconLoader2 size={13} className="animate-spin" />
+                  <span>{txt('Mise à jour en direct...', 'Updating live...', 'A atualizar...')}</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons: Refresh, CSV Exports & Print */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleManualRefresh}
+              disabled={isLoading}
+              title={txt('Rafraîchir les données', 'Refresh metrics', 'Atualizar dados')}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F1F5F9] text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <IconRefresh size={14} className={isLoading ? 'animate-spin text-[#C49A3C]' : 'text-[#64748B]'} />
+              <span>{txt('Rafraîchir', 'Refresh', 'Atualizar')}</span>
+            </button>
+
+            {/* Filtered Appointments Export */}
+            <a
+              href={`/api/admin/export?type=appointments&startDate=${activeRange.startDate}&endDate=${activeRange.endDate}`}
+              target="_blank"
+              download
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0F172A] text-xs font-semibold transition-colors"
+            >
+              <IconFileSpreadsheet size={14} className="text-[#10B981]" />
+              <span>{txt('Export RDV (CSV)', 'Export Appts', 'Exportar Consultas')}</span>
+            </a>
+
+            {/* Filtered Invoices Export */}
+            <a
+              href={`/api/admin/export?type=invoices&startDate=${activeRange.startDate}&endDate=${activeRange.endDate}`}
+              target="_blank"
+              download
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0F172A] text-xs font-semibold transition-colors"
+            >
+              <IconFileSpreadsheet size={14} className="text-[#0284C7]" />
+              <span>{txt('Export Factures', 'Export Invoices', 'Exportar Faturas')}</span>
+            </a>
+
+            {/* Print Summary */}
+            <button
+              type="button"
+              onClick={() => window.print()}
+              title={txt('Imprimer / Sauvegarder PDF', 'Print / Save PDF', 'Imprimir / Guardar PDF')}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <IconPrinter size={14} />
+              <span>PDF</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Controls Row */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+          {/* Date Range Selector Pills */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-bold text-[#64748B] mr-1 flex items-center gap-1">
+              <IconCalendar size={14} className="text-[#C49A3C]" />
+              <span>{txt('Période :', 'Period:', 'Período:')}</span>
+            </span>
+
+            {[
+              { id: 'today', label: txt('Aujourd’hui', 'Today', 'Hoje') },
+              { id: '7d', label: txt('7 Jours', '7 Days', '7 Dias') },
+              { id: 'month', label: txt('Ce Mois', 'This Month', 'Este Mês') },
+              { id: '30d', label: txt('30 Jours', '30 Days', '30 Dias') },
+              { id: '90d', label: txt('90 Jours', '90 Days', '90 Dias') },
+              { id: 'year', label: txt('Cette Année', 'This Year', 'Este Ano') },
+              { id: 'all', label: txt('Tout', 'All Time', 'Tudo') },
+            ].map(r => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => handleRangeChange(r.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  selectedRange === r.id
+                    ? 'bg-[#0F172A] text-white shadow-xs'
+                    : 'bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+
+            {/* Custom Range Button */}
+            <button
+              type="button"
+              onClick={() => setIsCustomModalOpen(true)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                selectedRange === 'custom'
+                  ? 'bg-[#C49A3C] text-white shadow-xs'
+                  : 'bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
+              }`}
+            >
+              <span>{txt('Personnalisé', 'Custom', 'Personalizado')}</span>
+              {selectedRange === 'custom' && customStart && customEnd && (
+                <span className="text-[10px] opacity-90 font-mono">({customStart.slice(5)} → {customEnd.slice(5)})</span>
+              )}
+            </button>
+          </div>
+
+          {/* Specialty / Department Selector Tabs */}
+          <div className="inline-flex p-1 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] self-start md:self-center">
+            {[
+              { id: 'all', label: txt('Tous les Pôles', 'All Sectors', 'Todos os Polos') },
+              { id: 'kinesitherapie', label: txt('Kinésithérapie', 'Physiotherapy', 'Fisioterapia') },
+              { id: 'minceur', label: txt('Soins Minceur', 'Slimming Care', 'Emagrecimento') },
+              { id: 'bilan', label: txt('Bilans', 'Assessments', 'Avaliações') },
+            ].map(p => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => handlePoleChange(p.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  selectedPole === p.id
+                    ? 'bg-white text-[#0F172A] shadow-xs border border-[#E2E8F0]'
+                    : 'text-[#64748B] hover:text-[#0F172A]'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. EXECUTIVE KPI CARDS ROW ──────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Card 1: Chiffre d'Affaires Encaissé */}
+        <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+              {txt('Chiffre d’Affaires Encaissé', 'Paid Revenue', 'Faturação Liquidada')}
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <IconCurrencyEuro size={16} />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
+              {currentStats.revenue.toLocaleString('pt-PT')} €
+            </div>
+            {/* Period-over-Period Delta & Billed Total */}
+            <div className="flex items-center gap-1.5 mt-1 text-[11px] flex-wrap">
+              {comparison.revenueGrowthPct >= 0 ? (
+                <span className="inline-flex items-center text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                  <IconTrendingUp size={13} className="mr-0.5" />
+                  +{comparison.revenueGrowthPct}%
+                </span>
+              ) : (
+                <span className="inline-flex items-center text-rose-700 font-bold bg-rose-50 px-1.5 py-0.5 rounded-md">
+                  <IconTrendingDown size={13} className="mr-0.5" />
+                  {comparison.revenueGrowthPct}%
+                </span>
+              )}
+              <span className="text-[#64748B]">
+                {currentStats.totalBilled && currentStats.totalBilled > currentStats.revenue
+                  ? `· ${currentStats.totalBilled.toLocaleString('pt-PT')} € ${txt('émis', 'billed', 'faturado')}`
+                  : txt('vs période préc.', 'vs prior period', 'vs período ant.')}
+              </span>
             </div>
           </div>
         </div>
 
-        {analyticsData.peakHours.length === 0 ? (
-          <div className="text-center text-[#64748B] text-xs py-6">
-            {txt('Aucune donnée', 'No data', 'Sem dados')}
+        {/* Card 2: Panier Moyen */}
+        <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+              {txt('Panier Moyen / Acte', 'Avg Ticket Value', 'Ticket Médio')}
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center">
+              <IconCurrencyEuro size={16} />
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 xs:grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
-            {analyticsData.peakHours.map(([hour, count], i) => {
-              const max = analyticsData.peakHours[0][1];
-              const pct = Math.round((count / max) * 100);
-              const isPeak = i === 0;
+          <div>
+            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
+              {currentStats.avgTicket} €
+            </div>
+            <div className="text-[11px] text-[#64748B] mt-1 truncate">
+              {currentStats.completed} {txt('séances honorées', 'sessions completed', 'sessões concluídas')}
+            </div>
+          </div>
+        </div>
 
-              return (
-                <div
-                  key={hour}
-                  className={`p-3 rounded-xl border text-center transition-all ${
-                    isPeak
-                      ? 'bg-[#F8FAFC] border-[#0F172A] shadow-xs'
-                      : 'bg-white border-[#E2E8F0]'
-                  }`}
+        {/* Card 3: Consultations & Présence */}
+        <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+              {txt('Consultations & Présence', 'Attendance Rate', 'Taxa de Presença')}
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <IconCheck size={16} />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-extrabold text-[#166534] tracking-tight">
+              {attendanceRate}%
+            </div>
+            <div className="flex items-center gap-1.5 mt-1 text-[11px] text-[#64748B]">
+              <span className="font-bold text-[#0F172A]">{currentStats.total}</span>
+              <span>{txt('rdv planifiés au total', 'total appts scheduled', 'consultas no total')}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: Taux d'Occupation Cabinet */}
+        <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+              {txt('Occupation Cabinet', 'Clinic Occupancy', 'Ocupação da Clínica')}
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+              <IconClock size={16} />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
+              {currentStats.occupancyRate}%
+            </div>
+            <div className="text-[11px] text-[#64748B] mt-1 truncate">
+              {txt('Capacité fauteuils mobilisée', 'Chair capacity utilized', 'Capacidade utilizada')}
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: Manque à Gagner Annulations */}
+        <div className="col-span-2 sm:col-span-2 lg:col-span-1 p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col justify-between space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700">
+              {txt('Manque à Gagner', 'Lost Revenue', 'Perda Faltas/Canc.')}
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+              <IconAlertCircle size={16} />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-extrabold text-rose-700 tracking-tight">
+              - {currentStats.lostRevenue.toLocaleString('pt-PT')} €
+            </div>
+            <div className="text-[11px] text-rose-600/80 mt-1 truncate">
+              {currentStats.cancelled} {txt('annulés', 'cancelled', 'desmarc.')} · {currentStats.noShow} {txt('absences', 'no-shows', 'faltas')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 4. DYNAMIC SPLINE TIMELINE CHART ───────────────────────────── */}
+      <TimelineSplineChart
+        points={timeline.points}
+        lang={lang}
+        granularity={timeline.granularity}
+      />
+
+      {/* ── 5. DEPARTMENT MATRIX & TOP SERVICES ────────────────────────── */}
+      <DepartmentDonutChart
+        poles={departmentData.poles}
+        topServices={departmentData.topServices}
+        lang={lang}
+        totalRevenue={currentStats.revenue}
+      />
+
+      {/* ── 6. CLINIC OCCUPANCY HEATMAP ─────────────────────────────────── */}
+      <OccupancyHeatmap
+        dowLabels={heatmap.dowLabels}
+        hours={heatmap.hours}
+        matrix={heatmap.matrix}
+        maxCount={heatmap.maxCount}
+        peakSlot={heatmap.peakSlot}
+        lang={lang}
+      />
+
+      {/* ── 7. ATTENDANCE & CONVERSION FUNNEL ───────────────────────────── */}
+      <AttendanceFunnel
+        stages={funnel.stages}
+        cancellationsCount={funnel.cancellationsCount}
+        noShowsCount={funnel.noShowsCount}
+        lostRevenue={funnel.lostRevenue}
+        retentionRate={funnel.retentionRate}
+        lang={lang}
+      />
+
+      {/* ── 8. PAYMENT CHANNELS & INSURANCE COVERAGE ────────────────────── */}
+      <PaymentDistributionVisualizer
+        byMethod={payments.byMethod}
+        byCoverage={payments.byCoverage}
+        unpaidCount={payments.unpaidCount}
+        unpaidAmount={payments.unpaidAmount}
+        lang={lang}
+      />
+
+      {/* ── 9. CUSTOM DATE RANGE PICKER MODAL ──────────────────────────── */}
+      <AnimatePresence>
+        {isCustomModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs font-sans">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-2xl border border-[#E2E8F0] shadow-2xl p-6 w-full max-w-md space-y-4"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-[#F1F5F9]">
+                <h4 className="font-bold text-base text-[#0F172A] flex items-center gap-2">
+                  <IconCalendar size={18} className="text-[#C49A3C]" />
+                  <span>{txt('Sélectionner une Période Personnalisée', 'Custom Date Range', 'Intervalo Personalizado')}</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomModalOpen(false)}
+                  className="p-1 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors cursor-pointer"
                 >
-                  <div className="font-bold text-xs text-[#0F172A]">
-                    {hour}
-                  </div>
-                  <div className="w-full bg-[#F1F5F9] rounded-full h-1.5 my-2 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.5, delay: i * 0.05, ease: 'easeOut' }}
-                      className={`h-full rounded-full ${isPeak ? 'bg-[#0F172A]' : 'bg-[#64748B]'}`}
-                    />
-                  </div>
-                  <div className="text-[11px] text-[#64748B]">
-                    {count} {txt('rdv', 'appts', 'cons.')}
-                  </div>
+                  <IconX size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                    {txt('Date de Début', 'Start Date', 'Data Inicial')}
+                  </label>
+                  <input
+                    type="date"
+                    value={customStart}
+                    onChange={e => setCustomStart(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E2E8F0] text-sm text-[#0F172A] focus:outline-hidden focus:ring-2 focus:ring-[#C49A3C]"
+                  />
                 </div>
-              );
-            })}
+
+                <div>
+                  <label className="block text-xs font-bold text-[#0F172A] mb-1">
+                    {txt('Date de Fin', 'End Date', 'Data Final')}
+                  </label>
+                  <input
+                    type="date"
+                    value={customEnd}
+                    onChange={e => setCustomEnd(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E2E8F0] text-sm text-[#0F172A] focus:outline-hidden focus:ring-2 focus:ring-[#C49A3C]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#F1F5F9]">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-[#E2E8F0] text-xs font-semibold text-[#64748B] hover:bg-[#F8FAFC] cursor-pointer"
+                >
+                  {txt('Annuler', 'Cancel', 'Cancelar')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplyCustomDate}
+                  disabled={!customStart || !customEnd}
+                  className="px-5 py-2 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {txt('Appliquer le Filtre', 'Apply Filter', 'Aplicar Filtro')}
+                </button>
+              </div>
+            </motion.div>
           </div>
         )}
-      </div>
-
-      {/* Status Breakdown Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
-        {[
-          { key: 'PENDING', label: txt('En attente', 'Pending', 'Pendentes'), count: stats.pending, color: 'text-[#854D0E]' },
-          { key: 'CONFIRMED', label: txt('Confirmés', 'Confirmed', 'Confirmados'), count: stats.confirmed, color: 'text-[#166534]' },
-          { key: 'COMPLETED', label: txt('Terminés', 'Completed', 'Concluídos'), count: stats.completed, color: 'text-[#1E40AF]' },
-          { key: 'CANCELLED', label: txt('Annulés', 'Cancelled', 'Cancelados'), count: stats.cancelled, color: 'text-[#991B1B]' },
-          { key: 'NO_SHOW', label: txt('Non présentés', 'No-shows', 'Faltas'), count: stats.noShow, color: 'text-[#475569]' },
-        ].map(s => (
-          <div
-            key={s.key}
-            className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] space-y-1 shadow-xs"
-          >
-            <div className={`text-[11px] font-medium uppercase tracking-wider ${s.color}`}>
-              {s.label}
-            </div>
-            <div className={`text-2xl font-bold ${s.color}`}>{s.count}</div>
-            <div className="text-[11px] text-[#64748B]">
-              {stats.total > 0 ? Math.round((s.count / stats.total) * 100) : 0}% du total
-            </div>
-          </div>
-        ))}
-      </div>
+      </AnimatePresence>
     </div>
   );
 });

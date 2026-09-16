@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOwnerAnalytics } from '@/lib/requireAdmin';
-import { dbGetAnalyticsStats } from '@/lib/db';
+import { dbGetFilteredAnalyticsStats } from '@/lib/db';
+import type { Lang } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -9,15 +10,25 @@ export async function GET(request: NextRequest) {
   const auth = await requireOwnerAnalytics(request);
   if ('status' in auth) return auth; // 401 or 403
 
-  const lang = request.nextUrl.searchParams.get('lang') || 'fr';
+  const { searchParams } = request.nextUrl;
+  const lang = (searchParams.get('lang') || 'fr') as Lang;
+  const range = searchParams.get('range') || '30d';
+  const startDate = searchParams.get('startDate') || undefined;
+  const endDate = searchParams.get('endDate') || undefined;
+  const pole = searchParams.get('pole') || 'all';
 
-  // High-performance database-level SQL aggregate calculation
-  const { stats, analyticsData } = await dbGetAnalyticsStats(lang);
+  // Multi-dimensional filtered database aggregate calculation
+  const result = await dbGetFilteredAnalyticsStats({
+    lang,
+    range,
+    startDate,
+    endDate,
+    pole,
+  });
 
   return NextResponse.json(
     {
-      stats,
-      analyticsData,
+      ...result,
       expiresAt: auth.session.analyticsUnlockedUntil,
     },
     {

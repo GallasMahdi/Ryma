@@ -4,8 +4,10 @@
 import { createClient, type Client as LibSqlClient } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
-import { getServicePrice, type PatientRecord, type PatientSession, type Invoice, type CreateInvoiceInput, type InvoiceStats, type PatientPrescription, type PrescriptionItem, type Review, type ReviewStatus, type CreateReviewInput } from '@/types/admin';
+import { getServicePrice, getServicePole, getServiceName, type PatientRecord, type PatientSession, type Invoice, type CreateInvoiceInput, type InvoiceStats, type PatientPrescription, type PrescriptionItem, type Review, type ReviewStatus, type CreateReviewInput } from '@/types/admin';
+import type { Lang } from '@/lib/i18n';
 import { TESTIMONIALS } from '@/data/testimonials';
+import { SERVICES } from '@/data/services';
 import { SITE } from '@/lib/site';
 import { phonesMatch } from '@/lib/phone';
 import { broadcastAppointmentCreated, broadcastMultipleAppointmentsCreated } from '@/lib/events';
@@ -3284,6 +3286,930 @@ export async function dbGetAnalyticsStats(lang: string = 'fr'): Promise<{
       peakHours,
       cancelRate,
       completionRate,
+    },
+  };
+}
+
+export interface FilteredAnalyticsOptions {
+  lang?: Lang;
+  range?: string;
+  startDate?: string;
+  endDate?: string;
+  pole?: string;
+}
+
+export interface FilteredAnalyticsResult {
+  stats: {
+    total: number;
+    confirmed: number;
+    pending: number;
+    completed: number;
+    cancelled: number;
+    noShow: number;
+    revenue: number;
+    totalRevenue: number;
+    totalBilled: number;
+    totalPaid: number;
+    totalPending: number;
+    countPaid: number;
+    countPending: number;
+    invoicesCount: number;
+    paidInvoicesRevenue: number;
+    avgTicket: number;
+    occupancyRate: number;
+    lostRevenue: number;
+    uniquePatients: number;
+  };
+  comparison: {
+    revenueGrowthPct: number;
+    appointmentsGrowthPct: number;
+    priorRevenue: number;
+    priorAppointments: number;
+  };
+  timeline: {
+    granularity: 'hour' | 'day' | 'week' | 'month';
+    points: Array<{
+      key: string;
+      label: string;
+      revenue: number;
+      appointments: number;
+      completed: number;
+      cancelled: number;
+    }>;
+  };
+  departmentData: {
+    poles: Array<{
+      pole: 'kinesitherapie' | 'minceur' | 'bilan';
+      name: string;
+      color: string;
+      count: number;
+      revenue: number;
+      percentage: number;
+    }>;
+    topServices: Array<{
+      slug: string;
+      name: string;
+      pole: string;
+      count: number;
+      revenue: number;
+      share: number;
+    }>;
+  };
+  heatmap: {
+    dowLabels: string[];
+    hours: string[];
+    matrix: number[][];
+    maxCount: number;
+    peakSlot: { dow: string; hour: string; count: number };
+  };
+  funnel: {
+    stages: Array<{
+      id: string;
+      name: string;
+      count: number;
+      percentage: number;
+    }>;
+    cancellationsCount: number;
+    noShowsCount: number;
+    lostRevenue: number;
+    retentionRate: number;
+  };
+  payments: {
+    byMethod: Array<{ method: string; count: number; amount: number; percentage: number }>;
+    byCoverage: Array<{ coverage: string; count: number; percentage: number }>;
+    unpaidCount: number;
+    unpaidAmount: number;
+  };
+  analyticsData: {
+    dowLabels: string[];
+    dowCounts: number[];
+    topServices: [string, number][];
+    peakHours: [string, number][];
+    cancelRate: number;
+    completionRate: number;
+  };
+  range: {
+    type: string;
+    startDate: string;
+    endDate: string;
+    pole: string;
+  };
+}
+
+/**
+ * Advanced real-time multi-dimensional analytics engine.
+ * Computes live KPIs, time-series spline points, 2D occupancy heatmap,
+ * patient conversion funnel, department matrix, and period-over-period growth deltas.
+ */
+export async function dbGetFilteredAnalyticsStats(
+  options: FilteredAnalyticsOptions = {}
+): Promise<FilteredAnalyticsResult> {
+  const lang: Lang = options.lang === 'pt' ? 'pt' : options.lang === 'en' ? 'en' : 'fr';
+  const rangeType = options.range || '30d';
+  const targetPole = options.pole && options.pole !== 'all' ? options.pole : 'all';
+
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const todayStr = fmt(now);
+
+  let start = todayStr;
+  let end = todayStr;
+  let priorStart = todayStr;
+  let priorEnd = todayStr;
+  let granularity: 'hour' | 'day' | 'week' | 'month' = 'day';
+
+  if (rangeType === 'today') {
+    start = todayStr;
+    end = todayStr;
+    const yest = new Date(now);
+    yest.setDate(yest.getDate() - 1);
+    priorStart = fmt(yest);
+    priorEnd = fmt(yest);
+    granularity = 'hour';
+  } else if (rangeType === '7d') {
+    end = todayStr;
+    const d7 = new Date(now);
+    d7.setDate(d7.getDate() - 6);
+    start = fmt(d7);
+
+    const pEnd = new Date(d7);
+    pEnd.setDate(pEnd.getDate() - 1);
+    priorEnd = fmt(pEnd);
+    const pStart = new Date(pEnd);
+    pStart.setDate(pStart.getDate() - 6);
+    priorStart = fmt(pStart);
+    granularity = 'day';
+  } else if (rangeType === 'month') {
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    start = fmt(firstOfMonth);
+    end = todayStr;
+
+    const prevMonthFirst = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    priorStart = fmt(prevMonthFirst);
+    const prevMonthEnd = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      Math.min(now.getDate(), new Date(now.getFullYear(), now.getMonth(), 0).getDate())
+    );
+    priorEnd = fmt(prevMonthEnd);
+    granularity = 'day';
+  } else if (rangeType === '30d') {
+    end = todayStr;
+    const d30 = new Date(now);
+    d30.setDate(d30.getDate() - 29);
+    start = fmt(d30);
+
+    const pEnd = new Date(d30);
+    pEnd.setDate(pEnd.getDate() - 1);
+    priorEnd = fmt(pEnd);
+    const pStart = new Date(pEnd);
+    pStart.setDate(pStart.getDate() - 29);
+    priorStart = fmt(pStart);
+    granularity = 'day';
+  } else if (rangeType === '90d') {
+    end = todayStr;
+    const d90 = new Date(now);
+    d90.setDate(d90.getDate() - 89);
+    start = fmt(d90);
+
+    const pEnd = new Date(d90);
+    pEnd.setDate(pEnd.getDate() - 1);
+    priorEnd = fmt(pEnd);
+    const pStart = new Date(pEnd);
+    pStart.setDate(pStart.getDate() - 89);
+    priorStart = fmt(pStart);
+    granularity = 'week';
+  } else if (rangeType === 'year') {
+    start = `${now.getFullYear()}-01-01`;
+    end = todayStr;
+
+    priorStart = `${now.getFullYear() - 1}-01-01`;
+    priorEnd = `${now.getFullYear() - 1}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    granularity = 'month';
+  } else if (rangeType === 'all') {
+    start = '2020-01-01';
+    end = '2099-12-31';
+    priorStart = '2020-01-01';
+    priorEnd = '2020-01-01';
+    granularity = 'month';
+  } else if (rangeType === 'custom') {
+    start = options.startDate || todayStr;
+    end = options.endDate || todayStr;
+    if (start > end) {
+      const tmp = start;
+      start = end;
+      end = tmp;
+    }
+    const dStart = new Date(start + 'T12:00:00');
+    const dEnd = new Date(end + 'T12:00:00');
+    const diffDays = Math.max(1, Math.round((dEnd.getTime() - dStart.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+
+    const pEnd = new Date(dStart);
+    pEnd.setDate(pEnd.getDate() - 1);
+    priorEnd = fmt(pEnd);
+    const pStart = new Date(pEnd);
+    pStart.setDate(pStart.getDate() - (diffDays - 1));
+    priorStart = fmt(pStart);
+
+    if (diffDays <= 2) granularity = 'hour';
+    else if (diffDays <= 45) granularity = 'day';
+    else if (diffDays <= 180) granularity = 'week';
+    else granularity = 'month';
+  }
+
+  // Fast index-assisted SQL queries
+  const isAllTime = rangeType === 'all';
+  const startIso = `${start}T00:00:00.000Z`;
+  const endIso = `${end}T23:59:59.999Z`;
+  const priorStartIso = `${priorStart}T00:00:00.000Z`;
+  const priorEndIso = `${priorEnd}T23:59:59.999Z`;
+
+  const [currentAppts, priorAppts, currentInvoices, priorInvoices] = await Promise.all([
+    isAllTime
+      ? executeQuery<{
+          id: string;
+          patientName: string;
+          phone: string;
+          service: string;
+          date: string;
+          startTime: string;
+          status: string;
+          coverageType: string | null;
+          createdAt: string;
+        }>(
+          `SELECT id, patientName, phone, service, date, startTime, status, coverageType, createdAt
+           FROM appointments`
+        )
+      : executeQuery<{
+          id: string;
+          patientName: string;
+          phone: string;
+          service: string;
+          date: string;
+          startTime: string;
+          status: string;
+          coverageType: string | null;
+          createdAt: string;
+        }>(
+          `SELECT id, patientName, phone, service, date, startTime, status, coverageType, createdAt
+           FROM appointments
+           WHERE date >= ? AND date <= ?`,
+          [start, end]
+        ),
+    isAllTime
+      ? Promise.resolve([])
+      : executeQuery<{
+          service: string;
+          status: string;
+        }>(
+          `SELECT service, status
+           FROM appointments
+           WHERE date >= ? AND date <= ?`,
+          [priorStart, priorEnd]
+        ),
+    isAllTime
+      ? executeQuery<{
+          id: string;
+          invoiceNumber: string;
+          amount: number;
+          paymentStatus: string;
+          paymentMethod: string;
+          coverageType: string | null;
+          serviceSlug: string;
+          createdAt: string;
+          paidAt: string | null;
+        }>(
+          `SELECT id, invoiceNumber, amount, paymentStatus, paymentMethod, coverageType, serviceSlug, createdAt, paidAt
+           FROM invoices`
+        )
+      : executeQuery<{
+          id: string;
+          invoiceNumber: string;
+          amount: number;
+          paymentStatus: string;
+          paymentMethod: string;
+          coverageType: string | null;
+          serviceSlug: string;
+          createdAt: string;
+          paidAt: string | null;
+        }>(
+          `SELECT id, invoiceNumber, amount, paymentStatus, paymentMethod, coverageType, serviceSlug, createdAt, paidAt
+           FROM invoices
+           WHERE createdAt >= ? AND createdAt <= ?`,
+          [startIso, endIso]
+        ),
+    isAllTime
+      ? Promise.resolve([])
+      : executeQuery<{
+          amount: number;
+          paymentStatus: string;
+          serviceSlug: string;
+        }>(
+          `SELECT amount, paymentStatus, serviceSlug
+           FROM invoices
+           WHERE createdAt >= ? AND createdAt <= ?`,
+          [priorStartIso, priorEndIso]
+        ),
+  ]);
+
+  // Apply Pole Filter
+  const appts = targetPole === 'all'
+    ? currentAppts
+    : currentAppts.filter(a => getServicePole(a.service) === targetPole);
+
+  const filteredPriorAppts = targetPole === 'all'
+    ? priorAppts
+    : priorAppts.filter(a => getServicePole(a.service) === targetPole);
+
+  const invoices = targetPole === 'all'
+    ? currentInvoices
+    : currentInvoices.filter(i => getServicePole(i.serviceSlug) === targetPole);
+
+  const filteredPriorInvoices = targetPole === 'all'
+    ? priorInvoices
+    : priorInvoices.filter(i => getServicePole(i.serviceSlug) === targetPole);
+
+  // Compute status metrics & revenue
+  let total = 0;
+  let confirmed = 0;
+  let pending = 0;
+  let completed = 0;
+  let cancelled = 0;
+  let noShow = 0;
+  let lostRevenue = 0;
+  let appointmentsRevenue = 0;
+  const uniquePatientsSet = new Set<string>();
+  const patientSessionCounts = new Map<string, number>();
+
+  for (const a of appts) {
+    total++;
+    const s = (a.status || '').toUpperCase();
+    const price = getServicePrice(a.service);
+    const pKey = a.phone || a.patientName;
+    if (pKey) {
+      uniquePatientsSet.add(pKey);
+      patientSessionCounts.set(pKey, (patientSessionCounts.get(pKey) || 0) + 1);
+    }
+
+    if (s === 'CONFIRMED') confirmed++;
+    else if (s === 'PENDING') pending++;
+    else if (s === 'COMPLETED') {
+      completed++;
+      appointmentsRevenue += price;
+    } else if (s === 'CANCELLED') {
+      cancelled++;
+      lostRevenue += price;
+    } else if (s === 'NO_SHOW') {
+      noShow++;
+      lostRevenue += price;
+    }
+  }
+
+  // Invoice calculations - Portuguese Statutory Accounting: exclude CANCELLED invoices
+  let paidInvoicesRevenue = 0;
+  let unpaidAmount = 0;
+  let unpaidCount = 0;
+  let paidCount = 0;
+  let activeInvoicesCount = 0;
+  const methodMap = new Map<string, { count: number; amount: number }>();
+  const coverageMap = new Map<string, number>();
+
+  for (const inv of invoices) {
+    const status = (inv.paymentStatus || '').toUpperCase();
+    if (status === 'CANCELLED') continue;
+    activeInvoicesCount++;
+    const amt = Number(inv.amount) || 0;
+    const isPaid = status === 'PAID';
+    if (isPaid) {
+      paidInvoicesRevenue += amt;
+      paidCount++;
+      const m = (inv.paymentMethod || 'MULTIBANCO').toUpperCase();
+      const cur = methodMap.get(m) || { count: 0, amount: 0 };
+      cur.count++;
+      cur.amount += amt;
+      methodMap.set(m, cur);
+    } else {
+      unpaidCount++;
+      unpaidAmount += amt;
+    }
+
+    const c = (inv.coverageType || 'PARTICULAR').toUpperCase();
+    coverageMap.set(c, (coverageMap.get(c) || 0) + 1);
+  }
+
+  const revenue = Math.max(paidInvoicesRevenue, appointmentsRevenue);
+  const totalBilled = paidInvoicesRevenue + unpaidAmount;
+  const avgTicket = completed > 0 ? Math.round(revenue / completed) : (paidCount > 0 ? Math.round(revenue / paidCount) : 0);
+
+  // Prior Period Deltas
+  let priorCompletedRevenue = 0;
+  let priorPaidInvoicesRevenue = 0;
+  for (const a of filteredPriorAppts) {
+    if ((a.status || '').toUpperCase() === 'COMPLETED') {
+      priorCompletedRevenue += getServicePrice(a.service);
+    }
+  }
+  for (const inv of filteredPriorInvoices) {
+    if ((inv.paymentStatus || '').toUpperCase() === 'PAID') {
+      priorPaidInvoicesRevenue += Number(inv.amount) || 0;
+    }
+  }
+  const priorRevenue = Math.max(priorPaidInvoicesRevenue, priorCompletedRevenue);
+  const priorAppointments = filteredPriorAppts.length;
+
+  const revenueGrowthPct = priorRevenue > 0
+    ? Math.round(((revenue - priorRevenue) / priorRevenue) * 1000) / 10
+    : revenue > 0 ? 100 : 0;
+
+  const appointmentsGrowthPct = priorAppointments > 0
+    ? Math.round(((total - priorAppointments) / priorAppointments) * 1000) / 10
+    : total > 0 ? 100 : 0;
+
+  // Dynamic Time-Series Spline Points
+  type TimePoint = {
+    key: string;
+    label: string;
+    revenue: number;
+    appointments: number;
+    completed: number;
+    cancelled: number;
+  };
+  const pointsMap = new Map<string, TimePoint>();
+
+  const locale = lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
+
+  if (granularity === 'hour') {
+    const slots = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
+    slots.forEach(slot => {
+      pointsMap.set(slot, {
+        key: slot,
+        label: slot,
+        revenue: 0,
+        appointments: 0,
+        completed: 0,
+        cancelled: 0,
+      });
+    });
+
+    for (const a of appts) {
+      if (!a.startTime) continue;
+      const h = parseInt(a.startTime.split(':')[0], 10);
+      let targetSlot = '08:00';
+      if (h >= 19) targetSlot = '20:00';
+      else if (h >= 17) targetSlot = '18:00';
+      else if (h >= 15) targetSlot = '16:00';
+      else if (h >= 13) targetSlot = '14:00';
+      else if (h >= 11) targetSlot = '12:00';
+      else if (h >= 9) targetSlot = '10:00';
+
+      const pt = pointsMap.get(targetSlot);
+      if (pt) {
+        pt.appointments++;
+        const s = (a.status || '').toUpperCase();
+        if (s === 'COMPLETED') {
+          pt.completed++;
+          pt.revenue += getServicePrice(a.service);
+        } else if (s === 'CONFIRMED') {
+          pt.revenue += getServicePrice(a.service) * 0.7;
+        } else if (s === 'CANCELLED' || s === 'NO_SHOW') {
+          pt.cancelled++;
+        }
+      }
+    }
+  } else if (granularity === 'day') {
+    const curDate = new Date(start + 'T12:00:00');
+    const endDateObj = new Date(end + 'T12:00:00');
+    while (curDate <= endDateObj) {
+      const dKey = fmt(curDate);
+      const label = curDate.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+      pointsMap.set(dKey, {
+        key: dKey,
+        label,
+        revenue: 0,
+        appointments: 0,
+        completed: 0,
+        cancelled: 0,
+      });
+      curDate.setDate(curDate.getDate() + 1);
+    }
+
+    for (const a of appts) {
+      const pt = pointsMap.get(a.date);
+      if (pt) {
+        pt.appointments++;
+        const s = (a.status || '').toUpperCase();
+        if (s === 'COMPLETED') {
+          pt.completed++;
+          pt.revenue += getServicePrice(a.service);
+        } else if (s === 'CONFIRMED') {
+          pt.revenue += getServicePrice(a.service) * 0.7;
+        } else if (s === 'CANCELLED' || s === 'NO_SHOW') {
+          pt.cancelled++;
+        }
+      }
+    }
+
+    // Invoices for exact daily revenue mapping
+    for (const inv of invoices) {
+      if ((inv.paymentStatus || '').toUpperCase() === 'PAID') {
+        const invDate = inv.createdAt.slice(0, 10);
+        const pt = pointsMap.get(invDate);
+        if (pt) {
+          pt.revenue = Math.max(pt.revenue, Number(inv.amount) || 0);
+        }
+      }
+    }
+  } else if (granularity === 'week') {
+    const curDate = new Date(start + 'T12:00:00');
+    const endDateObj = new Date(end + 'T12:00:00');
+    while (curDate <= endDateObj) {
+      const weekStartStr = fmt(curDate);
+      const label = `Sem. ${curDate.toLocaleDateString(locale, { day: 'numeric', month: 'numeric' })}`;
+      pointsMap.set(weekStartStr, {
+        key: weekStartStr,
+        label,
+        revenue: 0,
+        appointments: 0,
+        completed: 0,
+        cancelled: 0,
+      });
+      curDate.setDate(curDate.getDate() + 7);
+    }
+
+    const weekKeys = Array.from(pointsMap.keys());
+    for (const a of appts) {
+      // find matching week
+      let assignedKey = weekKeys[0];
+      for (const wk of weekKeys) {
+        if (a.date >= wk) assignedKey = wk;
+      }
+      const pt = pointsMap.get(assignedKey);
+      if (pt) {
+        pt.appointments++;
+        const s = (a.status || '').toUpperCase();
+        if (s === 'COMPLETED') {
+          pt.completed++;
+          pt.revenue += getServicePrice(a.service);
+        } else if (s === 'CANCELLED' || s === 'NO_SHOW') {
+          pt.cancelled++;
+        }
+      }
+    }
+  } else {
+    // month granularity
+    const curDate = new Date(start + 'T12:00:00');
+    const endDateObj = new Date(end + 'T12:00:00');
+    while (curDate <= endDateObj) {
+      const mKey = `${curDate.getFullYear()}-${pad(curDate.getMonth() + 1)}`;
+      const label = curDate.toLocaleDateString(locale, { month: 'short', year: '2-digit' });
+      pointsMap.set(mKey, {
+        key: mKey,
+        label,
+        revenue: 0,
+        appointments: 0,
+        completed: 0,
+        cancelled: 0,
+      });
+      curDate.setMonth(curDate.getMonth() + 1);
+    }
+
+    for (const a of appts) {
+      const mKey = a.date.slice(0, 7);
+      const pt = pointsMap.get(mKey);
+      if (pt) {
+        pt.appointments++;
+        const s = (a.status || '').toUpperCase();
+        if (s === 'COMPLETED') {
+          pt.completed++;
+          pt.revenue += getServicePrice(a.service);
+        } else if (s === 'CANCELLED' || s === 'NO_SHOW') {
+          pt.cancelled++;
+        }
+      }
+    }
+  }
+
+  const timelinePoints = Array.from(pointsMap.values()).map(pt => ({
+    ...pt,
+    revenue: Math.round(pt.revenue),
+  }));
+
+  // Department & Pole Distribution
+  const poleTotals = {
+    kinesitherapie: { count: 0, revenue: 0 },
+    minceur: { count: 0, revenue: 0 },
+    bilan: { count: 0, revenue: 0 },
+  };
+  const serviceStats = new Map<string, { count: number; revenue: number }>();
+
+  for (const a of appts) {
+    const p = getServicePole(a.service);
+    const pr = getServicePrice(a.service);
+    if (poleTotals[p]) {
+      poleTotals[p].count++;
+      if (a.status === 'COMPLETED' || a.status === 'CONFIRMED') {
+        poleTotals[p].revenue += pr;
+      }
+    }
+
+    const cur = serviceStats.get(a.service) || { count: 0, revenue: 0 };
+    cur.count++;
+    if (a.status === 'COMPLETED' || a.status === 'CONFIRMED') {
+      cur.revenue += pr;
+    }
+    serviceStats.set(a.service, cur);
+  }
+
+  const poleRevenueTotal =
+    poleTotals.kinesitherapie.revenue + poleTotals.minceur.revenue + poleTotals.bilan.revenue;
+
+  const polesList: Array<{
+    pole: 'kinesitherapie' | 'minceur' | 'bilan';
+    name: string;
+    color: string;
+    count: number;
+    revenue: number;
+    percentage: number;
+  }> = [
+    {
+      pole: 'kinesitherapie',
+      name:
+        lang === 'pt'
+          ? 'Fisioterapia & Reabilitação'
+          : lang === 'en'
+          ? 'Physiotherapy & Rehab'
+          : 'Kinésithérapie & Rééducation',
+      color: '#3B82F6',
+      count: poleTotals.kinesitherapie.count,
+      revenue: poleTotals.kinesitherapie.revenue,
+      percentage:
+        poleRevenueTotal > 0
+          ? Math.round((poleTotals.kinesitherapie.revenue / poleRevenueTotal) * 100)
+          : 0,
+    },
+    {
+      pole: 'minceur',
+      name:
+        lang === 'pt'
+          ? 'Estética & Emagrecimento'
+          : lang === 'en'
+          ? 'Slimming & Esthetics'
+          : 'Soins Minceur & Esthétique',
+      color: '#C49A3C',
+      count: poleTotals.minceur.count,
+      revenue: poleTotals.minceur.revenue,
+      percentage:
+        poleRevenueTotal > 0
+          ? Math.round((poleTotals.minceur.revenue / poleRevenueTotal) * 100)
+          : 0,
+    },
+    {
+      pole: 'bilan',
+      name:
+        lang === 'pt'
+          ? 'Avaliações Iniciais'
+          : lang === 'en'
+          ? 'Initial Assessments'
+          : 'Bilans & Consultations Initiales',
+      color: '#10B981',
+      count: poleTotals.bilan.count,
+      revenue: poleTotals.bilan.revenue,
+      percentage:
+        poleRevenueTotal > 0
+          ? Math.round((poleTotals.bilan.revenue / poleRevenueTotal) * 100)
+          : 0,
+    },
+  ];
+
+  const topServices = Array.from(serviceStats.entries())
+    .map(([slug, data]) => ({
+      slug,
+      name: getServiceName(slug, lang),
+      pole: getServicePole(slug),
+      count: data.count,
+      revenue: data.revenue,
+      share: total > 0 ? Math.round((data.count / total) * 100) : 0,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
+
+  // 2D Occupancy Heatmap Matrix
+  const hours = [
+    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
+    '14:00', '15:00', '16:00', '17:00', '18:00', '19:00',
+  ];
+  const dowLabels =
+    lang === 'pt'
+      ? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+      : lang === 'en'
+      ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      : ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
+  const matrix: number[][] = Array.from({ length: 6 }, () => Array(12).fill(0));
+  let maxCount = 0;
+  let peakSlot = { dow: dowLabels[0], hour: '09:00', count: 0 };
+
+  for (const a of appts) {
+    if (!a.date || !a.startTime) continue;
+    const d = new Date(a.date + 'T12:00:00');
+    const dow = d.getDay(); // 0 Sun, 1 Mon ... 6 Sat
+    if (dow === 0) continue;
+    const dowIdx = dow - 1;
+
+    const hourStr = a.startTime.slice(0, 2) + ':00';
+    const hourIdx = hours.indexOf(hourStr);
+    if (dowIdx >= 0 && dowIdx < 6 && hourIdx >= 0 && hourIdx < 12) {
+      matrix[dowIdx][hourIdx]++;
+      const cnt = matrix[dowIdx][hourIdx];
+      if (cnt > maxCount) {
+        maxCount = cnt;
+        peakSlot = { dow: dowLabels[dowIdx], hour: a.startTime, count: cnt };
+      }
+    }
+  }
+
+  // Patient Funnel
+  let multiCount = 0;
+  patientSessionCounts.forEach(cnt => {
+    if (cnt > 1) multiCount++;
+  });
+  const retentionRate =
+    uniquePatientsSet.size > 0
+      ? Math.round((multiCount / uniquePatientsSet.size) * 100)
+      : 0;
+
+  const funnelStages = [
+    {
+      id: 'booked',
+      name:
+        lang === 'pt'
+          ? 'Consultas Agendadas'
+          : lang === 'en'
+          ? 'Booked Appointments'
+          : 'Consultations Planifiées',
+      count: total,
+      percentage: 100,
+    },
+    {
+      id: 'confirmed',
+      name:
+        lang === 'pt'
+          ? 'Confirmadas pela Clínica'
+          : lang === 'en'
+          ? 'Confirmed by Clinic'
+          : 'Confirmées par le Cabinet',
+      count: confirmed + completed,
+      percentage: total > 0 ? Math.round(((confirmed + completed) / total) * 100) : 0,
+    },
+    {
+      id: 'completed',
+      name:
+        lang === 'pt'
+          ? 'Sessões Concluídas'
+          : lang === 'en'
+          ? 'Completed Sessions'
+          : 'Séances Honorées & Réalisées',
+      count: completed,
+      percentage: total > 0 ? Math.round((completed / total) * 100) : 0,
+    },
+    {
+      id: 'retained',
+      name:
+        lang === 'pt'
+          ? 'Utentes Recorrentes'
+          : lang === 'en'
+          ? 'Multi-Session Patients'
+          : 'Patients Fidélisés (> 1 séance)',
+      count: multiCount,
+      percentage: total > 0 ? Math.round((multiCount / total) * 100) : 0,
+    },
+  ];
+
+  // Clinic Occupancy Rate
+  const dStart = new Date(start + 'T12:00:00');
+  const dEnd = new Date(end + 'T12:00:00');
+  const daySpan = Math.max(
+    1,
+    Math.round((dEnd.getTime() - dStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  );
+  const workingDays = Math.max(1, Math.round(daySpan * (6 / 7)));
+  const capacitySlots = workingDays * 10;
+  const occupancyRate =
+    capacitySlots > 0 ? Math.min(100, Math.round(((confirmed + completed) / capacitySlots) * 100)) : 0;
+
+  // Payments & Coverage
+  const totalPaidCount = Array.from(methodMap.values()).reduce((sum, v) => sum + v.count, 0);
+  const paymentsByMethod = Array.from(methodMap.entries()).map(([method, data]) => ({
+    method,
+    count: data.count,
+    amount: Math.round(data.amount),
+    percentage: totalPaidCount > 0 ? Math.round((data.count / totalPaidCount) * 100) : 0,
+  }));
+
+  const totalCoverageCount = Array.from(coverageMap.values()).reduce((sum, v) => sum + v, 0);
+  const paymentsByCoverage = Array.from(coverageMap.entries()).map(([coverage, count]) => ({
+    coverage,
+    count,
+    percentage: totalCoverageCount > 0 ? Math.round((count / totalCoverageCount) * 100) : 0,
+  }));
+
+  // Backwards-compatible legacy analyticsData
+  const dowCounts = [0, 0, 0, 0, 0, 0, 0];
+  for (const a of appts) {
+    if (!a.date) continue;
+    const d = new Date(a.date + 'T12:00:00');
+    const dow = d.getDay();
+    const idx = (dow + 6) % 7;
+    dowCounts[idx]++;
+  }
+
+  const legacyPeakHours: [string, number][] = hours
+    .map(h => {
+      const sum = matrix.reduce((acc, row) => acc + (row[hours.indexOf(h)] || 0), 0);
+      return [h, sum] as [string, number];
+    })
+    .filter(item => item[1] > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8);
+
+  const cancelRate = total > 0 ? Math.round(((cancelled + noShow) / total) * 100) : 0;
+  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return {
+    stats: {
+      total,
+      confirmed,
+      pending,
+      completed,
+      cancelled,
+      noShow,
+      revenue,
+      totalRevenue: totalBilled,
+      totalBilled,
+      totalPaid: paidInvoicesRevenue,
+      totalPending: unpaidAmount,
+      countPaid: totalPaidCount,
+      countPending: unpaidCount,
+      invoicesCount: activeInvoicesCount,
+      paidInvoicesRevenue,
+      avgTicket,
+      occupancyRate,
+      lostRevenue,
+      uniquePatients: uniquePatientsSet.size,
+    },
+    comparison: {
+      revenueGrowthPct,
+      appointmentsGrowthPct,
+      priorRevenue,
+      priorAppointments,
+    },
+    timeline: {
+      granularity,
+      points: timelinePoints,
+    },
+    departmentData: {
+      poles: polesList,
+      topServices,
+    },
+    heatmap: {
+      dowLabels,
+      hours,
+      matrix,
+      maxCount,
+      peakSlot,
+    },
+    funnel: {
+      stages: funnelStages,
+      cancellationsCount: cancelled,
+      noShowsCount: noShow,
+      lostRevenue,
+      retentionRate,
+    },
+    payments: {
+      byMethod: paymentsByMethod,
+      byCoverage: paymentsByCoverage,
+      unpaidCount,
+      unpaidAmount,
+    },
+    analyticsData: {
+      dowLabels:
+        lang === 'pt'
+          ? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+          : lang === 'en'
+          ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          : ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+      dowCounts,
+      topServices: topServices.map(s => [s.slug, s.count]),
+      peakHours: legacyPeakHours,
+      cancelRate,
+      completionRate,
+    },
+    range: {
+      type: rangeType,
+      startDate: start,
+      endDate: end,
+      pole: targetPole,
     },
   };
 }

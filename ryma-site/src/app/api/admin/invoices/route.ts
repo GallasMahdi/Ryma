@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin, requireOwnerAnalytics } from '@/lib/requireAdmin';
+import { requireAdmin } from '@/lib/requireAdmin';
 import {
   dbGetInvoices,
   dbGetInvoicesPaginated,
@@ -28,34 +28,7 @@ export async function GET(request: NextRequest) {
   const pageParam     = searchParams.get('page');
   const limitParam    = searchParams.get('limit');
 
-  // Determine whether caller holds Owner Analytics step-up privilege
-  const ownerAuth = await requireOwnerAnalytics(request);
-  const isOwner = Boolean('ok' in ownerAuth && (ownerAuth as any).ok === true && !(ownerAuth instanceof NextResponse));
-
-  // Role-Based Protection: If not owner, restrict unrestricted queries to current month
-  // to allow daily reception billing operations while preventing lifetime turnover scraping
-  let effectiveDateFrom = dateFrom;
-  if (!isOwner && !dateFrom && !search && !patientPhone) {
-    const d = new Date();
-    effectiveDateFrom = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
-  }
-
-  const rawStats = await dbGetInvoiceStats();
-
-  // Owner Separation: Non-owner staff cannot see clinic revenue totals
-  const stats = isOwner
-    ? rawStats
-    : {
-        totalRevenue: 0,
-        totalPaid: 0,
-        totalPending: 0,
-        countPaid: rawStats.countPaid,
-        countPending: rawStats.countPending,
-        countTotal: rawStats.countTotal,
-        avgTicket: 0,
-        insuranceShare: rawStats.insuranceShare,
-        isOwnerCensored: true,
-      };
+  const stats = await dbGetInvoiceStats();
 
   if (pageParam !== null || limitParam !== null) {
     const page = Math.max(1, parseInt(pageParam || '1', 10));
@@ -63,7 +36,7 @@ export async function GET(request: NextRequest) {
     const paginated = await dbGetInvoicesPaginated({
       status,
       search,
-      dateFrom: effectiveDateFrom,
+      dateFrom,
       dateTo,
       patientPhone,
       paymentMethod,
@@ -87,7 +60,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const invoices = await dbGetInvoices({ status, search, dateFrom: effectiveDateFrom, dateTo, patientPhone, paymentMethod });
+  const invoices = await dbGetInvoices({ status, search, dateFrom, dateTo, patientPhone, paymentMethod });
 
   return NextResponse.json(
     { invoices, stats },

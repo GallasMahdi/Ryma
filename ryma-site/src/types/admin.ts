@@ -180,6 +180,11 @@ export function getServicePrice(slug: string): number {
   return SERVICES.find(s => s.slug === slug)?.price ?? 0;
 }
 
+export function getServicePole(slug: string): 'kinesitherapie' | 'minceur' | 'bilan' {
+  const service = SERVICES.find(s => s.slug === slug);
+  return service?.pole ?? 'kinesitherapie';
+}
+
 export function formatLocalDate(d: Date): string {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');

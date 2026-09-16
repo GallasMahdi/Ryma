@@ -182,6 +182,50 @@ export const InvoicesTab = React.memo(function InvoicesTab({
     window.location.href = '/api/admin/export?type=invoices';
   };
 
+  // Compute accurate financial metrics from both server stats and loaded invoices
+  const effectiveStats = useMemo(() => {
+    if (stats && stats.totalRevenue > 0) return stats;
+    if (!invoices || invoices.length === 0) return stats;
+
+    let totalRevenue = 0;
+    let totalPaid = 0;
+    let totalPending = 0;
+    let countPaid = 0;
+    let countPending = 0;
+    let insuranceCount = 0;
+
+    for (const inv of invoices) {
+      if (inv.paymentStatus === 'CANCELLED') continue;
+      const amt = Number(inv.amount || 0);
+      totalRevenue += amt;
+      if (inv.paymentStatus === 'PAID') {
+        totalPaid += amt;
+        countPaid++;
+      } else if (inv.paymentStatus === 'PENDING') {
+        totalPending += amt;
+        countPending++;
+      }
+      if (inv.coverageType === 'ADSE' || inv.coverageType === 'INSURANCE') {
+        insuranceCount++;
+      }
+    }
+
+    const countTotal = invoices.filter(i => i.paymentStatus !== 'CANCELLED').length;
+    const avgTicket = countTotal > 0 ? Math.round(totalRevenue / countTotal) : 0;
+    const insuranceShare = countTotal > 0 ? Math.round((insuranceCount / countTotal) * 100) : 0;
+
+    return {
+      totalRevenue,
+      totalPaid,
+      totalPending,
+      countPaid: countPaid || (stats?.countPaid ?? 0),
+      countPending: countPending || (stats?.countPending ?? 0),
+      countTotal: countTotal || (stats?.countTotal ?? 0),
+      avgTicket,
+      insuranceShare: insuranceShare || (stats?.insuranceShare ?? 0),
+    };
+  }, [stats, invoices]);
+
   return (
     <div className="space-y-6 font-sans select-none pb-12">
       {/* ── Top Financial KPI Cards ───────────────────────────────────── */}
@@ -212,7 +256,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
             <div className="flex items-baseline justify-between gap-1">
               <p className={`text-xl sm:text-2xl font-bold font-mono ${isAnalyticsUnlocked ? 'text-[#0F172A]' : 'text-[#7C3AED] tracking-widest'}`}>
                 {isAnalyticsUnlocked
-                  ? `${(stats?.totalRevenue ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €`
+                  ? `${(effectiveStats?.totalRevenue ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €`
                   : '•••• €'}
               </p>
               {!isAnalyticsUnlocked && (
@@ -223,7 +267,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
               )}
             </div>
             <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">
-              {stats?.countTotal ?? 0} {txt('documents émis', 'issued invoices', 'documentos emitidos')}
+              {effectiveStats?.countTotal ?? 0} {txt('documents émis', 'issued invoices', 'documentos emitidos')}
             </p>
           </div>
         </div>
@@ -250,11 +294,11 @@ export const InvoicesTab = React.memo(function InvoicesTab({
           <div>
             <p className={`text-xl sm:text-2xl font-bold font-mono ${isAnalyticsUnlocked ? 'text-emerald-700' : 'text-[#94A3B8] tracking-widest'}`}>
               {isAnalyticsUnlocked
-                ? `${(stats?.totalPaid ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €`
+                ? `${(effectiveStats?.totalPaid ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €`
                 : '•••• €'}
             </p>
             <p className="text-[10px] text-emerald-600 mt-0.5 font-medium">
-              {stats?.countPaid ?? 0} {txt('reçus réglés', 'paid receipts', 'recibos quitados')}
+              {effectiveStats?.countPaid ?? 0} {txt('reçus réglés', 'paid receipts', 'recibos quitados')}
             </p>
           </div>
         </div>
@@ -281,11 +325,11 @@ export const InvoicesTab = React.memo(function InvoicesTab({
           <div>
             <p className={`text-xl sm:text-2xl font-bold font-mono ${isAnalyticsUnlocked ? 'text-amber-700' : 'text-[#94A3B8] tracking-widest'}`}>
               {isAnalyticsUnlocked
-                ? `${(stats?.totalPending ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €`
+                ? `${(effectiveStats?.totalPending ?? 0).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT', { minimumFractionDigits: 2 })} €`
                 : '•••• €'}
             </p>
             <p className="text-[10px] text-amber-600 mt-0.5 font-medium">
-              {stats?.countPending ?? 0} {txt('factures en attente', 'pending invoices', 'faturas pendentes')}
+              {effectiveStats?.countPending ?? 0} {txt('factures en attente', 'pending invoices', 'faturas pendentes')}
             </p>
           </div>
         </div>
@@ -312,7 +356,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
           <div>
             <p className={`text-xl sm:text-2xl font-bold font-mono ${isAnalyticsUnlocked ? 'text-[#0F172A]' : 'text-[#94A3B8] tracking-widest'}`}>
               {isAnalyticsUnlocked
-                ? `${(stats?.avgTicket ?? 0).toFixed(2)} €`
+                ? `${(effectiveStats?.avgTicket ?? 0).toFixed(2)} €`
                 : '•••• €'}
             </p>
             <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">
@@ -342,7 +386,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
           </div>
           <div>
             <p className={`text-xl sm:text-2xl font-bold font-mono text-white ${!isAnalyticsUnlocked ? 'tracking-widest' : ''}`}>
-              {isAnalyticsUnlocked ? `${stats?.insuranceShare ?? 0} %` : '•• %'}
+              {isAnalyticsUnlocked ? `${effectiveStats?.insuranceShare ?? 0} %` : '•• %'}
             </p>
             <p className="text-[10px] text-white/70 mt-0.5 font-medium">
               {txt('des soins facturés', 'of billed care', 'dos tratamentos faturados')}
