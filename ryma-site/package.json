@@ -13,7 +13,6 @@
     "@libsql/client": "^0.17.4",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.7.0",
-    "@react-three/postprocessing": "^3.0.4",
     "@tabler/icons-react": "^3.46.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/bcryptjs": "^2.4.6",

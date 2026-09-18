@@ -1539,8 +1539,12 @@ export async function dbRecordRateLimitAttempt(ip: string, action: string): Prom
     action,
     Date.now(),
   ]);
-  const oneHourAgo = Date.now() - 3600 * 1000;
-  await executeQuery('DELETE FROM rate_limit_log WHERE timestamp < ?', [oneHourAgo]);
+  // Cleanup old entries probabilistically (1-in-20 calls) and fire-and-forget
+  // so the booking write path is not blocked by a serial DELETE round-trip.
+  if (Math.random() < 0.05) {
+    const oneHourAgo = Date.now() - 3600 * 1000;
+    executeQuery('DELETE FROM rate_limit_log WHERE timestamp < ?', [oneHourAgo]).catch(() => {});
+  }
 }
 
 export async function dbResetRateLimit(ip: string, action: string): Promise<void> {
@@ -2192,12 +2196,21 @@ export async function dbGetBackupStatus(): Promise<{ lastBackupDate: string | nu
 }
 
 export async function dbGetNoShowCounts(): Promise<Record<string, number>> {
+  // Limit to the past 12 months — older cancellations are not clinically relevant
+  // for current scheduling decisions and increase query cost unnecessarily.
+  // Only include patients with ≥2 no-shows/cancellations to avoid flagging one-off cases.
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const cutoffDate = oneYearAgo.toISOString().split('T')[0];
+
   const rows = await executeQuery<{ phone: string; cnt: number }>(`
     SELECT phone, COUNT(*) as cnt
     FROM appointments
     WHERE status IN ('CANCELLED', 'NO_SHOW')
+      AND date >= ?
     GROUP BY phone
-  `);
+    HAVING cnt >= 2
+  `, [cutoffDate]);
 
   const map: Record<string, number> = {};
   rows.forEach(r => {
@@ -2520,34 +2533,53 @@ export async function dbDeleteInvoice(id: string): Promise<void> {
 }
 
 export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
-  const invoices = await executeQuery<Invoice>('SELECT * FROM invoices');
-  
+  // Portuguese Accounting Rule: Cancelled/annulled invoices must not count toward clinic revenue.
+  // Aggregate entirely in SQL — avoids loading all invoice rows into Node.js memory.
+  const [statusRows, coverageRows] = await Promise.all([
+    executeQuery<{ paymentStatus: string; cnt: number; total: number }>(
+      `SELECT paymentStatus, COUNT(*) as cnt, COALESCE(SUM(amount), 0) as total
+       FROM invoices
+       WHERE paymentStatus != 'CANCELLED'
+       GROUP BY paymentStatus`
+    ),
+    executeQuery<{ coverageType: string; cnt: number }>(
+      `SELECT coverageType, COUNT(*) as cnt
+       FROM invoices
+       WHERE paymentStatus != 'CANCELLED'
+       GROUP BY coverageType`
+    ),
+  ]);
+
   let totalRevenue = 0;
   let totalPaid = 0;
   let totalPending = 0;
   let countPaid = 0;
   let countPending = 0;
-  let insuranceCount = 0;
+  let countTotal = 0;
 
-  for (const inv of invoices) {
-    // Portuguese Accounting Rule: Cancelled / annulled invoices must not count toward clinic revenue
-    if (inv.paymentStatus === 'CANCELLED') continue;
-
-    totalRevenue += Number(inv.amount || 0);
-    if (inv.paymentStatus === 'PAID') {
-      totalPaid += Number(inv.amount || 0);
-      countPaid++;
-    } else if (inv.paymentStatus === 'PENDING') {
-      totalPending += Number(inv.amount || 0);
-      countPending++;
-    }
-    if (inv.coverageType === 'ADSE' || inv.coverageType === 'INSURANCE') {
-      insuranceCount++;
+  for (const row of statusRows) {
+    const cnt = Number(row.cnt || 0);
+    const total = Number(row.total || 0);
+    const status = (row.paymentStatus || '').toUpperCase();
+    countTotal += cnt;
+    totalRevenue += total;
+    if (status === 'PAID') {
+      totalPaid = total;
+      countPaid = cnt;
+    } else if (status === 'PENDING') {
+      totalPending = total;
+      countPending = cnt;
     }
   }
 
-  const activeInvoices = invoices.filter(i => i.paymentStatus !== 'CANCELLED');
-  const countTotal = activeInvoices.length;
+  let insuranceCount = 0;
+  for (const row of coverageRows) {
+    const type = (row.coverageType || '').toUpperCase();
+    if (type === 'ADSE' || type === 'INSURANCE') {
+      insuranceCount += Number(row.cnt || 0);
+    }
+  }
+
   const avgTicket = countTotal > 0 ? Math.round(totalRevenue / countTotal) : 0;
   const insuranceShare = countTotal > 0 ? Math.round((insuranceCount / countTotal) * 100) : 0;
 

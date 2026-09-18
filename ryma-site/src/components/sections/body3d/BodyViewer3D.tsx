@@ -25,7 +25,7 @@ function CinematicCameraController({
   controlsRef: React.RefObject<any>;
   reduced: boolean;
 }) {
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
   const currentTarget = useRef(new THREE.Vector3(0, 0.88, 0));
 
   useFrame((_, delta) => {
@@ -46,6 +46,13 @@ function CinematicCameraController({
     );
     camera.position.lerp(desiredPos, Math.min(delta * 4, 1));
     controlsRef.current.update();
+
+    if (
+      currentTarget.current.distanceTo(targetVec) > 0.001 ||
+      camera.position.distanceTo(desiredPos) > 0.001
+    ) {
+      invalidate();
+    }
   });
 
   return null;
@@ -101,12 +108,32 @@ export function BodyViewer3D({
   const [lowQuality, setLowQuality] = useState(false);
   const [ready, setReady] = useState(false);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const [isVisible, setIsVisible] = useState(true);
   const controlsRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     setLowQuality(coarse);
     setReady(true);
+  }, []);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(node);
+    return () => {
+      observer.unobserve(node);
+      observer.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -125,6 +152,7 @@ export function BodyViewer3D({
 
   return (
     <div
+      ref={containerRef}
       className="relative w-full aspect-[5/6] sm:aspect-[4/5] md:aspect-[5/6] overflow-hidden rounded-2xl select-none shadow-inner"
       style={{ background: bgColor }}
       role="img"
@@ -134,7 +162,7 @@ export function BodyViewer3D({
     >
       {ready && (
         <Canvas
-          frameloop="always"
+          frameloop={isVisible ? 'demand' : 'never'}
           dpr={[1, lowQuality ? 1.5 : 2]}
           shadows={!lowQuality}
           camera={{ position: [0, 0.88, 3.4], fov: 38, near: 0.1, far: 30 }}

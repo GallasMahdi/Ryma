@@ -448,12 +448,59 @@ function BookingWizardContent() {
   // Slots loaded from the real API
   const [availableSlots, setAvailableSlots] = useState<SlotInfo[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [monthAvailability, setMonthAvailability] = useState<Record<string, boolean>>({});
+  const slotCacheRef = useRef<Record<string, SlotInfo[]>>({});
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+  // Prefetch availability for all future dates in the visible month
+  useEffect(() => {
+    if (step < 2) return;
+
+    const daysCount = getDaysInMonth(calYear, calMonth);
+    const validDates: string[] = [];
+    for (let d = 1; d <= daysCount; d++) {
+      const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const isPast = dateStr < todayStr;
+      const isSunday = new Date(calYear, calMonth, d).getDay() === 0;
+      if (!isPast && !isSunday) {
+        validDates.push(dateStr);
+      }
+    }
+
+    if (validDates.length === 0) return;
+
+    let isMounted = true;
+    const fetchMonth = async () => {
+      try {
+        const res = await fetch(`/api/slots?dates=${validDates.join(',')}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.availability) {
+            setMonthAvailability(prev => ({ ...prev, ...data.availability }));
+          }
+        }
+      } catch {
+        // Silently continue if prefetch fails
+      }
+    };
+    fetchMonth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [step, calYear, calMonth, todayStr]);
+
   // Fetch real slot availability from the API when a date is selected
   const fetchSlots = useCallback(async (date: string) => {
+    // Check client-side memory cache first for instant navigation
+    if (slotCacheRef.current[date]) {
+      setAvailableSlots(slotCacheRef.current[date]);
+      setSlotError(null);
+      return;
+    }
+
     setLoadingSlots(true);
     setAvailableSlots([]);
     setSlotError(null);
@@ -461,7 +508,9 @@ function BookingWizardContent() {
       const res = await fetch(`/api/slots?date=${date}`);
       if (res.ok) {
         const data = await res.json();
-        setAvailableSlots(data.slots ?? []);
+        const slots = data.slots ?? [];
+        slotCacheRef.current[date] = slots;
+        setAvailableSlots(slots);
       } else {
         // API error (500 etc.) — show actionable error, not "no slots"
         setSlotError(
@@ -1403,18 +1452,35 @@ function BookingWizardContent() {
                       const isPast = dateStr < todayStr;
                       const isSelected = dateStr === selectedDate;
                       const isSunday = new Date(calYear, calMonth, d).getDay() === 0;
+                      const isFullyBooked = !isPast && !isSunday && monthAvailability[dateStr] === false;
+                      const isDisabled = isPast || isSunday || isFullyBooked;
 
                       return (
                         <button
                           key={d}
-                          onClick={() => !isPast && !isSunday && handleDateClick(d)}
-                          disabled={isPast || isSunday}
-                          className={`aspect-square rounded-xl text-[15px] font-semibold transition-all duration-200 flex items-center justify-center ${isSelected ? 'bg-[#C49A3C] text-white shadow-[0_4px_12px_rgba(196,154,60,0.3)]' :
-                              isPast || isSunday ? 'text-[#D4CEBE] bg-[#FAFAF8] cursor-not-allowed' :
-                                'text-[#1A1412] bg-white border border-[#E8E2D8] hover:border-[#C49A3C] hover:text-[#9A7428] hover:bg-[#FDFAF4]'
-                            }`}
+                          onClick={() => !isDisabled && handleDateClick(d)}
+                          disabled={isDisabled}
+                          title={
+                            isFullyBooked
+                              ? (lang === 'pt' ? 'Dia esgotado' : lang === 'en' ? 'Fully booked' : 'Journée complète')
+                              : undefined
+                          }
+                          className={`aspect-square rounded-xl text-[15px] font-semibold transition-all duration-200 flex flex-col items-center justify-center relative ${
+                            isSelected
+                              ? 'bg-[#C49A3C] text-white shadow-[0_4px_12px_rgba(196,154,60,0.3)]'
+                              : isPast || isSunday
+                              ? 'text-[#D4CEBE] bg-[#FAFAF8] cursor-not-allowed'
+                              : isFullyBooked
+                              ? 'text-[#A8A095] bg-[#F7F4F0] cursor-not-allowed border border-dashed border-[#E0D8CC]'
+                              : 'text-[#1A1412] bg-white border border-[#E8E2D8] hover:border-[#C49A3C] hover:text-[#9A7428] hover:bg-[#FDFAF4]'
+                          }`}
                         >
-                          {d}
+                          <span className={isFullyBooked ? 'line-through opacity-75' : ''}>{d}</span>
+                          {isFullyBooked && (
+                            <span className="text-[8.5px] font-mono tracking-tighter text-[#A85850] -mt-0.5 leading-none">
+                              {lang === 'pt' ? 'Esgotado' : lang === 'en' ? 'Full' : 'Complet'}
+                            </span>
+                          )}
                         </button>
                       );
                     })}

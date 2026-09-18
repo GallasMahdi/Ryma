@@ -252,9 +252,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                       }
                     });
 
-                    observer.observe(document.documentElement, {
+                    observer.observe(document.body, {
                       attributes: true,
-                      childList: true,
+                      childList: false,
                       subtree: true,
                       attributeFilter: ['bis_skin_checked', 'bis_size', 'bis_status', 'bis_register']
                     });

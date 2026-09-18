@@ -489,7 +489,9 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   // ── Fetch patient notes ────────────────────────────────────────────────────
   const fetchPatientNotes = useCallback(async () => {
     try {
-      const data = await apiFetch<{ notes: PatientNote[]; patients: PatientRecord[] }>('/api/admin/patients');
+      // Use paginated endpoint to avoid loading all patients in a single full-table scan.
+      // Limit 100 covers practical patient volumes; PatientNotesTab handles further pagination.
+      const data = await apiFetch<{ notes: PatientNote[]; patients: PatientRecord[] }>('/api/admin/patients?page=1&limit=100');
       setPatientNotes(data.notes ?? []);
       setPatientsList(data.patients ?? []);
     } catch { /* silent */ }
@@ -756,13 +758,21 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     });
 
     // 4. Fallback sync polling: SSE handles real-time live events.
-    // Read live status from ref so interval callback is always up-to-date without
-    // needing isLiveConnected in the effect's dependency array.
+    // Rate is determined dynamically inside the callback using the ref so it always
+    // reflects the current SSE connection state without recreating the interval.
+    let lastPollAt = Date.now();
+    const POLL_INTERVAL_SSE_ACTIVE = 35_000;
+    const POLL_INTERVAL_SSE_DOWN   = 8_000;
+
     const interval = setInterval(() => {
-      if (!document.hidden) {
+      if (document.hidden) return;
+      const minInterval = isLiveConnectedRef.current ? POLL_INTERVAL_SSE_ACTIVE : POLL_INTERVAL_SSE_DOWN;
+      const now = Date.now();
+      if (now - lastPollAt >= minInterval) {
+        lastPollAt = now;
         fetchAppointments(true);
       }
-    }, isLiveConnectedRef.current ? 35000 : 8000);
+    }, 4000); // tick every 4s; actual fetch respects minInterval above
 
     // 5. Throttled focus/visibility sync — only refetch if data is ≥30s old.
     // Prevents hammering the API every time DevTools opens or the user briefly alt-tabs.
