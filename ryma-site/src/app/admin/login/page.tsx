@@ -117,13 +117,21 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
                 ? 'Too many attempts. Please wait 15 minutes.'
                 : 'Muitas tentativas. Por favor aguarde 15 minutos.'
           );
+        } else if (res.status === 503) {
+          setError(
+            lang === 'fr'
+              ? 'Connexion temporairement indisponible. Veuillez réessayer dans quelques instants.'
+              : lang === 'en'
+                ? 'Sign-in is temporarily unavailable. Please try again shortly.'
+                : 'O início de sessão está temporariamente indisponível. Tente novamente dentro de momentos.'
+          );
         } else if (res.status >= 500) {
           setError(
             lang === 'fr'
-              ? 'Erreur serveur (500). Vérifiez la configuration de Vercel.'
+              ? 'Impossible de vous connecter en raison d’une erreur serveur. Veuillez réessayer.'
               : lang === 'en'
-                ? 'Server configuration error (500). Check Vercel environment variables.'
-                : 'Erro de configuração do servidor (500). Verifique o Vercel.'
+                ? 'A server error prevented sign-in. Please try again.'
+                : 'Um erro do servidor impediu o início de sessão. Tente novamente.'
           );
         } else {
           setError(

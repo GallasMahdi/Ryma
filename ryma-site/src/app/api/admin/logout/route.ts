@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       console.error('[Logout Session Unseal/Revoke Error]:', err);
+      return NextResponse.json({ error: 'Unable to revoke session. Please retry.' }, { status: 503 });
     }
   }
 

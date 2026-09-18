@@ -1,3 +1,4 @@
+import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { requireOwnerAnalytics } from '@/lib/requireAdmin';
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest) {
   let body: { currentPassword?: string; newPassword?: string };
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }

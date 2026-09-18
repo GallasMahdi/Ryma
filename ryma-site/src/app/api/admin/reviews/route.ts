@@ -1,3 +1,4 @@
+import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { dbGetAllReviewsAdmin, dbUpdateReviewStatus, dbDeleteReview, dbCreateReview } from '@/lib/db';
@@ -44,14 +45,17 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
     const { id, status, verified, isFeatured } = body;
 
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'ID da avaliação obrigatório.' }, { status: 400 });
     }
 
+    if (status !== undefined && !['PENDING', 'APPROVED', 'REJECTED'].includes(String(status))) return NextResponse.json({ error: 'Invalid review status' }, { status: 422 });
+    if ((verified !== undefined && typeof verified !== 'boolean') || (isFeatured !== undefined && typeof isFeatured !== 'boolean')) return NextResponse.json({ error: 'Invalid review flags' }, { status: 422 });
     const updated = await dbUpdateReviewStatus(id, {
-      status,
+      status: status as ReviewStatus | undefined,
       verified,
       isFeatured,
     });
@@ -82,7 +86,8 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       try {
         const body = await request.json();
-        id = body.id;
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+        id = typeof body.id === 'string' ? body.id : null;
       } catch {
         /* ignore json parse error if empty */
       }

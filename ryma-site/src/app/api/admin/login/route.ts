@@ -1,3 +1,4 @@
+import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { sealData } from 'iron-session';
 import { cookies } from 'next/headers';
@@ -28,12 +29,14 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (err) {
-    console.warn('[LOGIN RATE LIMIT CHECK WARNING]:', err);
+    console.error('[LOGIN RATE LIMIT CHECK FAILED]:', err);
+    return NextResponse.json({ error: 'Authentication temporarily unavailable' }, { status: 503 });
   }
 
   let body: { password?: string };
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json(GENERIC_ERROR, { status: 400 });
   }
@@ -73,6 +76,7 @@ export async function POST(request: NextRequest) {
   const sessionData: SessionData = { sessionId, isAdmin: true, loginAt: Date.now() };
   const sealed = await sealData(sessionData, {
     password: SESSION_OPTIONS.password as string,
+    ttl: SESSION_OPTIONS.ttl,
   });
 
   const cookieStore = await cookies();

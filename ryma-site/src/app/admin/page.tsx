@@ -345,6 +345,16 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     }
   }, [activeTab, isAnalyticsUnlocked, serverAnalytics, fetchServerAnalytics]);
 
+  useEffect(() => {
+    if (!analyticsExpiresAt) return;
+    const timer = setTimeout(() => {
+      setIsAnalyticsUnlocked(false);
+      setAnalyticsExpiresAt(null);
+      setServerAnalytics(null);
+    }, Math.max(0, analyticsExpiresAt - Date.now()));
+    return () => clearTimeout(timer);
+  }, [analyticsExpiresAt]);
+
   const handleOwnerAuthSuccess = (expiresAt: number) => {
     setIsAnalyticsUnlocked(true);
     setAnalyticsExpiresAt(expiresAt);
@@ -360,8 +370,11 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
   const handleLockAnalytics = async () => {
     try {
-      await fetch('/api/admin/analytics/lock', { method: 'POST', credentials: 'same-origin' });
-    } catch { /* silent */ }
+      await apiFetch('/api/admin/analytics/lock', { method: 'POST' });
+    } catch (err) {
+      addToast({ type: 'error', title: 'Unable to lock analytics', message: (err as Error).message });
+      return;
+    }
     setIsAnalyticsUnlocked(false);
     setAnalyticsExpiresAt(null);
     setServerAnalytics(null);
@@ -451,7 +464,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
           setAppointments(data.appointments);
         } else {
           const newIncoming = data.appointments.filter(a => !knownAppointmentIdsRef.current.has(a.id));
-          newIncoming.forEach(a => knownAppointmentIdsRef.current.add(a.id));
+          if (isSilent || newIncoming.length !== 1) newIncoming.forEach(a => knownAppointmentIdsRef.current.add(a.id));
           setAppointments(data.appointments);
 
           if (!isSilent && newIncoming.length > 0) {
@@ -489,9 +502,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   // ── Fetch patient notes ────────────────────────────────────────────────────
   const fetchPatientNotes = useCallback(async () => {
     try {
-      // Use paginated endpoint to avoid loading all patients in a single full-table scan.
-      // Limit 100 covers practical patient volumes; PatientNotesTab handles further pagination.
-      const data = await apiFetch<{ notes: PatientNote[]; patients: PatientRecord[] }>('/api/admin/patients?page=1&limit=100');
+      // This tab paginates locally and therefore needs the complete patient set.
+      const data = await apiFetch<{ notes: PatientNote[]; patients: PatientRecord[] }>('/api/admin/patients');
       setPatientNotes(data.notes ?? []);
       setPatientsList(data.patients ?? []);
     } catch { /* silent */ }
@@ -826,6 +838,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
   // ── Cached Slot Fetching ───────────────────────────────────────────────────
   const fetchSlots = useCallback(async (date: string, forceRefresh = false) => {
+    slotAbortRef.current?.abort();
     if (!forceRefresh && slotCacheRef.current[date]) {
       setSlotList(slotCacheRef.current[date]);
       setLoadingSlots(false);
@@ -849,6 +862,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       if (res.ok) {
         const data = await res.json();
         const slotsData = data.slots ?? [];
+        if (controller.signal.aborted) return;
         slotCacheRef.current[date] = slotsData;
         setSlotList(slotsData);
       }
@@ -870,8 +884,12 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   }, [selectedDateForSlots, activeTab, fetchSlots]);
 
   const handleLogout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    router.replace('/admin/login');
+    try {
+      await apiFetch('/api/admin/logout', { method: 'POST' });
+      router.replace('/admin/login');
+    } catch (err) {
+      addToast({ type: 'error', title: 'Logout failed', message: (err as Error).message });
+    }
   };
 
   // ── Action helpers ─────────────────────────────────────────────────────────
@@ -1003,7 +1021,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         body: JSON.stringify(newForm),
       });
 
-      setAppointments(prev => [data.appointment, ...prev]);
+      // The live event can arrive before the POST response. Merge by ID in either order.
+      setAppointments(prev => [data.appointment, ...prev.filter(appointment => appointment.id !== data.appointment.id)]);
       slotCacheRef.current = {};
       setIsAddModalOpen(false);
       setNewForm({
@@ -1102,6 +1121,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         return [data.note, ...filtered];
       });
       setSelectedNote(data.note);
+      fetchPatientNotes();
       addToast({
         type: 'success',
         title: lang === 'pt' ? 'Ficha Guardada' : lang === 'en' ? 'File Saved' : 'Dossier Enregistré',

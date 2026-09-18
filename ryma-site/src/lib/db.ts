@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { isCalendarDate, lisbonDayStart } from './admin-validation';
 // better-sqlite3 is only imported lazily inside getDb() to avoid crashing on
 // Vercel serverless where the native .node binary cannot be loaded.
 // At module level we only declare the type.
@@ -14,7 +16,7 @@ import { broadcastAppointmentCreated, broadcastMultipleAppointmentsCreated } fro
 import { VALID_TIME_SLOTS, getLisbonDateTime } from '@/lib/validation';
 import { env } from '@/lib/env';
 
-// ─── Dual Storage Engine: Dynamic Turso (Cloud) with Local Fallback ───────────
+// Configured Turso is authoritative; SQLite is used only when explicitly selected.
 let _tursoClient: LibSqlClient | null = null;
 let _tursoInitialized = false;
 
@@ -298,15 +300,11 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
       /* non-blocking maintenance */
     }
 
+    await client.execute("CREATE TRIGGER IF NOT EXISTS trg_prevent_blocked_booking_update BEFORE UPDATE OF date, startTime, status ON appointments FOR EACH ROW WHEN NEW.status != 'CANCELLED' AND EXISTS (SELECT 1 FROM blocked_slots WHERE date = NEW.date AND time = NEW.startTime) BEGIN SELECT RAISE(ABORT, 'slot_blocked'); END");
+    await client.execute("CREATE TRIGGER IF NOT EXISTS trg_prevent_booked_block BEFORE INSERT ON blocked_slots FOR EACH ROW WHEN EXISTS (SELECT 1 FROM appointments WHERE date = NEW.date AND startTime = NEW.time AND status != 'CANCELLED') BEGIN SELECT RAISE(ABORT, 'slot_taken'); END");
     _tursoInitialized = true;
-    const isServerless = Boolean(
-      process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
-    );
-    if (!isServerless) {
-      await syncTursoToLocalSqlite(client);
-    }
   } catch (migErr) {
-    console.warn('[Turso Migration Note]:', migErr);
+    throw migErr;
   }
 }
 
@@ -366,10 +364,12 @@ function getTursoClient(): LibSqlClient {
  */
 async function executeTursoDirectly<T = any>(sql: string, args: any[] = []): Promise<T[]> {
   if (!isTursoEnabled()) {
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SQLITE_FALLBACK !== 'true') throw new Error('Persistent database configuration required');
     return executeSqliteQuery<T>(sql, args);
   }
 
-  const maxAttempts = 3;
+  // Reads may be retried; an ambiguous write response must not execute a mutation twice.
+  const maxAttempts = /^\s*(SELECT|PRAGMA)\b/i.test(sql) ? 3 : 1;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const client = getTursoClient();
@@ -440,6 +440,7 @@ function resolveDbPath(): string {
 let _sqliteDb: import('better-sqlite3').Database | null = null;
 
 export function getDb(): import('better-sqlite3').Database {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SQLITE_FALLBACK !== 'true') throw new Error('Persistent database configuration required');
   if (!_sqliteDb) {
     const dbPath = resolveDbPath();
     const dbDir = path.dirname(dbPath);
@@ -751,78 +752,33 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
   } catch (err) {
     console.warn('[DB Migration Warning]:', err);
   }
+  db.exec("CREATE TRIGGER IF NOT EXISTS trg_prevent_blocked_booking_update BEFORE UPDATE OF date, startTime, status ON appointments FOR EACH ROW WHEN NEW.status != 'CANCELLED' AND EXISTS (SELECT 1 FROM blocked_slots WHERE date = NEW.date AND time = NEW.startTime) BEGIN SELECT RAISE(ABORT, 'slot_blocked'); END");
+  db.exec("CREATE TRIGGER IF NOT EXISTS trg_prevent_booked_block BEFORE INSERT ON blocked_slots FOR EACH ROW WHEN EXISTS (SELECT 1 FROM appointments WHERE date = NEW.date AND startTime = NEW.time AND status != 'CANCELLED') BEGIN SELECT RAISE(ABORT, 'slot_taken'); END");
 }
 
-// ─── Unified Async Query Abstraction with Automatic Fallback & Dual-Write ─────
+// Queries use the configured authoritative database.
 export async function executeQuery<T = any>(sql: string, args: any[] = []): Promise<T[]> {
-  const trimmed = sql.trim().toUpperCase();
-  const isWrite = trimmed.startsWith('INSERT') || trimmed.startsWith('UPDATE') || trimmed.startsWith('DELETE');
+  return executeTursoDirectly<T>(sql, args);
+}
 
+async function executeAtomicBatch(statements: { sql: string; args: any[] }[]): Promise<void> {
   if (isTursoEnabled()) {
-    let rows: T[] | null = null;
-    let tursoSucceeded = false;
-
-    // Retry up to 2 times to handle transient HTTP socket/keep-alive disconnects
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        const client = getTursoClient();
-        await ensureTursoSchema(client);
-        const res = await client.execute({ sql, args });
-        rows = res.rows as unknown as T[];
-        tursoSucceeded = true;
-        break;
-      } catch (tursoErr) {
-        console.warn(`[Turso Query Attempt ${attempt} Warning]:`, (tursoErr as Error).message);
-        _tursoClient = null; // Reset client instance to force fresh HTTP socket
-        if (attempt === 2) {
-          console.error('[Turso Max Retries Exceeded - Falling back to local SQLite]:', tursoErr);
-        }
-      }
-    }
-
-    // Dual-write: Mirror write operations to local SQLite only in local non-serverless dev
-    const isServerless = Boolean(
-      process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
-    );
-    if (isWrite && !isServerless) {
-      try {
-        executeSqliteQuery<T>(sql, args);
-      } catch (sqliteErr) {
-        console.warn('[Local SQLite Dual-Write Warning]:', sqliteErr);
-      }
-    }
-
-    if (tursoSucceeded && rows !== null) {
-      return rows;
-    }
-
-    // In production, never silently fall back to ephemeral SQLite unless explicitly configured
-    if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_SQLITE_FALLBACK) {
-      throw new Error('[CRITICAL DB SAFETY] Turso database query failed in production. Silent fallback to local ephemeral SQLite is blocked to prevent data loss.');
-    }
-
-    // On serverless, never fall back to SQLite — it will crash on a read-only filesystem.
-    if (isServerless) {
-      throw new Error('[DB] Turso query failed in serverless environment with no fallback available.');
-    }
-
-    return executeSqliteQuery<T>(sql, args);
+    const client = getTursoClient();
+    await ensureTursoSchema(client);
+    await client.batch(statements, 'write');
   } else {
-    if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_SQLITE_FALLBACK) {
-      throw new Error('[FATAL DB CONFIG] TURSO_DATABASE_URL is not configured in production runtime. Cannot fall back to ephemeral SQLite.');
-    }
-    // Turso not configured — local dev only path
-    return executeSqliteQuery<T>(sql, args);
+    const db = getDb();
+    db.transaction(() => { for (const q of statements) db.prepare(q.sql).run(...q.args); })();
   }
 }
 
 function executeSqliteQuery<T = any>(sql: string, args: any[] = []): T[] {
   const db = getDb();
-  const trimmed = sql.trim().toUpperCase();
-  if (trimmed.startsWith('SELECT') || trimmed.startsWith('PRAGMA')) {
-    return db.prepare(sql).all(...args) as T[];
+  const statement = db.prepare(sql);
+  if (statement.reader) {
+    return statement.all(...args) as T[];
   } else {
-    const res = db.prepare(sql).run(...args);
+    const res = statement.run(...args);
     return [{ changes: res.changes, lastInsertRowid: res.lastInsertRowid }] as unknown as T[];
   }
 }
@@ -877,10 +833,10 @@ export interface SlotAvailabilityResult {
  * Client booking, Admin single booking, and Multiple Sessions scheduler.
  */
 export async function dbCheckSlotAvailability(date: string, startTime: string): Promise<SlotAvailabilityResult> {
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+  if (!isCalendarDate(date)) {
     return { available: false, reason: 'invalid_date' };
   }
-  if (!startTime) {
+  if (!VALID_TIME_SLOTS.includes(startTime as typeof VALID_TIME_SLOTS[number])) {
     return { available: false, reason: 'invalid_time' };
   }
 
@@ -930,7 +886,7 @@ export async function dbCheckMultipleDatesAvailability(
   dates: string[],
   timeSlots: readonly string[] | string[] = VALID_TIME_SLOTS
 ): Promise<Map<string, { time: string; available: boolean; reason?: 'sunday' | 'past' | 'booked' | 'blocked' }[]>> {
-  const uniqueDates = Array.from(new Set(dates.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d))));
+  const uniqueDates = Array.from(new Set(dates.filter(isCalendarDate)));
   const resultMap = new Map<string, { time: string; available: boolean; reason?: 'sunday' | 'past' | 'booked' | 'blocked' }[]>();
 
   if (uniqueDates.length === 0) {
@@ -1032,32 +988,16 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
       ]
     );
 
-    // Mirror the new appointment to local SQLite for consistency (only in local non-serverless dev)
-    const isServerless = Boolean(
-      process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
-    );
-    if (!isServerless) {
-      try {
-        executeSqliteQuery(
-          `INSERT OR REPLACE INTO appointments
-            (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [id, input.patientName, input.email ?? null, normalizedPhone, input.service, input.date, input.startTime, initialStatus, input.notes ?? null, input.coverageType ?? 'PARTICULAR', input.coverageProvider ?? null, input.coverageNumber ?? null, now, now]
-        );
-      } catch { /* silent — local SQLite is only a mirror */ }
-    }
-
     const rows = await executeTursoDirectly<Appointment>('SELECT * FROM appointments WHERE id = ?', [id]);
     const appointment = rows[0];
 
-    await dbUpsertPatient({
+    await dbEnsureBookingPatient({
       patientName: input.patientName,
       phone: normalizedPhone,
       email: input.email ?? null,
       coverageType: (input.coverageType as any) ?? 'PARTICULAR',
       coverageProvider: input.coverageProvider ?? null,
       coverageNumber: input.coverageNumber ?? null,
-      medicalHistory: input.notes ? `Marcação online: ${input.notes}` : '',
     });
 
     return { success: true, appointment };
@@ -1171,8 +1111,13 @@ export async function dbCreateMultipleAppointments(
     };
   }
 
+  if (input.patientId) {
+    const patient = await dbGetPatientById(input.patientId);
+    if (!patient || !phonesMatch(patient.phone, normalizedPhone)) return { success: false, error: 'invalid_input', message: 'Patient does not match the supplied phone number.' };
+  }
+
   // 4. Ensure patient record exists
-  const upsertRes = await dbUpsertPatient({
+  const upsertRes = await dbEnsureBookingPatient({
     patientName: input.patientName,
     phone: normalizedPhone,
     email: input.email ?? null,
@@ -1181,7 +1126,7 @@ export async function dbCreateMultipleAppointments(
     coverageNumber: input.coverageNumber ?? null,
   });
 
-  const patientId = input.patientId || upsertRes.id || ('pat_' + Date.now().toString(36));
+  const patientId = upsertRes.id;
   const now = new Date().toISOString();
   const createdAppointments: Appointment[] = [];
   const createdSessions: PatientSession[] = [];
@@ -1196,8 +1141,8 @@ export async function dbCreateMultipleAppointments(
 
   for (let i = 0; i < input.sessions.length; i++) {
     const s = input.sessions[i];
-    const aptId = 'apt_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
-    const sessId = 'sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+    const sessId = 'sess_' + crypto.randomUUID();
+    const aptId = 'apt_' + sessId;
     const evaScore = typeof s.evaPainScore === 'number' ? s.evaPainScore : 5;
     const sessionNote = s.notes || `Sessão #${i + 1} • Plano de Tratamento`;
 
@@ -1566,19 +1511,19 @@ export async function dbGetOwnerAnalyticsPasswordHash(): Promise<string> {
       return rows[0].value;
     }
   } catch (err) {
-    console.warn('[Security Settings Query Warning]:', err);
+    throw err;
   }
   return env.OWNER_ANALYTICS_PASSWORD_HASH;
 }
 
 export async function dbSetOwnerAnalyticsPasswordHash(newHash: string): Promise<void> {
   const now = new Date().toISOString();
-  await executeQuery(
-    `INSERT INTO security_settings (key, value, updatedAt)
+  await executeAtomicBatch([{
+    sql: `INSERT INTO security_settings (key, value, updatedAt)
      VALUES (?, ?, ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updatedAt = excluded.updatedAt`,
-    ['analytics_owner_password_hash', newHash, now]
-  );
+    args: ['analytics_owner_password_hash', newHash, now]
+  }, { sql: 'DELETE FROM owner_step_up_grants', args: [] }]);
 }
 
 export async function dbLogSecurityAudit(
@@ -1612,6 +1557,7 @@ export async function dbRevokeSession(sessionId: string, expiresAt: number): Pro
     );
   } catch (err) {
     console.error('[dbRevokeSession Error]:', err);
+    throw err;
   }
 }
 
@@ -1625,7 +1571,7 @@ export async function dbIsSessionRevoked(sessionId: string): Promise<boolean> {
     return (rows[0]?.cnt ?? 0) > 0;
   } catch (err) {
     console.error('[dbIsSessionRevoked Error]:', err);
-    return false;
+    return true;
   }
 }
 
@@ -1639,6 +1585,7 @@ export async function dbGrantOwnerStepUp(sessionId: string, expiresAt: number): 
     );
   } catch (err) {
     console.error('[dbGrantOwnerStepUp Error]:', err);
+    throw err;
   }
 }
 
@@ -1651,6 +1598,7 @@ export async function dbRevokeOwnerStepUp(sessionId: string): Promise<void> {
     );
   } catch (err) {
     console.error('[dbRevokeOwnerStepUp Error]:', err);
+    throw err;
   }
 }
 
@@ -1929,6 +1877,11 @@ export async function dbGetPatientByPhone(phone: string): Promise<PatientRecord 
   return { ...patient, sessions };
 }
 
+async function dbEnsureBookingPatient(input: Parameters<typeof dbUpsertPatient>[0]): Promise<PatientRecord> {
+  const existing = await dbGetPatientByPhone(input.phone);
+  return existing ?? dbUpsertPatient(input);
+}
+
 export async function dbUpsertPatient(input: {
   id?: string;
   patientName: string;
@@ -1952,8 +1905,8 @@ export async function dbUpsertPatient(input: {
   const id = existing?.id ?? input.id ?? ('pat_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6));
 
   const covType = input.coverageType ?? (existing as any)?.coverageType ?? 'PARTICULAR';
-  const covProv = input.coverageProvider ?? (existing as any)?.coverageProvider ?? null;
-  const covNum = input.coverageNumber ?? (existing as any)?.coverageNumber ?? null;
+  const covProv = input.coverageProvider !== undefined ? input.coverageProvider : existing?.coverageProvider ?? null;
+  const covNum = input.coverageNumber !== undefined ? input.coverageNumber : existing?.coverageNumber ?? null;
 
   if (existing) {
     await executeQuery(
@@ -1965,16 +1918,16 @@ export async function dbUpsertPatient(input: {
       [
         input.patientName,
         normalizedPhone,
-        input.email ?? null,
-        input.gender ?? null,
-        input.dob ?? null,
+        input.email !== undefined ? input.email : existing.email ?? null,
+        input.gender !== undefined ? input.gender : existing.gender ?? null,
+        input.dob !== undefined ? input.dob : existing.dob ?? null,
         covType,
         covProv,
         covNum,
-        input.referringDoctor ?? null,
-        input.pathologyTags ?? '',
-        input.medicalHistory ?? '',
-        input.totalPrescribedSessions ?? 10,
+        input.referringDoctor !== undefined ? input.referringDoctor : existing.referringDoctor ?? null,
+        input.pathologyTags ?? existing.pathologyTags ?? '',
+        input.medicalHistory ?? existing.medicalHistory ?? '',
+        input.totalPrescribedSessions ?? existing.totalPrescribedSessions ?? 10,
         now,
         id,
       ]
@@ -2005,7 +1958,7 @@ export async function dbUpsertPatient(input: {
     );
   }
 
-  await dbUpsertPatientNote(normalizedPhone, input.patientName, input.medicalHistory ?? '', input.pathologyTags ?? '');
+  await dbUpsertPatientNote(normalizedPhone, input.patientName, input.medicalHistory ?? existing?.medicalHistory ?? '', input.pathologyTags ?? existing?.pathologyTags ?? '');
   return (await dbGetPatientById(id))!;
 }
 
@@ -2081,11 +2034,11 @@ export async function dbAddPatientSession(input: {
   const id = 'sess_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
   const now = new Date().toISOString();
 
-  await executeQuery(
+  const statements: { sql: string; args: any[] }[] = [{ sql:
     `INSERT INTO patient_sessions
       (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
+    args: [
       id,
       input.patientId,
       input.date,
@@ -2097,9 +2050,18 @@ export async function dbAddPatientSession(input: {
       input.practitioner ?? null,
       now,
     ]
-  );
-
-  await executeQuery('UPDATE patients SET updatedAt = ? WHERE id = ?', [now, input.patientId]);
+  }];
+  if (input.time) {
+    const patient = await dbGetPatientById(input.patientId);
+    if (!patient) throw new Error('Patient not found');
+    statements.push({
+      sql: `INSERT INTO appointments (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'CONFIRMED', ?, ?, ?, ?, ?, ?)`,
+      args: ['apt_' + id, patient.patientName, patient.email ?? null, patient.phone, input.serviceSlug ?? 'kinesitherapie-generale', input.date, input.time, input.notes ?? null, patient.coverageType ?? 'PARTICULAR', patient.coverageProvider ?? null, patient.coverageNumber ?? null, now, now],
+    });
+  }
+  statements.push({ sql: 'UPDATE patients SET updatedAt = ? WHERE id = ?', args: [now, input.patientId] });
+  await executeAtomicBatch(statements);
   const rows = await executeQuery<PatientSession>('SELECT * FROM patient_sessions WHERE id = ?', [id]);
   return rows[0];
 }
@@ -2116,7 +2078,10 @@ export async function dbDeletePatientSession(sessionId: string, patientId?: stri
       return false;
     }
   }
-  await executeQuery('DELETE FROM patient_sessions WHERE id = ?', [sessionId]);
+  await executeAtomicBatch([
+    { sql: 'DELETE FROM appointments WHERE id = ?', args: ['apt_' + sessionId] },
+    { sql: 'DELETE FROM patient_sessions WHERE id = ?', args: [sessionId] },
+  ]);
   return true;
 }
 
@@ -2151,13 +2116,9 @@ export async function dbUpdatePatientSession(
 }
 
 export async function dbBulkBlockSlots(date: string, times: string[], action: 'block' | 'unblock'): Promise<void> {
-  for (const time of times) {
-    await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
-    if (action === 'block') {
-      const id = 'blk_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
-      await executeQuery('INSERT INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', [id, date, time]);
-    }
-  }
+  await executeAtomicBatch(times.map(time => action === 'block'
+    ? { sql: 'INSERT OR IGNORE INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', args: ['blk_' + crypto.randomUUID(), date, time] }
+    : { sql: 'DELETE FROM blocked_slots WHERE date = ? AND time = ?', args: [date, time] }));
 }
 
 export async function dbGetBackupStatus(): Promise<{ lastBackupDate: string | null; backupCount: number; dbSizeBytes: number }> {
@@ -2286,7 +2247,21 @@ export async function dbGenerateInvoiceNumber(): Promise<string> {
   return `${prefix}${padded}`;
 }
 
-export async function dbCreateInvoice(input: CreateInvoiceInput): Promise<Invoice> {
+export async function dbCreateInvoice(input: CreateInvoiceInput, idempotencyKey?: string): Promise<Invoice> {
+  const requestHash = createHash('sha256').update(JSON.stringify(input)).digest('hex');
+  const dedupeKey = idempotencyKey ? 'invoice:' + idempotencyKey : undefined;
+  const findExisting = async (): Promise<Invoice | null> => {
+    if (!dedupeKey) return null;
+    const rows = await executeQuery<{responseBody: string}>('SELECT responseBody FROM idempotency_keys WHERE key = ? AND scope = ?', [dedupeKey, 'admin_invoice']);
+    if (!rows.length) return null;
+    const saved = JSON.parse(rows[0].responseBody);
+    if (saved.requestHash !== requestHash) throw new Error('idempotency_conflict');
+    const existing = await dbGetInvoiceById(saved.invoiceId);
+    if (!existing) throw new Error('idempotency_record_missing');
+    return existing;
+  };
+  const existing = await findExisting();
+  if (existing) return existing;
   const phoneValidation = validateAndNormalizePhone(input.patientPhone);
   const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.patientPhone.trim();
 
@@ -2310,14 +2285,13 @@ export async function dbCreateInvoice(input: CreateInvoiceInput): Promise<Invoic
     const invoiceNumber = await dbGenerateInvoiceNumber();
 
     try {
-      await executeQuery(
-        `INSERT INTO invoices (
+      const statements = [{ sql: `INSERT INTO invoices (
           id, invoiceNumber, appointmentId, patientId, patientName, patientNif,
           patientEmail, patientPhone, patientAddress, coverageType, coverageProvider, coverageNumber,
           serviceSlug, serviceName, practitioner, amount, vatRate, vatExemptionReason,
           paymentMethod, paymentStatus, paidAt, notes, createdAt, updatedAt
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
+        args: [
           id,
           invoiceNumber,
           input.appointmentId || null,
@@ -2342,12 +2316,15 @@ export async function dbCreateInvoice(input: CreateInvoiceInput): Promise<Invoic
           input.notes || null,
           now,
           now,
-        ]
-      );
+        ] }];
+      if (dedupeKey) statements.push({sql: `INSERT INTO idempotency_keys (key, scope, statusCode, responseBody, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?)`, args: [dedupeKey, 'admin_invoice', 201, JSON.stringify({invoiceId: id, requestHash}), Date.now(), Date.now() + 86400000]});
+      await executeAtomicBatch(statements);
 
       const created = await dbGetInvoiceById(id);
       if (created) return created;
     } catch (err: any) {
+      const concurrent = await findExisting();
+      if (concurrent) return concurrent;
       lastError = err;
       if (err?.message?.includes('UNIQUE') || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
         // Small backoff before retrying to let concurrent insert finish and increment sequence
@@ -2504,8 +2481,10 @@ export async function dbUpdateInvoice(
     updates.push('paymentStatus = ?');
     params.push(fields.paymentStatus);
     if (fields.paymentStatus === 'PAID') {
-      updates.push('paidAt = ?');
+      updates.push("paidAt = CASE WHEN paymentStatus = 'PAID' THEN paidAt ELSE ? END");
       params.push(new Date().toISOString());
+    } else {
+      updates.push('paidAt = NULL');
     }
   }
   if (fields.coverageType !== undefined)     { updates.push('coverageType = ?');     params.push(fields.coverageType); }
@@ -3440,7 +3419,7 @@ export async function dbGetFilteredAnalyticsStats(
   const rangeType = options.range || '30d';
   const targetPole = options.pole && options.pole !== 'all' ? options.pole : 'all';
 
-  const now = new Date();
+  const now = new Date(getLisbonDateTime().todayStr + 'T12:00:00');
   const pad = (n: number) => String(n).padStart(2, '0');
   const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const todayStr = fmt(now);
@@ -3552,10 +3531,15 @@ export async function dbGetFilteredAnalyticsStats(
 
   // Fast index-assisted SQL queries
   const isAllTime = rangeType === 'all';
-  const startIso = `${start}T00:00:00.000Z`;
-  const endIso = `${end}T23:59:59.999Z`;
-  const priorStartIso = `${priorStart}T00:00:00.000Z`;
-  const priorEndIso = `${priorEnd}T23:59:59.999Z`;
+  const endOfDay = (date: string) => {
+    const next = new Date(date + 'T12:00:00Z');
+    next.setUTCDate(next.getUTCDate() + 1);
+    return new Date(Date.parse(lisbonDayStart(next.toISOString().slice(0, 10))) - 1).toISOString();
+  };
+  const startIso = lisbonDayStart(start);
+  const endIso = endOfDay(end);
+  const priorStartIso = lisbonDayStart(priorStart);
+  const priorEndIso = endOfDay(priorEnd);
 
   const [currentAppts, priorAppts, currentInvoices, priorInvoices] = await Promise.all([
     isAllTime
@@ -3628,7 +3612,7 @@ export async function dbGetFilteredAnalyticsStats(
         }>(
           `SELECT id, invoiceNumber, amount, paymentStatus, paymentMethod, coverageType, serviceSlug, createdAt, paidAt
            FROM invoices
-           WHERE createdAt >= ? AND createdAt <= ?`,
+           WHERE COALESCE(paidAt, createdAt) >= ? AND COALESCE(paidAt, createdAt) <= ?`,
           [startIso, endIso]
         ),
     isAllTime
@@ -3640,10 +3624,16 @@ export async function dbGetFilteredAnalyticsStats(
         }>(
           `SELECT amount, paymentStatus, serviceSlug
            FROM invoices
-           WHERE createdAt >= ? AND createdAt <= ?`,
+           WHERE COALESCE(paidAt, createdAt) >= ? AND COALESCE(paidAt, createdAt) <= ?`,
           [priorStartIso, priorEndIso]
         ),
   ]);
+
+  if (isAllTime) {
+    const dates = [...currentAppts.map(a => a.date), ...currentInvoices.map(i => getLisbonDateTime(new Date(i.paidAt || i.createdAt)).todayStr)].filter(isCalendarDate).sort();
+    start = dates[0] || todayStr;
+    end = dates[dates.length - 1] || todayStr;
+  }
 
   // Apply Pole Filter
   const appts = targetPole === 'all'
@@ -3709,7 +3699,7 @@ export async function dbGetFilteredAnalyticsStats(
 
   for (const inv of invoices) {
     const status = (inv.paymentStatus || '').toUpperCase();
-    if (status === 'CANCELLED') continue;
+    if (status === 'CANCELLED' || status === 'REFUNDED') continue;
     activeInvoicesCount++;
     const amt = Number(inv.amount) || 0;
     const isPaid = status === 'PAID';
@@ -3730,9 +3720,9 @@ export async function dbGetFilteredAnalyticsStats(
     coverageMap.set(c, (coverageMap.get(c) || 0) + 1);
   }
 
-  const revenue = Math.max(paidInvoicesRevenue, appointmentsRevenue);
+  const revenue = paidInvoicesRevenue;
   const totalBilled = paidInvoicesRevenue + unpaidAmount;
-  const avgTicket = completed > 0 ? Math.round(revenue / completed) : (paidCount > 0 ? Math.round(revenue / paidCount) : 0);
+  const avgTicket = paidCount > 0 ? Math.round(revenue / paidCount * 100) / 100 : 0;
 
   // Prior Period Deltas
   let priorCompletedRevenue = 0;
@@ -3747,7 +3737,7 @@ export async function dbGetFilteredAnalyticsStats(
       priorPaidInvoicesRevenue += Number(inv.amount) || 0;
     }
   }
-  const priorRevenue = Math.max(priorPaidInvoicesRevenue, priorCompletedRevenue);
+  const priorRevenue = priorPaidInvoicesRevenue;
   const priorAppointments = filteredPriorAppts.length;
 
   const revenueGrowthPct = priorRevenue > 0
@@ -3801,9 +3791,7 @@ export async function dbGetFilteredAnalyticsStats(
         const s = (a.status || '').toUpperCase();
         if (s === 'COMPLETED') {
           pt.completed++;
-          pt.revenue += getServicePrice(a.service);
-        } else if (s === 'CONFIRMED') {
-          pt.revenue += getServicePrice(a.service) * 0.7;
+
         } else if (s === 'CANCELLED' || s === 'NO_SHOW') {
           pt.cancelled++;
         }
@@ -3833,25 +3821,13 @@ export async function dbGetFilteredAnalyticsStats(
         const s = (a.status || '').toUpperCase();
         if (s === 'COMPLETED') {
           pt.completed++;
-          pt.revenue += getServicePrice(a.service);
-        } else if (s === 'CONFIRMED') {
-          pt.revenue += getServicePrice(a.service) * 0.7;
+
         } else if (s === 'CANCELLED' || s === 'NO_SHOW') {
           pt.cancelled++;
         }
       }
     }
 
-    // Invoices for exact daily revenue mapping
-    for (const inv of invoices) {
-      if ((inv.paymentStatus || '').toUpperCase() === 'PAID') {
-        const invDate = inv.createdAt.slice(0, 10);
-        const pt = pointsMap.get(invDate);
-        if (pt) {
-          pt.revenue = Math.max(pt.revenue, Number(inv.amount) || 0);
-        }
-      }
-    }
   } else if (granularity === 'week') {
     const curDate = new Date(start + 'T12:00:00');
     const endDateObj = new Date(end + 'T12:00:00');
@@ -3882,15 +3858,14 @@ export async function dbGetFilteredAnalyticsStats(
         const s = (a.status || '').toUpperCase();
         if (s === 'COMPLETED') {
           pt.completed++;
-          pt.revenue += getServicePrice(a.service);
         } else if (s === 'CANCELLED' || s === 'NO_SHOW') {
           pt.cancelled++;
         }
       }
     }
   } else {
-    // month granularity
-    const curDate = new Date(start + 'T12:00:00');
+    // Start on day one so month increments cannot skip February.
+    const curDate = new Date(start.slice(0, 7) + '-01T12:00:00');
     const endDateObj = new Date(end + 'T12:00:00');
     while (curDate <= endDateObj) {
       const mKey = `${curDate.getFullYear()}-${pad(curDate.getMonth() + 1)}`;
@@ -3914,7 +3889,6 @@ export async function dbGetFilteredAnalyticsStats(
         const s = (a.status || '').toUpperCase();
         if (s === 'COMPLETED') {
           pt.completed++;
-          pt.revenue += getServicePrice(a.service);
         } else if (s === 'CANCELLED' || s === 'NO_SHOW') {
           pt.cancelled++;
         }
@@ -3922,9 +3896,25 @@ export async function dbGetFilteredAnalyticsStats(
     }
   }
 
+  // Revenue always comes from settled invoices, using the clinic's payment date.
+  const bucketKeys = [...pointsMap.keys()];
+  for (const inv of invoices) {
+    if (inv.paymentStatus !== 'PAID') continue;
+    const paid = getLisbonDateTime(new Date(inv.paidAt || inv.createdAt));
+    let key = paid.todayStr;
+    if (granularity === 'month') key = key.slice(0, 7);
+    else if (granularity === 'week') key = bucketKeys.filter(k => k <= paid.todayStr).pop() || bucketKeys[0];
+    else if (granularity === 'hour') {
+      const hour = Number(paid.currentHHMM.slice(0, 2));
+      key = String(Math.max(8, Math.min(20, Math.ceil(hour / 2) * 2))).padStart(2, '0') + ':00';
+    }
+    const point = pointsMap.get(key);
+    if (point) point.revenue += Number(inv.amount) || 0;
+  }
+
   const timelinePoints = Array.from(pointsMap.values()).map(pt => ({
     ...pt,
-    revenue: Math.round(pt.revenue),
+    revenue: Math.round(pt.revenue * 100) / 100,
   }));
 
   // Department & Pole Distribution
@@ -3940,17 +3930,22 @@ export async function dbGetFilteredAnalyticsStats(
     const pr = getServicePrice(a.service);
     if (poleTotals[p]) {
       poleTotals[p].count++;
-      if (a.status === 'COMPLETED' || a.status === 'CONFIRMED') {
-        poleTotals[p].revenue += pr;
-      }
+
     }
 
     const cur = serviceStats.get(a.service) || { count: 0, revenue: 0 };
     cur.count++;
-    if (a.status === 'COMPLETED' || a.status === 'CONFIRMED') {
-      cur.revenue += pr;
-    }
+
     serviceStats.set(a.service, cur);
+  }
+
+  for (const inv of invoices) {
+    if (inv.paymentStatus !== 'PAID') continue;
+    const amount = Number(inv.amount) || 0;
+    poleTotals[getServicePole(inv.serviceSlug)].revenue += amount;
+    const service = serviceStats.get(inv.serviceSlug) || { count: 0, revenue: 0 };
+    service.revenue += amount;
+    serviceStats.set(inv.serviceSlug, service);
   }
 
   const poleRevenueTotal =
@@ -4125,10 +4120,17 @@ export async function dbGetFilteredAnalyticsStats(
     1,
     Math.round((dEnd.getTime() - dStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
   );
-  const workingDays = Math.max(1, Math.round(daySpan * (6 / 7)));
-  const capacitySlots = workingDays * 10;
+  let workingDays = 0;
+  for (let i = 0; i < daySpan; i++) {
+    const day = new Date(start + 'T12:00:00Z');
+    day.setUTCDate(day.getUTCDate() + i);
+    if (day.getUTCDay() !== 0) workingDays++;
+  }
+  const blocked = await executeQuery<{date: string; time: string}>('SELECT date, time FROM blocked_slots WHERE date >= ? AND date <= ?', [start, end]);
+  const blockedCapacity = blocked.filter(slot => VALID_TIME_SLOTS.includes(slot.time as typeof VALID_TIME_SLOTS[number]) && new Date(slot.date + 'T12:00:00Z').getUTCDay() !== 0).length;
+  const capacitySlots = Math.max(0, workingDays * VALID_TIME_SLOTS.length - blockedCapacity);
   const occupancyRate =
-    capacitySlots > 0 ? Math.min(100, Math.round(((confirmed + completed) / capacitySlots) * 100)) : 0;
+    capacitySlots > 0 ? Math.min(100, Math.round(((pending + confirmed + completed + noShow) / capacitySlots) * 100)) : 0;
 
   // Payments & Coverage
   const totalPaidCount = Array.from(methodMap.values()).reduce((sum, v) => sum + v.count, 0);
@@ -4283,6 +4285,5 @@ export async function dbHealthCheck(): Promise<{
     writable,
   };
 }
-
 
 

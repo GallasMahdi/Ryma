@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unsealData } from 'iron-session';
+import { isAdminSessionValid } from '@/lib/session-policy';
 import type { SessionData } from '@/lib/session';
 
 /**
@@ -39,7 +40,7 @@ export async function proxy(request: NextRequest) {
       password: secret,
     });
 
-    if (!session || !session.isAdmin || !session.sessionId) {
+    if (!isAdminSessionValid(session)) {
       return redirectToLogin(request, pathname);
     }
   } catch {

@@ -138,75 +138,42 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
   const invoicesCacheRef = useRef<Record<string, Invoice[]>>({});
   const prescriptionsCacheRef = useRef<Record<string, PatientPrescription[]>>({});
 
-  // Fetch invoices for active patient (Instant SWR + silent revalidation)
-  const fetchActivePatientInvoices = async (phone: string, force = false) => {
-    if (!phone) return;
-    if (!force && invoicesCacheRef.current[phone]) {
-      setPatientInvoices(invoicesCacheRef.current[phone]);
-      // Silently revalidate in background
-      fetch(`/api/admin/invoices?patientPhone=${encodeURIComponent(phone)}`, { cache: 'no-store' })
-        .then(r => r.json())
-        .then(data => {
-          if (Array.isArray(data.invoices)) {
-            invoicesCacheRef.current[phone] = data.invoices;
-            setPatientInvoices(data.invoices);
-          }
-        })
-        .catch(() => { });
-      return;
-    }
+  const invoicesRequestRef = useRef(0);
+  const prescriptionsRequestRef = useRef(0);
 
-    setLoadingInvoices(true);
+  const fetchActivePatientInvoices = async (phone: string, force = false) => {
+    const requestId = ++invoicesRequestRef.current;
+    const cached = force ? undefined : invoicesCacheRef.current[phone];
+    setPatientInvoices(cached ?? []);
+    setLoadingInvoices(!cached && Boolean(phone));
+    if (!phone) return;
     try {
-      const res = await fetch(`/api/admin/invoices?patientPhone=${encodeURIComponent(phone)}`, {
-        cache: 'no-store',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const list = data.invoices || [];
-        invoicesCacheRef.current[phone] = list;
-        setPatientInvoices(list);
-      }
-    } catch {
-      /* silent */
-    } finally {
-      setLoadingInvoices(false);
+      const res = await fetch(`/api/admin/invoices?patientPhone=${encodeURIComponent(phone)}`, { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!Array.isArray(data.invoices)) return;
+      invoicesCacheRef.current[phone] = data.invoices;
+      if (requestId === invoicesRequestRef.current) setPatientInvoices(data.invoices);
+    } catch { /* Keep this patient’s cached data on a failed refresh. */ } finally {
+      if (requestId === invoicesRequestRef.current) setLoadingInvoices(false);
     }
   };
 
-  // Fetch prescriptions for active patient (Instant SWR + silent revalidation)
   const fetchActivePatientPrescriptions = async (phone: string, force = false) => {
+    const requestId = ++prescriptionsRequestRef.current;
+    const cached = force ? undefined : prescriptionsCacheRef.current[phone];
+    setPatientPrescriptions(cached ?? []);
+    setLoadingPrescriptions(!cached && Boolean(phone));
     if (!phone) return;
-    if (!force && prescriptionsCacheRef.current[phone]) {
-      setPatientPrescriptions(prescriptionsCacheRef.current[phone]);
-      // Silently revalidate in background
-      fetch(`/api/admin/prescriptions?patientPhone=${encodeURIComponent(phone)}`, { cache: 'no-store' })
-        .then(r => r.json())
-        .then(data => {
-          if (Array.isArray(data.prescriptions)) {
-            prescriptionsCacheRef.current[phone] = data.prescriptions;
-            setPatientPrescriptions(data.prescriptions);
-          }
-        })
-        .catch(() => { });
-      return;
-    }
-
-    setLoadingPrescriptions(true);
     try {
-      const res = await fetch(`/api/admin/prescriptions?patientPhone=${encodeURIComponent(phone)}`, {
-        cache: 'no-store',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const list = data.prescriptions || [];
-        prescriptionsCacheRef.current[phone] = list;
-        setPatientPrescriptions(list);
-      }
-    } catch {
-      /* silent */
-    } finally {
-      setLoadingPrescriptions(false);
+      const res = await fetch(`/api/admin/prescriptions?patientPhone=${encodeURIComponent(phone)}`, { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!Array.isArray(data.prescriptions)) return;
+      prescriptionsCacheRef.current[phone] = data.prescriptions;
+      if (requestId === prescriptionsRequestRef.current) setPatientPrescriptions(data.prescriptions);
+    } catch { /* Keep this patient’s cached data on a failed refresh. */ } finally {
+      if (requestId === prescriptionsRequestRef.current) setLoadingPrescriptions(false);
     }
   };
 

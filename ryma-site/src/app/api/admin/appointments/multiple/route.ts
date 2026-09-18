@@ -1,3 +1,4 @@
+import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { dbCreateMultipleAppointments } from '@/lib/db';
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
   }
 
   const rawSessions = Array.isArray(body.sessions) ? body.sessions : [];
-  if (rawSessions.length === 0) {
+  if (rawSessions.length === 0 || rawSessions.length > 50) {
     return NextResponse.json({ error: 'Nenhuma sessão fornecida para marcação.' }, { status: 422 });
   }
 
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
     const sDate = String(s?.date || '').trim();
     const sTime = String(s?.startTime || '').trim();
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(sDate)) {
+    if (!isCalendarDate(sDate)) {
       return NextResponse.json({ error: `Sessão #${i + 1}: Data inválida (${sDate}).` }, { status: 422 });
     }
 

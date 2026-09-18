@@ -1,3 +1,4 @@
+import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { dbCheckMultipleDatesAvailability } from '@/lib/db';
@@ -34,19 +35,20 @@ export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
   const totalSessions = Math.min(50, Math.max(1, Number(body.totalSessions) || 10));
-  const startDateStr = typeof body.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.startDate)
+  const startDateStr = isCalendarDate(body.startDate)
     ? body.startDate
     : new Date().toISOString().split('T')[0];
 
   const scheduleSlots: ScheduleSlotConfig[] = Array.isArray(body.scheduleSlots)
     ? body.scheduleSlots.filter(
         (s: any) =>
-          typeof s.dayOfWeek === 'number' &&
+          isJsonObject(s) && Number.isInteger(s.dayOfWeek) && typeof s.dayOfWeek === 'number' &&
           s.dayOfWeek >= 0 &&
           s.dayOfWeek <= 6 &&
           typeof s.startTime === 'string' &&
@@ -57,12 +59,12 @@ export async function POST(request: NextRequest) {
   const explicitSessions: { date: string; startTime: string }[] = Array.isArray(body.explicitSessions)
     ? body.explicitSessions.filter(
         (s: any) =>
-          typeof s.date === 'string' &&
-          /^\d{4}-\d{2}-\d{2}$/.test(s.date) &&
-          typeof s.startTime === 'string'
+          isJsonObject(s) && isCalendarDate(s.date) &&
+          typeof s.startTime === 'string' && VALID_TIME_SLOTS.includes(s.startTime as any)
       )
     : [];
 
+  if ((Array.isArray(body.explicitSessions) && (body.explicitSessions.length > 50 || explicitSessions.length !== body.explicitSessions.length)) || (body.startDate !== undefined && !isCalendarDate(body.startDate))) return NextResponse.json({ error: 'Invalid schedule dates or time slots' }, { status: 422 });
   const candidateSlots: { date: string; startTime: string; dayOfWeek: number }[] = [];
 
   if (explicitSessions.length > 0) {
@@ -106,6 +108,10 @@ export async function POST(request: NextRequest) {
       { error: 'Especifique os dias e horários de recorrência para calcular o plano de sessões.' },
       { status: 422 }
     );
+  }
+
+  if (new Set(candidateSlots.map(slot => `${slot.date}:${slot.startTime}`)).size !== candidateSlots.length) {
+    return NextResponse.json({ error: 'Duplicate session slots are not allowed.' }, { status: 422 });
   }
 
   // High-performance single-pass batched availability across all candidate dates

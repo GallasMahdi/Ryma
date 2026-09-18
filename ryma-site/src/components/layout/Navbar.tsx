@@ -208,16 +208,16 @@ export function Navbar() {
             <div className="flex items-center justify-between h-14 md:h-16 gap-3">
 
               {/* ── Brand / Logo ── */}
-              <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0 whitespace-nowrap">
+              <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 whitespace-nowrap">
                 <div className="relative group-hover:scale-105 transition-transform duration-300">
-                  <LogoIcon size={48} className="drop-shadow-[0_2px_12px_rgba(196,154,60,0.35)]" />
+                  <LogoIcon size={48} className="max-[380px]:!w-8 max-[380px]:!h-8 drop-shadow-[0_2px_12px_rgba(196,154,60,0.35)]" />
                 </div>
 
                 <div className="flex flex-col justify-center leading-none">
-                  <span className="font-serif text-base md:text-lg font-bold tracking-tight text-[#1A1412] group-hover:text-[#9A7428] transition-colors whitespace-nowrap">
+                  <span className="font-serif text-sm min-[381px]:text-base md:text-lg font-bold tracking-tight text-[#1A1412] group-hover:text-[#9A7428] transition-colors whitespace-nowrap">
                     {t.common.siteName}
                   </span>
-                  <span className="font-sans text-[9px] font-semibold tracking-[0.16em] text-[#8A6A24] uppercase mt-0.5 whitespace-nowrap">
+                  <span className="hidden sm:block font-sans text-[9px] font-semibold tracking-[0.16em] text-[#8A6A24] uppercase mt-0.5 whitespace-nowrap">
                     {t.common.subtitle}
                   </span>
                 </div>

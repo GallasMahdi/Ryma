@@ -1,5 +1,7 @@
+import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
-import { sealData, unsealData } from 'iron-session';
+import { requireAdmin } from '@/lib/requireAdmin';
+import { sealData } from 'iron-session';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
@@ -24,26 +26,9 @@ export async function POST(request: NextRequest) {
 
   // 1. Verify that user is already an authenticated Admin
   const cookieStore = await cookies();
-  const cookieValue =
-    request.cookies.get(SESSION_OPTIONS.cookieName)?.value ||
-    cookieStore.get(SESSION_OPTIONS.cookieName)?.value;
-
-  if (!cookieValue) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
-
-  let session: SessionData;
-  try {
-    session = await unsealData<SessionData>(cookieValue, {
-      password: SESSION_OPTIONS.password as string,
-    });
-  } catch {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
-
-  if (!session.isAdmin) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
+  const auth = await requireAdmin(request);
+  if ('status' in auth) return auth;
+  const session = auth.session;
 
   // 2. Rate Limiting: Max 10 failed attempts per 15 minutes per IP
   const allowed = await dbCheckRateLimit(ip, 'owner_analytics_auth', 10, 15 * 60);
@@ -61,6 +46,7 @@ export async function POST(request: NextRequest) {
   let body: { password?: string };
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
@@ -106,6 +92,7 @@ export async function POST(request: NextRequest) {
 
   const sealed = await sealData(updatedSession, {
     password: SESSION_OPTIONS.password as string,
+    ttl: SESSION_OPTIONS.ttl,
   });
 
   cookieStore.set({

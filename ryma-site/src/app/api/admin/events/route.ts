@@ -1,87 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
+import { dbIsSessionRevoked } from '@/lib/db';
+import { isAdminSessionValid } from '@/lib/session-policy';
 import { adminEventBus, type AdminEventPayload } from '@/lib/events';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-/**
- * GET /api/admin/events
- * Server-Sent Events (SSE) stream for real-time admin dashboard updates.
- */
+/** Revalidate open streams as well as initial connections; always release timers. */
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
-  if ('status' in auth) return auth; // 401 Unauthorized
-
+  if ('status' in auth) return auth;
   const encoder = new TextEncoder();
-
-  let onAdminEvent: ((payload: AdminEventPayload) => void) | null = null;
-
+  let cleanup = () => {};
   const stream = new ReadableStream({
     start(controller) {
-      // Send initial handshake
-      const initialMessage = `event: connected\ndata: ${JSON.stringify({
-        status: 'connected',
-        timestamp: new Date().toISOString(),
-      })}\n\n`;
-      controller.enqueue(encoder.encode(initialMessage));
-
-      // Event listener for all admin bus events
-      onAdminEvent = (payload: AdminEventPayload) => {
-        try {
-          const message = `event: ${payload.type}\ndata: ${JSON.stringify(payload)}\n\n`;
-          controller.enqueue(encoder.encode(message));
-        } catch {
-          // Stream might be closed
-        }
+      let closed = false;
+      let ping: ReturnType<typeof setInterval> | undefined;
+      const authorized = async () => isAdminSessionValid(auth.session) && !(await dbIsSessionRevoked(auth.session.sessionId));
+      const send = (message: string) => {
+        if (closed) return;
+        try { controller.enqueue(encoder.encode(message)); } catch { cleanup(); }
       };
-
-      adminEventBus.on('admin_event', onAdminEvent);
-
-      // Clean up when client disconnects or stream drops
-      let cleanedUp = false;
-      let pingInterval: NodeJS.Timeout | null = null;
-      const cleanup = () => {
-        if (cleanedUp) return;
-        cleanedUp = true;
-        if (pingInterval) clearInterval(pingInterval);
-        if (onAdminEvent) {
-          adminEventBus.off('admin_event', onAdminEvent);
-          onAdminEvent = null;
-        }
-        try {
-          controller.close();
-        } catch {
-          // Already closed
-        }
+      const onEvent = async (payload: AdminEventPayload) => {
+        if (!(await authorized())) { cleanup(); return; }
+        send(`event: ${payload.type}\ndata: ${JSON.stringify(payload)}\n\n`);
       };
-
-      // Keepalive ping every 20 seconds to prevent proxy/browser timeout
-      pingInterval = setInterval(() => {
-        try {
-          controller.enqueue(encoder.encode(`: ping\n\n`));
-        } catch {
-          cleanup();
-        }
+      cleanup = () => {
+        if (closed) return;
+        closed = true;
+        if (ping) clearInterval(ping);
+        adminEventBus.off('admin_event', onEvent);
+        request.signal.removeEventListener('abort', cleanup);
+        try { controller.close(); } catch { /* already closed */ }
+      };
+      if (request.signal.aborted) { cleanup(); return; }
+      adminEventBus.on('admin_event', onEvent);
+      request.signal.addEventListener('abort', cleanup, { once: true });
+      send(`event: connected\ndata: ${JSON.stringify({ status: 'connected' })}\n\n`);
+      ping = setInterval(async () => {
+        if (!(await authorized())) { cleanup(); return; }
+        send(': ping\n\n');
       }, 20000);
-
-      request.signal.addEventListener('abort', cleanup);
     },
-    cancel() {
-      // Called when consumer closes stream
-      if (onAdminEvent) {
-        adminEventBus.off('admin_event', onAdminEvent);
-        onAdminEvent = null;
-      }
-    },
+    cancel() { cleanup(); },
   });
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform, no-store',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    },
-  });
+  return new Response(stream, { headers: {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform, no-store',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  } });
 }

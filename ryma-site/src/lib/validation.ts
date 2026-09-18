@@ -1,3 +1,4 @@
+import { isCalendarDate, isJsonObject } from './admin-validation';
 import { SERVICES } from '@/data/services';
 import { validateAndNormalizePhone } from '@/lib/phone';
 import type { Lang } from '@/lib/i18n';
@@ -32,6 +33,7 @@ export function validateAppointmentInput(
   body: Record<string, unknown>,
   preferredLang?: Lang
 ): ValidationResult | ValidationError {
+  if (!isJsonObject(body)) return { ok: false, error: 'JSON object required' };
   const lang: Lang = (body.lang as Lang) || preferredLang || 'pt';
   const { patientName, phone, service, date, startTime } = body;
 
@@ -118,7 +120,7 @@ export function validateAppointmentInput(
   }
 
   // Date format
-  if (!date || typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+  if (!isCalendarDate(date)) {
     return {
       ok: false,
       errorCode: 'INVALID_DATE_FORMAT',

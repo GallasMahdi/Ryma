@@ -1,3 +1,4 @@
+import { isJsonObject, pageNumber } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import {
@@ -25,8 +26,8 @@ export async function GET(request: NextRequest) {
   const limitParam = searchParams.get('limit');
 
   if (pageParam !== null || limitParam !== null) {
-    const page = Math.max(1, parseInt(pageParam || '1', 10));
-    const limit = Math.min(100, Math.max(1, parseInt(limitParam || '50', 10)));
+    const page = pageNumber(pageParam, 1);
+    const limit = pageNumber(limitParam, 50, 100);
     const res = await dbGetAppointmentsPaginated({ status, date, search, page, limit });
     return NextResponse.json(
       res,
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }

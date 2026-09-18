@@ -1,3 +1,4 @@
+import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { dbCreatePrescription, dbGetPrescriptionsByPatientPhone } from '@/lib/db';
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
   let body: Record<string, any>;
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
@@ -45,19 +47,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Selecione pelo menos uma recomendação ou produto' }, { status: 400 });
   }
 
+  if (items.length > 50 || items.some(it => !isJsonObject(it) || typeof it.title !== 'string' || !it.title.trim() || it.title.length > 200 || typeof it.instructions !== 'string' || it.instructions.length > 2000 || (it.category !== undefined && !['care_product', 'ergonomic_equipment', 'lifestyle_habit'].includes(String(it.category))))) return NextResponse.json({ error: 'Invalid prescription items' }, { status: 422 });
   const prescription = await dbCreatePrescription({
-    patientId: body.patientId,
+    patientId: typeof body.patientId === 'string' ? body.patientId.trim().slice(0, 2000) : undefined,
     patientPhone: String(patientPhone).trim(),
     patientName: String(patientName).trim(),
-    practitioner: body.practitioner,
-    diagnosisOrGoal: body.diagnosisOrGoal,
+    practitioner: typeof body.practitioner === 'string' ? body.practitioner.trim().slice(0, 2000) : undefined,
+    diagnosisOrGoal: typeof body.diagnosisOrGoal === 'string' ? body.diagnosisOrGoal.trim().slice(0, 2000) : undefined,
     items: items.map(it => ({
       category: it.category || 'care_product',
       title: String(it.title || '').trim(),
       instructions: String(it.instructions || '').trim(),
       productRef: it.productRef,
     })),
-    generalNotes: body.generalNotes,
+    generalNotes: typeof body.generalNotes === 'string' ? body.generalNotes.trim().slice(0, 2000) : undefined,
   });
 
   return NextResponse.json({ prescription }, { status: 201 });

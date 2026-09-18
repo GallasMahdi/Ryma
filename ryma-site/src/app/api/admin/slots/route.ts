@@ -1,3 +1,4 @@
+import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { dbGetAppointments, dbGetBlockedSlots, dbToggleBlockSlot } from '@/lib/db';
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const date = searchParams.get('date');
 
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+  if (!isCalendarDate(date)) {
     return NextResponse.json({ error: 'Paramètre date invalide' }, { status: 400 });
   }
 
@@ -63,13 +64,14 @@ export async function POST(request: NextRequest) {
   let body: { date?: string; time?: string };
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const { date, time } = body;
 
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+  if (!isCalendarDate(date)) {
     return NextResponse.json({ error: 'Date invalide' }, { status: 422 });
   }
 
@@ -88,6 +90,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const isNowBlocked = await dbToggleBlockSlot(date, time);
+  let isNowBlocked;
+  try { isNowBlocked = await dbToggleBlockSlot(date, time); }
+  catch (err) {
+    if (/UNIQUE|slot_taken/i.test(String(err))) return NextResponse.json({ error: 'Slot changed; refresh availability' }, { status: 409 });
+    throw err;
+  }
   return NextResponse.json({ blocked: isNowBlocked, date, time });
 }

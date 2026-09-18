@@ -1,3 +1,4 @@
+import { isAdminSessionValid } from './session-policy';
 import { unsealData } from 'iron-session';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
@@ -33,7 +34,7 @@ export async function requireAdmin(
       password: SESSION_OPTIONS.password as string,
     });
 
-    if (!session || !session.isAdmin || !session.sessionId) {
+    if (!isAdminSessionValid(session)) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -93,7 +94,7 @@ export async function requireOwnerAnalytics(
       password: SESSION_OPTIONS.password as string,
     });
 
-    if (!session || !session.isAdmin || !session.sessionId) {
+    if (!isAdminSessionValid(session)) {
       return NextResponse.json(
         { error: 'Authentication required', code: 'UNAUTHENTICATED' },
         { status: 401 }
@@ -160,7 +161,7 @@ export async function getAdminSession(): Promise<SessionData | null> {
       password: SESSION_OPTIONS.password as string,
     });
 
-    return session.isAdmin ? session : null;
+    return isAdminSessionValid(session) && !(await dbIsSessionRevoked(session.sessionId)) ? session : null;
   } catch {
     return null;
   }

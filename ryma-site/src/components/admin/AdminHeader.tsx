@@ -113,7 +113,7 @@ export const AdminHeader = React.memo(function AdminHeader({
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          className="hidden md:flex items-center justify-between gap-3 px-3.5 py-1.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#94A3B8] text-xs text-[#64748B] hover:text-[#0F172A] transition-all shadow-2xs max-w-xs xl:max-w-md w-full min-w-[220px]"
+          className="hidden xl:flex items-center justify-between gap-3 px-3.5 py-1.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#94A3B8] text-xs text-[#64748B] hover:text-[#0F172A] transition-all shadow-2xs max-w-md w-full min-w-0"
           title={txt('Ouvrir la palette de commandes (Ctrl+K)', 'Open Command Palette (Ctrl+K)', 'Abrir Paleta de Comandos (Ctrl+K)')}
         >
           <div className="flex items-center gap-2 truncate">
@@ -137,7 +137,7 @@ export const AdminHeader = React.memo(function AdminHeader({
           <button
             type="button"
             onClick={onOpenCommandPalette}
-            className="md:hidden p-2 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors"
+            className="xl:hidden p-2 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors"
             aria-label="Search command palette"
           >
             <IconSearch size={16} />
@@ -189,7 +189,7 @@ export const AdminHeader = React.memo(function AdminHeader({
             title={txt('Planifier des séances multiples récurrentes', 'Schedule multiple recurring sessions', 'Marcar múltiplas sessões recorrentes')}
           >
             <IconCalendarRepeat size={15} className="text-[#0F172A]" />
-            <span className="hidden md:inline">
+            <span className="hidden xl:inline">
               {txt('Séances Multiples', 'Multiple Sessions', 'Múltiplas Sessões')}
             </span>
           </button>
@@ -198,6 +198,7 @@ export const AdminHeader = React.memo(function AdminHeader({
         {/* New Appointment Primary Button */}
         <button
           onClick={onOpenAddModal}
+          aria-label={txt('Nouveau RDV', 'New appointment', 'Nova Consulta')}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs shadow-xs hover:shadow transition-all touch-target"
         >
           <IconPlus size={16} />

@@ -115,7 +115,7 @@ export function UnifiedServicesExplorer() {
               role="tablist"
               aria-label={lang === 'pt' ? 'Modo de visualização' : lang === 'en' ? 'View mode' : "Mode d'affichage"}
             >
-              {/* Tab 1: 3D Anatomical Explorer */}
+              {/* Tab 1: Body & Care Map */}
               <button
                 type="button"
                 role="tab"
@@ -139,10 +139,10 @@ export function UnifiedServicesExplorer() {
                   />
                   <span>
                     {lang === 'pt'
-                      ? 'Explorador Anatómico 3D'
+                      ? 'Mapa de Cuidados'
                       : lang === 'en'
                       ? '3D Anatomical Explorer'
-                      : 'Explorateur Anatomique 3D'}
+                      : 'Carte des soins'}
                   </span>
                   <span
                     className={`hidden sm:inline-block text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${

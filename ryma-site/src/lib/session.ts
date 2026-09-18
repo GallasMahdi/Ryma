@@ -1,4 +1,5 @@
 import type { SessionOptions } from 'iron-session';
+import { SESSION_TTL_SECONDS } from './session-policy';
 import { env } from './env';
 
 export interface SessionData {
@@ -9,6 +10,7 @@ export interface SessionData {
 }
 
 export const SESSION_OPTIONS: SessionOptions = {
+  ttl: SESSION_TTL_SECONDS,
   cookieName: 'ryma_admin_session',
   password: env.SESSION_SECRET,
   cookieOptions: {

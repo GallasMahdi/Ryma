@@ -123,6 +123,7 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
   }, [initialData]);
 
   // Fetch Filtered Analytics from API
+  const requestVersion = React.useRef(0);
   const fetchFilteredData = useCallback(
     async (
       rangeParam = selectedRange,
@@ -131,7 +132,8 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
       endParam = customEnd,
       isSilent = false
     ) => {
-      const cacheKey = `${rangeParam}_${poleParam}_${startParam}_${endParam}`;
+      const requestId = ++requestVersion.current;
+      const cacheKey = `${lang}_${rangeParam}_${poleParam}_${startParam}_${endParam}`;
 
       // ⚡ INSTANT CACHE HIT: 0ms UI switch
       if (cacheRef.current[cacheKey] && !isSilent) {
@@ -159,8 +161,16 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
           cache: 'no-store',
         });
 
+        if (requestId !== requestVersion.current) return;
+        if (res.status === 401 || res.status === 403) {
+          cacheRef.current = {};
+          setAnalyticsPayload(null);
+          onLock?.();
+          return;
+        }
         if (res.ok) {
           const json = await res.json();
+          if (requestId !== requestVersion.current) return;
           cacheRef.current[cacheKey] = json;
           startTransition(() => {
             setAnalyticsPayload(json);
@@ -170,7 +180,7 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
       } catch (err) {
         console.error('[AnalyticsTab Fetch Error]:', err);
       } finally {
-        setIsLoading(false);
+        if (requestId === requestVersion.current) setIsLoading(false);
       }
     },
     [lang, selectedRange, selectedPole, customStart, customEnd]

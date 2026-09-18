@@ -1,3 +1,5 @@
+import type { CoverageType } from '@/types/admin';
+import { isJsonObject, pageNumber, COVERAGE_TYPES } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import {
@@ -5,8 +7,6 @@ import {
   dbGetInvoicesPaginated,
   dbCreateInvoice,
   dbGetInvoiceStats,
-  dbGetIdempotencyKey,
-  dbSaveIdempotencyKey,
 } from '@/lib/db';
 import { SERVICES } from '@/data/services';
 
@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
   const stats = await dbGetInvoiceStats();
 
   if (pageParam !== null || limitParam !== null) {
-    const page = Math.max(1, parseInt(pageParam || '1', 10));
-    const limit = Math.min(100, Math.max(1, parseInt(limitParam || '50', 10)));
+    const page = pageNumber(pageParam, 1);
+    const limit = pageNumber(limitParam, 50, 100);
     const paginated = await dbGetInvoicesPaginated({
       status,
       search,
@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
   let body: Record<string, any>;
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
@@ -90,8 +91,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (body.coverageType !== undefined && !COVERAGE_TYPES.includes(String(body.coverageType))) return NextResponse.json({ error: 'Invalid coverage type' }, { status: 422 });
   const service = SERVICES.find(s => s.slug === body.serviceSlug);
-  const serviceName = body.serviceName || (service ? (service.name.pt || service.name.fr) : body.serviceSlug);
+  const serviceName = (typeof body.serviceName === 'string' ? body.serviceName.trim() : '') || (service ? (service.name.pt || service.name.fr) : String(body.serviceSlug));
   
   // Validate Amount strictly > 0 and <= 50,000 EUR
   const rawAmount = body.amount !== undefined ? Number(body.amount) : (service?.price || 0);
@@ -147,46 +149,37 @@ export async function POST(request: NextRequest) {
                          request.headers.get('x-idempotency-key') ||
                          (body.clientRequestId as string | undefined);
 
-  if (idempotencyKey) {
-    const cached = await dbGetIdempotencyKey(idempotencyKey, 'admin_invoice');
-    if (cached) {
-      return NextResponse.json(cached.responseBody, {
-        status: cached.statusCode,
-        headers: { 'X-Cache-Lookup': 'HIT_IDEMPOTENT' },
-      });
-    }
-  }
+  if (idempotencyKey && (typeof idempotencyKey !== 'string' || idempotencyKey.length > 200)) return NextResponse.json({error: 'Invalid idempotency key'}, {status: 422});
 
   try {
     const invoice = await dbCreateInvoice({
-      appointmentId: body.appointmentId,
-      patientId: body.patientId,
+      appointmentId: typeof body.appointmentId === 'string' ? body.appointmentId.trim() : undefined,
+      patientId: typeof body.patientId === 'string' ? body.patientId.trim() : undefined,
       patientName: String(body.patientName).trim().slice(0, 100),
       patientNif: cleanNif,
       patientEmail: body.patientEmail ? String(body.patientEmail).trim().slice(0, 254) : undefined,
       patientPhone: String(body.patientPhone).trim().slice(0, 30),
       patientAddress: body.patientAddress ? String(body.patientAddress).trim().slice(0, 250) : undefined,
-      coverageType: body.coverageType,
-      coverageProvider: body.coverageProvider,
-      coverageNumber: body.coverageNumber,
+      coverageType: body.coverageType as CoverageType | undefined,
+      coverageProvider: typeof body.coverageProvider === 'string' ? body.coverageProvider.trim() : undefined,
+      coverageNumber: typeof body.coverageNumber === 'string' ? body.coverageNumber.trim() : undefined,
       serviceSlug: String(body.serviceSlug).trim(),
       serviceName,
       practitioner: body.practitioner ? String(body.practitioner).trim().slice(0, 100) : undefined,
       amount,
       vatRate,
-      vatExemptionReason: body.vatExemptionReason,
+      vatExemptionReason: typeof body.vatExemptionReason === 'string' ? body.vatExemptionReason.trim() : undefined,
       paymentMethod: paymentMethod as any,
       paymentStatus: paymentStatus as any,
       notes: body.notes ? String(body.notes).trim().slice(0, 1000) : undefined,
-    });
+    }, idempotencyKey || undefined);
 
     const responsePayload = { invoice };
-    if (idempotencyKey) {
-      await dbSaveIdempotencyKey(idempotencyKey, 'admin_invoice', 201, responsePayload);
-    }
+
 
     return NextResponse.json(responsePayload, { status: 201 });
   } catch (err: any) {
+    if (err.message === 'idempotency_conflict') return NextResponse.json({error: 'Idempotency key already used for a different invoice'}, {status: 409});
     console.error('[API Create Invoice Error]:', err);
     return NextResponse.json({ error: err.message || 'Erro ao criar fatura/recibo' }, { status: 500 });
   }

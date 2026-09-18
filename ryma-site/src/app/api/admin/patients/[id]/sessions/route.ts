@@ -1,3 +1,5 @@
+import { VALID_TIME_SLOTS, VALID_SERVICES, getLisbonDateTime } from '@/lib/validation';
+import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import {
@@ -29,17 +31,21 @@ export async function POST(
   let body: Record<string, unknown>;
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
   }
 
-  const date = body.date ? String(body.date).trim() : new Date().toISOString().split('T')[0];
+  const date = body.date ? String(body.date).trim() : getLisbonDateTime().todayStr;
   const time = body.time ? String(body.time).trim() : null;
   const serviceSlug = body.serviceSlug ? String(body.serviceSlug).trim() : 'kinesitherapie-generale';
   const evaPainScore = typeof body.evaPainScore === 'number' ? Math.min(10, Math.max(0, body.evaPainScore)) : 5;
   const sessionType = (body.sessionType as 'ONLINE' | 'MANUAL' | 'PAPER') ?? 'MANUAL';
   const notes = body.notes ? String(body.notes).trim().slice(0, 2000) : null;
   const practitioner = body.practitioner ? String(body.practitioner).trim() : null;
+
+  if (!isCalendarDate(date) || (time && !VALID_TIME_SLOTS.includes(time as typeof VALID_TIME_SLOTS[number])) || !['ONLINE', 'MANUAL', 'PAPER'].includes(sessionType) || ![...VALID_SERVICES, 'kinesitherapie-generale'].includes(serviceSlug)) return NextResponse.json({ error: 'Invalid session date, time, type or service' }, { status: 422 });
+  if (body.evaPainScore !== undefined && (typeof body.evaPainScore !== 'number' || !Number.isInteger(body.evaPainScore) || body.evaPainScore < 0 || body.evaPainScore > 10)) return NextResponse.json({ error: 'EVA must be an integer from 0 to 10' }, { status: 422 });
 
   // If time is specified, validate slot availability against authoritative booking engine
   if (time) {
@@ -59,7 +65,9 @@ export async function POST(
     }
   }
 
-  const session = await dbAddPatientSession({
+  let session;
+  try {
+    session = await dbAddPatientSession({
     patientId,
     date,
     time,
@@ -68,46 +76,15 @@ export async function POST(
     sessionType,
     notes,
     practitioner,
-  });
+    });
+  } catch (err) {
+    if (/UNIQUE|slot_taken|slot_blocked/i.test(String(err))) return NextResponse.json({ error: 'Slot no longer available' }, { status: 409 });
+    throw err;
+  }
 
-  // If time is provided, create/sync a confirmed appointment in the appointments table
-  // so it immediately appears on the Admin Calendar and disables the slot for client-side booking
-  if (time && session) {
-    const aptId = 'apt_' + session.id;
-    const now = new Date().toISOString();
-    const sessionNote = notes
-      ? `${notes} [EVA: ${evaPainScore}/10]`
-      : `Séance clinique (${sessionType}) • EVA: ${evaPainScore}/10`;
-
-    try {
-      await executeQuery(
-        `INSERT INTO appointments
-          (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'CONFIRMED', ?, ?, ?, ?, ?, ?)`,
-        [
-          aptId,
-          patient.patientName,
-          patient.email ?? null,
-          patient.phone,
-          serviceSlug,
-          date,
-          time,
-          sessionNote,
-          patient.coverageType ?? 'PARTICULAR',
-          patient.coverageProvider ?? null,
-          patient.coverageNumber ?? null,
-          now,
-          now,
-        ]
-      );
-
-      const createdAppt = await dbGetAppointmentById(aptId);
-      if (createdAppt) {
-        broadcastAppointmentCreated(createdAppt);
-      }
-    } catch (err) {
-      console.error('Error syncing appointment for patient session:', err);
-    }
+  if (time) {
+    const appointment = await dbGetAppointmentById('apt_' + session.id);
+    if (appointment) broadcastAppointmentCreated(appointment);
   }
 
   return NextResponse.json({ session }, { status: 201 });
@@ -125,6 +102,7 @@ export async function PATCH(
   let body: Record<string, unknown>;
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
   }
@@ -172,13 +150,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Session introuvable pour ce patient' }, { status: 404 });
   }
 
-  const aptId = 'apt_' + sessionId;
-  try {
-    await executeQuery('DELETE FROM appointments WHERE id = ?', [aptId]);
-    broadcastAppointmentDeleted(aptId);
-  } catch {
-    /* silent */
-  }
+  broadcastAppointmentDeleted('apt_' + sessionId);
 
   return NextResponse.json({ ok: true });
 }

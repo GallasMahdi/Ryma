@@ -1,3 +1,4 @@
+import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import {
@@ -8,7 +9,7 @@ import {
   dbGetBlockedSlots,
   AppointmentStatus,
 } from '@/lib/db';
-import { VALID_TIME_SLOTS } from '@/lib/validation';
+import { VALID_TIME_SLOTS, getLisbonDateTime } from '@/lib/validation';
 import { broadcastAppointmentUpdated, broadcastAppointmentDeleted } from '@/lib/events';
 
 export const dynamic = 'force-dynamic';
@@ -53,17 +54,9 @@ export async function PATCH(
   let body: Record<string, unknown>;
   try {
     body = await request.json();
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  // If status is being updated to CANCELLED, soft-cancel the appointment so clinical history is preserved
-  if (body.status === 'CANCELLED') {
-    const updated = await dbUpdateAppointment(id, { status: 'CANCELLED' });
-    if (updated) {
-      broadcastAppointmentUpdated(updated);
-    }
-    return NextResponse.json({ appointment: updated, id, message: 'Rendez-vous annulé' });
   }
 
   const updates: Partial<{
@@ -89,7 +82,7 @@ export async function PATCH(
   const newStatus = body.status !== undefined ? (body.status as AppointmentStatus) : existing.status;
 
   if (body.date !== undefined || body.startTime !== undefined) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
+    if (!isCalendarDate(newDate)) {
       return NextResponse.json({ error: 'Format de date invalide' }, { status: 422 });
     }
 
@@ -97,6 +90,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Créneau horaire invalide' }, { status: 422 });
     }
 
+    const { todayStr, currentHHMM } = getLisbonDateTime();
+    if (newDate < todayStr || (newDate === todayStr && newTime <= currentHHMM) || new Date(newDate + 'T12:00:00Z').getUTCDay() === 0) return NextResponse.json({ error: 'Choose a future clinic opening time' }, { status: 422 });
     updates.date = newDate;
     updates.startTime = newTime;
   }
@@ -114,7 +109,13 @@ export async function PATCH(
     }
   }
 
-  const updated = await dbUpdateAppointment(id, updates);
+  let updated;
+  try { updated = await dbUpdateAppointment(id, updates); }
+  catch (err) {
+    if (/UNIQUE|slot_taken|slot_blocked/i.test(String(err))) return NextResponse.json({ error: 'Slot no longer available' }, { status: 409 });
+    throw err;
+  }
+  if (!updated) return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
   if (updated) {
     broadcastAppointmentUpdated(updated);
   }
