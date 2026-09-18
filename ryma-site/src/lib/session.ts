@@ -12,7 +12,7 @@ export interface SessionData {
 export const SESSION_OPTIONS: SessionOptions = {
   ttl: SESSION_TTL_SECONDS,
   cookieName: 'ryma_admin_session',
-  password: env.SESSION_SECRET,
+  get password() { return env.SESSION_SECRET; },
   cookieOptions: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

@@ -15,6 +15,15 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
+  let storedHash: string;
+  let sessionSecret: string;
+  try {
+    storedHash = env.ADMIN_PASSWORD_HASH;
+    sessionSecret = env.SESSION_SECRET;
+  } catch (error) {
+    console.error('[AUTH CONFIGURATION]', error instanceof Error ? error.message : 'Invalid credentials configuration');
+    return NextResponse.json({ error: 'Authentication temporarily unavailable', code: 'AUTH_CONFIGURATION_ERROR' }, { status: 503 });
+  }
   const ip = getClientIp(request);
 
   // Rate limiting: 10 attempts in prod (100 in dev) per 15 minutes per IP
@@ -48,7 +57,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(GENERIC_ERROR, { status: 401 });
   }
 
-  const storedHash = (env.ADMIN_PASSWORD_HASH ?? '').replace(/\\/g, '').trim();
   if (!storedHash) {
     console.error('[SECURITY] ADMIN_PASSWORD_HASH is empty.');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
@@ -75,7 +83,7 @@ export async function POST(request: NextRequest) {
   const sessionId = crypto.randomUUID();
   const sessionData: SessionData = { sessionId, isAdmin: true, loginAt: Date.now() };
   const sealed = await sealData(sessionData, {
-    password: SESSION_OPTIONS.password as string,
+    password: sessionSecret,
     ttl: SESSION_OPTIONS.ttl,
   });
 

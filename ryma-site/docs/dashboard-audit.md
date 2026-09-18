@@ -27,9 +27,9 @@ This is a source and isolated integration audit. No real patient records were ch
 
 ## Verification
 
-- `npm run test:dashboard`: **34 passing regression checks**, using a temporary SQLite database and synthetic patient records; no email or cloud database access.
+- `npm run test:dashboard`: **35 passing regression checks**, using a temporary SQLite database and synthetic patient records; no email or cloud database access.
 - `npx tsc --noEmit`: passed after the final code edits.
-- Production build: passed with ephemeral verification credentials using `node scripts/check-production-build.cjs`. Loading dotenv before supplying process-only bcrypt hashes resolved the verification failure. No deployment secrets or login passwords were changed.
+- Production build: `npm run build` passes. `node scripts/check-production-build.cjs` also verifies builds with all authentication credentials blank. Secret validation is deferred until request-time access; importing routes no longer throws during page-data collection. Invalid production credentials still prevent authentication (login returns 503 with `AUTH_CONFIGURATION_ERROR`). Admin login does not depend on the owner fallback password. No deployment secrets or login passwords were changed.
 - Regression coverage includes authentication boundaries, revocation, profile preservation, rollback under booking conflicts, paired deletion, invoice retry concurrency, real payment aggregation, Lisbon summer-time boundaries, malformed requests, and event cleanup.
 
 ## Remaining issues and verification limits

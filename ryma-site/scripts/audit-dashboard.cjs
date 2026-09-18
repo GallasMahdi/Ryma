@@ -137,11 +137,28 @@ await test('production rejects shared defaults and accepts unique fixture creden
   const original=process.env.SESSION_SECRET;
   try {
     process.env.NODE_ENV='production';
-    new Function('exports',code)({});
+    const exported={};
+    new Function('exports',code)(exported);
+    assert.equal(exported.env.SESSION_SECRET,original);
     delete process.env.SESSION_SECRET;
-    assert.throws(()=>new Function('exports',code)({}),/Production requires/);
+    assert.doesNotThrow(()=>new Function('exports',code)({}));
+    assert.throws(()=>exported.env.SESSION_SECRET,/Production requires/);
+    const result=await routes('login').POST(request('login','POST',{password:'test-only-password'}));
+    assert.equal(result.status,503);
+    assert.equal((await result.json()).code,'AUTH_CONFIGURATION_ERROR');
     assert.throws(()=>db.getDb(),/Persistent database/);
   } finally {process.env.NODE_ENV='test';process.env.SESSION_SECRET=original;}
+});
+await test('missing owner fallback does not disable configured admin credentials',async()=>{
+  const originalOwner=process.env.OWNER_ANALYTICS_PASSWORD_HASH;
+  try {
+    process.env.NODE_ENV='production';
+    delete process.env.OWNER_ANALYTICS_PASSWORD_HASH;
+    const {env}=require('../src/lib/env.ts');
+    assert.ok(env.ADMIN_PASSWORD_HASH);
+    assert.ok(require('../src/lib/session.ts').SESSION_OPTIONS.password);
+    assert.throws(()=>env.OWNER_ANALYTICS_PASSWORD_HASH,/OWNER_ANALYTICS_PASSWORD_HASH/);
+  } finally {process.env.NODE_ENV='test';process.env.OWNER_ANALYTICS_PASSWORD_HASH=originalOwner;}
 });
 console.log(`\n${passed} dashboard regression checks passed. No live database or email used.`);
 }

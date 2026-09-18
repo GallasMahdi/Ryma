@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unsealData } from 'iron-session';
 import { isAdminSessionValid } from '@/lib/session-policy';
+import { env } from '@/lib/env';
 import type { SessionData } from '@/lib/session';
 
 /**
@@ -30,14 +31,9 @@ export async function proxy(request: NextRequest) {
     return redirectToLogin(request, pathname);
   }
 
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) {
-    return redirectToLogin(request, pathname);
-  }
-
   try {
     const session = await unsealData<SessionData>(sessionCookie.value, {
-      password: secret,
+      password: env.SESSION_SECRET,
     });
 
     if (!isAdminSessionValid(session)) {
@@ -66,4 +62,3 @@ function redirectToLogin(request: NextRequest, from: string) {
 export const config = {
   matcher: ['/admin', '/admin/:path*'],
 };
-
