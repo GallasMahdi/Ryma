@@ -27,14 +27,14 @@ This is a source and isolated integration audit. No real patient records were ch
 
 ## Verification
 
-- `npm run test:dashboard`: **35 passing regression checks**, using a temporary SQLite database and synthetic patient records; no email or cloud database access.
+- `npm run test:dashboard`: **36 passing regression checks**, using a temporary SQLite database and synthetic patient records; no email or cloud database access. This includes production-mode login using the explicitly configured existing test password, and rejection when its hash is absent.
 - `npx tsc --noEmit`: passed after the final code edits.
 - Production build: `npm run build` passes. `node scripts/check-production-build.cjs` also verifies builds with all authentication credentials blank. Secret validation is deferred until request-time access; importing routes no longer throws during page-data collection. Invalid production credentials still prevent authentication (login returns 503 with `AUTH_CONFIGURATION_ERROR`). Admin login does not depend on the owner fallback password. No deployment secrets or login passwords were changed.
 - Regression coverage includes authentication boundaries, revocation, profile preservation, rollback under booking conflicts, paired deletion, invoice retry concurrency, real payment aggregation, Lisbon summer-time boundaries, malformed requests, and event cleanup.
 
 ## Remaining issues and verification limits
 
-1. **Deployment configuration:** valid unique session/admin/owner secrets are required in Vercel; this audit does not modify or certify that environment. Remote Turso failure/concurrency paths need testing against a disposable Turso database before deployment; the regression suite verifies SQLite transactions only. A read-only live connectivity check passed outside the local network sandbox.
+1. **Deployment configuration:** Vercel requires a valid configured admin password hash and unique session/owner secrets; this audit does not modify or certify that environment. The explicitly configured existing admin test password is accepted; automatic production password fallback remains disabled. Remote Turso failure/concurrency paths need testing against a disposable Turso database before deployment; the regression suite verifies SQLite transactions only. A read-only live connectivity check passed outside the local network sandbox.
 2. **Historical recurring-session links:** new sessions have reliable calendar links, but older records may not. A read-only reconciliation report and a reviewed migration are needed before repairing historical relationships; this audit does not guess matches in clinical data.
 3. **Legacy invoice retry keys:** new invoice requests use a namespaced transactional record. Old retry-cache entries are not migrated, so replaying a pre-change key can create a new invoice. Avoid replaying old requests during rollout; reconcile legacy keys if such retries are queued.
 4. **Scheduling semantics:** collision protection uses date/start-time slots. Treatment-duration overlap, multiple practitioners, and room capacity are not represented by this model. Confirm the clinic's scheduling rules before extending it.

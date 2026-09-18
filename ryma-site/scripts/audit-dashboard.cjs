@@ -160,6 +160,28 @@ await test('missing owner fallback does not disable configured admin credentials
     assert.throws(()=>env.OWNER_ANALYTICS_PASSWORD_HASH,/OWNER_ANALYTICS_PASSWORD_HASH/);
   } finally {process.env.NODE_ENV='test';process.env.OWNER_ANALYTICS_PASSWORD_HASH=originalOwner;}
 });
+await test('production accepts the explicitly configured existing admin password but never an absent hash',async()=>{
+  const originalHash=process.env.ADMIN_PASSWORD_HASH;
+  const originalFallback=process.env.ALLOW_SQLITE_FALLBACK;
+  try {
+    process.env.NODE_ENV='development';
+    delete process.env.ADMIN_PASSWORD_HASH;
+    const {env}=require('../src/lib/env.ts');
+    const existingHash=env.ADMIN_PASSWORD_HASH;
+    process.env.ADMIN_PASSWORD_HASH=existingHash;
+    process.env.NODE_ENV='production';
+    process.env.ALLOW_SQLITE_FALLBACK='true';
+    jar.clear();
+    assert.equal((await routes('login').POST(request('login','POST',{password:'ryma2024admin'}))).status,200);
+    assert.equal((await routes('me').GET(request('me'))).status,200);
+    delete process.env.ADMIN_PASSWORD_HASH;
+    assert.throws(()=>env.ADMIN_PASSWORD_HASH,/ADMIN_PASSWORD_HASH/);
+    assert.equal((await routes('login').POST(request('login','POST',{password:'ryma2024admin'}))).status,503);
+  } finally {
+    process.env.NODE_ENV='test';process.env.ADMIN_PASSWORD_HASH=originalHash;
+    if(originalFallback===undefined)delete process.env.ALLOW_SQLITE_FALLBACK;else process.env.ALLOW_SQLITE_FALLBACK=originalFallback;
+  }
+});
 console.log(`\n${passed} dashboard regression checks passed. No live database or email used.`);
 }
 main().catch(err=>{console.error(err);process.exitCode=1;}).finally(()=>{try{db.getDb().close();}catch{};for(const name of ['fixture.db','fixture.db-wal','fixture.db-shm']){const file=path.join(temp,name);if(fs.existsSync(file))fs.unlinkSync(file);}fs.rmdirSync(temp);});

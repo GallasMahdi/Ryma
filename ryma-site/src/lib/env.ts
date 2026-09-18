@@ -1,4 +1,4 @@
-/** Validate deployment secrets; shared defaults are allowed only in development. */
+/** Validate configured credentials; automatic defaults are development-only. */
 
 const DEFAULT_ADMIN_HASH = '$2b$12$mZ3/r/MFfB0bC14buxvXUuk5podIpggQ7sfis2Iyt5MnoZWeUh/Eu'; // ryma2024admin
 const DEFAULT_OWNER_HASH = '$2b$12$o9xduoDVUtaft5YD4d7hfuyVMNKI.NXxCOUmcttbn16L52/TCbE5W'; // ryma2024owner
@@ -6,7 +6,7 @@ const DEFAULT_SESSION_SECRET = 'c3a640f6a9b29b4c507540a4492d5b55be8c2002ebc420bb
 
 export class AuthConfigurationError extends Error {
   constructor(key: string) {
-    super(`Production requires unique, valid credentials: ${key}.`);
+    super(`Production requires valid configured credentials: ${key}.`);
     this.name = 'AuthConfigurationError';
   }
 }
@@ -15,7 +15,10 @@ function credential(key: string, developmentDefault: string, isHash = false): st
   const raw = (process.env[key] ?? '').trim();
   const value = isHash ? raw.replace(/\\/g, '') : raw;
   const valid = isHash ? /^\$2[aby]\$(0[4-9]|[12]\d|3[01])\$[./A-Za-z0-9]{53}$/.test(value) : value.length >= 32;
-  if (process.env.NODE_ENV === 'production' && (!valid || value === developmentDefault)) throw new AuthConfigurationError(key);
+  // Respect an explicitly configured admin password, including existing test deployments.
+  // Missing hashes still fail closed; the shared session signing key is never accepted.
+  const disallowedDefault = value === developmentDefault && key !== 'ADMIN_PASSWORD_HASH';
+  if (process.env.NODE_ENV === 'production' && (!valid || disallowedDefault)) throw new AuthConfigurationError(key);
   return valid ? value : developmentDefault;
 }
 
