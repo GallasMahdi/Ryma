@@ -74,15 +74,8 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: '/blog/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
+      // Blog pages depend on the language cookie. Keep Next.js page caching
+      // defaults; immutable caching belongs to versioned assets, not article URLs.
       // Strict No-Cache for Admin & Dynamic API Endpoints
       {
         source: '/admin/:path*',

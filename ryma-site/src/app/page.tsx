@@ -12,6 +12,7 @@ export default function HomePage() {
       <UnifiedServicesExplorer />
       <BeforeAfterGallery />
       <TestimonialsSection />
+      <BlogPreview />
       <CTABanner />
     </>
   );

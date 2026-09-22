@@ -309,22 +309,20 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
         <button
           type="button"
           onClick={handleJumpToday}
-          className={`py-1.5 sm:py-1 px-1 rounded-lg border text-center transition-colors truncate ${
-            selectedDate === todayStr
+          className={`py-1.5 sm:py-1 px-1 rounded-lg border text-center transition-colors truncate ${selectedDate === todayStr
               ? 'bg-[#0F172A] text-white border-[#0F172A] font-bold'
               : 'bg-[#F8FAFC] text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9]'
-          }`}
+            }`}
         >
           {txt('Aujourd’hui', 'Today', 'Hoje')}
         </button>
         <button
           type="button"
           onClick={handleJumpTomorrow}
-          className={`py-1.5 sm:py-1 px-1 rounded-lg border text-center transition-colors truncate ${
-            selectedDate === tomorrowStr
+          className={`py-1.5 sm:py-1 px-1 rounded-lg border text-center transition-colors truncate ${selectedDate === tomorrowStr
               ? 'bg-[#0F172A] text-white border-[#0F172A] font-bold'
               : 'bg-[#F8FAFC] text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9]'
-          }`}
+            }`}
         >
           {txt('Demain', 'Tomorrow', 'Amanhã')}
         </button>
@@ -349,9 +347,8 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
         {WEEKDAY_NAMES[lang].map((w, idx) => (
           <div
             key={idx}
-            className={`text-[10px] font-bold uppercase tracking-wider py-1 ${
-              idx === 6 ? 'text-[#94A3B8]' : 'text-[#64748B]'
-            }`}
+            className={`text-[10px] font-bold uppercase tracking-wider py-1 ${idx === 6 ? 'text-[#94A3B8]' : 'text-[#64748B]'
+              }`}
           >
             {w}
           </div>
@@ -370,24 +367,22 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
                 onSelectDate(day.dateStr);
                 setIsOpen(false);
               }}
-              className={`h-9 rounded-xl text-xs font-semibold flex flex-col items-center justify-center relative transition-all touch-manipulation ${
-                day.isSelected
+              className={`h-9 rounded-xl text-xs font-semibold flex flex-col items-center justify-center relative transition-all touch-manipulation ${day.isSelected
                   ? 'bg-[#0F172A] text-white shadow-md ring-2 ring-[#C49A3C]/40 font-bold z-10'
                   : day.isToday
-                  ? 'bg-[#F1F5F9] text-[#0F172A] border border-[#CBD5E1] font-bold'
-                  : !day.isCurrentMonth
-                  ? 'text-[#CBD5E1] hover:bg-[#F8FAFC]'
-                  : isSunday
-                  ? 'text-[#94A3B8] bg-[#F8FAFC]/50 hover:bg-[#F1F5F9]'
-                  : 'text-[#1E293B] hover:bg-[#F1F5F9]'
-              }`}
+                    ? 'bg-[#F1F5F9] text-[#0F172A] border border-[#CBD5E1] font-bold'
+                    : !day.isCurrentMonth
+                      ? 'text-[#CBD5E1] hover:bg-[#F8FAFC]'
+                      : isSunday
+                        ? 'text-[#94A3B8] bg-[#F8FAFC]/50 hover:bg-[#F1F5F9]'
+                        : 'text-[#1E293B] hover:bg-[#F1F5F9]'
+                }`}
             >
               <span>{day.dayNumber}</span>
               {day.appointmentCount > 0 && (
                 <span
-                  className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${
-                    day.isSelected ? 'bg-[#C49A3C]' : 'bg-[#2563EB]'
-                  }`}
+                  className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${day.isSelected ? 'bg-[#C49A3C]' : 'bg-[#2563EB]'
+                    }`}
                   title={`${day.appointmentCount} ${txt('rendez-vous', 'appointments', 'consultas')}`}
                 />
               )}
@@ -438,13 +433,12 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-xs ${
-            isOpen
+          className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-xs ${isOpen
               ? 'bg-[#0F172A] text-white border-[#0F172A] ring-2 ring-[#0F172A]/20'
               : isDateFilterActive
-              ? 'bg-[#FAF6EE] text-[#C49A3C] border-[#C49A3C] font-bold'
-              : 'bg-white hover:bg-[#F8FAFC] text-[#0F172A] border-[#E2E8F0]'
-          }`}
+                ? 'bg-[#FAF6EE] text-[#C49A3C] border-[#C49A3C] font-bold'
+                : 'bg-white hover:bg-[#F8FAFC] text-[#0F172A] border-[#E2E8F0]'
+            }`}
           title={txt('Sélecteur direct de calendrier', 'Jump to date in calendar', 'Salto direto de data no calendário')}
         >
           <div className="w-5 h-5 rounded-md bg-[#0F172A]/5 group-hover:bg-[#0F172A]/10 flex items-center justify-center text-[#C49A3C]">
@@ -459,11 +453,10 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
-            isOpen || isDateFilterActive
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${isOpen || isDateFilterActive
               ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-xs'
               : 'bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]'
-          }`}
+            }`}
         >
           <IconCalendarEvent size={14} className={isDateFilterActive ? 'text-[#C49A3C]' : ''} />
           <span>{isDateFilterActive ? formattedTriggerLabel : txt('Date spécifique', 'Specific date', 'Data específica')}</span>

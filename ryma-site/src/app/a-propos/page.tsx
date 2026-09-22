@@ -1,25 +1,23 @@
 'use client';
 
+import { EditorialPageHeader } from '@/components/layout/EditorialPageHeader';
+import headerStyles from '@/components/layout/EditorialPageHeader.module.css';
+import { EDITORIAL_PAGES } from '@/data/editorial-pages';
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { CounterAnimation } from '@/components/animation/CounterAnimation';
 import { Button } from '@/components/ui/Button';
 import { playSoftClick } from '@/lib/sound';
 import {
-  IconSparkles,
-  IconAward,
   IconShieldCheck,
   IconStethoscope,
   IconFlame,
   IconCalendarEvent,
-  IconCheck,
   IconBrandWhatsapp,
   IconArrowRight,
-  IconMapPin,
 } from '@tabler/icons-react';
 
 const DIPLOMAS = [
@@ -168,128 +166,23 @@ const TIMELINE = [
 export default function AboutPage() {
   const { lang, t } = useLanguage();
 
+  const intro = EDITORIAL_PAGES.about[lang];
   return (
-    <div className="bg-[#FAFAF8] text-[#1A1412] select-none">
+    <div className="bg-[#FAFAF8] text-[#1A1412]">
       
-      {/* ── Cinematic Hero with Background Image & Ambient Animation ── */}
-      <section className="relative pt-28 sm:pt-36 pb-16 sm:pb-20 overflow-hidden bg-[#1A1412] text-white text-center">
-        {/* Photographic Background Layer with Smooth Zoom */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/hero/clinic.jpg"
-            alt="Digital Clínica Lisboa"
-            fill
-            priority
-            className="object-cover object-center opacity-30 scale-105 transform transition-transform duration-1000"
-          />
-          {/* Obsidian & Champagne Gold Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1A1412]/90 via-[#1A1412]/75 to-[#1A1412]" />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                'radial-gradient(ellipse 75% 60% at 50% 20%, rgba(196,154,60,0.3) 0%, transparent 75%)',
-            }}
-          />
+      <EditorialPageHeader
+        eyebrow={intro.eyebrow} title={intro.title} emphasis={intro.emphasis} description={intro.description}
+        aside={<><span className={headerStyles.asideLabel}>{intro.asideLabel}</span><ol className={headerStyles.principles}>{intro.principles.map((principle, index) => <li key={principle}><span aria-hidden="true">0{index + 1}</span>{principle}</li>)}</ol></>}
+      >
+        <div className={headerStyles.actions}>
+          <a href="#our-approach" className={headerStyles.primary}>{intro.action}<IconArrowRight size={16} aria-hidden="true" /></a>
+          <Link href="/rendez-vous" className={headerStyles.secondary}>{intro.secondary}</Link>
         </div>
-
-        {/* Ambient Floating Gold Particles */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
-          {[
-            { top: '15%', left: '15%', size: 4, dur: 4.3, delay: 0 },
-            { top: '25%', left: '80%', size: 3.5, dur: 5.1, delay: 0.8 },
-            { top: '65%', left: '10%', size: 3, dur: 4.6, delay: 0.5 },
-            { top: '55%', left: '88%', size: 4.5, dur: 5.9, delay: 1.2 },
-            { top: '78%', left: '46%', size: 3.2, dur: 5.0, delay: 1.9 },
-          ].map((p, idx) => (
-            <motion.div
-              key={idx}
-              className="absolute rounded-full bg-[#E8C97A] opacity-60"
-              style={{
-                top: p.top,
-                left: p.left,
-                width: p.size,
-                height: p.size,
-                boxShadow: '0 0 12px 2px rgba(232, 201, 122, 0.8)',
-              }}
-              animate={{
-                y: [0, -20, 0],
-                opacity: [0.3, 0.9, 0.3],
-                scale: [1, 1.3, 1],
-              }}
-              transition={{
-                duration: p.dur,
-                repeat: Infinity,
-                delay: p.delay,
-                ease: 'easeInOut',
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 md:px-12">
-          <ScrollReveal>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-[#C49A3C]/40 px-4 py-1.5 rounded-full mb-4 sm:mb-5 shadow-[0_2px_12px_rgba(196,154,60,0.25)]">
-              <IconSparkles size={14} className="text-[#E8C97A]" />
-              <span className="font-mono text-[11px] tracking-[0.24em] text-[#F5E9C8] uppercase font-bold">
-                {lang === 'pt' ? 'Sobre a Digital Clínica' : lang === 'en' ? 'About Digital Clinic' : 'À Propos de la Clinique'}
-              </span>
-            </div>
-
-            <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 tracking-tight leading-[1.1] drop-shadow-[0_2px_16px_rgba(0,0,0,0.6)]">
-              {lang === 'pt' ? (
-                <>
-                  Rigor Clínico & <br className="hidden sm:inline" />
-                  <span className="bg-gradient-to-r from-[#E8C97A] via-[#F5E9C8] to-[#C49A3C] bg-clip-text text-transparent">
-                    Sensibilidade Estética
-                  </span>
-                </>
-              ) : lang === 'en' ? (
-                <>
-                  Clinical Precision & <br className="hidden sm:inline" />
-                  <span className="bg-gradient-to-r from-[#E8C97A] via-[#F5E9C8] to-[#C49A3C] bg-clip-text text-transparent">
-                    Aesthetic Excellence
-                  </span>
-                </>
-              ) : (
-                <>
-                  Rigueur Médicale & <br className="hidden sm:inline" />
-                  <span className="bg-gradient-to-r from-[#E8C97A] via-[#F5E9C8] to-[#C49A3C] bg-clip-text text-transparent">
-                    Sensibilité Esthétique
-                  </span>
-                </>
-              )}
-            </h1>
-
-            <p className="text-[#E8E2D8] text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal mb-8">
-              {lang === 'pt'
-                ? 'Aliamos mais de uma década de prática fisioterapêutica médica às tecnologias de remodelação corporal mais avançadas da Europa, garantindo um acompanhamento totalmente individualizado.'
-                : lang === 'en'
-                ? 'Combining over a decade of clinical physiotherapy expertise with Europe’s most advanced non-invasive body contouring technologies in a private, serene setting.'
-                : 'Alliant plus d\'une décennie d\'expérience clinique aux technologies minceur de pointe pour vous offrir une prise en charge sur mesure, sûre et bienveillante.'}
-            </p>
-
-            {/* Trust Highlights Ribbon */}
-            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 mt-6 text-xs text-[#F5E9C8] font-medium">
-              <span className="inline-flex items-center gap-1.5 bg-[#2A221E]/80 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-[#C49A3C]/30 shadow-xs">
-                <IconAward size={15} className="text-[#E8C97A]" />
-                {lang === 'pt' ? '14+ Anos de Experiência' : lang === 'en' ? '14+ Years Clinical Care' : '14+ Ans d\'Expérience'}
-              </span>
-              <span className="inline-flex items-center gap-1.5 bg-[#2A221E]/80 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-[#C49A3C]/30 shadow-xs">
-                <IconStethoscope size={15} className="text-[#E8C97A]" />
-                {lang === 'pt' ? 'Fisioterapeuta D.E. & RPG' : lang === 'en' ? 'Licensed Physio & GPR' : 'Kinésithérapeute D.E'}
-              </span>
-              <span className="inline-flex items-center gap-1.5 bg-[#2A221E]/80 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-[#C49A3C]/30 shadow-xs">
-                <IconMapPin size={15} className="text-[#E8C97A]" />
-                {lang === 'pt' ? 'Avenida da Liberdade • Lisboa' : lang === 'en' ? 'Avenida da Liberdade • Lisbon' : 'Avenida da Liberdade • Lisbonne'}
-              </span>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
+        <p className={headerStyles.footnote}>{intro.note}</p>
+      </EditorialPageHeader>
 
       {/* ── Editorial Story & Pillars Grid ───────────────────────── */}
-      <section className="py-12 sm:py-20 bg-[#FAFAF8]">
+      <section id="our-approach" className="scroll-mt-28 py-12 sm:py-20 bg-[#FAFAF8]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
             

@@ -774,7 +774,7 @@ La radiofréquence chauffe le derme pour relancer la production de collagène, i
     relatedServiceSlug: 'radiofrequence',
     readingTime: 8,
     publishedAt: '2026-08-12',
-    coverImage: '/hero_slimming_bg.png',
+    coverImage: '/hero/slimming.jpg',
     tags: ['radiofréquence', 'cryolipolyse', 'minceur', 'comparatif'],
     seoDescription: {
       pt: 'Comparativo clínico entre radiofrequência e criolipólise: indicações, mecanismos e resultados pela Digital Clínica em Lisboa.',

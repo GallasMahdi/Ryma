@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Digital Clínica — Product overview</title>
+<style>body{margin:0;background:#f7f8fa;color:#11182c;font:16px system-ui,sans-serif}main{max-width:760px;margin:32px auto;padding:0 20px}h1{font-size:26px}p{color:#66768c;line-height:1.6}video{display:block;width:100%;border-radius:16px;background:#fff;box-shadow:0 8px 36px #11182c10}nav{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}button,a{border:1px solid #dce2eb;border-radius:8px;padding:10px 14px;background:white;color:#11182c;font:inherit;text-decoration:none;cursor:pointer}button:hover{border-color:#bf9737}</style>
+<main><h1>Digital Clínica</h1><p>40-second product overview · Square 1080p · Ambient audio · Burned-in text</p>
+<video id="film" controls playsinline preload="metadata" poster="poster.jpg"><source src="digital-clinica-square.mp4" type="video/mp4"></video>
+<nav><button data-time="0">Hook</button><button data-time="4">Reveal</button><button data-time="8">Features</button><button data-time="28">Benefit</button><button data-time="34">Closing</button><a href="digital-clinica-square.mp4" download>Download MP4</a></nav>
+<p>Scheduling, patient records and billing in one platform.</p></main>
+<script>document.querySelectorAll('[data-time]').forEach(b=>b.onclick=()=>{document.querySelector('video').currentTime=Number(b.dataset.time)});</script></html>
