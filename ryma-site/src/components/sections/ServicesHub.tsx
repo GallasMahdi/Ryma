@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect, memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { SERVICES, Service, getLocalizedText, getLocalizedList } from '@/data/services';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
@@ -85,23 +84,159 @@ function getServiceIcon(iconKey: string, size = 18) {
   }
 }
 
+// Scrolling only rerenders the previously active and newly active cards.
+const ServiceCarouselCard = memo(function ServiceCarouselCard({ service, index, isCurrent, onSelect }: {
+  service: Service;
+  index: number;
+  isCurrent: boolean;
+  onSelect: (index: number) => void;
+}) {
+  const { lang, t } = useLanguage();
+  const isKine = service.pole === 'kinesitherapie';
+  const keyIndications = getLocalizedList(service.indications, lang).slice(0, 2);
+  return (
+    <div
+      onClick={() => onSelect(index)}
+      className={`service-carousel-card snap-start shrink-0 w-[84vw] sm:w-[340px] lg:w-[370px] flex flex-col justify-between bg-white rounded-3xl border p-4 sm:p-5 transition-[border-color,box-shadow] duration-200 group overflow-hidden ${
+        isCurrent
+          ? 'border-[#C49A3C] shadow-[0_16px_45px_rgba(196,154,60,0.18)] ring-1 ring-[#C49A3C]/30'
+          : 'border-[#E8E2D8] hover:border-[#C49A3C]/60 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_36px_rgba(196,154,60,0.12)]'
+      }`}
+    >
+      {/* Top Image Preview with Gold Tag */}
+      <Link
+        draggable={false}
+        href={`/services/${service.slug}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          playSoftClick();
+        }}
+        className="block relative h-40 sm:h-44 w-full rounded-2xl overflow-hidden mb-3.5 bg-[#F5EFE6] cursor-pointer"
+        title={getLocalizedText(service.name, lang)}
+      >
+        <Image
+          draggable={false}
+          quality={70}
+          src={getServiceHeroImage(service)}
+          alt={getLocalizedText(service.name, lang)}
+          fill
+          sizes="(max-width: 639px) calc(84vw - 34px), (max-width: 1023px) 298px, 328px"
+          className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A05]/80 via-[#0F0A05]/20 to-transparent" />
+
+        {/* Top Badges */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md text-[10px] font-sans font-bold uppercase tracking-wider text-[#8A6A24] border border-[#C49A3C]/30 shadow-xs">
+            {getServiceIcon(service.icon, 13)}
+            <span>
+              {isKine
+                ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
+                : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming' : 'Soins Minceur'}
+            </span>
+          </span>
+
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1A1412]/85 backdrop-blur-md text-white font-mono text-[10px] font-semibold border border-white/20">
+            <IconClock size={11} className="text-[#E8C97A]" />
+            <span>{service.duration}</span>
+          </span>
+        </div>
+
+        {/* Bottom Price inside Image */}
+        <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between">
+          <span className="font-mono text-xs sm:text-sm font-bold text-[#E8C97A] drop-shadow-sm">
+            {service.price} {t.common.currency} <span className="text-[10px] text-white/80 font-normal">/ sessão</span>
+          </span>
+        </div>
+      </Link>
+
+      {/* Content Section */}
+      <div className="flex-1 flex flex-col justify-between">
+        <div>
+          {/* Title */}
+          <Link
+            draggable={false}
+            href={`/services/${service.slug}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              playSoftClick();
+            }}
+            className="block group-hover:text-[#9A7428] transition-colors"
+          >
+            <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412] leading-snug mb-1.5 truncate">
+              {getLocalizedText(service.name, lang)}
+            </h3>
+          </Link>
+
+          {/* Short Description */}
+          <p className="text-xs sm:text-sm text-[#6B6058] leading-relaxed line-clamp-2 mb-3 font-normal">
+            {getLocalizedText(service.shortDesc, lang)}
+          </p>
+
+          {/* Clinical Benefits Checklist */}
+          {keyIndications.length > 0 && (
+            <div className="bg-[#FAF8F5] border border-[#E8E2D8] rounded-xl p-2.5 mb-3.5 space-y-1">
+              {keyIndications.map((ind, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-[11px] text-[#554C42]">
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#FAF5EA] border border-[#C49A3C]/40 flex items-center justify-center shrink-0">
+                    <IconCheck size={10} className="text-[#9A7428]" />
+                  </div>
+                  <span className="truncate">{ind}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Card Action Buttons */}
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#F0EBE1]">
+          <Link
+            draggable={false}
+            href={`/services/${service.slug}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              playSoftClick();
+            }}
+            className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl border border-[#C49A3C]/30 hover:border-[#C49A3C] bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-white font-bold text-xs transition-all shadow-2xs group/btn"
+          >
+            <span>{lang === 'pt' ? 'Selecionar' : lang === 'en' ? 'Select' : 'Sélectionner'}</span>
+            <IconArrowRight size={13} className="group-hover/btn:translate-x-0.5 transition-transform" />
+          </Link>
+
+          <Link
+            draggable={false}
+            href={`/rendez-vous?service=${service.slug}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              playSoftClick();
+            }}
+            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#9A7428] hover:from-[#B88E32] hover:to-[#8A6620] text-white font-bold text-xs transition-all shadow-xs hover:shadow-md"
+          >
+            <IconCalendarEvent size={13} />
+            <span>{lang === 'pt' ? 'Agendar' : lang === 'en' ? 'Book' : 'Réserver'}</span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export interface ServicesHubProps {
   embedded?: boolean;
   hideHeader?: boolean;
 }
 
 export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHeader = false }: ServicesHubProps = {}) {
-  const { lang, t } = useLanguage();
+  const { lang } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
-  // Mouse Drag state for desktop grab-and-swipe
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeftState, setScrollLeftState] = useState(0);
-
+  const [slideCount, setSlideCount] = useState(SERVICES.length);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const geometryRef = useRef({ step: 0, maxScroll: 0, lastSlide: 0 });
+  const scrollFrameRef = useRef<number | null>(null);
+  const dragRef = useRef({ active: false, moved: false, startX: 0, scrollLeft: 0 });
 
   const matchesCategory = useCallback((service: Service, cat: CategoryFilter): boolean => {
     if (cat === 'all') return true;
@@ -123,11 +258,11 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
   }, []);
 
   const filteredServices = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return SERVICES.filter((service) => {
       if (!matchesCategory(service, activeCategory)) return false;
-      if (!searchQuery.trim()) return true;
+      if (!q) return true;
 
-      const q = searchQuery.toLowerCase().trim();
       const name = getLocalizedText(service.name, lang).toLowerCase();
       const desc = getLocalizedText(service.shortDesc, lang).toLowerCase();
       const tags = service.keywords?.join(' ').toLowerCase() ?? '';
@@ -144,72 +279,97 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
     };
   }, [matchesCategory]);
 
-  // Reset scroll position on filter change
+  // Measure only when the content or viewport changes, never inside a scroll frame.
   useEffect(() => {
+    const container = carouselRef.current;
+    if (!container) return;
+    container.scrollTo({ left: 0, behavior: 'instant' });
     setCurrentSlideIndex(0);
-    if (carouselRef.current) {
-      carouselRef.current.scrollLeft = 0;
-    }
-  }, [activeCategory, searchQuery]);
+    const measure = () => {
+      // Preserve the scroll position while the other explorer tab is open.
+      if (!container.clientWidth) return;
+      const card = container.querySelector<HTMLElement>('.service-carousel-card');
+      const step = card ? card.getBoundingClientRect().width + parseFloat(getComputedStyle(container).columnGap) : 0;
+      const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
+      const lastSlide = step ? Math.min(filteredServices.length - 1, Math.ceil(Math.max(0, maxScroll - 1) / step)) : 0;
+      geometryRef.current = { step, maxScroll, lastSlide };
+      setSlideCount(filteredServices.length ? lastSlide + 1 : 0);
+      setCurrentSlideIndex(!step ? 0 : container.scrollLeft >= maxScroll - 1
+        ? lastSlide
+        : Math.min(lastSlide, Math.round(container.scrollLeft / step)));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    const card = container.querySelector<HTMLElement>('.service-carousel-card');
+    if (card) observer.observe(card);
+    return () => {
+      observer.disconnect();
+      if (scrollFrameRef.current !== null) cancelAnimationFrame(scrollFrameRef.current);
+      scrollFrameRef.current = null;
+    };
+  }, [filteredServices]);
 
-  // Track scroll position for active indicator
+  // Coalesce scroll events into one inexpensive update per animation frame.
   const handleScroll = useCallback(() => {
-    if (!carouselRef.current) return;
-    const { scrollLeft, clientWidth } = carouselRef.current;
-    if (clientWidth === 0) return;
-    const card = carouselRef.current.querySelector<HTMLElement>('.service-carousel-card');
-    const cardWidth = card ? card.offsetWidth + 20 : clientWidth * 0.85;
-    const index = Math.round(scrollLeft / cardWidth);
-    setCurrentSlideIndex(Math.min(Math.max(index, 0), filteredServices.length - 1));
-  }, [filteredServices.length]);
+    if (scrollFrameRef.current !== null) return;
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      const container = carouselRef.current;
+      const { step, maxScroll, lastSlide } = geometryRef.current;
+      if (!container || !step) return;
+      const index = container.scrollLeft >= maxScroll - 1
+        ? lastSlide
+        : Math.round(container.scrollLeft / step);
+      setCurrentSlideIndex(Math.max(0, Math.min(index, lastSlide)));
+    });
+  }, []);
 
   const scrollToSlide = useCallback((index: number) => {
-    if (!carouselRef.current) return;
     const container = carouselRef.current;
-    const card = container.querySelector<HTMLElement>('.service-carousel-card');
-    const cardWidth = card ? card.offsetWidth + 20 : container.clientWidth * 0.85;
+    const { step, maxScroll, lastSlide } = geometryRef.current;
+    if (!container || !step) return;
+    const target = Math.max(0, Math.min(index, lastSlide));
     container.scrollTo({
-      left: index * cardWidth,
-      behavior: 'smooth',
+      left: Math.min(target * step, maxScroll),
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
     });
-    setCurrentSlideIndex(index);
     playSlideChange();
   }, []);
 
   const handleNext = () => {
-    if (currentSlideIndex < filteredServices.length - 1) {
-      scrollToSlide(currentSlideIndex + 1);
-    } else {
-      scrollToSlide(0);
-    }
+    scrollToSlide(currentSlideIndex < slideCount - 1 ? currentSlideIndex + 1 : 0);
   };
 
   const handlePrev = () => {
-    if (currentSlideIndex > 0) {
-      scrollToSlide(currentSlideIndex - 1);
-    } else {
-      scrollToSlide(filteredServices.length - 1);
+    scrollToSlide(currentSlideIndex > 0 ? currentSlideIndex - 1 : slideCount - 1);
+  };
+
+  // Touch keeps native momentum scrolling; mouse dragging uses refs without rerenders.
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    dragRef.current = { active: true, moved: false, startX: event.clientX, scrollLeft: event.currentTarget.scrollLeft };
+  };
+
+  const handlePointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current.active = false;
+    delete event.currentTarget.dataset.dragging;
+    event.currentTarget.style.scrollSnapType = 'x mandatory';
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag.active) return;
+    const distance = event.clientX - drag.startX;
+    if (!drag.moved && Math.abs(distance) < 5) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      event.currentTarget.dataset.dragging = 'true';
+      event.currentTarget.style.scrollSnapType = 'none';
     }
-  };
-
-  // Mouse Drag Events for Desktop Smooth Swiping
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!carouselRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - carouselRef.current.offsetLeft);
-    setScrollLeftState(carouselRef.current.scrollLeft);
-  };
-
-  const handleMouseLeaveOrUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !carouselRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5; // Drag speed multiplier
-    carouselRef.current.scrollLeft = scrollLeftState - walk;
+    event.preventDefault();
+    event.currentTarget.scrollLeft = drag.scrollLeft - distance;
   };
 
   const hubContent = (
@@ -256,6 +416,8 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
                 return (
                   <button
                     key={cat.id}
+                    type="button"
+                    aria-pressed={isActive}
                     onClick={() => {
                       setActiveCategory(cat.id);
                       playSoftClick();
@@ -282,7 +444,8 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
             <div className="relative flex items-center bg-white border border-[#E8E2D8] focus-within:border-[#C49A3C] rounded-full px-3.5 py-1.5 text-xs shadow-2xs transition-all w-full md:w-60 shrink-0">
               <IconSearch size={14} className="text-[#8A8078] shrink-0 me-2" />
               <input
-                type="text"
+                type="search"
+                aria-label={lang === 'pt' ? 'Pesquisar cuidados' : lang === 'en' ? 'Search treatments' : 'Rechercher un soin'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={lang === 'pt' ? 'Pesquisar...' : lang === 'en' ? 'Search...' : 'Rechercher...'}
@@ -304,26 +467,30 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
         <div className="flex items-center justify-between px-2 mb-4">
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs font-bold text-[#8A6A24] bg-[#FAF5EA] border border-[#C49A3C]/30 px-3 py-1 rounded-full shadow-2xs">
-              0{Math.min(currentSlideIndex + 1, filteredServices.length)} <span className="text-[#A8A098] font-normal">/</span> 0{filteredServices.length}
+              {String(Math.min(currentSlideIndex + 1, slideCount)).padStart(2, '0')} <span className="text-[#A8A098] font-normal">/</span> {String(slideCount).padStart(2, '0')}
             </span>
             <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#8A8078]">
-              <span>Deslize ou arraste para navegar</span>
+              <span>{lang === 'pt' ? 'Deslize ou arraste para navegar' : lang === 'en' ? 'Swipe or drag to browse' : 'Faites glisser pour parcourir'}</span>
             </span>
           </div>
 
           {/* Luxury Navigation Buttons */}
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handlePrev}
-              className="p-2 sm:p-2.5 rounded-full bg-white hover:bg-[#FAF5EA] border border-[#C49A3C]/40 text-[#554C42] hover:text-[#9A7428] shadow-xs hover:shadow-md transition-all duration-200 touch-target flex items-center justify-center active:scale-95"
-              aria-label="Previous treatment"
+              disabled={slideCount <= 1}
+              className="p-2 sm:p-2.5 rounded-full bg-white hover:bg-[#FAF5EA] border border-[#C49A3C]/40 text-[#554C42] hover:text-[#9A7428] shadow-xs hover:shadow-md transition-all duration-200 touch-target flex items-center justify-center active:scale-95 disabled:opacity-40 disabled:cursor-default"
+              aria-label={lang === 'pt' ? 'Cuidado anterior' : lang === 'en' ? 'Previous treatment' : 'Soin précédent'}
             >
               <IconChevronLeft size={18} />
             </button>
             <button
+              type="button"
               onClick={handleNext}
-              className="p-2 sm:p-2.5 rounded-full bg-white hover:bg-[#FAF5EA] border border-[#C49A3C]/40 text-[#554C42] hover:text-[#9A7428] shadow-xs hover:shadow-md transition-all duration-200 touch-target flex items-center justify-center active:scale-95"
-              aria-label="Next treatment"
+              disabled={slideCount <= 1}
+              className="p-2 sm:p-2.5 rounded-full bg-white hover:bg-[#FAF5EA] border border-[#C49A3C]/40 text-[#554C42] hover:text-[#9A7428] shadow-xs hover:shadow-md transition-all duration-200 touch-target flex items-center justify-center active:scale-95 disabled:opacity-40 disabled:cursor-default"
+              aria-label={lang === 'pt' ? 'Próximo cuidado' : lang === 'en' ? 'Next treatment' : 'Soin suivant'}
             >
               <IconChevronRight size={18} />
             </button>
@@ -335,16 +502,34 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
           <div
             ref={carouselRef}
             onScroll={handleScroll}
-            onMouseDown={handleMouseDown}
-            onMouseLeave={handleMouseLeaveOrUp}
-            onMouseUp={handleMouseLeaveOrUp}
-            onMouseMove={handleMouseMove}
-            className={`flex gap-5 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-3 px-1 -mx-1 ${
-              isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
-            }`}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerEnd}
+            onPointerCancel={handlePointerEnd}
+            onLostPointerCapture={handlePointerEnd}
+            onPointerLeave={(event) => {
+              if (!event.currentTarget.hasPointerCapture(event.pointerId)) handlePointerEnd(event);
+            }}
+            onDragStart={(event) => event.preventDefault()}
+            onClickCapture={(event) => {
+              if (!dragRef.current.moved) return;
+              dragRef.current.moved = false;
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            tabIndex={0}
+            aria-label={lang === 'pt' ? 'Carrossel de cuidados' : lang === 'en' ? 'Treatment carousel' : 'Carrousel des soins'}
+            onKeyDown={(event) => {
+              if (event.target !== event.currentTarget) return;
+              if (event.key === 'ArrowRight') { event.preventDefault(); handleNext(); }
+              if (event.key === 'ArrowLeft') { event.preventDefault(); handlePrev(); }
+              if (event.key === 'Home') { event.preventDefault(); scrollToSlide(0); }
+              if (event.key === 'End') { event.preventDefault(); scrollToSlide(slideCount - 1); }
+            }}
+            className="flex gap-5 sm:gap-6 overflow-x-auto overscroll-x-contain no-scrollbar snap-x snap-mandatory py-3 px-1 -mx-1 cursor-grab data-[dragging=true]:cursor-grabbing"
             style={{
               WebkitOverflowScrolling: 'touch',
-              scrollSnapType: isDragging ? 'none' : 'x mandatory',
+              scrollPaddingInline: 4,
             }}
           >
             {filteredServices.length === 0 ? (
@@ -368,151 +553,36 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
                 </button>
               </div>
             ) : (
-              filteredServices.map((service, index) => {
-                const isKine = service.pole === 'kinesitherapie';
-                const isCurrent = currentSlideIndex === index;
-                const keyIndications = getLocalizedList(service.indications, lang).slice(0, 2);
-
-                return (
-                  <div
-                    key={service.slug}
-                    onClick={() => scrollToSlide(index)}
-                    className={`service-carousel-card snap-start shrink-0 w-[84vw] sm:w-[340px] lg:w-[370px] flex flex-col justify-between bg-white rounded-3xl border p-4 sm:p-5 transition-all duration-300 group overflow-hidden ${
-                      isCurrent
-                        ? 'border-[#C49A3C] shadow-[0_16px_45px_rgba(196,154,60,0.18)] ring-1 ring-[#C49A3C]/30'
-                        : 'border-[#E8E2D8] hover:border-[#C49A3C]/60 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_36px_rgba(196,154,60,0.12)]'
-                    }`}
-                  >
-                    {/* Top Image Preview with Gold Tag */}
-                    <Link
-                      href={`/services/${service.slug}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        playSoftClick();
-                      }}
-                      className="block relative h-40 sm:h-44 w-full rounded-2xl overflow-hidden mb-3.5 bg-[#F5EFE6] cursor-pointer"
-                      title={getLocalizedText(service.name, lang)}
-                    >
-                      <Image
-                        src={getServiceHeroImage(service)}
-                        alt={getLocalizedText(service.name, lang)}
-                        fill
-                        sizes="(max-width: 768px) 85vw, 380px"
-                        className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A05]/80 via-[#0F0A05]/20 to-transparent" />
-
-                      {/* Top Badges */}
-                      <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md text-[10px] font-sans font-bold uppercase tracking-wider text-[#8A6A24] border border-[#C49A3C]/30 shadow-xs">
-                          {getServiceIcon(service.icon, 13)}
-                          <span>
-                            {isKine
-                              ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
-                              : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming' : 'Soins Minceur'}
-                          </span>
-                        </span>
-
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1A1412]/85 backdrop-blur-md text-white font-mono text-[10px] font-semibold border border-white/20">
-                          <IconClock size={11} className="text-[#E8C97A]" />
-                          <span>{service.duration}</span>
-                        </span>
-                      </div>
-
-                      {/* Bottom Price inside Image */}
-                      <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between">
-                        <span className="font-mono text-xs sm:text-sm font-bold text-[#E8C97A] drop-shadow-sm">
-                          {service.price} {t.common.currency} <span className="text-[10px] text-white/80 font-normal">/ sessão</span>
-                        </span>
-                      </div>
-                    </Link>
-
-                    {/* Content Section */}
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        {/* Title */}
-                        <Link
-                          href={`/services/${service.slug}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            playSoftClick();
-                          }}
-                          className="block group-hover:text-[#9A7428] transition-colors"
-                        >
-                          <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412] leading-snug mb-1.5 truncate">
-                            {getLocalizedText(service.name, lang)}
-                          </h3>
-                        </Link>
-
-                        {/* Short Description */}
-                        <p className="text-xs sm:text-sm text-[#6B6058] leading-relaxed line-clamp-2 mb-3 font-normal">
-                          {getLocalizedText(service.shortDesc, lang)}
-                        </p>
-
-                        {/* Clinical Benefits Checklist */}
-                        {keyIndications.length > 0 && (
-                          <div className="bg-[#FAF8F5] border border-[#E8E2D8] rounded-xl p-2.5 mb-3.5 space-y-1">
-                            {keyIndications.map((ind, i) => (
-                              <div key={i} className="flex items-center gap-1.5 text-[11px] text-[#554C42]">
-                                <div className="w-3.5 h-3.5 rounded-full bg-[#FAF5EA] border border-[#C49A3C]/40 flex items-center justify-center shrink-0">
-                                  <IconCheck size={10} className="text-[#9A7428]" />
-                                </div>
-                                <span className="truncate">{ind}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Card Action Buttons */}
-                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#F0EBE1]">
-                        <Link
-                          href={`/services/${service.slug}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            playSoftClick();
-                          }}
-                          className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl border border-[#C49A3C]/30 hover:border-[#C49A3C] bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-white font-bold text-xs transition-all shadow-2xs group/btn"
-                        >
-                          <span>{lang === 'pt' ? 'Selecionar' : lang === 'en' ? 'Select' : 'Sélectionner'}</span>
-                          <IconArrowRight size={13} className="group-hover/btn:translate-x-0.5 transition-transform" />
-                        </Link>
-
-                        <Link
-                          href={`/rendez-vous?service=${service.slug}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            playSoftClick();
-                          }}
-                          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#9A7428] hover:from-[#B88E32] hover:to-[#8A6620] text-white font-bold text-xs transition-all shadow-xs hover:shadow-md"
-                        >
-                          <IconCalendarEvent size={13} />
-                          <span>{lang === 'pt' ? 'Agendar' : lang === 'en' ? 'Book' : 'Réserver'}</span>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+              filteredServices.map((service, index) => (
+                <ServiceCarouselCard
+                  key={service.slug}
+                  service={service}
+                  index={index}
+                  isCurrent={currentSlideIndex === index}
+                  onSelect={scrollToSlide}
+                />
+              ))
             )}
           </div>
         </div>
 
         {/* ── Carousel Interactive Pagination Dots / Bar ──────────────── */}
-        {filteredServices.length > 1 && (
+        {slideCount > 1 && (
           <div className="flex items-center justify-center gap-1.5 mt-4 sm:mt-6">
-            {filteredServices.map((_, i) => {
+            {Array.from({ length: slideCount }, (_, i) => {
               const isCurrent = currentSlideIndex === i;
               return (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => scrollToSlide(i)}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     isCurrent
                       ? 'w-8 bg-gradient-to-r from-[#C49A3C] to-[#9A7428] shadow-xs'
                       : 'w-2 bg-[#D8D0C5] hover:bg-[#C49A3C]/60'
                   }`}
-                  aria-label={`Go to treatment ${i + 1}`}
+                  aria-current={isCurrent ? 'true' : undefined}
+                  aria-label={lang === 'pt' ? `Ir para a posição ${i + 1}` : lang === 'en' ? `Go to position ${i + 1}` : `Aller à la position ${i + 1}`}
                 />
               );
             })}

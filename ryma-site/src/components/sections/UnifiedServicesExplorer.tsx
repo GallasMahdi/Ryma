@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { playSoftClick } from '@/lib/sound';
-import { BodyMap } from './BodyMap';
 import { ServicesHub } from './ServicesHub';
 import {
   IconBodyScan,
@@ -13,23 +13,46 @@ import {
 
 export type ExplorerViewMode = 'anatomy' | 'carousel';
 
+const BodyMap = dynamic(() => import('./BodyMap').then((module) => module.BodyMap), {
+  loading: function AnatomyLoading() {
+    const { lang } = useLanguage();
+    return (
+      <div role="status" className="min-h-96 grid place-items-center rounded-3xl bg-white/60 text-sm text-[#6B6058]">
+        {lang === 'pt' ? 'A carregar o mapa…' : lang === 'en' ? 'Loading the care map…' : 'Chargement de la carte…'}
+      </div>
+    );
+  },
+});
+
+const VIEW_MODES: ExplorerViewMode[] = ['carousel', 'anatomy'];
+
 export function UnifiedServicesExplorer() {
   const { lang } = useLanguage();
-  const [viewMode, setViewMode] = useState<ExplorerViewMode>('anatomy');
-  const [, startTransition] = useTransition();
+  const [viewMode, setViewMode] = useState<ExplorerViewMode>('carousel');
+  const [hasOpenedAnatomy, setHasOpenedAnatomy] = useState(false);
 
   const handleModeChange = (mode: ExplorerViewMode) => {
     if (mode === viewMode) return;
     playSoftClick();
-    startTransition(() => {
-      setViewMode(mode);
-    });
+    if (mode === 'anatomy') setHasOpenedAnatomy(true);
+    setViewMode(mode);
   };
 
-  useEffect(() => {
-    // Notify any canvas/carousel listeners of the dimension update
-    window.dispatchEvent(new Event('resize'));
-  }, [viewMode]);
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, mode: ExplorerViewMode) => {
+    let nextMode: ExplorerViewMode;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+      nextMode = mode === 'carousel' ? 'anatomy' : 'carousel';
+    } else if (event.key === 'Home') {
+      nextMode = 'carousel';
+    } else if (event.key === 'End') {
+      nextMode = 'anatomy';
+    } else {
+      return;
+    }
+    event.preventDefault();
+    handleModeChange(nextMode);
+    document.getElementById(`explorer-tab-${nextMode}`)?.focus();
+  };
 
   return (
     <section
@@ -102,124 +125,86 @@ export function UnifiedServicesExplorer() {
 
           <p className="text-[#6B6058] text-xs sm:text-sm md:text-base leading-relaxed font-normal max-w-2xl mx-auto">
             {lang === 'pt'
-              ? '13 protocolos clínicos estruturados. Explore através do mapa anatómico interativo ou navegue pelo catálogo em carrossel.'
+              ? '13 protocolos clínicos estruturados. Navegue pelo catálogo em carrossel ou explore o mapa anatómico interativo.'
               : lang === 'en'
-              ? '13 tailored clinical protocols. Explore via the interactive anatomical map or browse the photo carousel.'
-              : '13 protocoles médicaux sur-mesure. Explorez via la carte anatomique interactive ou parcourez le catalogue en carrousel.'}
+              ? '13 tailored clinical protocols. Browse the treatment carousel or explore the interactive anatomical map.'
+              : '13 protocoles médicaux sur-mesure. Parcourez le catalogue en carrousel ou explorez la carte anatomique interactive.'}
           </p>
 
           {/* ── Haute-Couture View Mode Switcher ─────────────────────── */}
           <div className="mt-6 sm:mt-7 flex items-center justify-center">
             <div
-              className="inline-flex items-center p-1.5 rounded-full bg-white/95 backdrop-blur-md border border-[#C49A3C]/35 shadow-sm"
+              className="inline-flex max-w-full items-center p-1.5 rounded-full bg-white/95 backdrop-blur-md border border-[#C49A3C]/35 shadow-sm"
               role="tablist"
               aria-label={lang === 'pt' ? 'Modo de visualização' : lang === 'en' ? 'View mode' : "Mode d'affichage"}
             >
-              {/* Tab 1: Body & Care Map */}
-              <button
-                type="button"
-                role="tab"
-                aria-selected={viewMode === 'anatomy'}
-                onClick={() => handleModeChange('anatomy')}
-                className={`relative px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
-                  viewMode === 'anatomy' ? 'text-white' : 'text-[#6B6058] hover:text-[#1A1412]'
-                }`}
-              >
-                {viewMode === 'anatomy' && (
-                  <motion.div
-                    layoutId="servicesExplorerModePill"
-                    className="absolute inset-0 rounded-full bg-gradient-to-r from-[#1A1412] to-[#2B2320] shadow-md border border-[#C49A3C]/40"
-                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center gap-2">
-                  <IconBodyScan
-                    size={16}
-                    className={viewMode === 'anatomy' ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}
-                  />
-                  <span>
-                    {lang === 'pt'
-                      ? 'Mapa de Cuidados'
-                      : lang === 'en'
-                      ? '3D Anatomical Explorer'
-                      : 'Carte des soins'}
-                  </span>
-                  <span
-                    className={`hidden sm:inline-block text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                      viewMode === 'anatomy'
-                        ? 'bg-white/20 text-[#F5E9C8]'
-                        : 'bg-[#FAF5EA] text-[#9A7428] border border-[#C49A3C]/20'
+              {VIEW_MODES.map((mode) => {
+                const isSelected = viewMode === mode;
+                const isCarousel = mode === 'carousel';
+                const Icon = isCarousel ? IconSparkles : IconBodyScan;
+                return (
+                  <button
+                    key={mode}
+                    id={`explorer-tab-${mode}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    aria-controls={`explorer-panel-${mode}`}
+                    tabIndex={isSelected ? 0 : -1}
+                    onClick={() => handleModeChange(mode)}
+                    onKeyDown={(event) => handleTabKeyDown(event, mode)}
+                    className={`relative min-w-0 flex-1 sm:flex-none sm:whitespace-nowrap px-3 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
+                      isSelected ? 'text-white' : 'text-[#6B6058] hover:text-[#1A1412]'
                     }`}
                   >
-                    {lang === 'pt' ? 'Zonas' : lang === 'en' ? 'Zones' : 'Zones'}
-                  </span>
-                </span>
-              </button>
-
-              {/* Tab 2: Carousel Gallery */}
-              <button
-                type="button"
-                role="tab"
-                aria-selected={viewMode === 'carousel'}
-                onClick={() => handleModeChange('carousel')}
-                className={`relative px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C49A3C] ${
-                  viewMode === 'carousel' ? 'text-white' : 'text-[#6B6058] hover:text-[#1A1412]'
-                }`}
-              >
-                {viewMode === 'carousel' && (
-                  <motion.div
-                    layoutId="servicesExplorerModePill"
-                    className="absolute inset-0 rounded-full bg-gradient-to-r from-[#1A1412] to-[#2B2320] shadow-md border border-[#C49A3C]/40"
-                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center gap-2">
-                  <IconSparkles
-                    size={16}
-                    className={viewMode === 'carousel' ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}
-                  />
-                  <span>
-                    {lang === 'pt'
-                      ? 'Catálogo em Carrossel'
-                      : lang === 'en'
-                      ? 'Treatment Carousel'
-                      : 'Catalogue en Carrousel'}
-                  </span>
-                  <span
-                    className={`hidden sm:inline-block text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                      viewMode === 'carousel'
-                        ? 'bg-white/20 text-[#F5E9C8]'
-                        : 'bg-[#FAF5EA] text-[#9A7428] border border-[#C49A3C]/20'
-                    }`}
-                  >
-                    {lang === 'pt' ? '13 Cuidados' : lang === 'en' ? '13 Treatments' : '13 Soins'}
-                  </span>
-                </span>
-              </button>
+                    {isSelected && (
+                      <motion.div
+                        layoutId="servicesExplorerModePill"
+                        className="absolute inset-0 rounded-full bg-gradient-to-r from-[#1A1412] to-[#2B2320] shadow-md border border-[#C49A3C]/40"
+                        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Icon size={16} aria-hidden="true" className={`shrink-0 ${isSelected ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}`} />
+                      <span>
+                        {isCarousel
+                          ? lang === 'pt' ? 'Catálogo em Carrossel' : lang === 'en' ? 'Treatment Carousel' : 'Catalogue en Carrousel'
+                          : lang === 'pt' ? 'Mapa de Cuidados' : lang === 'en' ? '3D Anatomical Explorer' : 'Carte des soins'}
+                      </span>
+                      <span className={`hidden sm:inline-block whitespace-nowrap text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                        isSelected ? 'bg-white/20 text-[#F5E9C8]' : 'bg-[#FAF5EA] text-[#9A7428] border border-[#C49A3C]/20'
+                      }`}>
+                        {isCarousel
+                          ? lang === 'pt' ? '13 Cuidados' : lang === 'en' ? '13 Treatments' : '13 Soins'
+                          : lang === 'pt' ? 'Zonas' : 'Zones'}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </motion.div>
 
-        {/* ── Zero-Lag Persistent Dual Panels (Pre-rendered & Kept Alive) ── */}
         <div className="relative w-full">
-          {/* Panel 1: 3D Anatomical Explorer */}
-          <div
-            role="tabpanel"
-            id="explorer-panel-anatomy"
-            aria-hidden={viewMode !== 'anatomy'}
-            className={viewMode === 'anatomy' ? 'block' : 'hidden'}
-          >
-            <BodyMap embedded hideHeader />
-          </div>
-
-          {/* Panel 2: Carousel Gallery */}
           <div
             role="tabpanel"
             id="explorer-panel-carousel"
-            aria-hidden={viewMode !== 'carousel'}
-            className={viewMode === 'carousel' ? 'block' : 'hidden'}
+            aria-labelledby="explorer-tab-carousel"
+            hidden={viewMode !== 'carousel'}
+            tabIndex={0}
           >
             <ServicesHub embedded hideHeader />
+          </div>
+          <div
+            role="tabpanel"
+            id="explorer-panel-anatomy"
+            aria-labelledby="explorer-tab-anatomy"
+            hidden={viewMode !== 'anatomy'}
+            tabIndex={0}
+          >
+            {/* Load on first selection, then preserve the visitor's map selections. */}
+            {hasOpenedAnatomy && <BodyMap embedded hideHeader />}
           </div>
         </div>
 
