@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react
 import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLanguage, type Lang } from '@/lib/i18n';
+import { useLanguage } from '@/lib/i18n';
 import { SERVICES, Service } from '@/data/services';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { Badge } from '@/components/ui/Badge';
@@ -15,124 +15,14 @@ import {
   IconAlertCircle, IconX, IconUser, IconPhone, IconMail, IconLoader2,
   IconCalendarX, IconWifi, IconSearch, IconSparkles, IconStethoscope,
   IconFlame, IconActivity, IconHeartbeat, IconDroplet, IconBolt,
-  IconRipple, IconShieldCheck, IconCalendarEvent, IconMapPin,
-  IconCalendarPlus, IconPrinter, IconAward, IconFileText,
-  IconCopy, IconDirections, IconDownload, IconCircleCheck,
+  IconRipple, IconShieldCheck, IconCalendarEvent,
   IconInfoCircle,
 } from '@tabler/icons-react';
-import { LogoIcon } from '@/components/ui/Logo';
+import { AppointmentConfirmation } from '@/components/booking/AppointmentConfirmation';
 import { SITE } from '@/lib/site';
 import { playSoftClick } from '@/lib/sound';
 import { getRecaptchaToken } from '@/lib/recaptcha-client';
 import { validateAndNormalizePhone } from '@/lib/phone';
-
-function formatFullConfirmationDate(dateStr: string, lang = 'pt'): string {
-  try {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const d = new Date(year, month - 1, day, 12, 0, 0);
-    const locale = lang === 'pt' ? 'pt-PT' : lang === 'fr' ? 'fr-FR' : 'en-US';
-    return d.toLocaleDateString(locale, {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
-}
-
-function buildGoogleCalendarLink(serviceName: string, dateStr: string, timeStr: string, patientName: string, lang: Lang = 'pt') {
-  try {
-    const [year, month, day] = dateStr.split('-');
-    const [hour, min] = timeStr.split(':');
-    const startIso = `${year}${month}${day}T${hour}${min}00`;
-    const endMinutes = Number(min) + 50;
-    const endH = Number(hour) + Math.floor(endMinutes / 60);
-    const endM = endMinutes % 60;
-    const endIso = `${year}${month}${day}T${String(endH).padStart(2, '0')}${String(endM).padStart(2, '0')}00`;
-
-    const titleText = lang === 'fr'
-      ? `Rendez-vous : ${serviceName} — Digital Clínica`
-      : lang === 'en'
-        ? `Appointment: ${serviceName} — Digital Clínica`
-        : `Consulta: ${serviceName} — Digital Clínica`;
-
-    const detailsText = lang === 'fr'
-      ? `Consultation médicale à la Digital Clínica pour ${patientName}.\n\nSoin : ${serviceName}\nContact : ${SITE.phone}\nAdresse : ${SITE.address.fr || SITE.address.pt}\nWhatsApp : ${SITE.whatsappDisplay}`
-      : lang === 'en'
-        ? `Medical appointment at Digital Clínica for ${patientName}.\n\nTreatment: ${serviceName}\nContact: ${SITE.phone}\nAddress: ${SITE.address.en || SITE.address.pt}\nWhatsApp: ${SITE.whatsappDisplay}`
-        : `Consulta médica na Digital Clínica para ${patientName}.\n\nTratamento: ${serviceName}\nContacto: ${SITE.phone}\nMorada: ${SITE.address.pt || SITE.address.en}\nWhatsApp: ${SITE.whatsappDisplay}`;
-
-    const title = encodeURIComponent(titleText);
-    const details = encodeURIComponent(detailsText);
-    const addr = (SITE.address as any)[lang] || SITE.address.pt || SITE.address.en || 'Avenida da Liberdade 120, Lisboa';
-    const location = encodeURIComponent(addr);
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${details}&location=${location}`;
-  } catch {
-    return 'https://calendar.google.com';
-  }
-}
-
-function downloadIcsEvent(serviceName: string, dateStr: string, timeStr: string, patientName: string, lang: Lang = 'pt') {
-  try {
-    const [year, month, day] = dateStr.split('-');
-    const [hour, min] = timeStr.split(':');
-    const startIso = `${year}${month}${day}T${hour}${min}00`;
-    const endMinutes = Number(min) + 50;
-    const endH = Number(hour) + Math.floor(endMinutes / 60);
-    const endM = endMinutes % 60;
-    const endIso = `${year}${month}${day}T${String(endH).padStart(2, '0')}${String(endM).padStart(2, '0')}00`;
-    const location = (SITE.address as any)[lang] || SITE.address.pt || SITE.address.en || 'Avenida da Liberdade 120, Lisboa';
-
-    const summaryText = lang === 'fr'
-      ? `Rendez-vous : ${serviceName} — Digital Clínica`
-      : lang === 'en'
-        ? `Appointment: ${serviceName} — Digital Clínica`
-        : `Consulta: ${serviceName} — Digital Clínica`;
-
-    const descText = lang === 'fr'
-      ? `Consultation confirmée à la Digital Clínica pour ${patientName}. Soin : ${serviceName}. Contact : ${SITE.phone}`
-      : lang === 'en'
-        ? `Confirmed medical appointment at Digital Clínica for ${patientName}. Treatment: ${serviceName}. Contact: ${SITE.phone}`
-        : `Consulta confirmada na Digital Clínica para ${patientName}. Tratamento: ${serviceName}. Contacto: ${SITE.phone}`;
-
-    const fileName = lang === 'fr'
-      ? `rendez-vous-digital-clinica-${dateStr}.ics`
-      : lang === 'en'
-        ? `appointment-digital-clinica-${dateStr}.ics`
-        : `consulta-digital-clinica-${dateStr}.ics`;
-
-    const icsContent = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Digital Clinica//Booking System//EN',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      'BEGIN:VEVENT',
-      `SUMMARY:${summaryText}`,
-      `DESCRIPTION:${descText}`,
-      `LOCATION:${location}`,
-      `DTSTART:${startIso}`,
-      `DTEND:${endIso}`,
-      'STATUS:CONFIRMED',
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ].join('\r\n');
-
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } catch (e) {
-    console.error('ICS export error:', e);
-  }
-}
 
 function getBookingServiceIcon(iconKey: string, size = 18) {
   switch (iconKey) {
@@ -363,8 +253,6 @@ function BookingWizardContent() {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
-  const [bookingRefCode, setBookingRefCode] = useState<string>('');
-  const [copiedRef, setCopiedRef] = useState(false);
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -559,7 +447,7 @@ function BookingWizardContent() {
   // Scroll the booking wizard into view on every step transition
   useEffect(() => {
     if (step === 5) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
     if (!bookingRef.current) return;
@@ -786,22 +674,8 @@ function BookingWizardContent() {
         return;
       }
 
-      // Success toast
-      showToast({
-        type: 'success',
-        title:
-          lang === 'pt' ? 'Marcação confirmada! 🎉' :
-            lang === 'en' ? 'Booking confirmed! 🎉' :
-              'Rendez-vous confirmé ! 🎉',
-        message:
-          lang === 'pt' ? `${selectedService.name.pt ?? selectedService.name.fr} — ${selectedDate} às ${selectedSlot}` :
-            lang === 'en' ? `${selectedService.name.en ?? selectedService.name.fr} — ${selectedDate} at ${selectedSlot}` :
-              `${selectedService.name.fr} — ${selectedDate} à ${selectedSlot}`,
-        duration: 6000,
-      });
-
-      const refCode = 'DC-' + (selectedDate?.replace(/-/g, '').slice(2) || '26') + '-' + Math.floor(1000 + Math.random() * 9000);
-      setBookingRefCode(refCode);
+      // The confirmation screen provides the success feedback.
+      setToasts([]);
       setStep(5);
     } catch {
       dismissToast(loadingToastId);
@@ -829,362 +703,8 @@ function BookingWizardContent() {
       : 'border-[#D4CEBE] focus:border-[#C49A3C] focus:ring-1 focus:ring-[#C49A3C]/40'
     }`;
 
-  // ── Step 5: Screen-Fitted VIP Confirmation View ──────────────────────────────
   if (step === 5 && selectedService && selectedDate && selectedSlot) {
-    return (
-      <>
-        {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
-          <Script
-            src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
-            strategy="lazyOnload"
-          />
-        )}
-        <BookingToastBanner toasts={toasts} onDismiss={dismissToast} />
-
-        <section className="pt-24 lg:pt-28 pb-8 min-h-[calc(100vh-80px)] flex flex-col justify-center bg-gradient-to-b from-[#FDF9F2] via-[#FAFAF8] to-[#F5EFE6]">
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 w-full">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className="grid grid-cols-1 lg:grid-cols-12 rounded-3xl overflow-hidden border border-[#C49A3C]/40 shadow-[0_20px_60px_-15px_rgba(196,154,60,0.2)] bg-white"
-            >
-              {/* LEFT COLUMN: Official Boarding Pass Ticket (7 Cols) */}
-              <div className="lg:col-span-7 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#E8E2D8] bg-white">
-                {/* Top Luxury Dark Header Bar */}
-                <div className="bg-[#161210] text-white px-5 sm:px-6 py-4 relative">
-                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#C6A15B] via-[#F5E5C9] to-[#C6A15B]" />
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <LogoIcon size={30} variant="gold" />
-                      <div>
-                        <div className="font-serif font-bold text-base text-white leading-none tracking-tight">
-                          Digital Clínica
-                        </div>
-                        <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#E8C97A] mt-0.5">
-                          {lang === 'pt' ? 'Gabinete Médico • Lisboa' : lang === 'en' ? 'Medical Clinic • Lisbon' : 'Cabinet Médical • Lisbonne'}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-[#C49A3C]/30 text-[10px] sm:text-[11px] font-mono font-bold text-[#E8C97A] shadow-xs backdrop-blur-md">
-                      <span className="h-2 w-2 rounded-full bg-[#25D366] animate-pulse" />
-                      <span>{lang === 'pt' ? 'Confirmado' : lang === 'en' ? 'Confirmed' : 'Confirmé'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Patient & Treatment Content */}
-                <div className="p-5 sm:p-6 space-y-4">
-                  {/* Patient Info & Coverage Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-[#E8E2D8]">
-                    <div>
-                      <span className="font-mono text-[9.5px] uppercase tracking-wider text-[#8A8078] font-bold block mb-0.5">
-                        {lang === 'pt' ? 'Utente' : lang === 'en' ? 'Patient' : 'Patient'}
-                      </span>
-                      <div className="font-serif text-base font-bold text-[#1A1412] leading-tight flex items-center gap-1.5">
-                        <IconUser size={15} className="text-[#C49A3C] shrink-0" />
-                        <span>{form.name}</span>
-                      </div>
-                      <div className="text-[11px] text-[#6B6058] font-mono mt-0.5 truncate">
-                        {form.phone} {form.email && `• ${form.email}`}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="font-mono text-[9.5px] uppercase tracking-wider text-[#8A8078] font-bold block mb-0.5">
-                        {lang === 'pt' ? 'Regime de Cobertura' : lang === 'en' ? 'Coverage Type' : 'Régime de Soins'}
-                      </span>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FAF8F5] border border-[#E8E2D8] text-xs font-semibold text-[#1A1412]">
-                        <IconShieldCheck size={13} className="text-[#6F8F72]" />
-                        <span className="truncate max-w-[170px]">
-                          {form.coverageType === 'INSURANCE'
-                            ? (form.coverageProvider ? `${lang === 'pt' ? 'Seguro' : 'Insurance'} (${form.coverageProvider})` : (lang === 'pt' ? 'Seguro de Saúde' : 'Health Insurance'))
-                            : form.coverageType === 'ADSE'
-                            ? 'ADSE / Regime Livre'
-                            : (lang === 'pt' ? 'Particular / Privado' : lang === 'en' ? 'Private Consultation' : 'Consultation Privée')}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Selected Protocol Card */}
-                  <div className="bg-[#FAF8F5] border border-[#E8E2D8] rounded-2xl p-3.5 sm:p-4">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-white border border-[#C49A3C]/30 text-[#9A7428] flex items-center justify-center shrink-0 shadow-2xs">
-                          {getBookingServiceIcon(selectedService.icon, 18)}
-                        </div>
-                        <div className="min-w-0">
-                          <span className="font-mono text-[9px] uppercase tracking-widest text-[#C49A3C] font-bold block leading-none mb-0.5">
-                            {selectedService.pole === 'kinesitherapie'
-                              ? (lang === 'pt' ? 'Fisioterapia & RPG' : lang === 'en' ? 'Physiotherapy & Rehab' : 'Kinésithérapie & RPG')
-                              : (lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur High-Tech')}
-                          </span>
-                          <h3 className="font-serif text-sm sm:text-base font-bold text-[#1A1412] leading-tight truncate">
-                            {selectedService.name[lang] || selectedService.name.pt || selectedService.name.en || selectedService.name.fr}
-                          </h3>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-white border border-[#E8E2D8] text-[#6B6058] flex items-center gap-1">
-                          <IconClock size={12} className="text-[#C49A3C]" />
-                          {selectedService.duration}
-                        </span>
-                        <span className="font-mono text-sm font-bold text-[#C49A3C] px-2.5 py-0.5 rounded bg-[#FAF5EA] border border-[#C49A3C]/30">
-                          {selectedService.price} {t.common.currency}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="text-[10.5px] text-[#554C42] pt-2 border-t border-[#E8E2D8]/70 flex items-center gap-1">
-                      <IconAward size={13} className="text-[#9A7428] shrink-0" />
-                      <span className="truncate">
-                        {selectedService.pole === 'kinesitherapie'
-                          ? (lang === 'pt' ? 'Fatura com cédula profissional para ADSE e Seguros.' : lang === 'en' ? 'Invoice with license for insurance reimbursement.' : 'Facture conforme pour remboursement mutuelle.')
-                          : (lang === 'pt' ? 'Tecnologia médica não invasiva de alta precisão.' : lang === 'en' ? 'Certified high-precision non-invasive protocol.' : 'Protocole médical non-invasif de haute précision.')}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Date & Time Feature Banner */}
-                  <div className="bg-gradient-to-r from-[#FAF5EA] via-[#FFFDF9] to-[#FAF5EA] border border-[#C49A3C]/35 rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 shadow-2xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white border border-[#C49A3C]/40 text-[#9A7428] flex items-center justify-center shrink-0 shadow-xs">
-                        <IconCalendarEvent size={20} />
-                      </div>
-                      <div>
-                        <span className="font-mono text-[9px] uppercase font-bold text-[#8A6A24] tracking-wider block leading-none mb-0.5">
-                          {lang === 'pt' ? 'Data Agendada' : lang === 'en' ? 'Appointment Date' : 'Date du Rendez-vous'}
-                        </span>
-                        <span className="font-serif text-sm sm:text-base font-bold text-[#1A1412] capitalize block leading-tight">
-                          {formatFullConfirmationDate(selectedDate, lang)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 bg-white border border-[#C49A3C]/30 px-3.5 py-1.5 rounded-xl shadow-xs">
-                      <IconClock size={15} className="text-[#C49A3C]" />
-                      <span className="font-mono text-base font-extrabold text-[#C49A3C]">{selectedSlot}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Perforated Divider */}
-                <div className="relative flex items-center justify-between py-0.5">
-                  <div className="w-4 h-6 bg-[#FAFAF8] rounded-r-full border-r border-y border-[#C49A3C]/35 -ml-px" />
-                  <div className="flex-1 border-b-2 border-dashed border-[#E8E2D8] mx-2" />
-                  <div className="w-4 h-6 bg-[#FAFAF8] rounded-l-full border-l border-y border-[#C49A3C]/35 -mr-px" />
-                </div>
-
-                {/* Lower Ticket Content: Location & Access */}
-                <div className="p-4 sm:p-5 bg-[#FDFAF4] flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-white border border-[#C49A3C]/30 text-[#9A7428] flex items-center justify-center shrink-0">
-                      <IconMapPin size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-serif font-bold text-xs text-[#1A1412] truncate">
-                        Digital Clínica — {SITE.address.pt || SITE.address.en}
-                      </div>
-                      <div className="text-[10px] text-[#8A8078] font-mono truncate">
-                        {lang === 'pt' ? 'Metro Avenida (Linha Azul) • Estacionamento Restauradores' : lang === 'en' ? 'Metro Avenida • Parking Restauradores' : 'Métro Avenida • Parking Restauradores'}
-                      </div>
-                    </div>
-                  </div>
-
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(SITE.address.pt || SITE.address.en || 'Avenida da Liberdade 120, Lisboa')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white hover:bg-[#FAF5EA] text-[#9A7428] hover:text-[#1A1412] text-[11px] font-bold transition-all border border-[#C49A3C]/30 shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
-                  >
-                    <IconDirections size={13} />
-                    <span>{lang === 'pt' ? 'Maps' : lang === 'en' ? 'Maps' : 'Maps'}</span>
-                  </a>
-                </div>
-              </div>
-
-              {/* RIGHT COLUMN: Actions, Advisory & WhatsApp Concierge (5 Cols) */}
-              <div className="lg:col-span-5 flex flex-col justify-between gap-4 bg-gradient-to-b from-white to-[#FDFCF9] p-5 sm:p-6">
-                {/* Header & Ref Code */}
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#F5E9C8] to-[#FAF3E0] border border-[#C49A3C] text-[#9A7428] flex items-center justify-center shadow-2xs">
-                        <IconCircleCheck size={18} strokeWidth={2.5} />
-                      </div>
-                      <span className="font-mono text-xs uppercase tracking-widest text-[#8A6A24] font-bold bg-[#FAF5EA] border border-[#C49A3C]/30 px-2.5 py-0.5 rounded-full shadow-2xs">
-                        REF: {bookingRefCode || 'DC-260828-4821'}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(bookingRefCode || 'DC-260828-4821');
-                          setCopiedRef(true);
-                          playSoftClick();
-                          setTimeout(() => setCopiedRef(false), 2500);
-                        }
-                      }}
-                      className="inline-flex items-center gap-1 text-[10.5px] font-mono font-bold text-[#8A8078] hover:text-[#1A1412] bg-white border border-[#E8E2D8] hover:border-[#C49A3C] px-2 py-0.5 rounded-full transition-all shadow-2xs cursor-pointer"
-                    >
-                      <IconCopy size={11} className={copiedRef ? 'text-[#6F8F72]' : 'text-[#8A8078]'} />
-                      <span>{copiedRef ? (lang === 'pt' ? 'Copiado' : lang === 'en' ? 'Copied' : 'Copié') : (lang === 'pt' ? 'Copiar' : lang === 'en' ? 'Copy' : 'Copier')}</span>
-                    </button>
-                  </div>
-
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#1A1412] leading-tight mb-1">
-                    {lang === 'pt' ? 'Marcação Confirmada!' : lang === 'en' ? 'Appointment Confirmed!' : 'Rendez-vous Confirmé !'}
-                  </h2>
-                  <p className="text-xs text-[#6B6058] leading-relaxed">
-                    {lang === 'pt'
-                      ? `Enviámos o comprovativo detalhado para ${form.email || form.phone}.`
-                      : lang === 'en'
-                      ? `A detailed confirmation was sent to ${form.email || form.phone}.`
-                      : `Le récapitulatif a été envoyé à ${form.email || form.phone}.`}
-                  </p>
-                </div>
-
-                {/* 1-Click Action Hub */}
-                <div className="space-y-2">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8078] font-bold block">
-                    {lang === 'pt' ? 'Sincronização & Calendário' : lang === 'en' ? 'Sync & Calendar' : 'Synchronisation & Calendrier'}
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <a
-                      href={buildGoogleCalendarLink(
-                        selectedService.name[lang] || selectedService.name.pt || selectedService.name.en || selectedService.name.fr,
-                        selectedDate,
-                        selectedSlot,
-                        form.name,
-                        lang
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-white hover:bg-[#FAF5EA] border border-[#C49A3C]/35 text-[#1A1412] font-bold text-xs transition-all shadow-2xs hover:shadow-xs group cursor-pointer"
-                    >
-                      <IconCalendarPlus size={14} className="text-[#C49A3C] group-hover:scale-110 transition-transform" />
-                      <span>Google Cal</span>
-                    </a>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        playSoftClick();
-                        downloadIcsEvent(
-                          selectedService.name[lang] || selectedService.name.pt || selectedService.name.en || selectedService.name.fr,
-                          selectedDate,
-                          selectedSlot,
-                          form.name,
-                          lang
-                        );
-                      }}
-                      className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-white hover:bg-[#FAF5EA] border border-[#C49A3C]/35 text-[#1A1412] font-bold text-xs transition-all shadow-2xs hover:shadow-xs group cursor-pointer"
-                    >
-                      <IconDownload size={14} className="text-[#9A7428] group-hover:scale-110 transition-transform" />
-                      <span>Apple / .ics</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Compact Clinical Advisory Grid */}
-                <div className="space-y-1.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8078] font-bold block">
-                    {lang === 'pt' ? 'Orientações Clínicas' : lang === 'en' ? 'Clinical Preparation' : 'Consignes Cliniques'}
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8]/70">
-                      <div className="flex items-center gap-1 text-[11px] font-serif font-bold text-[#1A1412]">
-                        <IconClock size={12} className="text-[#C49A3C]" />
-                        <span>{lang === 'pt' ? 'Chegada' : lang === 'fr' ? 'Arrivée' : 'Arrival'}</span>
-                      </div>
-                      <p className="text-[10px] text-[#6B6058] mt-0.5 leading-tight">
-                        {lang === 'pt' ? '5 a 10 min antes.' : lang === 'fr' ? '5 à 10 min avant.' : '5-10 min early.'}
-                      </p>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8]/70">
-                      <div className="flex items-center gap-1 text-[11px] font-serif font-bold text-[#1A1412]">
-                        <IconFileText size={12} className="text-[#9A7428]" />
-                        <span>{lang === 'pt' ? 'Exames / RX' : lang === 'fr' ? 'Examens / IRM' : 'Exams / RX'}</span>
-                      </div>
-                      <p className="text-[10px] text-[#6B6058] mt-0.5 leading-tight">
-                        {lang === 'pt' ? 'Trazer se tiver.' : lang === 'fr' ? 'Apportez vos radios.' : 'Bring if available.'}
-                      </p>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8]/70">
-                      <div className="flex items-center gap-1 text-[11px] font-serif font-bold text-[#1A1412]">
-                        <IconSparkles size={12} className="text-[#C49A3C]" />
-                        <span>{lang === 'pt' ? 'Vestuário' : lang === 'fr' ? 'Tenue' : 'Clothing'}</span>
-                      </div>
-                      <p className="text-[10px] text-[#6B6058] mt-0.5 leading-tight">
-                        {lang === 'pt' ? 'Roupa confortável.' : lang === 'fr' ? 'Tenue souple et confortable.' : 'Comfortable wear.'}
-                      </p>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D8]/70">
-                      <div className="flex items-center gap-1 text-[11px] font-serif font-bold text-[#1A1412]">
-                        <IconShieldCheck size={12} className="text-[#6F8F72]" />
-                        <span>{lang === 'pt' ? 'Flexibilidade' : lang === 'fr' ? 'Politique' : 'Policy'}</span>
-                      </div>
-                      <p className="text-[10px] text-[#6B6058] mt-0.5 leading-tight">
-                        {lang === 'pt' ? 'Até 24h grátis.' : lang === 'fr' ? 'Annulation gratuite 24h.' : 'Free up to 24h.'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Primary CTAs */}
-                <div className="space-y-2 pt-1">
-                  <Button
-                    href={`https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(
-                      lang === 'pt'
-                        ? `Olá! Confirmei a minha consulta para ${selectedService.name.pt || selectedService.name.fr} em ${selectedDate} às ${selectedSlot} (Ref: ${bookingRefCode || 'DC-260828-4821'}).`
-                        : lang === 'en'
-                        ? `Hello! I have confirmed my appointment for ${selectedService.name.en || selectedService.name.fr} on ${selectedDate} at ${selectedSlot} (Ref: ${bookingRefCode || 'DC-260828-4821'}).`
-                        : `Bonjour ! J'ai confirmé mon rendez-vous pour ${selectedService.name.fr} le ${selectedDate} à ${selectedSlot} (Réf: ${bookingRefCode || 'DC-260828-4821'}).`
-                    )}`}
-                    variant="primary"
-                    className="w-full justify-center py-3 text-xs shadow-[0_4px_20px_rgba(196,154,60,0.3)]"
-                  >
-                    <IconBrandWhatsapp size={16} className="me-1.5 text-[#25D366]" />
-                    <span>{lang === 'pt' ? 'WhatsApp Concierge' : lang === 'en' ? 'WhatsApp Concierge' : 'WhatsApp Concierge'}</span>
-                  </Button>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        playSoftClick();
-                        if (typeof window !== 'undefined') window.print();
-                      }}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white hover:bg-[#FAF5EA] border border-[#E8E2D8] text-[#1A1412] font-bold text-xs transition-all shadow-2xs cursor-pointer"
-                    >
-                      <IconPrinter size={13} className="text-[#6B6058]" />
-                      <span>{lang === 'pt' ? 'Imprimir' : lang === 'en' ? 'Print' : 'Imprimer'}</span>
-                    </button>
-
-                    <Button
-                      href="/"
-                      variant="outline"
-                      className="flex-1 justify-center py-2 text-xs bg-white border-[#E8E2D8] hover:border-[#C49A3C]"
-                    >
-                      <IconArrowLeft size={13} className="me-1" />
-                      <span>{t.common.backToHome}</span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      </>
-    );
+    return <AppointmentConfirmation service={selectedService} date={selectedDate} time={selectedSlot} patient={form} />;
   }
 
   return (
