@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -29,6 +29,8 @@ import { AdminDateJumpPicker } from './AdminDateJumpPicker';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 interface DayAgendaViewProps {
+  selectedDate: string;
+  loading: boolean;
   onDateChange: (date: string) => void;
   appointments: Appointment[];
   lang: Lang;
@@ -51,6 +53,8 @@ function getInitials(name: string): string {
 
 export const DayAgendaView = React.memo(function DayAgendaView({
   appointments,
+  selectedDate,
+  loading,
   onDateChange,
   lang,
   updateStatus,
@@ -66,8 +70,6 @@ export const DayAgendaView = React.memo(function DayAgendaView({
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const todayStr = useMemo(() => formatLocalDate(new Date()), []);
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
-  useEffect(() => { onDateChange(selectedDate); }, [selectedDate, onDateChange]);
   const [selectedDetailAppt, setSelectedDetailAppt] = useState<Appointment | null>(null);
 
   // Map of date -> appointment count for calendar dots
@@ -107,7 +109,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setSelectedDate(prev => shiftDateString(prev, -1))}
+              onClick={() => onDateChange(shiftDateString(selectedDate, -1))}
               className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
               title={txt('Jour précédent', 'Previous day', 'Dia anterior')}
             >
@@ -115,7 +117,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
             </button>
 
             <button
-              onClick={() => setSelectedDate(prev => shiftDateString(prev, 1))}
+              onClick={() => onDateChange(shiftDateString(selectedDate, 1))}
               className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
               title={txt('Jour suivant', 'Next day', 'Dia seguinte')}
             >
@@ -127,12 +129,12 @@ export const DayAgendaView = React.memo(function DayAgendaView({
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <AdminDateJumpPicker
               selectedDate={selectedDate}
-              onSelectDate={(newDate) => setSelectedDate(newDate)}
+              onSelectDate={onDateChange}
               lang={lang}
               appointmentDatesMap={appointmentDatesMap}
               buttonVariant="header"
             />
-            <span className="text-xs text-[#64748B] font-medium hidden sm:inline">
+            <span className={`text-xs text-[#64748B] font-medium hidden sm:inline ${loading ? 'invisible' : ''}`}>
               · {dayAppointments.length}{' '}
               {dayAppointments.length === 1
                 ? txt('rendez-vous', 'appointment', 'consulta')
@@ -142,7 +144,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
 
           <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setSelectedDate(todayStr)}
+              onClick={() => onDateChange(todayStr)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 selectedDate === todayStr
                   ? 'bg-[#0F172A] text-white shadow-xs'
@@ -152,7 +154,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
               {txt("Auj.", 'Today', 'Hoje')}
             </button>
             <button
-              onClick={() => setSelectedDate(prev => shiftDateString(prev, 7))}
+              onClick={() => onDateChange(shiftDateString(selectedDate, 7))}
               className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] transition-colors hidden sm:inline-block"
               title={txt('+7 jours', '+7 days', '+7 dias')}
             >
@@ -172,7 +174,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
             return (
               <button
                 key={ds}
-                onClick={() => setSelectedDate(ds)}
+                onClick={() => onDateChange(ds)}
                 className={`flex-1 min-w-[58px] py-2 px-1 rounded-xl border text-center transition-all flex flex-col items-center justify-center relative touch-target ${
                   isSel
                     ? 'bg-[#0F172A] border-[#0F172A] text-white shadow-xs font-semibold'
@@ -201,7 +203,11 @@ export const DayAgendaView = React.memo(function DayAgendaView({
       </div>
 
       {/* Day Timeline List */}
-      {dayAppointments.length === 0 ? (
+      {loading ? (
+        <div role="status" className="bg-white border border-[#E2E8F0] rounded-xl p-12 text-center text-sm text-[#64748B] animate-pulse">
+          {txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…')}
+        </div>
+      ) : dayAppointments.length === 0 ? (
         <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 sm:p-12 text-center space-y-2">
           <div className="w-12 h-12 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] flex items-center justify-center mx-auto">
             <IconCalendar size={24} />

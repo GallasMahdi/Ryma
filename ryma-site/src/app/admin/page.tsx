@@ -456,13 +456,13 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   const appointmentRequest = useRef(0);
   const [appointmentTotal, setAppointmentTotal] = useState(0);
   const [appointmentStats, setAppointmentStats] = useState({total: 0, confirmed: 0, pending: 0, cancelled: 0, completed: 0, noShow: 0, revenue: 0});
-  const fetchAppointments = useCallback(async (isSilent = false) => {
-    if (!isSilent) {
-      setLoadingAppointments(prev => prev || appointmentsRef.current.length === 0);
+  const fetchAppointments = useCallback(async (isSilent = false, showLoading = false) => {
+    if (!isSilent || showLoading) {
+      setLoadingAppointments(prev => prev || showLoading || appointmentsRef.current.length === 0);
     }
     setAppointmentsError(null);
+    const request = ++appointmentRequest.current;
     try {
-      const request = ++appointmentRequest.current;
       const data = await apiFetch<{ appointments: Appointment[]; total: number; stats: typeof appointmentStats }>('/api/admin/appointments?summary=1&' + appointmentQuery.current);
       if (request !== appointmentRequest.current) return;
       setAppointmentTotal(data.total);
@@ -494,8 +494,9 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         }
       }
     } catch (err) {
+      if (request !== appointmentRequest.current) return;
       if ((err as Error).message !== 'Session expirée' && (err as Error).message !== 'Sessão expirada. A redirecionar...') {
-        if (!isSilent)
+        if (!isSilent || showLoading)
           setAppointmentsError(
             lang === 'fr'
               ? 'Erreur de chargement des rendez-vous'
@@ -505,13 +506,13 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
           );
       }
     } finally {
-      setLoadingAppointments(false);
+      if (request === appointmentRequest.current) setLoadingAppointments(false);
     }
   }, [lang, handleNewIncomingAppointment]);
 
   const setAppointmentQuery = useCallback((query: string) => {
     appointmentQuery.current = query;
-    void fetchAppointments(true);
+    void fetchAppointments(true, true);
   }, [fetchAppointments]);
 
   // ── Fetch patient notes ────────────────────────────────────────────────────

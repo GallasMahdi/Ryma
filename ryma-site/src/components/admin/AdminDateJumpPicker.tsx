@@ -93,7 +93,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
       setViewYear(y);
       setViewMonth(m - 1);
     }
-  }, [selectedDate]);
+  }, [selectedDate, isOpen]);
 
   // Close on outside click
   useEffect(() => {
@@ -270,6 +270,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
 
         <div className="flex items-center gap-1.5">
           <select
+            aria-label={txt('Mois', 'Month', 'Mês')}
             value={viewMonth}
             onChange={(e) => setViewMonth(Number(e.target.value))}
             className="bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-2 py-1 text-xs font-bold text-[#0F172A] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
@@ -282,11 +283,12 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
           </select>
 
           <select
+            aria-label={txt('Année', 'Year', 'Ano')}
             value={viewYear}
             onChange={(e) => setViewYear(Number(e.target.value))}
             className="bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-2 py-1 text-xs font-bold text-[#0F172A] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
           >
-            {Array.from({ length: 7 }, (_, i) => 2024 + i).map((year) => (
+            {Array.from({ length: 11 }, (_, i) => viewYear - 5 + i).map((year) => (
               <option key={year} value={year}>
                 {year}
               </option>
@@ -356,6 +358,9 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
       </div>
 
       {/* Calendar Days Matrix (7x6) */}
+      <p className="text-[11px] text-[#64748B] text-center">
+        {txt('Choisissez un jour pour afficher les rendez-vous.', 'Choose a day to show its appointments.', 'Escolha um dia para ver as consultas.')}
+      </p>
       <div className="grid grid-cols-7 gap-1">
         {calendarDays.map((day, idx) => {
           const isSunday = (idx % 7) === 6;
@@ -363,6 +368,8 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
             <button
               key={day.dateStr + idx}
               type="button"
+              aria-label={day.dateStr}
+              aria-pressed={day.isSelected}
               onClick={() => {
                 onSelectDate(day.dateStr);
                 setIsOpen(false);
@@ -399,6 +406,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
           </span>
           <input
             type="date"
+            aria-label={txt('Saisir une date', 'Type a date', 'Digitar uma data')}
             value={selectedDate}
             onChange={(e) => {
               if (e.target.value) {

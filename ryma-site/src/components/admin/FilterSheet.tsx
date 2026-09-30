@@ -20,6 +20,7 @@ interface FilterSheetProps {
   setSpecificDateFilter?: (d: string | null) => void;
   onReset: () => void;
   totalResults: number;
+  calendarMode?: boolean;
 }
 
 export const FilterSheet = React.memo(function FilterSheet({
@@ -36,6 +37,7 @@ export const FilterSheet = React.memo(function FilterSheet({
   setSpecificDateFilter,
   onReset,
   totalResults,
+  calendarMode = false,
 }: FilterSheetProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
@@ -119,15 +121,14 @@ export const FilterSheet = React.memo(function FilterSheet({
             {txt('Période / Date', 'Period / Date', 'Período / Data')}
           </label>
           <div className="grid grid-cols-2 gap-2">
-            {dateOptions.map(opt => {
-              const isSelected = dateFilter === opt.id && !specificDateFilter;
+            {dateOptions.filter(opt => !calendarMode || opt.id === 'today' || opt.id === 'tomorrow').map(opt => {
+              const isSelected = dateFilter === opt.id && (calendarMode || !specificDateFilter);
               return (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => {
                     setDateFilter(opt.id);
-                    if (setSpecificDateFilter) setSpecificDateFilter(null);
                   }}
                   className={`p-2.5 rounded-xl border text-xs font-medium text-center transition-all flex items-center justify-center gap-1.5 touch-target ${
                     isSelected
@@ -150,16 +151,16 @@ export const FilterSheet = React.memo(function FilterSheet({
               </span>
               <input
                 type="date"
+                aria-label={txt('Date exacte', 'Exact date', 'Data exata')}
                 value={specificDateFilter || ''}
                 onChange={(e) => {
                   if (setSpecificDateFilter) {
                     setSpecificDateFilter(e.target.value || null);
-                    if (e.target.value) setDateFilter('all');
                   }
                 }}
                 className="flex-1 bg-white border border-[#CBD5E1] rounded-lg px-2.5 py-1 text-xs text-[#0F172A] font-semibold focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
               />
-              {specificDateFilter && (
+              {specificDateFilter && !calendarMode && (
                 <button
                   type="button"
                   onClick={() => {

@@ -33,6 +33,7 @@ import {
   getServiceName,
   getServicePrice,
   formatLocalDate,
+  shiftDateString,
 } from '@/types/admin';
 import { Lang } from '@/lib/i18n';
 import dynamic from 'next/dynamic';
@@ -98,6 +99,8 @@ function getInitials(name: string): string {
 }
 
 interface WeekCalendarViewProps {
+  selectedDate: string;
+  loading: boolean;
   appointments: Appointment[];
   lang: Lang;
   updateStatus: (id: string, status: AppointmentStatus) => void;
@@ -106,7 +109,7 @@ interface WeekCalendarViewProps {
   setConfirmDialog: (dlg: { title: string; onConfirm: () => void } | null) => void;
   recentNewIds?: Set<string>;
   openWhatsAppModal?: (appt: Appointment) => void;
-  onRangeChange: (date: string) => void;
+  onDateChange: (date: string) => void;
 }
 
 import { AdminDateJumpPicker } from './AdminDateJumpPicker';
@@ -121,14 +124,15 @@ function WeekCalendarView({
   setConfirmDialog,
   recentNewIds,
   openWhatsAppModal,
-  onRangeChange,
+  selectedDate,
+  loading,
+  onDateChange,
 }: WeekCalendarViewProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const todayStr = useMemo(() => toDateStr(new Date()), []);
-  const [weekStart, setWeekStart] = useState<Date>(() => getWeekStart(new Date()));
-  useEffect(() => { onRangeChange(toDateStr(weekStart)); }, [weekStart, onRangeChange]);
+  const weekStart = useMemo(() => getWeekStart(new Date(selectedDate + 'T12:00:00')), [selectedDate]);
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -189,14 +193,14 @@ function WeekCalendarView({
       <div className="flex flex-wrap items-center justify-between gap-2.5 bg-white border border-[#E2E8F0] rounded-xl px-4 py-3 shadow-xs">
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setWeekStart(d => addDays(d, -7))}
+            onClick={() => onDateChange(shiftDateString(selectedDate, -7))}
             className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
             title={txt('Semaine précédente', 'Previous week', 'Semana anterior')}
           >
             <IconChevronLeft size={16} />
           </button>
           <button
-            onClick={() => setWeekStart(d => addDays(d, 7))}
+            onClick={() => onDateChange(shiftDateString(selectedDate, 7))}
             className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
             title={txt('Semaine suivante', 'Next week', 'Semana seguinte')}
           >
@@ -208,16 +212,13 @@ function WeekCalendarView({
         <div className="flex flex-col sm:flex-row items-center gap-2 text-center">
           <div className="font-semibold text-[#0F172A] text-sm sm:text-base">{weekLabel}</div>
           <AdminDateJumpPicker
-            selectedDate={toDateStr(weekStart)}
-            onSelectDate={(newDate) => {
-              const d = new Date(newDate + 'T12:00:00');
-              setWeekStart(getWeekStart(d));
-            }}
+            selectedDate={selectedDate}
+            onSelectDate={onDateChange}
             lang={lang}
             appointmentDatesMap={appointmentDatesMap}
             buttonVariant="compact"
           />
-          <span className="text-xs text-[#64748B] font-medium hidden md:inline">
+          <span className={`text-xs text-[#64748B] font-medium hidden md:inline ${loading ? 'invisible' : ''}`}>
             · {appointments.filter(a => weekDays.some(d => toDateStr(d) === a.date)).length}{' '}
             {txt('rendez-vous', 'appointments', 'consultas')}
           </span>
@@ -225,7 +226,7 @@ function WeekCalendarView({
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setWeekStart(getWeekStart(new Date()))}
+            onClick={() => onDateChange(todayStr)}
             className="px-3 py-1.5 rounded-lg bg-[#F1F5F9] text-[#334155] text-xs font-semibold hover:bg-[#E2E8F0] transition-colors"
           >
             {txt("Auj.", 'Today', 'Hoje')}
@@ -234,6 +235,11 @@ function WeekCalendarView({
       </div>
 
       {/* Calendar Grid Container */}
+      {loading ? (
+        <div role="status" className="bg-white border border-[#E2E8F0] rounded-xl p-12 text-center text-sm text-[#64748B] animate-pulse">
+          {txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…')}
+        </div>
+      ) : (
       <div className="bg-white border border-[#E2E8F0] rounded-xl overflow-x-auto shadow-xs no-scrollbar">
         <div className="min-w-[700px]">
           {/* Day Headers */}
@@ -350,6 +356,8 @@ function WeekCalendarView({
         </div>
       </div>
 
+      )}
+
       {/* Modal for Appointment Details */}
       <AppointmentDetailModal
         isOpen={Boolean(selectedAppt)}
@@ -455,21 +463,43 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
     setCurrentPage(1);
   }, [searchQuery, filter, dateFilter, specificDateFilter, viewMode, itemsPerPage]);
 
-  const [weekDate, setWeekDate] = useState(() => toDateStr(getWeekStart(new Date())));
-  const [agendaDate, setAgendaDate] = useState(todayStr);
-  useEffect(() => {
+  // Every date control and both calendar views share the same selected day.
+  const [calendarDate, setCalendarDate] = useState(todayStr);
+  const isCalendarView = viewMode === 'week' || viewMode === 'agenda';
+  const selectDate = (date: string | null) => {
+    if (date) setCalendarDate(date);
+    setSpecificDateFilter(date);
+    setDateFilter('all');
+  };
+  const selectDatePreset = (preset: typeof dateFilter) => {
+    setDateFilter(preset);
+    setSpecificDateFilter(null);
+    if (preset === 'today') setCalendarDate(todayStr);
+    if (preset === 'tomorrow') setCalendarDate(tomorrowStr);
+  };
+
+  const appointmentQuery = useMemo(() => {
     const query = new URLSearchParams({page: String(currentPage), limit: String(itemsPerPage), search: searchQuery, status: filter});
     if (viewMode === 'week' || viewMode === 'agenda') {
-      const start = viewMode === 'week' ? weekDate : agendaDate;
+      const start = viewMode === 'week' ? toDateStr(getWeekStart(new Date(calendarDate + 'T12:00:00'))) : calendarDate;
       query.set('calendar', '1'); query.set('dateFrom', start);
       query.set('dateTo', viewMode === 'week' ? toDateStr(addDays(new Date(start + 'T12:00:00'), 6)) : start);
     } else if (specificDateFilter) query.set('date', specificDateFilter);
     else if (dateFilter === 'today') query.set('date', todayStr);
     else if (dateFilter === 'tomorrow') query.set('date', tomorrowStr);
     else if (dateFilter === 'upcoming') query.set('dateFrom', todayStr);
-    const timer = setTimeout(() => onQueryChange(query.toString()), 150);
+    return query.toString();
+  }, [currentPage, itemsPerPage, searchQuery, filter, viewMode, calendarDate, specificDateFilter, dateFilter, todayStr, tomorrowStr]);
+
+  const [requestedQuery, setRequestedQuery] = useState<string | null>(null);
+  const loading = loadingAppointments || requestedQuery !== appointmentQuery;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onQueryChange(appointmentQuery);
+      setRequestedQuery(appointmentQuery);
+    }, isCalendarView ? 0 : 150);
     return () => clearTimeout(timer);
-  }, [currentPage, itemsPerPage, searchQuery, filter, viewMode, weekDate, agendaDate, specificDateFilter, dateFilter, todayStr, tomorrowStr, onQueryChange]);
+  }, [appointmentQuery, isCalendarView, onQueryChange]);
 
   const displayedAppointments = useMemo(() => {
     if (viewMode === 'week' || viewMode === 'agenda') return filteredAppointments;
@@ -508,6 +538,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
     setFilter('all');
     setDateFilter('all');
     setSpecificDateFilter(null);
+    setCalendarDate(todayStr);
   };
 
   const renderAppointmentCard = (item: Appointment) => {
@@ -795,19 +826,16 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
           </div>
 
           {/* Quick Date Pills & Direct Date Jump Picker */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {[
               { id: 'all', label: txt('Toutes dates', 'All dates', 'Todas as datas') },
               { id: 'today', label: txt("Aujourd'hui", 'Today', 'Hoje') },
               { id: 'tomorrow', label: txt('Demain', 'Tomorrow', 'Amanhã') },
               { id: 'upcoming', label: txt('À venir', 'Upcoming', 'Próximas') },
-            ].map(d => (
+            ].filter(d => !isCalendarView || d.id === 'today' || d.id === 'tomorrow').map(d => (
               <button
                 key={d.id}
-                onClick={() => {
-                  setDateFilter(d.id as typeof dateFilter);
-                  setSpecificDateFilter(null);
-                }}
+                onClick={() => selectDatePreset(d.id as typeof dateFilter)}
                 className={`px-2.5 py-1 rounded-lg transition-colors text-xs font-medium whitespace-nowrap ${
                   dateFilter === d.id && !specificDateFilter
                     ? 'bg-[#0F172A] text-white'
@@ -819,23 +847,17 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
             ))}
 
             <AdminDateJumpPicker
-              selectedDate={specificDateFilter || todayStr}
-              onSelectDate={(newDate) => {
-                setSpecificDateFilter(newDate);
-                setDateFilter('all');
-              }}
+              selectedDate={isCalendarView ? calendarDate : specificDateFilter || todayStr}
+              onSelectDate={selectDate}
               lang={lang}
               appointmentDatesMap={appointmentDatesMap}
-              showAllOption={true}
-              onClearDateFilter={() => {
-                setSpecificDateFilter(null);
-                setDateFilter('all');
-              }}
-              isDateFilterActive={specificDateFilter !== null}
+              showAllOption={!isCalendarView}
+              onClearDateFilter={() => selectDate(null)}
+              isDateFilterActive={isCalendarView || specificDateFilter !== null}
               buttonVariant="toolbar"
             />
 
-            {specificDateFilter && (
+            {specificDateFilter && !isCalendarView && (
               <button
                 type="button"
                 onClick={() => setSpecificDateFilter(null)}
@@ -860,9 +882,10 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
         filter={filter}
         setFilter={setFilter}
         dateFilter={dateFilter}
-        setDateFilter={setDateFilter}
-        specificDateFilter={specificDateFilter}
-        setSpecificDateFilter={setSpecificDateFilter}
+        setDateFilter={selectDatePreset}
+        specificDateFilter={isCalendarView ? calendarDate : specificDateFilter}
+        setSpecificDateFilter={selectDate}
+        calendarMode={isCalendarView}
         onReset={resetFilters}
         totalResults={displayedAppointments.length}
       />
@@ -876,7 +899,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
       )}
 
       {/* Content Rendering based on viewMode */}
-      {loadingAppointments && viewMode !== 'week' && viewMode !== 'agenda' ? (
+      {loading && !isCalendarView ? (
         <div className="space-y-3 font-sans">
           {Array.from({ length: 5 }).map((_, idx) => (
             <div
@@ -916,7 +939,9 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
         <>
           {viewMode === 'agenda' ? (
             <DayAgendaView
-              onDateChange={setAgendaDate}
+              selectedDate={calendarDate}
+              loading={loading}
+              onDateChange={selectDate}
               appointments={displayedAppointments}
               lang={lang}
               updateStatus={updateStatus}
@@ -933,7 +958,9 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
             />
           ) : viewMode === 'week' ? (
             <WeekCalendarView
-              onRangeChange={setWeekDate}
+              selectedDate={calendarDate}
+              loading={loading}
+              onDateChange={selectDate}
               appointments={displayedAppointments}
               lang={lang}
               updateStatus={updateStatus}
