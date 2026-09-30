@@ -112,15 +112,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: '/api/reviews',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=60, s-maxage=120, stale-while-revalidate=600',
-          },
-        ],
-      },
     ];
   },
 };

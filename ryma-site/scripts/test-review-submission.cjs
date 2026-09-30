@@ -15,12 +15,17 @@ function clock() {
   return {
     setTimeout(callback, delay) { const id = ++nextId; timers.set(id, { at: now + delay, callback }); return id; },
     clearTimeout(id) { timers.delete(id); },
+    setInterval(callback, delay) { const id = ++nextId; timers.set(id, { at: now + delay, callback, repeat: delay }); return id; },
+    clearInterval(id) { timers.delete(id); },
     advance(ms) {
       const end = now + ms;
       for (;;) {
         const next = [...timers.entries()].filter(([, timer]) => timer.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
         if (!next) break;
-        now = next[1].at; timers.delete(next[0]); next[1].callback();
+        now = next[1].at;
+        if (next[1].repeat) next[1].at += next[1].repeat;
+        else timers.delete(next[0]);
+        next[1].callback();
       }
       now = end;
     },
@@ -66,10 +71,14 @@ function find(tree, predicate) {
 function fixture(options = {}) {
   const timers = clock();
   const env = { NODE_ENV: 'production', NEXT_PUBLIC_RECAPTCHA_SITE_KEY: 'fixture-site-key', RECAPTCHA_SECRET_KEY: 'fixture-secret', ...options.env };
-  const writes = [], posts = [], executions = [];
+  const writes = [], posts = [], executions = [], reads = [];
+  const storedReviews = new Map();
   let googleCalls = 0, attempts = 0, hookIndex = 0;
   const state = [];
-  const window = {};
+  const effects = new Map(), cleanup = new Map();
+  const sameDeps = (a, b) => a && b && a.length === b.length && a.every((value, index) => Object.is(value, b[index]));
+  const window = new EventTarget();
+  const document = Object.assign(new EventTarget(), { visibilityState: 'visible' });
   const recaptcha = {
     ready(callback) { callback(); },
     async execute(key, { action }) {
@@ -87,8 +96,23 @@ function fixture(options = {}) {
         if (!(index in state)) state[index] = typeof initial === 'function' ? initial() : initial;
         return [state[index], value => { state[index] = typeof value === 'function' ? value(state[index]) : value; }];
       },
-      useEffect() {},
-      useCallback(callback) { return callback; },
+      useRef(initial) {
+        const index = hookIndex++;
+        if (!(index in state)) state[index] = { current: initial };
+        return state[index];
+      },
+      useEffect(callback, deps) {
+        const index = hookIndex++;
+        if (!sameDeps(state[index], deps)) {
+          state[index] = deps;
+          effects.set(index, callback);
+        }
+      },
+      useCallback(callback, deps) {
+        const index = hookIndex++;
+        if (!sameDeps(state[index]?.deps, deps)) state[index] = { deps, callback };
+        return state[index].callback;
+      },
     },
     'next/link': 'a', 'next/script': 'fixture-script',
     'framer-motion': { AnimatePresence: 'fixture-presence', motion: new Proxy({}, { get: (_, key) => key }) },
@@ -98,34 +122,52 @@ function fixture(options = {}) {
     '@/components/animation/ScrollReveal': { ScrollReveal: 'fixture-reveal' },
     '@/data/editorial-pages': { EDITORIAL_PAGES: { reviews: { en: { secondary: 'Write review' } } } },
     '@/data/testimonials': { TESTIMONIALS: [] }, '@/data/services': { SERVICES: [] },
-    '@/lib/i18n': { useLanguage: () => ({ lang: 'en', t: { common: { bookAppointment: 'Book' } } }) },
+    '@/lib/i18n': { useLanguage: () => ({ lang: 'en', t: { common: { bookAppointment: 'Book', readMore: 'Read reviews' } } }) },
     '@/lib/sound': { playSoftClick() {}, playNotificationChime() {} },
     '@/lib/validation': { getClientIp: () => 'fixture-ip' },
+    '@/lib/requireAdmin': { requireAdmin: async () => ({ ok: true }) },
     '@/lib/db': {
       dbCheckRateLimit: async () => !options.rateLimited,
       dbRecordRateLimitAttempt: async () => { attempts++; },
-      dbCreateReview: async input => { writes.push(input); return { id: 'fixture-review', createdAt: '2026-09-30', ...input }; },
-      dbGetApprovedReviews: async () => [],
+      dbCreateReview: async input => {
+        writes.push(input);
+        const review = { id: `fixture-review-${writes.length}`, createdAt: '2026-09-30', ...input };
+        storedReviews.set(review.id, review);
+        return review;
+      },
+      dbGetApprovedReviews: async ({ limit } = {}) => [...storedReviews.values()].filter(review => review.status === 'APPROVED').slice(0, limit),
+      dbUpdateReviewStatus: async (id, updates) => {
+        const review = storedReviews.get(id);
+        if (!review) return null;
+        const updated = { ...review, ...Object.fromEntries(Object.entries(updates).filter(([, value]) => value !== undefined)) };
+        storedReviews.set(id, updated);
+        return updated;
+      },
     },
   };
   const load = loader(mocks, {
-    window, process: { env }, setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout,
+    window, document, AbortController, process: { env },
+    setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout,
+    setInterval: timers.setInterval, clearInterval: timers.clearInterval,
     fetch: async (url, init) => {
       if (url === 'https://www.google.com/recaptcha/api/siteverify') {
         googleCalls++;
         throw new Error('Reviews must not call Google verification');
       }
-      assert.equal(url, '/api/reviews', 'Unexpected outbound request');
+      assert.equal(new URL(url, 'http://fixture.invalid').pathname, '/api/reviews', 'Unexpected outbound request');
       if (init?.method === 'POST') {
         posts.push(JSON.parse(init.body));
         if (options.apiNetworkFailure) throw new Error('Fixture network failure');
         return route.POST(new NextRequest('http://fixture.invalid/api/reviews', init));
       }
-      return Response.json({ reviews: [] });
+      reads.push({ url, ...init });
+      if (options.readFailure) return Response.json({}, { status: 503 });
+      return route.GET(new NextRequest('http://fixture.invalid' + url));
     },
   });
   route = load('@/app/api/reviews/route');
-  const Page = load('@/app/avis/page').default;
+  const adminRoute = load('@/app/api/admin/reviews/route');
+  const Page = options.homepage ? load('@/components/sections/TestimonialsSection').TestimonialsSection : load('@/app/avis/page').default;
   const render = () => { hookIndex = 0; return Page(); };
   const openForm = () => {
     find(render(), node => node.type === 'button' && node.props.children === 'Write review').props.onClick();
@@ -134,7 +176,21 @@ function fixture(options = {}) {
     find(tree, node => node.type === 'textarea').props.onChange({ target: { value: 'Isolated review submission test.' } });
   };
   return {
-    timers, env, window, recaptcha, writes, posts, executions, render, openForm,
+    timers, env, window, document, recaptcha, writes, posts, reads, executions, render, openForm,
+    settle: () => new Promise(setImmediate),
+    flushEffects: async () => {
+      for (const [index, callback] of effects) {
+        cleanup.get(index)?.();
+        cleanup.set(index, callback());
+      }
+      effects.clear();
+      await new Promise(setImmediate);
+    },
+    unmount: () => { for (const dispose of cleanup.values()) dispose?.(); cleanup.clear(); },
+    moderate: (id, status) => adminRoute.PATCH(new NextRequest('http://fixture.invalid/api/admin/reviews', {
+      method: 'PATCH', body: JSON.stringify({ id, status }),
+    })),
+    get: () => route.GET(new NextRequest('http://fixture.invalid/api/reviews')),
     token: load('@/lib/recaptcha-client').getRecaptchaToken,
     submit: () => find(render(), node => node.type === 'form').props.onSubmit({ preventDefault() {} }),
     post: body => route.POST(new NextRequest('http://fixture.invalid/api/reviews', { method: 'POST', body: JSON.stringify(body) })),
@@ -226,4 +282,88 @@ test('shared client helper preserves the booking action and local unconfigured b
   assert.equal(f.executions[0].action, 'booking');
   f.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY = '';
   assert.equal(await f.token('review'), null);
+});
+
+test('approval refreshes an already-open public page without exposing pending or rejected reviews', async () => {
+  const f = fixture();
+  f.render();
+  await f.flushEffects();
+  assert.equal(f.reads[0].cache, 'no-store');
+  const response = await f.post({ patientName: 'New Approved Visitor', rating: 5, comment: 'Moderation visibility fixture.' });
+  const { review } = await response.json();
+  assert.equal((await (await f.get()).json()).reviews.length, 0);
+  assert.match((await f.get()).headers.get('cache-control'), /no-store/);
+  assert.equal((await f.moderate(review.id, 'APPROVED')).status, 200);
+
+  f.window.dispatchEvent(new Event('focus'));
+  await f.settle();
+  assert(nodes(f.render()).some(node => node.props?.children === 'New Approved Visitor'));
+
+  await f.moderate(review.id, 'REJECTED');
+  f.timers.advance(15_000);
+  await f.settle();
+  assert.equal(nodes(f.render()).some(node => node.props?.children === 'New Approved Visitor'), false);
+  assert(nodes(f.render()).some(node => typeof node.props?.children === 'string' && node.props.children.startsWith('No reviews have been published')));
+  f.unmount();
+});
+
+test('homepage refreshes approved reviews and clears its carousel when none remain', async () => {
+  const f = fixture({ homepage: true });
+  assert.equal(f.render(), null);
+  await f.flushEffects();
+  assert.equal(f.reads[0].url, '/api/reviews?limit=16');
+  assert.equal(f.reads[0].cache, 'no-store');
+  const response = await f.post({ patientName: 'Homepage Visitor', rating: 5, comment: 'Homepage visibility fixture.' });
+  const { review } = await response.json();
+  await f.moderate(review.id, 'APPROVED');
+  f.document.dispatchEvent(new Event('visibilitychange'));
+  await f.settle();
+  const rendered = nodes(f.render()).flatMap(node => node.props?.testimonials ?? []);
+  assert(rendered.some(item => item.id === review.id));
+  await f.moderate(review.id, 'REJECTED');
+  f.timers.advance(15_000);
+  await f.settle();
+  assert.equal(f.render(), null);
+  f.unmount();
+});
+
+test('background refresh pauses while hidden and stops after unmount', async () => {
+  const f = fixture();
+  f.render();
+  await f.flushEffects();
+  const initialReads = f.reads.length;
+  f.document.visibilityState = 'hidden';
+  f.timers.advance(30_000);
+  await f.settle();
+  assert.equal(f.reads.length, initialReads);
+  f.document.visibilityState = 'visible';
+  f.document.dispatchEvent(new Event('visibilitychange'));
+  await f.settle();
+  assert.equal(f.reads.length, initialReads + 1);
+  f.unmount();
+  f.window.dispatchEvent(new Event('focus'));
+  f.timers.advance(30_000);
+  await f.settle();
+  assert.equal(f.reads.length, initialReads + 1);
+  assert.equal(f.timers.size, 0);
+});
+
+test('a failed refresh preserves the last approved data and recovers on focus', async () => {
+  const options = {};
+  const f = fixture(options);
+  const response = await f.post({ patientName: 'Existing Visitor', rating: 5, comment: 'Network recovery fixture.' });
+  const { review } = await response.json();
+  await f.moderate(review.id, 'APPROVED');
+  f.render();
+  await f.flushEffects();
+  options.readFailure = true;
+  f.timers.advance(15_000);
+  await f.settle();
+  assert(nodes(f.render()).some(node => node.props?.children === 'Existing Visitor'));
+  await f.moderate(review.id, 'REJECTED');
+  options.readFailure = false;
+  f.window.dispatchEvent(new Event('focus'));
+  await f.settle();
+  assert.equal(nodes(f.render()).some(node => node.props?.children === 'Existing Visitor'), false);
+  f.unmount();
 });

@@ -3,11 +3,11 @@
 import { EditorialPageHeader } from '@/components/layout/EditorialPageHeader';
 import headerStyles from '@/components/layout/EditorialPageHeader.module.css';
 import { EDITORIAL_PAGES } from '@/data/editorial-pages';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
-import { TESTIMONIALS } from '@/data/testimonials';
+import { usePublicReviews } from '@/lib/usePublicReviews';
 import { SERVICES } from '@/data/services';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { playSoftClick, playNotificationChime } from '@/lib/sound';
@@ -57,30 +57,7 @@ export default function AvisPage() {
   const [formLocation, setFormLocation] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  // Live reviews state with fallback to static TESTIMONIALS
-  const [reviewsList, setReviewsList] = useState<any[]>(TESTIMONIALS);
-  const [loadingReviews, setLoadingReviews] = useState(false);
-
-  const fetchLiveReviews = useCallback(async () => {
-    try {
-      setLoadingReviews(true);
-      const res = await fetch('/api/reviews');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.reviews && data.reviews.length > 0) {
-          setReviewsList(data.reviews);
-        }
-      }
-    } catch (err) {
-      console.warn('Could not fetch reviews:', err);
-    } finally {
-      setLoadingReviews(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchLiveReviews();
-  }, [fetchLiveReviews]);
+  const { reviews: reviewsList, loading: loadingReviews, error: reviewsError, refresh: fetchLiveReviews } = usePublicReviews();
 
   // Filtering reviews
   const filteredReviews = reviewsList.filter((rev) => {
@@ -265,14 +242,28 @@ export default function AvisPage() {
           </div>
 
           {/* ── Review Cards Grid ── */}
+          {loadingReviews ? (
+            <p role="status" className="py-10 text-center text-sm text-[#6B6058]">
+              {lang === 'pt' ? 'A carregar avaliações…' : lang === 'en' ? 'Loading reviews…' : 'Chargement des avis…'}
+            </p>
+          ) : reviewsList.length === 0 && (
+            <div className="py-10 text-center text-sm text-[#6B6058] space-y-3">
+              <p>{reviewsError
+                ? (lang === 'pt' ? 'Não foi possível carregar as avaliações.' : lang === 'en' ? 'Reviews could not be loaded.' : 'Impossible de charger les avis.')
+                : (lang === 'pt' ? 'Ainda não existem avaliações publicadas. Partilhe a sua experiência.' : lang === 'en' ? 'No reviews have been published yet. Share your experience.' : 'Aucun avis publié pour le moment. Partagez votre expérience.')}</p>
+              {reviewsError && <button type="button" onClick={() => void fetchLiveReviews()} className="underline underline-offset-4">
+                {lang === 'pt' ? 'Tentar novamente' : lang === 'en' ? 'Try again' : 'Réessayer'}
+              </button>}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {filteredReviews.map((review, i) => {
               const service = SERVICES.find((s) => s.slug === review.serviceSlug);
               const helpful = (helpfulCounts[review.id] || 0) + 4;
               const hasVoted = userVoted[review.id];
-              const authorName = review.patientName || review.name || 'Utente';
-              const dateDisplay = review.date || (review.createdAt ? new Date(review.createdAt).toLocaleDateString('pt-PT') : '');
-              const commentText = typeof review.comment === 'string' ? review.comment : (review.comment[lang] || review.comment.pt || review.comment.fr || '');
+              const authorName = review.patientName || 'Utente';
+              const dateDisplay = review.createdAt ? new Date(review.createdAt).toLocaleDateString('pt-PT') : '';
+              const commentText = review.comment;
 
               return (
                 <ScrollReveal key={review.id} delay={i * 0.05}>

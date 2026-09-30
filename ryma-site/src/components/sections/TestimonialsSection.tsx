@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/i18n';
-import { TESTIMONIALS, Testimonial } from '@/data/testimonials';
-import { getLocalizedText } from '@/data/services';
+import type { Review } from '@/types/admin';
+import { usePublicReviews } from '@/lib/usePublicReviews';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { playSoftClick } from '@/lib/sound';
 import {
@@ -23,17 +23,14 @@ function TestimonialCard({
   testimonial,
   lang,
 }: {
-  testimonial: any;
+  testimonial: Review;
   lang: string;
 }) {
-  const authorName = testimonial.patientName || testimonial.name || 'Utente';
-  const commentText =
-    typeof testimonial.comment === 'string'
-      ? testimonial.comment
-      : getLocalizedText(testimonial.comment, lang);
-  const roleText = testimonial.role
-    ? getLocalizedText(testimonial.role, lang)
-    : (lang === 'pt' ? 'Paciente Verificado' : lang === 'en' ? 'Verified Patient' : 'Patient Vérifié');
+  const authorName = testimonial.patientName || 'Utente';
+  const commentText = testimonial.comment;
+  const roleText = testimonial.verified
+    ? (lang === 'pt' ? 'Paciente Verificado' : lang === 'en' ? 'Verified Patient' : 'Patient Vérifié')
+    : (lang === 'pt' ? 'Paciente' : lang === 'en' ? 'Patient' : 'Patient');
 
   return (
     <div className="bg-white/95 backdrop-blur-xl border border-[#C49A3C]/25 rounded-2xl p-5 sm:p-6 h-full flex flex-col justify-between shadow-[0_6px_25px_rgba(196,154,60,0.08)] hover:border-[#C49A3C]/60 hover:shadow-[0_12px_36px_rgba(196,154,60,0.18)] hover:-translate-y-1 transition-all duration-300 select-none">
@@ -103,7 +100,7 @@ function TestimonialRow({
   speedSeconds = 35,
   isPaused,
 }: {
-  testimonials: Testimonial[];
+  testimonials: Review[];
   lang: string;
   reverse?: boolean;
   speedSeconds?: number;
@@ -150,19 +147,8 @@ function TestimonialRow({
 export function TestimonialsSection() {
   const { lang, t } = useLanguage();
   const [isPaused, setIsPaused] = useState(false);
-  const [reviews, setReviews] = useState<any[]>(TESTIMONIALS);
+  const { reviews } = usePublicReviews(16);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    fetch('/api/reviews?limit=16')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.reviews && data.reviews.length > 0) {
-          setReviews(data.reviews);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   // Divide testimonials into 2 rows for desktop dynamic flow
   const half = Math.ceil(reviews.length / 2);
@@ -175,6 +161,8 @@ export function TestimonialsSection() {
       scrollContainerRef.current.scrollBy({ left: offset, behavior: 'smooth' });
     }
   };
+
+  if (reviews.length === 0) return null;
 
   return (
     <section
@@ -267,8 +255,8 @@ export function TestimonialsSection() {
           isPaused={isPaused}
         />
 
-        {/* Row 2: Rightward moving stream on desktop & tablet */}
-        <div className="hidden sm:block">
+        {/* Keep both rows visible on mobile so approved reviews are not hidden. */}
+        {row2.length > 0 && (
           <TestimonialRow
             testimonials={row2}
             lang={lang}
@@ -276,7 +264,7 @@ export function TestimonialsSection() {
             speedSeconds={38}
             isPaused={isPaused}
           />
-        </div>
+        )}
       </div>
 
       {/* ── View All Reviews & Rating Bar ── */}

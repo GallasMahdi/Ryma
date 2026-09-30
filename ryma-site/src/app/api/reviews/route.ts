@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       {
         status: 200,
         headers: {
-          'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600',
+          'Cache-Control': 'no-store, max-age=0, must-revalidate',
         },
       }
     );
