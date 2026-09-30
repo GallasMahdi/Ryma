@@ -113,14 +113,12 @@ function fixture(options = {}) {
     fetch: async (url, init) => {
       if (url === 'https://www.google.com/recaptcha/api/siteverify') {
         googleCalls++;
-        assert.equal(new URLSearchParams(init.body).get('secret'), 'fixture-secret');
-        assert(new URLSearchParams(init.body).get('response').startsWith('fixture-token-'));
-        if (options.networkFailure) throw new Error('Fixture network failure');
-        return Response.json(options.googleResult ?? { success: true, score: 0.9, action: 'review' }, { status: options.googleStatus ?? 200 });
+        throw new Error('Reviews must not call Google verification');
       }
       assert.equal(url, '/api/reviews', 'Unexpected outbound request');
       if (init?.method === 'POST') {
         posts.push(JSON.parse(init.body));
+        if (options.apiNetworkFailure) throw new Error('Fixture network failure');
         return route.POST(new NextRequest('http://fixture.invalid/api/reviews', init));
       }
       return Response.json({ reviews: [] });
@@ -144,14 +142,14 @@ function fixture(options = {}) {
   };
 }
 
-test('review form loads verification and sends a fresh review token through the real route', async () => {
+test('review form submits without reCAPTCHA and creates a pending review through the real route', async () => {
   const f = fixture();
-  assert.equal(find(f.render(), node => node.type === 'fixture-script').props.src, 'https://www.google.com/recaptcha/api.js?render=fixture-site-key');
+  assert.equal(nodes(f.render()).some(node => node.type === 'fixture-script'), false);
   f.openForm();
   await f.submit();
-  assert.equal(f.executions[0].action, 'review');
-  assert.equal(f.posts[0].recaptchaToken, 'fixture-token-1');
-  assert.equal(f.googleCalls, 1);
+  assert.equal(f.executions.length, 0);
+  assert.equal('recaptchaToken' in f.posts[0], false);
+  assert.equal(f.googleCalls, 0);
   assert.equal(f.writes.length, 1);
   assert.equal(f.writes[0].status, 'PENDING');
   assert.equal(f.writes[0].verified, false);
@@ -160,76 +158,56 @@ test('review form loads verification and sends a fresh review token through the 
   f.timers.advance(2200);
   f.openForm();
   await f.submit();
-  assert.equal(f.posts[1].recaptchaToken, 'fixture-token-2');
+  assert.equal(f.writes.length, 2);
+  assert.equal(f.attempts, 2);
 });
 
-test('slow script loading waits before sending the review', async () => {
-  const f = fixture({ delayedScript: true });
-  f.openForm();
-  const submitted = f.submit();
-  assert.equal(f.posts.length, 0);
-  f.timers.advance(500);
-  f.window.grecaptcha = f.recaptcha;
-  f.timers.advance(100);
-  await submitted;
-  assert.equal(f.writes.length, 1);
+test('blocked Google scripts and missing or placeholder keys do not delay review submission', async () => {
+  for (const env of [{}, { NEXT_PUBLIC_RECAPTCHA_SITE_KEY: '', RECAPTCHA_SECRET_KEY: '' }]) {
+    const f = fixture({ delayedScript: true, env });
+    f.openForm();
+    const submitted = f.submit();
+    assert.equal(f.posts.length, 1, 'Review should post immediately without waiting for Google');
+    await submitted;
+    assert.equal(f.writes.length, 1);
+    assert.equal(f.googleCalls, 0);
+  }
 });
 
-test('blocked script times out, preserves the form, and supports a later retry', async () => {
-  const f = fixture({ delayedScript: true });
+test('public review endpoint accepts submissions without a token, including stale clients', async () => {
+  const body = { patientName: 'Review Fixture', rating: 5, comment: 'Isolated review test.' };
+  for (const recaptchaToken of [undefined, 'expired-legacy-token']) {
+    const f = fixture({ env: { RECAPTCHA_SECRET_KEY: '' } });
+    const response = await f.post({ ...body, recaptchaToken });
+    assert.equal(response.status, 201);
+    assert.equal((await response.json()).review.status, 'PENDING');
+    assert.equal(f.googleCalls, 0);
+    assert.equal(f.writes.length, 1);
+  }
+});
+
+test('network failure preserves the review text and allows retry', async () => {
+  const options = { apiNetworkFailure: true };
+  const f = fixture(options);
   f.openForm();
-  const submitted = f.submit();
-  f.timers.advance(12_000);
-  await submitted;
-  assert.equal(f.posts.length, 0);
-  assert.equal(f.writes.length, 0);
-  assert.equal(f.timers.size, 0);
+  await f.submit();
   const tree = f.render();
   assert.equal(find(tree, node => node.type === 'textarea').props.value, 'Isolated review submission test.');
-  assert(nodes(tree).some(node => node.props?.children === 'Verification unavailable'));
-  f.window.grecaptcha = f.recaptcha;
+  assert(nodes(tree).some(node => node.props?.children === 'Connection Error'));
+  assert.equal(f.writes.length, 0);
+  options.apiNetworkFailure = false;
   await f.submit();
   assert.equal(f.writes.length, 1);
 });
 
-test('failed or stalled token execution completes without posting an unverified review', async () => {
-  for (const stalled of [false, true]) {
-    const f = fixture();
-    f.recaptcha.execute = () => stalled ? new Promise(() => {}) : Promise.reject(new Error('Fixture error'));
-    f.openForm();
-    const submitted = f.submit();
-    if (stalled) f.timers.advance(12_000);
-    await submitted;
-    assert.equal(f.posts.length, 0);
-    assert.equal(f.timers.size, 0);
-  }
-});
-
-test('missing, rejected, low-score and wrong-action tokens never create reviews', async () => {
-  const body = { patientName: 'Review Fixture', rating: 5, comment: 'Isolated review test.' };
-  const missing = fixture();
-  assert.equal((await missing.post(body)).status, 403);
-  assert.equal(missing.googleCalls, 0);
-  assert.equal(missing.writes.length, 0);
-  for (const googleResult of [
-    { success: false, 'error-codes': ['timeout-or-duplicate'] },
-    { success: true, action: 'review', score: 0.1 },
-    { success: true, action: 'booking', score: 0.9 },
-  ]) {
-    const f = fixture({ googleResult });
-    assert.equal((await f.post({ ...body, recaptchaToken: 'fixture-token-invalid' })).status, 403);
-    assert.equal(f.writes.length, 0);
-  }
-});
-
-test('service/configuration failures report temporary unavailability and remain closed', async () => {
-  for (const options of [{ networkFailure: true }, { googleStatus: 503 }, { env: { RECAPTCHA_SECRET_KEY: '' } }]) {
-    const f = fixture(options);
-    const response = await f.post({ recaptchaToken: 'fixture-token-valid' });
-    assert.equal(response.status, 503);
-    assert.equal((await response.json()).code, 'SECURITY_VERIFICATION_UNAVAILABLE');
-    assert.equal(f.writes.length, 0);
-  }
+test('review validation still rejects incomplete and unsafe input', async () => {
+  const f = fixture();
+  const valid = { patientName: 'Review Fixture', rating: 5, comment: 'Isolated review test.' };
+  for (const [override, status] of [
+    [{ patientName: '' }, 400], [{ rating: 6 }, 400], [{ comment: 'Bad' }, 400],
+    [{ patientName: '<script>' }, 422], [{ comment: '<script>alert(1)</script>' }, 422],
+  ]) assert.equal((await f.post({ ...valid, ...override })).status, status);
+  assert.equal(f.writes.length, 0);
 });
 
 test('rate limits, honeypots and malformed payloads still block submissions', async () => {
