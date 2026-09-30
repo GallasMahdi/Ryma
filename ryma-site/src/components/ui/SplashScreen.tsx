@@ -150,7 +150,12 @@ export function SplashScreen() {
       /Lighthouse|PageSpeed|Googlebot|HeadlessChrome|Chrome-Lighthouse|Mediapartners-Google/i.test(navigator.userAgent) ||
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const hasSeenSplash = sessionStorage.getItem('ryma_splash_v6') === 'true';
+    let hasSeenSplash = false;
+    try {
+      hasSeenSplash = sessionStorage.getItem('ryma_splash_v6') === 'true';
+    } catch {
+      // The intro must still finish when browser storage is unavailable.
+    }
 
     if (isBotOrLighthouse || hasSeenSplash) {
       setShowSplash(false);
@@ -166,7 +171,7 @@ export function SplashScreen() {
     setExitReady(true);
     setTimeout(() => {
       setShowSplash(false);
-      sessionStorage.setItem('ryma_splash_v6', 'true');
+      try { sessionStorage.setItem('ryma_splash_v6', 'true'); } catch {}
       document.documentElement.classList.add('skip-splash');
     }, 400);
   };
@@ -175,7 +180,7 @@ export function SplashScreen() {
     setExitReady(true);
     setTimeout(() => {
       setShowSplash(false);
-      sessionStorage.setItem('ryma_splash_v6', 'true');
+      try { sessionStorage.setItem('ryma_splash_v6', 'true'); } catch {}
       document.documentElement.classList.add('skip-splash');
     }, 250);
   };
