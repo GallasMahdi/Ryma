@@ -1,5 +1,7 @@
 'use client';
 
+import { PhoneInput } from '@/components/ui/PhoneInput';
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -459,11 +461,12 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
+                    <label htmlFor="invoice-phone" className="block text-[11px] font-medium text-[#64748B] mb-1">
                       {txt('Téléphone / WhatsApp *', 'Phone / WhatsApp *', 'Telefone / WhatsApp *')}
                     </label>
-                    <input
-                      type="tel"
+                    <PhoneInput
+                      id="invoice-phone"
+                      lang={lang}
                       required
                       value={patientPhone}
                       onChange={(e) => setPatientPhone(e.target.value)}

@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const rawPhone = String(body.phone ?? '').trim().slice(0, 30);
+  const rawPhone = body.phone;
   const patientName = String(body.patientName ?? '').trim().slice(0, 100);
 
   if (!rawPhone || !patientName) {
@@ -113,11 +113,10 @@ export async function POST(request: NextRequest) {
   }
 
   const phoneValidation = validateAndNormalizePhone(rawPhone);
-  const phone = phoneValidation.isValid ? phoneValidation.normalized : rawPhone.replace(/[^\d+]/g, '');
-
-  if (!phone || phone.replace(/\D/g, '').length < 6) {
-    return NextResponse.json({ error: 'Número de telefone inválido.' }, { status: 422 });
+  if (!phoneValidation.isValid) {
+    return NextResponse.json({ error: phoneValidation.error, errorCode: phoneValidation.errorCode }, { status: 422 });
   }
+  const phone = phoneValidation.normalized;
 
   // Validate optional email
   let email: string | null | undefined = body.email === undefined ? undefined : null;

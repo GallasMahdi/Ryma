@@ -11,7 +11,7 @@ import type { Lang } from '@/lib/i18n';
 import { TESTIMONIALS } from '@/data/testimonials';
 import { SERVICES } from '@/data/services';
 import { SITE } from '@/lib/site';
-import { phonesMatch } from '@/lib/phone';
+import { phonesMatch, requireNormalizedPhone, validateAndNormalizePhone } from '@/lib/phone';
 import { broadcastAppointmentCreated, broadcastMultipleAppointmentsCreated } from '@/lib/events';
 import { VALID_TIME_SLOTS, getLisbonDateTime } from '@/lib/validation';
 import { env } from '@/lib/env';
@@ -784,7 +784,6 @@ function executeSqliteQuery<T = any>(sql: string, args: any[] = []): T[] {
 }
 
 // ─── Public Export Types ──────────────────────────────────────────────────────
-import { validateAndNormalizePhone } from '@/lib/phone';
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
 
 export interface Appointment {
@@ -954,7 +953,8 @@ export async function dbCreateAppointment(input: CreateAppointmentInput): Promis
 
   // Normalize phone number
   const phoneValidation = validateAndNormalizePhone(input.phone);
-  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.phone.trim();
+  if (!phoneValidation.isValid) return { success: false, error: 'invalid_data' };
+  const normalizedPhone = phoneValidation.normalized;
 
   // Use authoritative single source of truth availability check
   const availability = await dbCheckSlotAvailability(input.date, input.startTime);
@@ -1060,7 +1060,8 @@ export async function dbCreateMultipleAppointments(
   }
 
   const phoneValidation = validateAndNormalizePhone(input.phone);
-  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.phone.trim();
+  if (!phoneValidation.isValid) return { success: false, error: 'invalid_input', message: phoneValidation.error! };
+  const normalizedPhone = phoneValidation.normalized;
 
   // 1. Check for duplicates inside the requested batch itself
   const seenSlots = new Set<string>();
@@ -1654,8 +1655,7 @@ export async function dbUpsertPatientNote(
   tags: string
 ): Promise<PatientNote> {
   const now = new Date().toISOString();
-  const phoneValidation = validateAndNormalizePhone(phone);
-  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : phone.trim();
+  const normalizedPhone = requireNormalizedPhone(phone);
   const existing = await dbGetPatientNote(phone);
 
   if (existing) {
@@ -1675,12 +1675,11 @@ export async function dbUpsertPatientNote(
 }
 
 export async function dbEnsurePatientNote(phone: string, patientName: string): Promise<PatientNote> {
+  const normalizedPhone = requireNormalizedPhone(phone);
   const existing = await dbGetPatientNote(phone);
   if (existing) return existing;
 
   const now = new Date().toISOString();
-  const phoneValidation = validateAndNormalizePhone(phone);
-  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : phone.trim();
   await executeQuery(
     'INSERT INTO patient_notes (phone, patientName, content, tags, updatedAt) VALUES (?, ?, \'\', \'\', ?)',
     [normalizedPhone, patientName, now]
@@ -1892,8 +1891,7 @@ export async function dbUpsertPatient(input: {
   totalPrescribedSessions?: number;
 }): Promise<PatientRecord> {
   const now = new Date().toISOString();
-  const phoneValidation = validateAndNormalizePhone(input.phone);
-  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.phone.trim();
+  const normalizedPhone = requireNormalizedPhone(input.phone);
 
   const existing = input.id ? await dbGetPatientById(input.id) : await dbGetPatientByPhone(normalizedPhone);
   const id = existing?.id ?? input.id ?? ('pat_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6));
@@ -2242,6 +2240,7 @@ export async function dbGenerateInvoiceNumber(): Promise<string> {
 }
 
 export async function dbCreateInvoice(input: CreateInvoiceInput, idempotencyKey?: string): Promise<Invoice> {
+  const normalizedPhone = requireNormalizedPhone(input.patientPhone);
   const requestHash = createHash('sha256').update(JSON.stringify(input)).digest('hex');
   const dedupeKey = idempotencyKey ? 'invoice:' + idempotencyKey : undefined;
   const findExisting = async (): Promise<Invoice | null> => {
@@ -2256,8 +2255,6 @@ export async function dbCreateInvoice(input: CreateInvoiceInput, idempotencyKey?
   };
   const existing = await findExisting();
   if (existing) return existing;
-  const phoneValidation = validateAndNormalizePhone(input.patientPhone);
-  const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : input.patientPhone.trim();
 
   const isKineService = !input.serviceSlug.includes('minceur') &&
                         !input.serviceSlug.includes('cryolipolyse') &&
@@ -2584,6 +2581,7 @@ export async function dbCreatePrescription(input: {
   }>;
   generalNotes?: string;
 }): Promise<PatientPrescription> {
+  const normalizedPhone = requireNormalizedPhone(input.patientPhone);
   const id = `rx_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const now = new Date().toISOString();
   const dateStr = now.split('T')[0];
@@ -2606,7 +2604,7 @@ export async function dbCreatePrescription(input: {
     [
       id,
       input.patientId ?? null,
-      input.patientPhone.trim(),
+      normalizedPhone,
       input.patientName.trim(),
       input.practitioner?.trim() || SITE.professionalName,
       dateStr,
@@ -2620,7 +2618,7 @@ export async function dbCreatePrescription(input: {
   return {
     id,
     patientId: input.patientId,
-    patientPhone: input.patientPhone.trim(),
+    patientPhone: normalizedPhone,
     patientName: input.patientName.trim(),
     practitioner: input.practitioner?.trim() || SITE.professionalName,
     date: dateStr,

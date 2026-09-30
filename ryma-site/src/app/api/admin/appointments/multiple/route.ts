@@ -31,10 +31,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Nome do utente inválido (mínimo 2 caracteres).' }, { status: 422 });
   }
 
-  const phone = String(body.phone || '').trim();
-  const phoneValidation = validateAndNormalizePhone(phone);
+  const phoneValidation = validateAndNormalizePhone(body.phone);
   if (!phoneValidation.isValid) {
-    return NextResponse.json({ error: phoneValidation.error || 'Número de telefone inválido.' }, { status: 422 });
+    return NextResponse.json({ error: phoneValidation.error, errorCode: phoneValidation.errorCode }, { status: 422 });
   }
 
   const service = String(body.service || '').trim();

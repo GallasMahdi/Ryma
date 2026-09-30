@@ -1,5 +1,7 @@
 'use client';
 
+import { PhoneInput } from '@/components/ui/PhoneInput';
+
 import React, { useState } from 'react';
 import { useLanguage } from '@/lib/i18n';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
@@ -192,12 +194,12 @@ export default function ContactPage() {
                         />
                       </div>
                       <div>
-                        <label className="font-mono text-xs text-[#8A8078] uppercase tracking-wide block mb-1.5 font-medium">
+                        <label htmlFor="contact-phone" className="font-mono text-xs text-[#8A8078] uppercase tracking-wide block mb-1.5 font-medium">
                           {t.contact.phoneLabel} *
                         </label>
-                        <input
+                        <PhoneInput
                           id="contact-phone"
-                          type="tel"
+                          lang={lang}
                           name="phone"
                           required
                           value={form.phone}

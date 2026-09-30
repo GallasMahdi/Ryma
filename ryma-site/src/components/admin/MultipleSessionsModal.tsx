@@ -1,5 +1,7 @@
 'use client';
 
+import { PhoneInput } from '@/components/ui/PhoneInput';
+
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   IconCalendarEvent,
@@ -25,6 +27,7 @@ import { VALID_TIME_SLOTS } from '@/lib/validation';
 import { Lang } from '@/lib/i18n';
 import { PatientRecord, Appointment, CoverageType } from '@/types/admin';
 import { ResponsiveModal } from './ResponsiveModal';
+import { validateAndNormalizePhone } from '@/lib/phone';
 
 interface MultipleSessionsModalProps {
   isOpen: boolean;
@@ -192,6 +195,12 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
 
   // Preview API calculation
   const handleCalculatePreview = async () => {
+    const phoneValidation = validateAndNormalizePhone(phone, lang);
+    if (!phoneValidation.isValid) {
+      setPreviewError(phoneValidation.error!);
+      (document.getElementById('sessions-phone') as HTMLInputElement | null)?.reportValidity();
+      return;
+    }
     if (schedulePatterns.length === 0) {
       setPreviewError(txt('Veuillez sélectionner au moins un jour.', 'Please select at least one day.', 'Por favor, selecione pelo menos um dia da semana.'));
       return;
@@ -274,6 +283,12 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
 
   // Final confirmation: Commit multiple sessions
   const handleConfirmBooking = async () => {
+    const phoneValidation = validateAndNormalizePhone(phone, lang);
+    if (!phoneValidation.isValid) {
+      setPreviewError(phoneValidation.error!);
+      (document.getElementById('sessions-phone') as HTMLInputElement | null)?.reportValidity();
+      return;
+    }
     if (!patientName.trim() || !phone.trim()) {
       setPreviewError(txt('Nom et téléphone du patient requis.', 'Patient name and phone required.', 'O nome e telefone do utente são obrigatórios.'));
       return;
@@ -305,7 +320,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientName: patientName.trim(),
-          phone: phone.trim(),
+          phone: phoneValidation.normalized,
           email: email.trim() || undefined,
           service: serviceSlug,
           patientId,
@@ -471,7 +486,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="font-bold text-[#475569] block">
+                <label htmlFor="sessions-phone" className="font-bold text-[#475569] block">
                   {txt('Téléphone *', 'Phone *', 'Telefone *')}
                 </label>
                 {Boolean(initialPatient || patientId) && (
@@ -482,8 +497,9 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                 )}
               </div>
               <div className="relative">
-                <input
-                  type="tel"
+                <PhoneInput
+                  id="sessions-phone"
+                  lang={lang}
                   required
                   readOnly={Boolean(initialPatient || patientId)}
                   value={phone}
@@ -500,7 +516,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                   }`}
                 />
                 {Boolean(initialPatient || patientId) && (
-                  <IconLock size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                  <IconLock size={14} className="absolute right-2.5 top-3 text-[#94A3B8]" />
                 )}
               </div>
             </div>

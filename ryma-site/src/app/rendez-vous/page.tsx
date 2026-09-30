@@ -1,5 +1,7 @@
 'use client';
 
+import { PhoneInput } from '@/components/ui/PhoneInput';
+
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
@@ -514,7 +516,7 @@ function BookingWizardContent() {
     }
 
     // Authoritative phone format validation according to selected language
-    const phoneCheck = validateAndNormalizePhone(phoneTrimmed, lang);
+    const phoneCheck = validateAndNormalizePhone(form.phone, lang);
     if (!phoneCheck.isValid) {
       markFieldError('phone');
       showToast({
@@ -576,7 +578,7 @@ function BookingWizardContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientName: nameTrimmed,
-          phone: phoneTrimmed,
+          phone: phoneCheck.normalized,
           email: emailTrimmed || undefined,
           notes: form.notes || undefined,
           coverageType: form.coverageType,
@@ -1192,12 +1194,14 @@ function BookingWizardContent() {
                       />
                     </div>
                     <div>
-                      <label className="font-mono text-xs font-semibold text-[#8A8078] uppercase tracking-wide block mb-2">
+                      <label htmlFor="booking-phone" className="font-mono text-xs font-semibold text-[#8A8078] uppercase tracking-wide block mb-2">
                         {t.booking.phoneLabel} *
                       </label>
-                      <input
+                      <PhoneInput
                         id="booking-phone"
-                        type="tel"
+                        lang={lang}
+                        required
+                        showError={fieldErrors.phone}
                         value={form.phone}
                         onChange={e => { setForm(p => ({ ...p, phone: e.target.value })); if (fieldErrors.phone) setFieldErrors(p => ({ ...p, phone: false })); }}
                         placeholder="+351 9XX XXX XXX"

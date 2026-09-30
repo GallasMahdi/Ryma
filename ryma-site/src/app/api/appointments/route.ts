@@ -87,9 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Per-phone rate limit: 3 bookings per normalized phone number per hour
-    const rawPhone = String(body.phone ?? '').trim();
-    const phoneVal = validateAndNormalizePhone(rawPhone);
-    const normalizedPhone = phoneVal.isValid ? phoneVal.normalized : rawPhone;
+    const normalizedPhone = validateAndNormalizePhone(body.phone).normalized;
 
     if (normalizedPhone) {
       const phoneAllowed = await dbCheckRateLimit(`phone:${normalizedPhone}`, 'booking_phone', 3, 60 * 60);

@@ -9,6 +9,7 @@ import {
   dbGetInvoiceStats,
 } from '@/lib/db';
 import { SERVICES } from '@/data/services';
+import { validateAndNormalizePhone } from '@/lib/phone';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -91,6 +92,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const phoneValidation = validateAndNormalizePhone(body.patientPhone);
+  if (!phoneValidation.isValid) {
+    return NextResponse.json({ error: phoneValidation.error, errorCode: phoneValidation.errorCode }, { status: 422 });
+  }
+
   if (body.coverageType !== undefined && !COVERAGE_TYPES.includes(String(body.coverageType))) return NextResponse.json({ error: 'Invalid coverage type' }, { status: 422 });
   const service = SERVICES.find(s => s.slug === body.serviceSlug);
   const serviceName = (typeof body.serviceName === 'string' ? body.serviceName.trim() : '') || (service ? (service.name.pt || service.name.fr) : String(body.serviceSlug));
@@ -158,7 +164,7 @@ export async function POST(request: NextRequest) {
       patientName: String(body.patientName).trim().slice(0, 100),
       patientNif: cleanNif,
       patientEmail: body.patientEmail ? String(body.patientEmail).trim().slice(0, 254) : undefined,
-      patientPhone: String(body.patientPhone).trim().slice(0, 30),
+      patientPhone: phoneValidation.normalized,
       patientAddress: body.patientAddress ? String(body.patientAddress).trim().slice(0, 250) : undefined,
       coverageType: body.coverageType as CoverageType | undefined,
       coverageProvider: typeof body.coverageProvider === 'string' ? body.coverageProvider.trim() : undefined,

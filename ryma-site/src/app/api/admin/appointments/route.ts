@@ -10,6 +10,7 @@ import {
 import { VALID_SERVICES, VALID_TIME_SLOTS, validateAppointmentInput } from '@/lib/validation';
 import { broadcastAppointmentCreated } from '@/lib/events';
 import { sendAppointmentConfirmationEmail } from '@/lib/email';
+import { validateAndNormalizePhone } from '@/lib/phone';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -74,13 +75,13 @@ export async function POST(request: NextRequest) {
 
   const validation = validateAppointmentInput(body);
   if (!validation.ok) {
-    return NextResponse.json({ error: validation.error }, { status: 422 });
+    return NextResponse.json({ error: validation.error, errorCode: validation.errorCode }, { status: 422 });
   }
 
   const result = await dbCreateAppointment({
     patientName: String(body.patientName).trim().slice(0, 100),
     email:       body.email ? String(body.email).trim().slice(0, 254) : undefined,
-    phone:       String(body.phone).trim().slice(0, 30),
+    phone:       validateAndNormalizePhone(body.phone).normalized,
     service:     String(body.service).trim(),
     date:        String(body.date).trim(),
     startTime:   String(body.startTime).trim(),

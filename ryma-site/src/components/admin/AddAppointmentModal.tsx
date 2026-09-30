@@ -1,5 +1,7 @@
 'use client';
 
+import { PhoneInput } from '@/components/ui/PhoneInput';
+
 import React from 'react';
 import { SERVICES } from '@/data/services';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
@@ -81,11 +83,12 @@ export const AddAppointmentModal = React.memo(function AddAppointmentModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="font-medium text-[#475569] block mb-1">
+            <label htmlFor="appointment-phone" className="font-medium text-[#475569] block mb-1">
               {txt('Téléphone *', 'Phone *', 'Telefone *')}
             </label>
-            <input
-              type="tel"
+            <PhoneInput
+              id="appointment-phone"
+              lang={lang}
               required
               value={newForm.phone}
               onChange={e => setNewForm(p => ({ ...p, phone: e.target.value }))}

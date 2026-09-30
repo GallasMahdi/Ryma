@@ -1,5 +1,7 @@
 'use client';
 
+import { PhoneInput } from '@/components/ui/PhoneInput';
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   IconSearch,
@@ -1784,11 +1786,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-[#475569] block mb-1">
+              <label htmlFor="new-patient-phone" className="font-bold text-[#475569] block mb-1">
                 {txt('Téléphone *', 'Phone *', 'Telefone *')}
               </label>
-              <input
-                type="tel"
+              <PhoneInput
+                id="new-patient-phone"
+                lang={lang}
                 required
                 value={newPatientForm.phone}
                 onChange={e => setNewPatientForm(p => ({ ...p, phone: e.target.value }))}
@@ -1917,11 +1920,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-[#475569] block mb-1">
+              <label htmlFor="edit-patient-phone" className="font-bold text-[#475569] block mb-1">
                 {txt('Téléphone *', 'Phone *', 'Telefone *')}
               </label>
-              <input
-                type="tel"
+              <PhoneInput
+                id="edit-patient-phone"
+                lang={lang}
                 required
                 value={editPatientForm.phone}
                 onChange={e => setEditPatientForm(p => ({ ...p, phone: e.target.value }))}

@@ -8,7 +8,8 @@
     "start": "next start",
     "db:backup": "node scripts/backup-db.mjs",
     "db:reset": "node scripts/reset-db.mjs",
-    "test:dashboard": "node scripts/audit-dashboard.cjs"
+    "test:dashboard": "node scripts/audit-dashboard.cjs",
+    "test:phone": "node --test scripts/test-phone-validation.cjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -22,6 +23,7 @@
     "better-sqlite3": "^13.0.3",
     "framer-motion": "^12.43.0",
     "iron-session": "^8.0.4",
+    "libphonenumber-js": "^1.13.14",
     "next": "^16.3.4",
     "nodemailer": "^9.0.5",
     "postcss": "^8.5.25",
