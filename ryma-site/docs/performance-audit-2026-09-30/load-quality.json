@@ -1,0 +1,2076 @@
+{
+  "phases": [
+    {
+      "phase": "load-smoke",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5014,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "public_home": {
+          "n": 2,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 48.73019999999087,
+          "pass": true,
+          "unexpected": 0
+        },
+        "availability": {
+          "n": 2,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 18.81789999999455,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 1,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 27.97099999999773,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 2,
+        "rssStart": 231108608,
+        "rssEnd": 232054784,
+        "rssMax": 232054784,
+        "rssSlopeMiBPerMinute": 10.821632020787526,
+        "cpuP50": 0.6196344900070584,
+        "cpuP95": 46.118537607501786,
+        "eventLoopP99Max": 218.103807,
+        "gcTotalMs": 2.0468000173568726
+      },
+      "generator": {
+        "samples": 3,
+        "cpuP50": 0.319092755477626,
+        "cpuP95": 0.6198114037860554,
+        "rssMax": 85340160,
+        "eventLoopMax": 35.717119
+      }
+    },
+    {
+      "phase": "baseline",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5016,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "admin_invoices": {
+          "n": 7,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 34.43510000000242,
+          "pass": true,
+          "unexpected": 0
+        },
+        "availability": {
+          "n": 25,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 24.03200000000652,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 5,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 23.358500000002095,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 5,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 32.629999999990105,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 11,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 73.80520000000251,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 6,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 30.566899999976158,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 2,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 24.04649999999674,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 25,
+        "rssStart": 232091648,
+        "rssEnd": 243617792,
+        "rssMax": 245911552,
+        "rssSlopeMiBPerMinute": 5.457073926813328,
+        "cpuP50": 0.9388114834381948,
+        "cpuP95": 2.7926144841782987,
+        "eventLoopP99Max": 35.291135,
+        "gcTotalMs": 47.754299998283386
+      },
+      "generator": {
+        "samples": 24,
+        "cpuP50": 0.3198582771945406,
+        "cpuP95": 0.9396701006210695,
+        "rssMax": 92262400,
+        "eventLoopMax": 37.650431
+      }
+    },
+    {
+      "phase": "warmup-5",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5015,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 15,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 24.965100000001257,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 5,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 51.80009999999311,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 3,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 42.3925000000163,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 9,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 59.388999999995576,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 4,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 38.490400000009686,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 3,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 30.92139999999199,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 3,
+        "rssStart": 242900992,
+        "rssEnd": 242454528,
+        "rssMax": 243560448,
+        "rssSlopeMiBPerMinute": -2.54645779422819,
+        "cpuP50": 6.221126346888815,
+        "cpuP95": 7.19326437110823,
+        "eventLoopP99Max": 34.701311,
+        "gcTotalMs": 22.401700377464294
+      },
+      "generator": {
+        "samples": 3,
+        "cpuP50": 2.791575861522676,
+        "cpuP95": 2.8158625967693207,
+        "rssMax": 92090368,
+        "eventLoopMax": 35.717119
+      }
+    },
+    {
+      "phase": "sustained-5",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5014,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 180,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 23.637300000002142,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 46,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 36.53659999999218,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 36,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 36.25669999999809,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 44,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 66.4713000000338,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 89,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 69.18430000002263,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 44,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 39.4267000000109,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 9,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 36.75229999999283,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 37,
+        "rssStart": 242462720,
+        "rssEnd": 245542912,
+        "rssMax": 249618432,
+        "rssSlopeMiBPerMinute": 0.32115126784471637,
+        "cpuP50": 3.7281043645933485,
+        "cpuP95": 7.166477573466663,
+        "eventLoopP99Max": 35.553279,
+        "gcTotalMs": 79.94209969043732
+      },
+      "generator": {
+        "samples": 37,
+        "cpuP50": 1.2591002469635115,
+        "cpuP95": 3.1123838721694495,
+        "rssMax": 95617024,
+        "eventLoopMax": 37.650431
+      }
+    },
+    {
+      "phase": "warmup-10",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5008,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "public_booking": {
+          "n": 2,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 148.54800000000978,
+          "pass": true,
+          "unexpected": 0
+        },
+        "availability": {
+          "n": 31,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 174.6589999999851,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 8,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 190.171399999992,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 9,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 196.57140000001527,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 7,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 197.60359999997308,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 6,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 198.8118999999715,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 16,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 205.59640000003856,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 3,
+        "rssStart": 247660544,
+        "rssEnd": 245817344,
+        "rssMax": 247660544,
+        "rssSlopeMiBPerMinute": -10.526626062442384,
+        "cpuP50": 7.458905915714089,
+        "cpuP95": 11.25522013311404,
+        "eventLoopP99Max": 35.749887,
+        "gcTotalMs": 16.2399001121521
+      },
+      "generator": {
+        "samples": 3,
+        "cpuP50": 2.4989950541289403,
+        "cpuP95": 3.7298377586395532,
+        "rssMax": 94531584,
+        "eventLoopMax": 35.717119
+      }
+    },
+    {
+      "phase": "sustained-10",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5017,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "admin_invoices": {
+          "n": 90,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 50.73739999998361,
+          "pass": true,
+          "unexpected": 0
+        },
+        "availability": {
+          "n": 358,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 23.195999999996275,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 90,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 49.645100000023376,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 72,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 56.68840000004275,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 179,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 62.37810000003083,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 89,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 61.553799999994226,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 17,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 40.228499999968335,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 37,
+        "rssStart": 249032704,
+        "rssEnd": 298651648,
+        "rssMax": 301936640,
+        "rssSlopeMiBPerMinute": 21.676687642300784,
+        "cpuP50": 6.874724748711184,
+        "cpuP95": 9.391587204014412,
+        "eventLoopP99Max": 35.717119,
+        "gcTotalMs": 147.76810014247894
+      },
+      "generator": {
+        "samples": 37,
+        "cpuP50": 2.498609873410831,
+        "cpuP95": 5.020523138510982,
+        "rssMax": 110542848,
+        "eventLoopMax": 175.898623
+      }
+    },
+    {
+      "phase": "warmup-25",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5000,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 80,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 60.277499999967404,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 4,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 37.71069999993779,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 20,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 145.15220000001136,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 20,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 146.07400000002235,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 20,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 139.51009999995586,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 16,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 157.99219999997877,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 40,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 171.5698000000557,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 3,
+        "rssStart": 301412352,
+        "rssEnd": 302440448,
+        "rssMax": 302440448,
+        "rssSlopeMiBPerMinute": 5.861690414604105,
+        "cpuP50": 18.730683732524614,
+        "cpuP95": 20.306320038316443,
+        "eventLoopP99Max": 47.316991,
+        "gcTotalMs": 29.6774001121521
+      },
+      "generator": {
+        "samples": 3,
+        "cpuP50": 5.619400185224327,
+        "cpuP95": 6.87612365405118,
+        "rssMax": 113750016,
+        "eventLoopMax": 35.979263
+      }
+    },
+    {
+      "phase": "sustained-25",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5022,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 892,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 24.26969999994617,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 46,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 46.81060000008438,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 223,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 50.84519999998156,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 223,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 33.59599999990314,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 223,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 39.432099999976344,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 178,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 34.84320000000298,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 445,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 69.34620000002906,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 37,
+        "rssStart": 289464320,
+        "rssEnd": 302596096,
+        "rssMax": 309125120,
+        "rssSlopeMiBPerMinute": 0.7700229514536129,
+        "cpuP50": 18.141204938832036,
+        "cpuP95": 22.469611647815555,
+        "eventLoopP99Max": 41.877503,
+        "gcTotalMs": 380.38510048389435
+      },
+      "generator": {
+        "samples": 37,
+        "cpuP50": 4.699657770921116,
+        "cpuP95": 7.480157834122825,
+        "rssMax": 126140416,
+        "eventLoopMax": 42.237951
+      }
+    },
+    {
+      "phase": "warmup-50",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5002,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 157,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 80.88450000004377,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 39,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 335.4290000000037,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 39,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 325.076999999932,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 38,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 333.6977000000188,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 32,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 355.32499999995343,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 79,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 375.91150000004563,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 7,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 72.7833999999566,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 3,
+        "rssStart": 323760128,
+        "rssEnd": 343691264,
+        "rssMax": 343691264,
+        "rssSlopeMiBPerMinute": 113.81489598590156,
+        "cpuP50": 26.219442193647666,
+        "cpuP95": 26.521161350471633,
+        "eventLoopP99Max": 71.368703,
+        "gcTotalMs": 51.78779983520508
+      },
+      "generator": {
+        "samples": 3,
+        "cpuP50": 6.857847733067417,
+        "cpuP95": 9.074354662477353,
+        "rssMax": 118849536,
+        "eventLoopMax": 38.502399
+      }
+    },
+    {
+      "phase": "sustained-50",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5020,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 1771,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 29.01789999997709,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 89,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 162.59909999999218,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 444,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 60.973500000080094,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 442,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 39.14299999992363,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 443,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 42.85820000001695,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 354,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 34.667099999962375,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 886,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 69.90130000002682,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 37,
+        "rssStart": 344215552,
+        "rssEnd": 337113088,
+        "rssMax": 346337280,
+        "rssSlopeMiBPerMinute": -0.8888848699250894,
+        "cpuP50": 31.25298495499744,
+        "cpuP95": 35.22610057265255,
+        "eventLoopP99Max": 58.654719,
+        "gcTotalMs": 733.1544998884201
+      },
+      "generator": {
+        "samples": 37,
+        "cpuP50": 8.118067737517105,
+        "cpuP95": 11.531575128571207,
+        "rssMax": 158117888,
+        "eventLoopMax": 37.584895
+      }
+    },
+    {
+      "phase": "spike-before",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5015,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 21,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 22.920199999934994,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 6,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 30.856999999959953,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 5,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 33.12639999995008,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 4,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 25.577599999960512,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 6,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 44.715499999932945,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 10,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 51.216799999936484,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 1,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 28.769599999999627,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 4,
+        "rssStart": 339079168,
+        "rssEnd": 334123008,
+        "rssMax": 339079168,
+        "rssSlopeMiBPerMinute": -21.435763641758054,
+        "cpuP50": 2.4988054710327323,
+        "cpuP95": 5.6080304441416216,
+        "eventLoopP99Max": 34.996223,
+        "gcTotalMs": 9.678999900817871
+      },
+      "generator": {
+        "samples": 4,
+        "cpuP50": 1.2393178546664243,
+        "cpuP95": 1.2584259356711387,
+        "rssMax": 133136384,
+        "eventLoopMax": 35.913727
+      }
+    },
+    {
+      "phase": "spike-ramp",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5002,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "public_home": {
+          "n": 20,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 69.10010000003967,
+          "pass": true,
+          "unexpected": 0
+        },
+        "availability": {
+          "n": 40,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 22.099500000011176,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 10,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 28.63950000004843,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 8,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 34.84270000003744,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 10,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 30.67599999997765,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 10,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 50.31579999998212,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 2,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 34.24640000006184,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 0,
+        "rssMax": 0,
+        "rssSlopeMiBPerMinute": null,
+        "cpuP50": null,
+        "cpuP95": null,
+        "eventLoopP99Max": 0,
+        "gcTotalMs": 0
+      },
+      "generator": {
+        "samples": 2,
+        "cpuP50": 2.199501373038734,
+        "cpuP95": 6.237789951020314,
+        "rssMax": 128401408,
+        "eventLoopMax": 38.764543
+      }
+    },
+    {
+      "phase": "spike-peak",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5015,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 1186,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 30.553199999965727,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 59,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 331.671399999992,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 296,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 50.084499999997206,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 297,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 59.66049999999814,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 295,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 76.6530999999959,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 238,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 43.51989999995567,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 593,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 91.43680000002496,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 13,
+        "rssStart": 357900288,
+        "rssEnd": 469250048,
+        "rssMax": 580161536,
+        "rssSlopeMiBPerMinute": 107.00199332942566,
+        "cpuP50": 36.555422529990835,
+        "cpuP95": 48.75786928111282,
+        "eventLoopP99Max": 90.177535,
+        "gcTotalMs": 327.82200050354004
+      },
+      "generator": {
+        "samples": 12,
+        "cpuP50": 14.04851983056468,
+        "cpuP95": 18.078483846555528,
+        "rssMax": 144113664,
+        "eventLoopMax": 40.861695
+      }
+    },
+    {
+      "phase": "spike-recovery",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5015,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 60,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 23.75330000021495,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 15,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 46.089099999982864,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 16,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 33.22259999997914,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 30,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 67.98259999998845,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 14,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 25.897600000025705,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 11,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 33.124599999981,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 3,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 30.662999999942258,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 12,
+        "rssStart": 462045184,
+        "rssEnd": 462131200,
+        "rssMax": 464494592,
+        "rssSlopeMiBPerMinute": 0.6071488846517925,
+        "cpuP50": 3.7380334206174353,
+        "cpuP95": 4.990246762313093,
+        "eventLoopP99Max": 35.356671,
+        "gcTotalMs": 28.901099920272827
+      },
+      "generator": {
+        "samples": 13,
+        "cpuP50": 1.2389334022340532,
+        "cpuP95": 1.8950238190531217,
+        "rssMax": 138629120,
+        "eventLoopMax": 49.348607
+      }
+    },
+    {
+      "phase": "warmup-100",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": false,
+      "maxGeneratorSampleGapMs": 5001,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "admin_update": {
+          "n": 62,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 664.7254999999423,
+          "pass": true,
+          "unexpected": 0
+        },
+        "availability": {
+          "n": 308,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 159.7312999998685,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 15,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 231.3340999998618,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 77,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 634.5574000000488,
+          "pass": false,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 78,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 631.1329000000842,
+          "pass": false,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 77,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 635.9867000000086,
+          "pass": false,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 154,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 716.2428999999538,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": false,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 4,
+        "rssStart": 484605952,
+        "rssEnd": 506138624,
+        "rssMax": 506138624,
+        "rssSlopeMiBPerMinute": 75.46025812760719,
+        "cpuP50": 32.428971472362626,
+        "cpuP95": 47.481180382146746,
+        "eventLoopP99Max": 91.881471,
+        "gcTotalMs": 89.68570017814636
+      },
+      "generator": {
+        "samples": 3,
+        "cpuP50": 15.595480828516964,
+        "cpuP95": 18.119970645647637,
+        "rssMax": 167276544,
+        "eventLoopMax": 54.657023
+      }
+    },
+    {
+      "phase": "stress-100",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5014,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 2362,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 31.198199999984354,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 118,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 38.36189999990165,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 473,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 60.320999999996275,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 591,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 66.64280000003055,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 590,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 74.15339999995194,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 590,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 62.61280000000261,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 1181,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 107.17390000005253,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 24,
+        "rssStart": 534896640,
+        "rssEnd": 475418624,
+        "rssMax": 593006592,
+        "rssSlopeMiBPerMinute": -24.363875873297165,
+        "cpuP50": 43.64265941244849,
+        "cpuP95": 63.35468677127377,
+        "eventLoopP99Max": 132.120575,
+        "gcTotalMs": 714.9053007364273
+      },
+      "generator": {
+        "samples": 25,
+        "cpuP50": 14.978575551027838,
+        "cpuP95": 19.678003076247812,
+        "rssMax": 224509952,
+        "eventLoopMax": 100.859903
+      }
+    },
+    {
+      "phase": "warmup-200",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": false,
+      "maxGeneratorSampleGapMs": 5007,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 606,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 246.20509999990463,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 152,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 1060.0383000001311,
+          "pass": false,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 31,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 583.5475000001024,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 152,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 1057.7962000002153,
+          "pass": false,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 151,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 1058.7309000000823,
+          "pass": false,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 120,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 1243.129200000083,
+          "pass": false,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 303,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 1343.0538000001106,
+          "pass": false,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": false,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 4,
+        "rssStart": 495439872,
+        "rssEnd": 523292672,
+        "rssMax": 527626240,
+        "rssSlopeMiBPerMinute": 99.46240413925337,
+        "cpuP50": 73.39805948904821,
+        "cpuP95": 85.48916671491625,
+        "eventLoopP99Max": 339.214335,
+        "gcTotalMs": 183.11170029640198
+      },
+      "generator": {
+        "samples": 3,
+        "cpuP50": 29.0587719762958,
+        "cpuP95": 29.33998495492029,
+        "rssMax": 184614912,
+        "eventLoopMax": 68.943871
+      }
+    },
+    {
+      "phase": "stress-200",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5013,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 4705,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 41.55920000001788,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 1177,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 126.76640000008047,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 942,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 133.64830000000075,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 2353,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 292.467399999965,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 235,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 62.8179999999702,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 1176,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 138.47970000002533,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 1176,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 150.73380000004545,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 24,
+        "rssStart": 533598208,
+        "rssEnd": 485539840,
+        "rssMax": 628428800,
+        "rssSlopeMiBPerMinute": -33.302740582335495,
+        "cpuP50": 79.66704773137582,
+        "cpuP95": 93.84489810904343,
+        "eventLoopP99Max": 309.329919,
+        "gcTotalMs": 1226.7412993907928
+      },
+      "generator": {
+        "samples": 25,
+        "cpuP50": 29.036352453404287,
+        "cpuP95": 34.32356176738599,
+        "rssMax": 234868736,
+        "eventLoopMax": 73.007103
+      }
+    },
+    {
+      "phase": "recovery",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5015,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 60,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 30.02680000010878,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 15,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 44.76480000000447,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 14,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 59.375499999849126,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 29,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 69.97750000003725,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 15,
+          "budgetMs": 500,
+          "metric": "maximum (small n)",
+          "ms": 29.020499999867752,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 12,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 34.7453000000678,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 3,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 23.896399999968708,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 13,
+        "rssStart": 490029056,
+        "rssEnd": 463138816,
+        "rssMax": 491995136,
+        "rssSlopeMiBPerMinute": -30.537311097208153,
+        "cpuP50": 3.737255583734766,
+        "cpuP95": 31.253589888713893,
+        "eventLoopP99Max": 35.487743,
+        "gcTotalMs": 44.50619995594025
+      },
+      "generator": {
+        "samples": 12,
+        "cpuP50": 1.2398109040409115,
+        "cpuP95": 2.798523666824759,
+        "rssMax": 177131520,
+        "eventLoopMax": 74.252287
+      }
+    },
+    {
+      "phase": "arrival-50",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5008,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 1200,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 20.9804999998305,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 600,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 76.82130000018515,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 300,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 45.15959999989718,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 300,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 22.04230000008829,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 300,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 22.28649999992922,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 60,
+          "budgetMs": 1000,
+          "metric": "maximum (small n)",
+          "ms": 158.81590000004508,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 240,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 24.155100000090897,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": {
+        "targetIterations": 3000,
+        "actuallyOffered": 3000,
+        "capacityDropped": 0,
+        "schedulerMissed": 0,
+        "totalUnstarted": 0,
+        "completed": 3000
+      },
+      "server": {
+        "samples": 12,
+        "rssStart": 471670784,
+        "rssEnd": 479326208,
+        "rssMax": 482107392,
+        "rssSlopeMiBPerMinute": 4.858139471895083,
+        "cpuP50": 55.877746365751705,
+        "cpuP95": 70.88835924805811,
+        "eventLoopP99Max": 48.988159,
+        "gcTotalMs": 493.7093998193741
+      },
+      "generator": {
+        "samples": 12,
+        "cpuP50": 14.682122741305747,
+        "cpuP95": 17.492929008236246,
+        "rssMax": 204320768,
+        "eventLoopMax": 52.396031
+      }
+    },
+    {
+      "phase": "arrival-100",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5011,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 2400,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 24.60149999987334,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 1200,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 113.67949999985285,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 600,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 59.659200000111014,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 600,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 51.557599999941885,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 600,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 39.860699999844655,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 120,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 25.50649999990128,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 480,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 44.95479999994859,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": {
+        "targetIterations": 6000,
+        "actuallyOffered": 6000,
+        "capacityDropped": 0,
+        "schedulerMissed": 0,
+        "totalUnstarted": 0,
+        "completed": 6000
+      },
+      "server": {
+        "samples": 12,
+        "rssStart": 486252544,
+        "rssEnd": 519589888,
+        "rssMax": 522018816,
+        "rssSlopeMiBPerMinute": 18.201180187647996,
+        "cpuP50": 81.54094388141255,
+        "cpuP95": 91.9302622495795,
+        "eventLoopP99Max": 47.022079,
+        "gcTotalMs": 621.2235993146896
+      },
+      "generator": {
+        "samples": 12,
+        "cpuP50": 27.174924267644954,
+        "cpuP95": 31.88390258967675,
+        "rssMax": 244322304,
+        "eventLoopMax": 39.714815
+      }
+    },
+    {
+      "phase": "soak-10",
+      "valid": true,
+      "completedPlannedHold": true,
+      "eligibleForCapacity": true,
+      "maxGeneratorSampleGapMs": 5018,
+      "correctDatabaseResponses": true,
+      "perOperation": {
+        "availability": {
+          "n": 3535,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 22.814100000075996,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_booking": {
+          "n": 177,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 37.91030000010505,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_patients": {
+          "n": 884,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 59.56350000016391,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_invoices": {
+          "n": 883,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 29.90240000002086,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_appointments": {
+          "n": 884,
+          "budgetMs": 500,
+          "metric": "p95 verified completion",
+          "ms": 32.57670000009239,
+          "pass": true,
+          "unexpected": 0
+        },
+        "public_home": {
+          "n": 1767,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 62.8473000000231,
+          "pass": true,
+          "unexpected": 0
+        },
+        "admin_update": {
+          "n": 707,
+          "budgetMs": 1000,
+          "metric": "p95 verified completion",
+          "ms": 33.3851999999024,
+          "pass": true,
+          "unexpected": 0
+        }
+      },
+      "latencyBudgetsMet": true,
+      "successfulFraction": 1,
+      "arrival": null,
+      "server": {
+        "samples": 360,
+        "rssStart": 521469952,
+        "rssEnd": 385986560,
+        "rssMax": 525684736,
+        "rssSlopeMiBPerMinute": -1.7435045089954122,
+        "cpuP50": 7.816269763418003,
+        "cpuP95": 11.241372121881852,
+        "eventLoopP99Max": 92.078079,
+        "gcTotalMs": 1671.3263009786606
+      },
+      "generator": {
+        "samples": 360,
+        "cpuP50": 1.8800600491179538,
+        "cpuP95": 3.760521734785618,
+        "rssMax": 239550464,
+        "eventLoopMax": 171.442175
+      }
+    }
+  ],
+  "sse": {
+    "setup": {
+      "expectedWrites": 0,
+      "session0": 0,
+      "session1": 0,
+      "p50DelayMs": null,
+      "p95DelayMs": null,
+      "maxDelayMs": 0
+    },
+    "load-smoke": {
+      "expectedWrites": 0,
+      "session0": 0,
+      "session1": 0,
+      "p50DelayMs": null,
+      "p95DelayMs": null,
+      "maxDelayMs": 0
+    },
+    "baseline": {
+      "expectedWrites": 7,
+      "session0": 7,
+      "session1": 7,
+      "p50DelayMs": 4,
+      "p95DelayMs": null,
+      "maxDelayMs": 10
+    },
+    "warmup-5": {
+      "expectedWrites": 3,
+      "session0": 3,
+      "session1": 3,
+      "p50DelayMs": 3,
+      "p95DelayMs": null,
+      "maxDelayMs": 4
+    },
+    "sustained-5": {
+      "expectedWrites": 45,
+      "session0": 45,
+      "session1": 45,
+      "p50DelayMs": 4,
+      "p95DelayMs": null,
+      "maxDelayMs": 13
+    },
+    "warmup-10": {
+      "expectedWrites": 8,
+      "session0": 8,
+      "session1": 8,
+      "p50DelayMs": 4,
+      "p95DelayMs": null,
+      "maxDelayMs": 14
+    },
+    "sustained-10": {
+      "expectedWrites": 89,
+      "session0": 89,
+      "session1": 89,
+      "p50DelayMs": 4,
+      "p95DelayMs": 12,
+      "maxDelayMs": 15
+    },
+    "warmup-25": {
+      "expectedWrites": 20,
+      "session0": 20,
+      "session1": 20,
+      "p50DelayMs": 3,
+      "p95DelayMs": null,
+      "maxDelayMs": 10
+    },
+    "sustained-25": {
+      "expectedWrites": 224,
+      "session0": 224,
+      "session1": 224,
+      "p50DelayMs": 8,
+      "p95DelayMs": 14,
+      "maxDelayMs": 22
+    },
+    "warmup-50": {
+      "expectedWrites": 39,
+      "session0": 39,
+      "session1": 39,
+      "p50DelayMs": 7,
+      "p95DelayMs": null,
+      "maxDelayMs": 57
+    },
+    "sustained-50": {
+      "expectedWrites": 443,
+      "session0": 443,
+      "session1": 443,
+      "p50DelayMs": 5,
+      "p95DelayMs": 11,
+      "maxDelayMs": 18
+    },
+    "spike-before": {
+      "expectedWrites": 5,
+      "session0": 5,
+      "session1": 5,
+      "p50DelayMs": 4,
+      "p95DelayMs": null,
+      "maxDelayMs": 7
+    },
+    "spike-ramp": {
+      "expectedWrites": 10,
+      "session0": 10,
+      "session1": 10,
+      "p50DelayMs": 4,
+      "p95DelayMs": null,
+      "maxDelayMs": 10
+    },
+    "spike-peak": {
+      "expectedWrites": 297,
+      "session0": 297,
+      "session1": 297,
+      "p50DelayMs": 11,
+      "p95DelayMs": 13,
+      "maxDelayMs": 65
+    },
+    "spike-recovery": {
+      "expectedWrites": 14,
+      "session0": 14,
+      "session1": 14,
+      "p50DelayMs": 4,
+      "p95DelayMs": null,
+      "maxDelayMs": 16
+    },
+    "warmup-100": {
+      "expectedWrites": 77,
+      "session0": 77,
+      "session1": 77,
+      "p50DelayMs": 4,
+      "p95DelayMs": 13,
+      "maxDelayMs": 82
+    },
+    "stress-100": {
+      "expectedWrites": 591,
+      "session0": 591,
+      "session1": 591,
+      "p50DelayMs": 4,
+      "p95DelayMs": 8,
+      "maxDelayMs": 74
+    },
+    "warmup-200": {
+      "expectedWrites": 151,
+      "session0": 151,
+      "session1": 151,
+      "p50DelayMs": 2,
+      "p95DelayMs": 5,
+      "maxDelayMs": 44
+    },
+    "stress-200": {
+      "expectedWrites": 1177,
+      "session0": 1177,
+      "session1": 1177,
+      "p50DelayMs": 4,
+      "p95DelayMs": 9,
+      "maxDelayMs": 38
+    },
+    "recovery": {
+      "expectedWrites": 15,
+      "session0": 15,
+      "session1": 15,
+      "p50DelayMs": 2,
+      "p95DelayMs": null,
+      "maxDelayMs": 13
+    },
+    "arrival-50": {
+      "expectedWrites": 300,
+      "session0": 300,
+      "session1": 300,
+      "p50DelayMs": -6,
+      "p95DelayMs": 3,
+      "maxDelayMs": 32
+    },
+    "arrival-100": {
+      "expectedWrites": 600,
+      "session0": 600,
+      "session1": 600,
+      "p50DelayMs": 3,
+      "p95DelayMs": 10,
+      "maxDelayMs": 54
+    },
+    "soak-10": {
+      "expectedWrites": 884,
+      "session0": 889,
+      "session1": 889,
+      "p50DelayMs": 4,
+      "p95DelayMs": 11,
+      "maxDelayMs": 23
+    }
+  }
+}

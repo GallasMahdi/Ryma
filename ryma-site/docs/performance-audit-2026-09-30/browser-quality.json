@@ -1,0 +1,469 @@
+{
+  "samples": 66,
+  "passed": true,
+  "method": "Raw request failures are preserved. ERR_ABORTED on _rsc requests is reported separately as canceled background RSC traffic. Captured HAR headers identify next-router-prefetch=1 for these requests; successful real navigation is independently checked by journeys. Counts in successive visits are cumulative within each browser context, not unique request totals.",
+  "classified": [
+    {
+      "label": "desktop-normal-0-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 3,
+      "canceledRsc": 3,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-0-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 3,
+      "canceledRsc": 3,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-0-return-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 5,
+      "canceledRsc": 5,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-1-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-1-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-2-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-2-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 4,
+      "canceledRsc": 4,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-3-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-3-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-4-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "desktop-normal-4-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-0-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-0-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-0-return-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-1-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-1-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-2-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-2-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-3-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-3-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-4-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-normal-4-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-0-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-0-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-0-return-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 3,
+      "canceledRsc": 3,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-1-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-1-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 3,
+      "canceledRsc": 3,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-2-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-2-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-3-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-3-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-4-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-4-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 3,
+      "canceledRsc": 3,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-0-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-0-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-0-return-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-1-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-1-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-2-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-2-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-3-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-3-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-4-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "mobile-constrained-cpu4-4-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-0-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-0-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-0-return-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 3,
+      "canceledRsc": 3,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-1-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 3,
+      "canceledRsc": 3,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-1-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 3,
+      "canceledRsc": 3,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-2-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-2-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-3-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-3-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-4-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "headless-control-4-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-0-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-0-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-0-return-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 7,
+      "canceledRsc": 7,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-1-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-1-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 0,
+      "canceledRsc": 0,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-2-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 4,
+      "canceledRsc": 4,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-2-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 5,
+      "canceledRsc": 5,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-3-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-3-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-4-first-cold",
+      "consoleErrors": 0,
+      "rawRequestFailures": 1,
+      "canceledRsc": 1,
+      "otherRequestFailures": []
+    },
+    {
+      "label": "reduced-motion-control-4-return-warm",
+      "consoleErrors": 0,
+      "rawRequestFailures": 2,
+      "canceledRsc": 2,
+      "otherRequestFailures": []
+    }
+  ]
+}

@@ -1,0 +1,244 @@
+{
+  "runId": "audit-2026-09-30T09-37-49-670Z",
+  "baselineCommit": "8f3b9e2a5b4b8f1197053f40fe8cd27cd3d215f8",
+  "sourceCommit": "85dad8060ed1ddb12a87fd49e0b667ea402c04c3",
+  "productionDatabaseAccess": false,
+  "productionDeploymentPerformed": false,
+  "cleanupPassed": true,
+  "sourceUnchangedSinceTestBuild": true,
+  "regressions": [
+    {
+      "url": "/api/admin/appointments?page=1&limit=10&summary=1",
+      "ms": 28.580000000000382,
+      "bytes": 4330,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/appointments?page=2&limit=10",
+      "ms": 18.889700000000175,
+      "bytes": 4230,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/appointments?page=1&limit=10&search=Patient%2009999",
+      "ms": 33.13239999999996,
+      "bytes": 481,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/appointments?calendar=1&dateFrom=2026-09-23&dateTo=2026-09-30",
+      "ms": 10.5317,
+      "bytes": 37459,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/patients?directory=1&limit=10&page=1",
+      "ms": 119.86549999999988,
+      "bytes": 4754,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/patients?directory=1&limit=10&page=2",
+      "ms": 84.76400000000012,
+      "bytes": 4754,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/patients?directory=1&limit=10&search=Patient%2009999",
+      "ms": 47.43080000000009,
+      "bytes": 612,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/patients?phone=%2B351920009999",
+      "ms": 17.66730000000007,
+      "bytes": 1429,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/invoices?page=1&limit=10&search=AUDIT-9999",
+      "ms": 53.704299999999876,
+      "bytes": 949,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/patients?directory=1&search=Legacy%20Directory",
+      "ms": 162.34820000000036,
+      "bytes": 564,
+      "passed": true
+    },
+    {
+      "url": "/api/admin/patients?directory=1&search=Patient%2000001",
+      "ms": 189.85430000000042,
+      "bytes": 606,
+      "passed": true
+    },
+    {
+      "name": "early-table-click-0",
+      "ms": 2906.6648999999998,
+      "passed": true
+    },
+    {
+      "name": "early-table-click-1",
+      "ms": 1296.4063999999998,
+      "passed": true
+    },
+    {
+      "name": "early-table-click-2",
+      "ms": 1344.6612999999998,
+      "passed": true
+    },
+    {
+      "name": "early-table-click-3",
+      "ms": 1574.3616999999995,
+      "passed": true
+    },
+    {
+      "name": "early-table-click-4",
+      "ms": 1681.2628999999997,
+      "passed": true
+    },
+    {
+      "name": "patient-outside-first-page",
+      "ms": 2727.7036000000007,
+      "passed": true
+    },
+    {
+      "name": "invoice-outside-first-page",
+      "ms": 968.9182000000001,
+      "passed": true
+    },
+    {
+      "name": "rapid-tab-switch-0",
+      "ms": 985.4084999999977,
+      "passed": true
+    },
+    {
+      "name": "rapid-tab-switch-1",
+      "ms": 861.7082999999984,
+      "passed": true
+    },
+    {
+      "name": "rapid-tab-switch-2",
+      "ms": 536.6497000000018,
+      "passed": true
+    },
+    {
+      "name": "rapid-tab-switch-3",
+      "ms": 574.0190999999977,
+      "passed": true
+    },
+    {
+      "name": "rapid-tab-switch-4",
+      "ms": 588.0593999999983,
+      "passed": true
+    }
+  ],
+  "extended": [
+    {
+      "name": "insurance-ADSE-provider-filter",
+      "passed": true
+    },
+    {
+      "name": "calendar-next-week-even-when-empty",
+      "passed": true
+    },
+    {
+      "name": "patient-page-two",
+      "passed": true
+    },
+    {
+      "name": "clinical-note-save-outside-initial-page",
+      "passed": true
+    },
+    {
+      "name": "invoice-page-two",
+      "passed": true
+    },
+    {
+      "name": "invoice-modal-global-patient-search",
+      "passed": true
+    }
+  ],
+  "bookingLifecycle": [
+    {
+      "name": "competing-booking-while-filling-form-recovers",
+      "passed": true
+    },
+    {
+      "name": "confirmation-and-selection-remain-stable",
+      "passed": true
+    }
+  ],
+  "staleAvailabilityFixed": true,
+  "concurrency": {
+    "contested": true,
+    "distinct": true,
+    "retry": true,
+    "availabilityAfterCancel": true,
+    "independentUpdates": true,
+    "phoneRateLimit": true
+  },
+  "contestedSlot": {
+    "outcomes": {
+      "201": 1,
+      "409": 49
+    },
+    "persisted": 1
+  },
+  "liveUnderLoad": [
+    {
+      "name": "admin-dashboard-filter-during-soak",
+      "ms": 3300.8635999999997,
+      "ok": true
+    },
+    {
+      "name": "second-session-persisted-visible-during-soak",
+      "ms": 175.58449999999993,
+      "httpMs": 9.259400000000824,
+      "persisted": 1,
+      "ok": true,
+      "time": "2026-09-30T10:28:21.472Z"
+    },
+    {
+      "name": "second-session-persisted-visible-during-soak",
+      "ms": 235.72990000000027,
+      "httpMs": 10.801000000000386,
+      "persisted": 1,
+      "ok": true,
+      "time": "2026-09-30T10:28:22.714Z"
+    },
+    {
+      "name": "second-session-persisted-visible-during-soak",
+      "ms": 226.01530000000002,
+      "httpMs": 12.908699999999953,
+      "persisted": 1,
+      "ok": true,
+      "time": "2026-09-30T10:28:23.941Z"
+    },
+    {
+      "name": "second-session-persisted-visible-during-soak",
+      "ms": 233.33179999999993,
+      "httpMs": 11.132699999998295,
+      "persisted": 1,
+      "ok": true,
+      "time": "2026-09-30T10:28:25.178Z"
+    },
+    {
+      "name": "second-session-persisted-visible-during-soak",
+      "ms": 231.5607,
+      "httpMs": 8.949900000001435,
+      "persisted": 1,
+      "ok": true,
+      "time": "2026-09-30T10:28:26.412Z"
+    }
+  ],
+  "verdict": {
+    "functional": true,
+    "capacity": 200,
+    "analyticsP95Ms": 351.71099999998114,
+    "browserPaintTargetsMet": true,
+    "allWorkflowSamplesWithin200ms": false,
+    "cleanupPassed": true
+  }
+}
