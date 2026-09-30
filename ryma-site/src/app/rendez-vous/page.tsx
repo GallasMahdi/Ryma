@@ -449,7 +449,7 @@ function BookingWizardContent() {
   const [availableSlots, setAvailableSlots] = useState<SlotInfo[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [monthAvailability, setMonthAvailability] = useState<Record<string, boolean>>({});
-  const slotCacheRef = useRef<Record<string, SlotInfo[]>>({});
+  const slotRequestRef = useRef<AbortController | null>(null);
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -494,23 +494,20 @@ function BookingWizardContent() {
 
   // Fetch real slot availability from the API when a date is selected
   const fetchSlots = useCallback(async (date: string) => {
-    // Check client-side memory cache first for instant navigation
-    if (slotCacheRef.current[date]) {
-      setAvailableSlots(slotCacheRef.current[date]);
-      setSlotError(null);
-      return;
-    }
-
+    slotRequestRef.current?.abort();
+    const request = new AbortController();
+    slotRequestRef.current = request;
     setLoadingSlots(true);
     setAvailableSlots([]);
     setSlotError(null);
     try {
-      const res = await fetch(`/api/slots?date=${date}`);
+      const res = await fetch(`/api/slots?date=${date}`, { cache: 'no-store', signal: request.signal });
       if (res.ok) {
         const data = await res.json();
         const slots = data.slots ?? [];
-        slotCacheRef.current[date] = slots;
+        if (request.signal.aborted) return;
         setAvailableSlots(slots);
+        setSelectedSlot(previous => slots.some((slot: SlotInfo) => slot.time === previous && slot.available) ? previous : null);
       } else {
         // API error (500 etc.) — show actionable error, not "no slots"
         setSlotError(
@@ -520,21 +517,41 @@ function BookingWizardContent() {
         );
       }
     } catch {
+      if (request.signal.aborted) return;
       setSlotError(
         lang === 'pt' ? 'Sem ligação. Verifique a sua internet e tente novamente.' :
           lang === 'en' ? 'Connection error. Check your internet and try again.' :
             'Erreur de connexion. Vérifiez votre internet et réessayez.'
       );
     } finally {
-      setLoadingSlots(false);
+      if (!request.signal.aborted) setLoadingSlots(false);
     }
   }, [lang]);
 
+  // Keep the chosen slot stable while submitting and showing confirmation.
+  // The booking transaction revalidates availability and handles conflicts.
+  const selectingTime = step === 2 || step === 3;
   useEffect(() => {
-    if (selectedDate) {
-      fetchSlots(selectedDate);
+    if (selectedDate && selectingTime) {
+      void fetchSlots(selectedDate);
+    } else {
+      setLoadingSlots(false);
     }
-  }, [selectedDate, fetchSlots]);
+    return () => slotRequestRef.current?.abort();
+  }, [selectedDate, selectingTime, fetchSlots]);
+
+  useEffect(() => {
+    if (!selectedDate || !selectingTime) return;
+    const refresh = () => { if (!document.hidden) void fetchSlots(selectedDate); };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    const timer = window.setInterval(refresh, 30000);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+      window.clearInterval(timer);
+    };
+  }, [selectedDate, selectingTime, fetchSlots]);
 
   // Ref to the booking wizard section — used to scroll into view on step changes
   const bookingRef = useRef<HTMLElement>(null);
@@ -692,7 +709,7 @@ function BookingWizardContent() {
       dismissToast(loadingToastId);
 
       if (!res.ok) {
-        if (data.error === 'slot_taken' || data.error === 'slot_blocked') {
+        if (res.status === 409 || data.error === 'slot_taken' || data.error === 'slot_blocked') {
           setSlotError(null);
           showToast({
             type: 'error',

@@ -48,6 +48,8 @@ const InvoiceDetailModal = dynamic(
 );
 
 interface InvoicesTabProps {
+  total: number;
+  onQueryChange: (query: string) => void;
   invoices: Invoice[];
   stats: InvoiceStats | null;
   loading: boolean;
@@ -71,6 +73,8 @@ interface InvoicesTabProps {
 
 export const InvoicesTab = React.memo(function InvoicesTab({
   invoices,
+  total,
+  onQueryChange,
   stats,
   loading,
   onRefresh,
@@ -113,24 +117,13 @@ export const InvoicesTab = React.memo(function InvoicesTab({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Filtered invoices
-  const filteredInvoices = useMemo(() => {
-    return invoices.filter((inv) => {
-      const matchesStatus = statusFilter === 'all' || inv.paymentStatus === statusFilter;
-      const matchesMethod = methodFilter === 'all' || inv.paymentMethod === methodFilter;
-
-      const q = search.toLowerCase().trim();
-      const matchesSearch =
-        !q ||
-        inv.patientName.toLowerCase().includes(q) ||
-        inv.patientPhone.includes(q) ||
-        inv.patientNif.includes(q) ||
-        inv.invoiceNumber.toLowerCase().includes(q) ||
-        inv.serviceName.toLowerCase().includes(q);
-
-      return matchesStatus && matchesMethod && matchesSearch;
-    });
-  }, [invoices, statusFilter, methodFilter, search]);
+  useEffect(() => {
+    const query = new URLSearchParams({page: String(currentPage), limit: String(pageSize), search});
+    if (statusFilter !== 'all') query.set('status', statusFilter);
+    if (methodFilter !== 'all') query.set('paymentMethod', methodFilter);
+    const timer = setTimeout(() => onQueryChange(query.toString()), 150);
+    return () => clearTimeout(timer);
+  }, [currentPage, pageSize, search, statusFilter, methodFilter, onQueryChange]);
 
   // Reset to page 1 on filter/search changes
   useEffect(() => {
@@ -138,15 +131,16 @@ export const InvoicesTab = React.memo(function InvoicesTab({
   }, [search, statusFilter, methodFilter, pageSize]);
 
   // Pagination bounds & slice
-  const totalItems = filteredInvoices.length;
+  const totalItems = total;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
   const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
   const startIndex = totalItems === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalItems);
 
   const paginatedInvoices = useMemo(() => {
-    return filteredInvoices.slice(startIndex, endIndex);
-  }, [filteredInvoices, startIndex, endIndex]);
+    return invoices;
+  }, [invoices]);
 
   // Smart page numbers generator (with ellipsis)
   const paginationRange = useMemo(() => {
@@ -184,7 +178,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
 
   // Compute accurate financial metrics from both server stats and loaded invoices
   const effectiveStats = useMemo(() => {
-    if (stats && stats.totalRevenue > 0) return stats;
+    if (stats) return stats;
     if (!invoices || invoices.length === 0) return stats;
 
     let totalRevenue = 0;
@@ -218,11 +212,11 @@ export const InvoicesTab = React.memo(function InvoicesTab({
       totalRevenue,
       totalPaid,
       totalPending,
-      countPaid: countPaid || (stats?.countPaid ?? 0),
-      countPending: countPending || (stats?.countPending ?? 0),
-      countTotal: countTotal || (stats?.countTotal ?? 0),
+      countPaid,
+      countPending,
+      countTotal,
       avgTicket,
-      insuranceShare: insuranceShare || (stats?.insuranceShare ?? 0),
+      insuranceShare,
     };
   }, [stats, invoices]);
 
@@ -487,7 +481,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
             <div className="w-6 h-6 border-2 border-[#C49A3C] border-t-transparent rounded-full animate-spin" />
             <span>{txt('Chargement des documents de facturation...', 'Loading billing documents...', 'A carregar documentos de faturação...')}</span>
           </div>
-        ) : filteredInvoices.length === 0 ? (
+        ) : invoices.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#94A3B8] flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-[#F8FAFC] flex items-center justify-center text-[#CBD5E1]">
               <IconReceiptTax size={26} />

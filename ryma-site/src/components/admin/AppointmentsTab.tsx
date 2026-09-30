@@ -106,6 +106,7 @@ interface WeekCalendarViewProps {
   setConfirmDialog: (dlg: { title: string; onConfirm: () => void } | null) => void;
   recentNewIds?: Set<string>;
   openWhatsAppModal?: (appt: Appointment) => void;
+  onRangeChange: (date: string) => void;
 }
 
 import { AdminDateJumpPicker } from './AdminDateJumpPicker';
@@ -120,12 +121,14 @@ function WeekCalendarView({
   setConfirmDialog,
   recentNewIds,
   openWhatsAppModal,
+  onRangeChange,
 }: WeekCalendarViewProps) {
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const todayStr = useMemo(() => toDateStr(new Date()), []);
   const [weekStart, setWeekStart] = useState<Date>(() => getWeekStart(new Date()));
+  useEffect(() => { onRangeChange(toDateStr(weekStart)); }, [weekStart, onRangeChange]);
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -367,6 +370,8 @@ function WeekCalendarView({
 // ─── Main AppointmentsTab Component ──────────────────────────────────────────
 
 interface AppointmentsTabProps {
+  total: number;
+  onQueryChange: (query: string) => void;
   lang: Lang;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
@@ -392,6 +397,8 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
   setFilter,
   appointmentsError,
   loadingAppointments,
+  total,
+  onQueryChange,
   appointments,
   filteredAppointments,
   updateStatus,
@@ -448,7 +455,24 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
     setCurrentPage(1);
   }, [searchQuery, filter, dateFilter, specificDateFilter, viewMode, itemsPerPage]);
 
+  const [weekDate, setWeekDate] = useState(() => toDateStr(getWeekStart(new Date())));
+  const [agendaDate, setAgendaDate] = useState(todayStr);
+  useEffect(() => {
+    const query = new URLSearchParams({page: String(currentPage), limit: String(itemsPerPage), search: searchQuery, status: filter});
+    if (viewMode === 'week' || viewMode === 'agenda') {
+      const start = viewMode === 'week' ? weekDate : agendaDate;
+      query.set('calendar', '1'); query.set('dateFrom', start);
+      query.set('dateTo', viewMode === 'week' ? toDateStr(addDays(new Date(start + 'T12:00:00'), 6)) : start);
+    } else if (specificDateFilter) query.set('date', specificDateFilter);
+    else if (dateFilter === 'today') query.set('date', todayStr);
+    else if (dateFilter === 'tomorrow') query.set('date', tomorrowStr);
+    else if (dateFilter === 'upcoming') query.set('dateFrom', todayStr);
+    const timer = setTimeout(() => onQueryChange(query.toString()), 150);
+    return () => clearTimeout(timer);
+  }, [currentPage, itemsPerPage, searchQuery, filter, viewMode, weekDate, agendaDate, specificDateFilter, dateFilter, todayStr, tomorrowStr, onQueryChange]);
+
   const displayedAppointments = useMemo(() => {
+    if (viewMode === 'week' || viewMode === 'agenda') return filteredAppointments;
     return filteredAppointments.filter(item => {
       if (specificDateFilter) return item.date === specificDateFilter;
       if (dateFilter === 'today') return item.date === todayStr;
@@ -456,15 +480,16 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
       if (dateFilter === 'upcoming') return item.date >= todayStr;
       return true;
     });
-  }, [filteredAppointments, dateFilter, specificDateFilter, todayStr, tomorrowStr]);
+  }, [filteredAppointments, dateFilter, specificDateFilter, todayStr, tomorrowStr, viewMode]);
 
-  const totalItems = displayedAppointments.length;
+  const totalItems = total;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
 
   const paginatedAppointments = useMemo(() => {
-    return displayedAppointments.slice(startIndex, endIndex);
+    return displayedAppointments;
   }, [displayedAppointments, startIndex, endIndex]);
 
   const groupedByDate = useMemo(() => {
@@ -851,7 +876,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
       )}
 
       {/* Content Rendering based on viewMode */}
-      {loadingAppointments ? (
+      {loadingAppointments && viewMode !== 'week' && viewMode !== 'agenda' ? (
         <div className="space-y-3 font-sans">
           {Array.from({ length: 5 }).map((_, idx) => (
             <div
@@ -877,7 +902,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
             </div>
           ))}
         </div>
-      ) : displayedAppointments.length === 0 ? (
+      ) : displayedAppointments.length === 0 && viewMode !== 'week' && viewMode !== 'agenda' ? (
         <div className="py-16 text-center text-[#64748B] bg-white rounded-xl border border-[#E2E8F0] space-y-2">
           <IconListCheck size={36} className="mx-auto text-[#94A3B8]" />
           <h4 className="text-sm font-semibold text-[#0F172A]">
@@ -891,6 +916,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
         <>
           {viewMode === 'agenda' ? (
             <DayAgendaView
+              onDateChange={setAgendaDate}
               appointments={displayedAppointments}
               lang={lang}
               updateStatus={updateStatus}
@@ -907,6 +933,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
             />
           ) : viewMode === 'week' ? (
             <WeekCalendarView
+              onRangeChange={setWeekDate}
               appointments={displayedAppointments}
               lang={lang}
               updateStatus={updateStatus}

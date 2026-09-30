@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -29,6 +29,7 @@ import { AdminDateJumpPicker } from './AdminDateJumpPicker';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 interface DayAgendaViewProps {
+  onDateChange: (date: string) => void;
   appointments: Appointment[];
   lang: Lang;
   updateStatus: (id: string, status: AppointmentStatus) => void;
@@ -50,6 +51,7 @@ function getInitials(name: string): string {
 
 export const DayAgendaView = React.memo(function DayAgendaView({
   appointments,
+  onDateChange,
   lang,
   updateStatus,
   softDeleteAppointment,
@@ -65,6 +67,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
 
   const todayStr = useMemo(() => formatLocalDate(new Date()), []);
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  useEffect(() => { onDateChange(selectedDate); }, [selectedDate, onDateChange]);
   const [selectedDetailAppt, setSelectedDetailAppt] = useState<Appointment | null>(null);
 
   // Map of date -> appointment count for calendar dots

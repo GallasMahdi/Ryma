@@ -59,6 +59,7 @@ export interface PatientRecord {
   createdAt: string;
   updatedAt: string;
   sessions?: PatientSession[];
+  sessionCount?: number;
 }
 
 export interface SlotInfo {

@@ -68,6 +68,9 @@ import { formatPrescriptionWhatsAppMessage } from '@/lib/prescriptionPdf';
 import { SITE } from '@/lib/site';
 
 interface PatientNotesTabProps {
+  total: number;
+  counts: {all: number; insurance: number; particular: number; withSessions: number};
+  onQueryChange: (query: string) => void;
   lang: Lang;
   patientNotes: PatientNote[];
   patientsList?: PatientRecord[];
@@ -89,6 +92,9 @@ interface PatientNotesTabProps {
 
 export const PatientNotesTab = React.memo(function PatientNotesTab({
   lang,
+  total,
+  counts,
+  onQueryChange,
   patientNotes,
   patientsList = [],
   onRefreshPatients,
@@ -179,19 +185,26 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
   // Sync selectedPatientId when selectedNote changes from outside
   useEffect(() => {
-    if (selectedNote) {
-      const match = patientsList.find(p => phonesMatch(p.phone, selectedNote.phone));
-      if (match) {
-        setSelectedPatientId(match.id);
-        fetchActivePatientInvoices(match.phone);
-        fetchActivePatientPrescriptions(match.phone);
-      } else {
-        setSelectedPatientId('legacy_' + selectedNote.phone);
-        fetchActivePatientInvoices(selectedNote.phone);
-        fetchActivePatientPrescriptions(selectedNote.phone);
-      }
-    }
-  }, [selectedNote, patientsList]);
+    if (!selectedNote) {setSelectedPatientId(null); return;}
+    const controller = new AbortController();
+    const phone = selectedNote.phone;
+    const fallback: PatientRecord = {id: 'legacy_' + phone, phone, patientName: selectedNote.patientName, pathologyTags: selectedNote.tags, medicalHistory: selectedNote.content, totalPrescribedSessions: 10, createdAt: selectedNote.updatedAt, updatedAt: selectedNote.updatedAt};
+    const match = patientsList.find(p => phonesMatch(p.phone, phone));
+    setRetainedPatient(match || fallback);
+    setSelectedPatientId((match || fallback).id);
+    fetchActivePatientInvoices(phone);
+    fetchActivePatientPrescriptions(phone);
+    Promise.all([
+      fetch('/api/admin/patients?phone=' + encodeURIComponent(phone), {signal: controller.signal}).then(r => {if (!r.ok) throw Error('Patient load failed'); return r.json();}),
+      fetch('/api/admin/appointments?phone=' + encodeURIComponent(phone), {signal: controller.signal}).then(r => {if (!r.ok) throw Error('History load failed'); return r.json();}),
+    ]).then(([detail, history]) => {
+      if (controller.signal.aborted) return;
+      setRetainedPatient(detail.patient || fallback);
+      setSelectedPatientId((detail.patient || fallback).id);
+      setPatientAppointments(history.appointments);
+    }).catch(() => {if (!controller.signal.aborted) onActionToast?.({type: 'error', title: 'Unable to load patient history'});});
+    return () => controller.abort();
+  }, [selectedNote?.phone, patientsList]);
 
   const [newPatientForm, setNewPatientForm] = useState({
     patientName: '',
@@ -237,6 +250,14 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
   const [pageSize, setPageSize] = useState(10);
   const [quickFilter, setQuickFilter] = useState<'ALL' | 'INSURANCE' | 'PARTICULAR' | 'ACTIVE_SESSIONS'>('ALL');
 
+  useEffect(() => {
+    const query = new URLSearchParams({directory: '1', page: String(currentPage), limit: String(pageSize), search: noteSearch, coverage: quickFilter});
+    const timer = setTimeout(() => onQueryChange(query.toString()), 150);
+    return () => clearTimeout(timer);
+  }, [currentPage, pageSize, noteSearch, quickFilter, onQueryChange]);
+  const [patientAppointments, setPatientAppointments] = useState<Appointment[]>([]);
+  const [retainedPatient, setRetainedPatient] = useState<PatientRecord | null>(null);
+
   // Consolidated Patient Record List (Merge structured + legacy notes)
   const unifiedPatients: PatientRecord[] = useMemo(() => {
     const list: PatientRecord[] = [...patientsList];
@@ -274,69 +295,21 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
   }, [patientsList, patientNotes]);
 
   // Counts for quick filter pills
-  const filterCounts = useMemo(() => {
-    const all = unifiedPatients.length;
-    const insurance = unifiedPatients.filter(
-      p => p.coverageType === 'INSURANCE' || p.coverageType === 'ADSE' || (p.coverageProvider && p.coverageProvider.trim().length > 0)
-    ).length;
-    const particular = unifiedPatients.filter(
-      p => !p.coverageType || p.coverageType === 'PARTICULAR'
-    ).length;
-    const withSessions = unifiedPatients.filter(
-      p => (p.sessions && p.sessions.length > 0)
-    ).length;
-    return { all, insurance, particular, withSessions };
-  }, [unifiedPatients]);
-
-  // Filtered Patients based on Search & Quick Filter
-  const filteredPatients = useMemo(() => {
-    let list = unifiedPatients;
-
-    // Apply Quick Filter
-    if (quickFilter === 'INSURANCE') {
-      list = list.filter(
-        p => p.coverageType === 'INSURANCE' || p.coverageType === 'ADSE' || (p.coverageProvider && p.coverageProvider.trim().length > 0)
-      );
-    } else if (quickFilter === 'PARTICULAR') {
-      list = list.filter(
-        p => !p.coverageType || p.coverageType === 'PARTICULAR'
-      );
-    } else if (quickFilter === 'ACTIVE_SESSIONS') {
-      list = list.filter(
-        p => (p.sessions && p.sessions.length > 0)
-      );
-    }
-
-    // Apply Search
-    if (noteSearch.trim()) {
-      const q = noteSearch.toLowerCase();
-      list = list.filter(
-        p =>
-          p.patientName.toLowerCase().includes(q) ||
-          p.phone.toLowerCase().includes(q) ||
-          (p.pathologyTags && p.pathologyTags.toLowerCase().includes(q)) ||
-          (p.coverageProvider && p.coverageProvider.toLowerCase().includes(q)) ||
-          (p.referringDoctor && p.referringDoctor.toLowerCase().includes(q))
-      );
-    }
-
-    return list;
-  }, [unifiedPatients, noteSearch, quickFilter]);
-
+  const filterCounts = counts;
   // Reset page when search or filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [noteSearch, quickFilter, pageSize]);
 
   // Pagination bounds & slice
-  const totalFiltered = filteredPatients.length;
+  const totalFiltered = total;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
   const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
 
   const paginatedPatients = useMemo(() => {
     const start = (safeCurrentPage - 1) * pageSize;
-    return filteredPatients.slice(start, start + pageSize);
-  }, [filteredPatients, safeCurrentPage, pageSize]);
+    return patientsList;
+  }, [patientsList]);
 
   const startIndex = totalFiltered === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
   const endIndex = Math.min(safeCurrentPage * pageSize, totalFiltered);
@@ -359,11 +332,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
   // Active Selected Patient
   const activePatient: PatientRecord | null = useMemo(() => {
     if (!selectedPatientId) return null;
-    return unifiedPatients.find(p => p.id === selectedPatientId) || null;
-  }, [selectedPatientId, unifiedPatients]);
+    return (retainedPatient?.id === selectedPatientId ? retainedPatient : null) || unifiedPatients.find(p => p.id === selectedPatientId) || null;
+  }, [selectedPatientId, unifiedPatients, retainedPatient]);
 
   // Select patient handler
   const handleSelectPatient = (patient: PatientRecord) => {
+    setRetainedPatient(patient);
     setSelectedPatientId(patient.id);
     setIsMobileDetailOpen(true);
     fetchActivePatientInvoices(patient.phone);
@@ -420,7 +394,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
     }
 
     // Add completed online appointments
-    appointments
+    patientAppointments
       .filter(a => phonesMatch(a.phone, activePatient.phone) && a.status === 'COMPLETED')
       .forEach(a => {
         const alreadyInSessions = items.some(it => it.date === a.date && it.time === a.startTime);
@@ -439,7 +413,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
     // Sort descending by date
     items.sort((a, b) => new Date(`${b.date}T${b.time || '00:00'}`).getTime() - new Date(`${a.date}T${a.time || '00:00'}`).getTime());
     return items;
-  }, [activePatient, appointments, lang]);
+  }, [activePatient, patientAppointments, lang]);
 
   // EVA Progression computation
   const evaAnalytics = useMemo(() => {
@@ -910,9 +884,9 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                               {p.coverageType === 'ADSE' ? 'ADSE' : (p.coverageProvider || 'Mutuelle')}
                             </span>
                           )}
-                          {p.sessions && p.sessions.length > 0 && (
+                          {(p.sessionCount || p.sessions?.length || 0) > 0 && (
                             <span className="bg-[#EFF6FF] text-[#1E40AF] border border-[#DBEAFE] px-1.5 py-0.2 rounded text-[10px] font-semibold">
-                              {p.sessions.length} sessões
+                              {p.sessionCount || p.sessions?.length || 0} sessões
                             </span>
                           )}
                         </div>

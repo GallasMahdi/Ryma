@@ -216,8 +216,7 @@ export function validateAppointmentInput(
  * Authoritative Lisbon Clinic Timezone Helper.
  * Computes calendar date ('YYYY-MM-DD') and 24h clock ('HH:MM') in Europe/Lisbon.
  */
-export function getLisbonDateTime(dateObj: Date = new Date()): { todayStr: string; currentHHMM: string } {
-  const formatter = new Intl.DateTimeFormat('en-CA', {
+const lisbonFormatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Lisbon',
     year: 'numeric',
     month: '2-digit',
@@ -227,7 +226,8 @@ export function getLisbonDateTime(dateObj: Date = new Date()): { todayStr: strin
     hour12: false,
   });
 
-  const parts = formatter.formatToParts(dateObj);
+export function getLisbonDateTime(dateObj: Date = new Date()): { todayStr: string; currentHHMM: string } {
+  const parts = lisbonFormatter.formatToParts(dateObj);
   const getPart = (type: string) => parts.find(p => p.type === type)?.value || '00';
   const todayStr = `${getPart('year')}-${getPart('month')}-${getPart('day')}`;
   const currentHHMM = `${getPart('hour')}:${getPart('minute')}`;

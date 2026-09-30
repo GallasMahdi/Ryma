@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, requireOwnerAnalytics } from '@/lib/requireAdmin';
 import {
   dbGetAllPatients,
+  dbGetPatientDirectory,
+  dbGetPatientByPhone,
+  dbGetPatientNote,
   dbGetPatientsPaginated,
   dbGetAllPatientNotes,
   dbUpsertPatient,
@@ -20,6 +23,15 @@ export async function GET(request: NextRequest) {
   if ('status' in auth) return auth;
 
   const url = request.nextUrl;
+  const phone = url.searchParams.get('phone');
+  if (phone) {
+    const [patient, note] = await Promise.all([dbGetPatientByPhone(phone), dbGetPatientNote(phone)]);
+    return NextResponse.json({patient, note}, {headers: {'Cache-Control': 'no-store'}});
+  }
+  if (url.searchParams.get('directory') === '1') {
+    const result = await dbGetPatientDirectory({page: pageNumber(url.searchParams.get('page'), 1), limit: pageNumber(url.searchParams.get('limit'), 10, 100), search: url.searchParams.get('search') || '', coverageType: url.searchParams.get('coverage') || 'ALL'});
+    return NextResponse.json(result, {headers: {'Cache-Control': 'no-store'}});
+  }
   const pageParam = url.searchParams.get('page');
   const limitParam = url.searchParams.get('limit');
   const searchParam = url.searchParams.get('search') || url.searchParams.get('q') || '';

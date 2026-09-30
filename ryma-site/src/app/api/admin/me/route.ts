@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
-import { dbGetBackupStatus, dbGetNoShowCounts } from '@/lib/db';
+import { dbGetBackupStatus, dbGetNoShowCounts, dbGetAdminRecordCounts } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(
     {
       authenticated: true,
+      recordCounts: await dbGetAdminRecordCounts(),
       backupStatus: cachedData.backupStatus,
       noShowCounts: cachedData.noShowCounts,
     },

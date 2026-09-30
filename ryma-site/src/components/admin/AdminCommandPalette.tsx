@@ -69,10 +69,10 @@ export function AdminCommandPalette({
   onClose,
   lang,
   setActiveTab,
-  appointments,
-  patientsList,
+  appointments: initialAppointments,
+  patientsList: initialPatients,
   patientNotes,
-  invoices,
+  invoices: initialInvoices,
   onOpenNewAppointment,
   onOpenMultipleSessions,
   onOpenCreateInvoice,
@@ -85,6 +85,26 @@ export function AdminCommandPalette({
   onOpenHelpdesk,
 }: AdminCommandPaletteProps) {
   const [query, setQuery] = useState('');
+  const [appointments, setAppointments] = useState(initialAppointments);
+  const [patientsList, setPatientsList] = useState(initialPatients);
+  const [invoices, setInvoices] = useState(initialInvoices);
+  useEffect(() => {
+    if (!isOpen) return;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const search = encodeURIComponent(query.trim());
+        const results = await Promise.all([
+          '/api/admin/appointments?page=1&limit=10&search=' + search,
+          '/api/admin/patients?directory=1&limit=10&search=' + search,
+          '/api/admin/invoices?page=1&limit=10&search=' + search,
+        ].map(url => fetch(url, {signal: controller.signal}).then(r => {if (!r.ok) throw Error('Search failed'); return r.json();})));
+        if (controller.signal.aborted) return;
+        setAppointments(results[0].appointments); setPatientsList(results[1].patients); setInvoices(results[2].invoices);
+      } catch { if (!controller.signal.aborted) {setAppointments([]); setPatientsList([]); setInvoices([]);} }
+    }, 150);
+    return () => {clearTimeout(timer); controller.abort();};
+  }, [isOpen, query]);
   const [selectedCategory, setSelectedCategory] = useState<PaletteCategory>('all');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);

@@ -1307,99 +1307,48 @@ export async function dbCreateMultipleAppointments(
   };
 }
 
-export async function dbGetAppointments(filters?: {
-  status?: string;
-  date?: string;
-  search?: string;
-  limit?: number;
-  offset?: number;
-}): Promise<Appointment[]> {
-  let sql = 'SELECT * FROM appointments WHERE 1=1';
+type AppointmentFilters = {status?: string; date?: string; search?: string; dateFrom?: string; dateTo?: string; phone?: string};
+function appointmentWhere(filters: AppointmentFilters = {}) {
+  const clauses = ['1=1'];
   const params: (string | number)[] = [];
-
-  if (filters?.status && filters.status !== 'all') {
-    sql += ' AND status = ?';
-    params.push(filters.status.toUpperCase());
+  if (filters.status && filters.status !== 'all') {clauses.push('status = ?'); params.push(filters.status.toUpperCase());}
+  if (filters.date) {clauses.push('date = ?'); params.push(filters.date);}
+  if (filters.dateFrom) {clauses.push('date >= ?'); params.push(filters.dateFrom);}
+  if (filters.dateTo) {clauses.push('date <= ?'); params.push(filters.dateTo);}
+  if (filters.phone) {
+    const validation = validateAndNormalizePhone(filters.phone);
+    clauses.push('(phone = ? OR phone = ?)'); params.push(filters.phone, validation.isValid ? validation.normalized : filters.phone);
   }
-  if (filters?.date) {
-    sql += ' AND date = ?';
-    params.push(filters.date);
-  }
-  if (filters?.search) {
-    sql += ' AND (patientName LIKE ? OR phone LIKE ? OR service LIKE ?)';
-    const q = `%${filters.search}%`;
-    params.push(q, q, q);
-  }
-
-  sql += ' ORDER BY date DESC, startTime ASC';
-
-  if (typeof filters?.limit === 'number' && filters.limit > 0) {
-    sql += ' LIMIT ?';
-    params.push(filters.limit);
-    if (typeof filters?.offset === 'number' && filters.offset >= 0) {
-      sql += ' OFFSET ?';
-      params.push(filters.offset);
-    }
-  }
-
+  if (filters.search) {clauses.push('(patientName LIKE ? OR phone LIKE ? OR service LIKE ?)'); params.push(...Array(3).fill('%' + filters.search + '%'));}
+  return {where: ' WHERE ' + clauses.join(' AND '), params};
+}
+export async function dbGetAppointments(filters: AppointmentFilters & {limit?: number; offset?: number} = {}): Promise<Appointment[]> {
+  const {where, params} = appointmentWhere(filters);
+  let sql = 'SELECT * FROM appointments' + where + ' ORDER BY date DESC, startTime ASC, id ASC';
+  if (filters.limit) {sql += ' LIMIT ? OFFSET ?'; params.push(filters.limit, filters.offset || 0);}
   return executeQuery<Appointment>(sql, params);
 }
-
-export async function dbGetAppointmentsPaginated(options: {
-  page?: number;
-  limit?: number;
-  status?: string;
-  date?: string;
-  search?: string;
-}): Promise<{
-  appointments: Appointment[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}> {
-  const page = Math.max(1, options.page ?? 1);
-  const limit = Math.min(100, Math.max(1, options.limit ?? 50));
-  const offset = (page - 1) * limit;
-
-  let countSql = 'SELECT COUNT(*) as cnt FROM appointments WHERE 1=1';
-  const countParams: (string | number)[] = [];
-
-  if (options.status && options.status !== 'all') {
-    countSql += ' AND status = ?';
-    countParams.push(options.status.toUpperCase());
+export async function dbGetAppointmentSummary() {
+  const rows = await executeQuery<{status: string; service: string; count: number}>('SELECT status, service, COUNT(*) AS count FROM appointments GROUP BY status, service');
+  const stats = {total: 0, confirmed: 0, pending: 0, cancelled: 0, completed: 0, noShow: 0, revenue: 0};
+  for (const row of rows) {
+    const n = Number(row.count); stats.total += n;
+    const key = ({CONFIRMED:'confirmed', PENDING:'pending', CANCELLED:'cancelled', COMPLETED:'completed', NO_SHOW:'noShow'} as const)[row.status as 'CONFIRMED'];
+    if (key) stats[key] += n;
+    if (row.status === 'CONFIRMED' || row.status === 'COMPLETED') stats.revenue += n * getServicePrice(row.service);
   }
-  if (options.date) {
-    countSql += ' AND date = ?';
-    countParams.push(options.date);
-  }
-  if (options.search) {
-    countSql += ' AND (patientName LIKE ? OR phone LIKE ? OR service LIKE ?)';
-    const q = `%${options.search}%`;
-    countParams.push(q, q, q);
-  }
-
-  const [countRes, appointments] = await Promise.all([
-    executeQuery<{ cnt: number }>(countSql, countParams),
-    dbGetAppointments({
-      status: options.status,
-      date: options.date,
-      search: options.search,
-      limit,
-      offset,
-    }),
-  ]);
-
-  const total = Number(countRes[0]?.cnt ?? 0);
-  const totalPages = Math.ceil(total / limit) || 1;
-
-  return {
-    appointments,
-    total,
-    page,
-    limit,
-    totalPages,
-  };
+  return stats;
+}
+export async function dbGetAppointmentsPaginated(options: AppointmentFilters & {page?: number; limit?: number}) {
+  const page = Math.max(1, options.page || 1);
+  const limit = Math.min(100, Math.max(1, options.limit || 50));
+  const {where, params} = appointmentWhere(options);
+  const count = await executeQuery<{cnt: number}>('SELECT COUNT(*) AS cnt FROM appointments' + where, params);
+  const total = Number(count[0]?.cnt || 0);
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const actualPage = Math.min(page, totalPages);
+  const appointments = await dbGetAppointments({...options, limit, offset: (actualPage - 1) * limit});
+  return {appointments, total, page: actualPage, limit, totalPages};
 }
 
 export async function dbGetAppointmentById(id: string): Promise<Appointment | null> {
@@ -1762,6 +1711,51 @@ export async function dbGetAllPatients(): Promise<PatientRecord[]> {
     ...p,
     sessions: sessionsByPatient[p.id] ?? [],
   }));
+}
+
+// The directory includes legacy-only records, but loads sessions only for one page.
+export async function dbGetAdminRecordCounts() {
+  const [patients, invoices, legacy] = await Promise.all([
+    executeQuery<{n: number}>('SELECT COUNT(*) AS n FROM patients'),
+    executeQuery<{n: number}>('SELECT COUNT(*) AS n FROM invoices'),
+    executeQuery<{n: number}>(`SELECT COUNT(*) AS n FROM patient_notes WHERE substr(replace(replace(replace(replace(replace(phone, '+', ''), ' ', ''), '-', ''), '(', ''), ')', ''), -9) NOT IN (SELECT substr(replace(replace(replace(replace(replace(phone, '+', ''), ' ', ''), '-', ''), '(', ''), ')', ''), -9) FROM patients)`),
+  ]);
+  return {patients: Number(patients[0].n) + Number(legacy[0].n), invoices: Number(invoices[0].n)};
+}
+
+export async function dbGetPatientDirectory(options: {page: number; limit: number; search: string; coverageType: string}) {
+  const phoneKey = (column: string) => `substr(replace(replace(replace(replace(replace(${column}, '+', ''), ' ', ''), '-', ''), '(', ''), ')', ''), -9)`;
+  const directory = `WITH directory AS (
+    SELECT id, patientName, phone, email, gender, dob, coverageType, coverageProvider, coverageNumber,
+      referringDoctor, pathologyTags, medicalHistory, totalPrescribedSessions, createdAt, updatedAt,
+      (SELECT count(*) FROM patient_sessions s WHERE s.patientId = p.id) AS sessionCount
+    FROM patients p
+    UNION ALL
+    SELECT 'legacy_' || n.phone, n.patientName, n.phone, NULL, NULL, NULL, 'PARTICULAR', NULL, NULL,
+      NULL, n.tags, n.content, 10, n.updatedAt, n.updatedAt, 0
+    FROM patient_notes n WHERE ${phoneKey('n.phone')} NOT IN (SELECT ${phoneKey('p.phone')} FROM patients p)
+  )`;
+  const insurance = "(coverageType IN ('INSURANCE', 'ADSE') OR length(trim(coalesce(coverageProvider, ''))) > 0)";
+  const particular = "(coverageType IS NULL OR coverageType = 'PARTICULAR')";
+  const where: string[] = [];
+  const args: string[] = [];
+  if (options.search.trim()) {
+    where.push('(patientName LIKE ? OR phone LIKE ? OR pathologyTags LIKE ? OR coverageProvider LIKE ? OR referringDoctor LIKE ? OR email LIKE ? OR coverageNumber LIKE ?)');
+    args.push(...Array(7).fill('%' + options.search.trim() + '%'));
+  }
+  if (options.coverageType === 'INSURANCE') where.push(insurance);
+  if (options.coverageType === 'PARTICULAR') where.push(particular);
+  if (options.coverageType === 'ACTIVE_SESSIONS') where.push('sessionCount > 0');
+  const filter = where.length ? ' WHERE ' + where.join(' AND ') : '';
+  const [count, counts] = await Promise.all([
+    executeQuery<{total: number}>(directory + ' SELECT COUNT(*) AS total FROM directory' + filter, args),
+    executeQuery<{all: number; insurance: number; particular: number; withSessions: number}>(directory + ` SELECT COUNT(*) AS 'all', coalesce(sum(${insurance}), 0) AS insurance, coalesce(sum(${particular}), 0) AS particular, coalesce(sum(sessionCount > 0), 0) AS withSessions FROM directory`),
+  ]);
+  const total = Number(count[0]?.total || 0);
+  const totalPages = Math.max(1, Math.ceil(total / options.limit));
+  const page = Math.min(options.page, totalPages);
+  const patients = await executeQuery<PatientRecord>(directory + ' SELECT * FROM directory' + filter + ' ORDER BY updatedAt DESC, id ASC LIMIT ? OFFSET ?', [...args, options.limit, (page - 1) * options.limit]);
+  return {patients, notes: [], total, page, limit: options.limit, totalPages, counts: counts[0]};
 }
 
 export async function dbGetPatientsPaginated(options: {
@@ -3629,8 +3623,16 @@ export async function dbGetFilteredAnalyticsStats(
         ),
   ]);
 
+  // Convert once per distinct payment timestamp within this request.
+  const paymentDates = new Map<string, ReturnType<typeof getLisbonDateTime>>();
+  const paymentDate = (invoice: { paidAt?: string | null; createdAt: string }) => {
+    const timestamp = invoice.paidAt || invoice.createdAt;
+    let value = paymentDates.get(timestamp);
+    if (!value) { value = getLisbonDateTime(new Date(timestamp)); paymentDates.set(timestamp, value); }
+    return value;
+  };
   if (isAllTime) {
-    const dates = [...currentAppts.map(a => a.date), ...currentInvoices.map(i => getLisbonDateTime(new Date(i.paidAt || i.createdAt)).todayStr)].filter(isCalendarDate).sort();
+    const dates = [...currentAppts.map(a => a.date), ...currentInvoices.map(i => paymentDate(i).todayStr)].filter(isCalendarDate).sort();
     start = dates[0] || todayStr;
     end = dates[dates.length - 1] || todayStr;
   }
@@ -3900,7 +3902,7 @@ export async function dbGetFilteredAnalyticsStats(
   const bucketKeys = [...pointsMap.keys()];
   for (const inv of invoices) {
     if (inv.paymentStatus !== 'PAID') continue;
-    const paid = getLisbonDateTime(new Date(inv.paidAt || inv.createdAt));
+    const paid = paymentDate(inv);
     let key = paid.todayStr;
     if (granularity === 'month') key = key.slice(0, 7);
     else if (granularity === 'week') key = bucketKeys.filter(k => k <= paid.todayStr).pop() || bucketKeys[0];

@@ -5,7 +5,6 @@ import './globals.css';
 import { LanguageProvider, type Lang } from '@/lib/i18n';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { SplashScreen } from '@/components/ui/SplashScreen';
 import { WhatsAppBubble } from '@/components/ui/WhatsAppBubble';
 
 export const viewport: Viewport = {
@@ -192,24 +191,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             `,
           }}
         />
-        {/* Instant synchronous check: skip splash for bots, reduced motion, or returning users without flashing */}
-        <script
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var isBot = /Lighthouse|PageSpeed|Googlebot|HeadlessChrome|Chrome-Lighthouse|Mediapartners-Google/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-                  var hasSeen = sessionStorage.getItem('ryma_splash_v6') === 'true';
-                  var isAdmin = window.location.pathname.indexOf('/admin') === 0;
-                  if (isBot || hasSeen || isAdmin) {
-                    document.documentElement.classList.add('skip-splash');
-                  }
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
         {/* Prevent browser extensions (Bitdefender bis_skin_checked, etc.) from causing React hydration mismatches */}
         <script
           suppressHydrationWarning
@@ -275,7 +256,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         }}
       >
         <LanguageProvider initialLang={initialLang}>
-          <SplashScreen />
           <Navbar />
           <main className="min-h-screen" suppressHydrationWarning>{children}</main>
           <Footer />

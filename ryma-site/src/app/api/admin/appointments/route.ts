@@ -1,8 +1,9 @@
-import { isJsonObject, pageNumber } from '@/lib/admin-validation';
+import { isJsonObject, pageNumber, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import {
   dbGetAppointments,
+  dbGetAppointmentSummary,
   dbGetAppointmentsPaginated,
   dbCreateAppointment,
 } from '@/lib/db';
@@ -22,15 +23,25 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status') ?? undefined;
   const date   = searchParams.get('date')   ?? undefined;
   const search = searchParams.get('search') ?? undefined;
+  const dateFrom = searchParams.get('dateFrom') || undefined;
+  const dateTo = searchParams.get('dateTo') || undefined;
+  const phone = searchParams.get('phone') || undefined;
+  const stats = searchParams.get('summary') === '1' ? await dbGetAppointmentSummary() : undefined;
+  if (searchParams.get('calendar') === '1') {
+    const days = (Date.parse(dateTo || '') - Date.parse(dateFrom || '')) / 86400000;
+    if (!isCalendarDate(dateFrom) || !isCalendarDate(dateTo) || !Number.isFinite(days) || days < 0 || days > 31) return NextResponse.json({error: 'Invalid calendar range'}, {status: 400});
+    const appointments = await dbGetAppointments({status, search, date, dateFrom, dateTo});
+    return NextResponse.json({appointments, total: appointments.length, stats}, {headers: {'Cache-Control': 'no-store'}});
+  }
   const pageParam = searchParams.get('page');
   const limitParam = searchParams.get('limit');
 
   if (pageParam !== null || limitParam !== null) {
     const page = pageNumber(pageParam, 1);
     const limit = pageNumber(limitParam, 50, 100);
-    const res = await dbGetAppointmentsPaginated({ status, date, search, page, limit });
+    const res = await dbGetAppointmentsPaginated({ status, date, search, dateFrom, dateTo, phone, page, limit });
     return NextResponse.json(
-      res,
+      {...res, stats},
       {
         status: 200,
         headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
@@ -38,9 +49,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const appointments = await dbGetAppointments({ status, date, search });
+  const appointments = await dbGetAppointments({ status, date, search, dateFrom, dateTo, phone });
   return NextResponse.json(
-    { appointments },
+    { appointments, stats },
     {
       status: 200,
       headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },

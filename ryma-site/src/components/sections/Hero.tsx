@@ -156,10 +156,11 @@ export function Hero() {
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {HERO_SLIDES.map((slide, index) => {
           const isActive = currentIndex === index;
+          if (index !== 0 && !isActive) return null;
           return (
             <motion.div
               key={slide.src}
-              initial={{ opacity: 0, scale: 1 }}
+              initial={false}
               animate={{
                 opacity: isActive ? 1 : 0,
                 scale: isActive ? 1.02 : 1,
@@ -177,7 +178,7 @@ export function Hero() {
                 fill
                 priority={index === 0}
                 loading={index === 0 ? 'eager' : 'lazy'}
-                quality={85}
+                quality={75}
                 sizes="100vw"
                 className="object-cover object-center"
               />
@@ -224,7 +225,7 @@ export function Hero() {
       <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 w-full text-center mt-2 sm:mt-4 mb-3 sm:mb-6">
         <motion.div
           key="hero-prestige-badge"
-          initial={{ opacity: 0, y: -10 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="inline-flex items-center gap-2 sm:gap-3 bg-white/95 backdrop-blur-xl border border-[#C49A3C]/40 px-3.5 py-1.5 sm:px-5 sm:py-2 rounded-full shadow-[0_8px_30px_rgba(196,154,60,0.14)]"
@@ -279,7 +280,7 @@ export function Hero() {
         {/* Master Heading with Editorial Cormorant Serif */}
         <motion.div
           key="hero-heading"
-          initial={{ opacity: 0, y: 20 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="mx-auto max-w-3xl mb-4 sm:mb-6"
@@ -329,7 +330,7 @@ export function Hero() {
         {/* ── Luxury Conversion CTAs ── */}
         <motion.div
           key="hero-ctas"
-          initial={{ opacity: 0, y: 16 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.25 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8 w-full max-w-md sm:max-w-none mx-auto"
@@ -379,7 +380,7 @@ export function Hero() {
         {/* ── Key Trust Pillars ── */}
         <motion.div
           key="hero-trust"
-          initial={{ opacity: 0 }}
+          initial={false}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.35 }}
           className="flex flex-wrap items-center justify-center gap-x-5 sm:gap-x-8 gap-y-2 text-xs sm:text-sm text-white/85 font-medium"

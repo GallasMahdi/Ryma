@@ -93,10 +93,10 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
   // Keep state in sync if URL query changes
   useEffect(() => {
-    if (tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl) && tabFromUrl !== activeTab) {
+    if (tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl)) {
       setActiveTabState(tabFromUrl);
     }
-  }, [tabFromUrl, activeTab]);
+  }, [tabFromUrl]);
 
   // If no tab in URL on initial load, check localStorage once
   useEffect(() => {
@@ -149,7 +149,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
   // Real-time synchronization state
   const [recentNewIds, setRecentNewIds] = useState<Set<string>>(new Set());
-  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
   const knownAppointmentIdsRef = useRef<Set<string>>(new Set());
   const isInitialLoadDoneRef = useRef<boolean>(false);
 
@@ -187,6 +187,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   const slotAbortRef = useRef<AbortController | null>(null);
 
   // Patient notes & structured EMR state
+  const [recordCounts, setRecordCounts] = useState({patients: 0, invoices: 0});
   const [patientNotes, setPatientNotes] = useState<PatientNote[]>([]);
   const [patientsList, setPatientsList] = useState<PatientRecord[]>([]);
   const [noShowCounts, setNoShowCounts] = useState<Record<string, number>>({});
@@ -251,7 +252,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   // ── Fetch admin metadata ───────────────────────────────────────────────────
   const fetchAdminMetadata = useCallback(async () => {
     try {
-      const data = await apiFetch<{ authenticated: boolean; noShowCounts?: Record<string, number> }>('/api/admin/me');
+      const data = await apiFetch<{ authenticated: boolean; recordCounts: {patients: number; invoices: number}; noShowCounts?: Record<string, number> }>('/api/admin/me');
+      setRecordCounts(data.recordCounts);
       if (data.noShowCounts) {
         setNoShowCounts(data.noShowCounts);
       }
@@ -450,13 +452,21 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   const appointmentsRef = useRef<Appointment[]>(appointments);
   useEffect(() => { appointmentsRef.current = appointments; }, [appointments]);
 
+  const appointmentQuery = useRef('page=1&limit=10');
+  const appointmentRequest = useRef(0);
+  const [appointmentTotal, setAppointmentTotal] = useState(0);
+  const [appointmentStats, setAppointmentStats] = useState({total: 0, confirmed: 0, pending: 0, cancelled: 0, completed: 0, noShow: 0, revenue: 0});
   const fetchAppointments = useCallback(async (isSilent = false) => {
     if (!isSilent) {
       setLoadingAppointments(prev => prev || appointmentsRef.current.length === 0);
     }
     setAppointmentsError(null);
     try {
-      const data = await apiFetch<{ appointments: Appointment[] }>('/api/admin/appointments');
+      const request = ++appointmentRequest.current;
+      const data = await apiFetch<{ appointments: Appointment[]; total: number; stats: typeof appointmentStats }>('/api/admin/appointments?summary=1&' + appointmentQuery.current);
+      if (request !== appointmentRequest.current) return;
+      setAppointmentTotal(data.total);
+      setAppointmentStats(data.stats);
       if (Array.isArray(data.appointments)) {
         if (!isInitialLoadDoneRef.current) {
           data.appointments.forEach(a => knownAppointmentIdsRef.current.add(a.id));
@@ -499,11 +509,27 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     }
   }, [lang, handleNewIncomingAppointment]);
 
+  const setAppointmentQuery = useCallback((query: string) => {
+    appointmentQuery.current = query;
+    void fetchAppointments(true);
+  }, [fetchAppointments]);
+
   // ── Fetch patient notes ────────────────────────────────────────────────────
+  const patientQuery = useRef('directory=1&page=1&limit=10');
+  const patientRequest = useRef(0);
+  const [patientTotal, setPatientTotal] = useState(0);
+  const [patientCounts, setPatientCounts] = useState({all: 0, insurance: 0, particular: 0, withSessions: 0});
+  const invoiceQuery = useRef('page=1&limit=10');
+  const invoiceRequest = useRef(0);
+  const [invoiceTotal, setInvoiceTotal] = useState(0);
   const fetchPatientNotes = useCallback(async () => {
     try {
-      // This tab paginates locally and therefore needs the complete patient set.
-      const data = await apiFetch<{ notes: PatientNote[]; patients: PatientRecord[] }>('/api/admin/patients');
+      const request = ++patientRequest.current;
+      const data = await apiFetch<{ notes: PatientNote[]; patients: PatientRecord[]; total: number; counts: typeof patientCounts }>('/api/admin/patients?' + patientQuery.current);
+      if (request !== patientRequest.current) return;
+      setPatientTotal(data.total);
+      setPatientCounts(data.counts);
+      setRecordCounts(previous => ({...previous, patients: data.counts.all}));
       setPatientNotes(data.notes ?? []);
       setPatientsList(data.patients ?? []);
     } catch { /* silent */ }
@@ -513,15 +539,28 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   const fetchInvoices = useCallback(async () => {
     setLoadingInvoices(true);
     try {
-      const data = await apiFetch<{ invoices: Invoice[]; stats: InvoiceStats }>('/api/admin/invoices');
+      const request = ++invoiceRequest.current;
+      const data = await apiFetch<{ invoices: Invoice[]; stats: InvoiceStats; total: number }>('/api/admin/invoices?' + invoiceQuery.current);
+      if (request !== invoiceRequest.current) return;
+      setInvoiceTotal(data.total);
       setInvoices(data.invoices ?? []);
       setInvoiceStats(data.stats ?? null);
+      void fetchAdminMetadata();
     } catch (err) {
       console.warn('[Invoices Fetch Error]:', err);
     } finally {
       setLoadingInvoices(false);
     }
   }, []);
+
+  const setPatientQuery = useCallback((query: string) => {
+    patientQuery.current = query;
+    void fetchPatientNotes();
+  }, [fetchPatientNotes]);
+  const setInvoiceQuery = useCallback((query: string) => {
+    invoiceQuery.current = query;
+    void fetchInvoices();
+  }, [fetchInvoices]);
 
   // ── Fetch patient reviews ──────────────────────────────────────────────────
   const fetchReviews = useCallback(async () => {
@@ -614,6 +653,11 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     let reconnectTimer: NodeJS.Timeout | null = null;
     let isUnmounted = false;
 
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleRefresh = () => {
+      if (refreshTimer) return;
+      refreshTimer = setTimeout(() => {refreshTimer = undefined; if (!isUnmounted) {void fetchAppointments(true); void fetchAdminMetadata();}}, 100);
+    };
     const setupSSE = () => {
       if (isUnmounted) return;
       try {
@@ -632,10 +676,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
             const parsed = JSON.parse(e.data);
             const appt: Appointment = parsed.data;
             if (appt && appt.id) {
-              setAppointments(prev => {
-                if (prev.some(a => a.id === appt.id)) return prev;
-                return [appt, ...prev];
-              });
+              scheduleRefresh();
               handleNewIncomingAppointment(appt, false);
               setAnalyticsRefreshTrigger(prev => prev + 1);
             }
@@ -650,11 +691,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
               const newAppts = batchAppts.filter(a => !knownAppointmentIdsRef.current.has(a.id));
               if (newAppts.length > 0) {
                 newAppts.forEach(a => knownAppointmentIdsRef.current.add(a.id));
-                setAppointments(prev => {
-                  const existingIds = new Set(prev.map(p => p.id));
-                  const toAdd = newAppts.filter(a => !existingIds.has(a.id));
-                  return [...toAdd, ...prev];
-                });
+                scheduleRefresh();
 
                 playNotificationChime();
                 slotCacheRef.current = {};
@@ -694,6 +731,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
               setAppointments(prev =>
                 prev.map(a => (a.id === updated.id ? { ...a, ...updated } : a))
               );
+              scheduleRefresh();
               slotCacheRef.current = {};
               setAnalyticsRefreshTrigger(prev => prev + 1);
             }
@@ -731,10 +769,11 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
     return () => {
       isUnmounted = true;
+      clearTimeout(refreshTimer);
       if (eventSource) eventSource.close();
       if (reconnectTimer) clearTimeout(reconnectTimer);
     };
-  }, [handleNewIncomingAppointment]);
+  }, [handleNewIncomingAppointment, fetchAppointments, fetchAdminMetadata]);
 
   // Ref to track live connection status without making it a useEffect dependency
   const isLiveConnectedRef = useRef(isLiveConnected);
@@ -747,13 +786,6 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     // 1. Critical initial data: Appointments & Metadata for immediate display
     fetchAppointments(false);
     fetchAdminMetadata();
-
-    // 2. Staggered background prefetch for patients, invoices & reviews (zero-lag initial render)
-    const prefetchTimer = setTimeout(() => {
-      fetchPatientNotes();
-      fetchInvoices();
-      fetchReviews();
-    }, 450);
 
     // 3. Preload secondary tab bundles & drawers during idle time to eliminate chunk download delay
     const idleCallback =
@@ -797,8 +829,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         if (now - lastFocusRefreshAt < MIN_FOCUS_REFRESH_MS) return;
         lastFocusRefreshAt = now;
         fetchAppointments(true);
-        fetchInvoices();
-        fetchReviews();
+
         fetchAdminMetadata();
       }
     };
@@ -814,7 +845,6 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     window.addEventListener('focus', handleWindowFocus);
 
     return () => {
-      clearTimeout(prefetchTimer);
       if (typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
         (window as any).cancelIdleCallback(idleHandle);
       }
@@ -825,16 +855,16 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchAppointments, fetchPatientNotes, fetchInvoices, fetchReviews, fetchAdminMetadata]);
 
-  // If user immediately switches to patients, invoices, or reviews tab before prefetch, fetch instantly
+  // Load secondary datasets only when their tab is opened.
   useEffect(() => {
-    if (activeTab === 'patients' && patientsList.length === 0) {
+    if (activeTab === 'patients') {
       fetchPatientNotes();
-    } else if (activeTab === 'invoices' && invoices.length === 0) {
+    } else if (activeTab === 'invoices') {
       fetchInvoices();
-    } else if (activeTab === 'reviews' && reviews.length === 0) {
+    } else if (activeTab === 'reviews') {
       fetchReviews();
     }
-  }, [activeTab, patientsList.length, invoices.length, reviews.length, fetchPatientNotes, fetchInvoices, fetchReviews]);
+  }, [activeTab, fetchPatientNotes, fetchInvoices, fetchReviews]);
 
   // ── Cached Slot Fetching ───────────────────────────────────────────────────
   const fetchSlots = useCallback(async (date: string, forceRefresh = false) => {
@@ -1053,22 +1083,14 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     }
   };
 
-  const openPatientNote = (appt: Appointment) => {
-    const existing = patientNotes.find(n => phonesMatch(n.phone, appt.phone));
-    if (existing) {
-      setSelectedNote(existing);
-      setNoteForm({ content: existing.content, tags: existing.tags });
-    } else {
-      setSelectedNote({
-        phone: appt.phone,
-        patientName: appt.patientName,
-        content: '',
-        tags: '',
-        updatedAt: new Date().toISOString(),
-      });
-      setNoteForm({ content: '', tags: '' });
-    }
-    setActiveTab('patients');
+  const openPatientNote = async (appt: Appointment) => {
+    try {
+      const data = await apiFetch<{patient: PatientRecord | null; note: PatientNote | null}>('/api/admin/patients?phone=' + encodeURIComponent(appt.phone));
+      const note = data.note || {phone: appt.phone, patientName: appt.patientName, content: data.patient?.medicalHistory || '', tags: data.patient?.pathologyTags || '', updatedAt: data.patient?.updatedAt || new Date().toISOString()};
+      setSelectedNote(note);
+      setNoteForm({content: note.content, tags: note.tags});
+      setActiveTab('patients');
+    } catch (error) {addToast({type: 'error', title: 'Unable to load patient', message: (error as Error).message});}
   };
 
   const createDirectPatientNote = async (phone: string, patientName: string, tags = '', content = ''): Promise<PatientNote | null> => {
@@ -1175,54 +1197,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     });
   }, [appointments, filter, searchQuery]);
 
-  const stats = useMemo(() => {
-    const total = appointments.length;
-    const confirmed = appointments.filter(a => a.status === 'CONFIRMED').length;
-    const pending = appointments.filter(a => a.status === 'PENDING').length;
-    const cancelled = appointments.filter(a => a.status === 'CANCELLED').length;
-    const completed = appointments.filter(a => a.status === 'COMPLETED').length;
-    const noShow = appointments.filter(a => a.status === 'NO_SHOW').length;
-    const revenue = appointments.filter(a => a.status === 'CONFIRMED' || a.status === 'COMPLETED')
-      .reduce((sum, a) => sum + getServicePrice(a.service), 0);
-    return { total, confirmed, pending, cancelled, completed, noShow, revenue };
-  }, [appointments]);
-
-  const analyticsData = useMemo(() => {
-    const dowLabels =
-      lang === 'fr'
-        ? ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-        : lang === 'en'
-        ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-        : ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-    const dowCounts = Array(7).fill(0);
-    appointments.forEach(a => {
-      const d = new Date(a.date + 'T12:00:00');
-      const idx = (d.getDay() + 6) % 7;
-      dowCounts[idx]++;
-    });
-
-    const svcMap: Record<string, number> = {};
-    appointments.forEach(a => { svcMap[a.service] = (svcMap[a.service] ?? 0) + 1; });
-    const topServices = Object.entries(svcMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6);
-
-    const hourMap: Record<string, number> = {};
-    appointments.forEach(a => { hourMap[a.startTime] = (hourMap[a.startTime] ?? 0) + 1; });
-    const peakHours = Object.entries(hourMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8);
-
-    const cancelRate = stats.total > 0
-      ? Math.round(((stats.cancelled + stats.noShow) / stats.total) * 100)
-      : 0;
-
-    const completionRate = stats.total > 0
-      ? Math.round((stats.completed / stats.total) * 100)
-      : 0;
-
-    return { dowLabels, dowCounts, topServices, peakHours, cancelRate, completionRate };
-  }, [appointments, stats, lang]);
+  const stats = appointmentStats;
 
   const todayStr = useMemo(() => formatLocalDate(new Date()), []);
   const next7Days = useMemo(() => getNext7Days(), []);
@@ -1315,8 +1290,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
           setActiveTab={setActiveTab}
           lang={lang}
           totalAppointments={stats.total}
-          totalNotes={Math.max(patientsList.length, patientNotes.length)}
-          totalInvoices={invoices.length}
+          totalNotes={recordCounts.patients}
+          totalInvoices={recordCounts.invoices}
           totalReviews={reviews.length}
           isLoading={loadingAppointments}
           isAnalyticsUnlocked={isAnalyticsUnlocked}
@@ -1346,6 +1321,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                   appointmentsError={appointmentsError}
                   loadingAppointments={loadingAppointments}
                   appointments={appointments}
+                  total={appointmentTotal}
+                  onQueryChange={setAppointmentQuery}
                   filteredAppointments={filteredAppointments}
                   updateStatus={updateStatus}
                   setConfirmDialog={setConfirmDialog}
@@ -1384,6 +1361,9 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
               <div className={activeTab === 'patients' ? 'block' : 'hidden'} aria-hidden={activeTab !== 'patients'}>
                 <PatientNotesTab
                   lang={lang}
+                  total={patientTotal}
+                  counts={patientCounts}
+                  onQueryChange={setPatientQuery}
                   patientNotes={patientNotes}
                   patientsList={patientsList}
                   onRefreshPatients={() => {
@@ -1411,6 +1391,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
             {visitedTabs.has('invoices') && (
               <div className={activeTab === 'invoices' ? 'block' : 'hidden'} aria-hidden={activeTab !== 'invoices'}>
                 <InvoicesTab
+                  total={invoiceTotal}
+                  onQueryChange={setInvoiceQuery}
                   invoices={invoices}
                   stats={invoiceStats}
                   loading={loadingInvoices}
@@ -1632,10 +1614,13 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 // never suspended mid-render. Suspense resolves here, then the dashboard mounts
 // exactly once with a stable initialTab prop.
 function AdminPageShell() {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as AdminTab | null;
   const initialTab =
     tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl) ? tabFromUrl : null;
+  if (!hydrated) return <div role="status" className="min-h-screen grid place-items-center">A carregar painel...</div>;
   return <AdminDashboardContent initialTab={initialTab} />;
 }
 

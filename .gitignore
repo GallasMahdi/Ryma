@@ -30,3 +30,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# Local performance evidence and generated audit credentials
+/ryma-site/performance-results/
+/ryma-site/load-tests/audit-2026/latest.json

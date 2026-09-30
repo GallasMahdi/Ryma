@@ -41,7 +41,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
   onClose,
   onCreated,
   lang,
-  patients,
+  patients: initialPatients,
   appointments,
   prefilledData,
 }: CreateInvoiceModalProps) {
@@ -75,6 +75,21 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
   const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
   const [selectedPatientObject, setSelectedPatientObject] = useState<PatientRecord | null>(null);
   const patientDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [patients, setPatients] = useState(initialPatients);
+  useEffect(() => {
+    if (!isOpen) return;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch('/api/admin/patients?directory=1&limit=30&search=' + encodeURIComponent(patientSearchQuery), {signal: controller.signal});
+        if (!response.ok) throw new Error('Patient search failed');
+        const data = await response.json();
+        if (!controller.signal.aborted) setPatients(data.patients);
+      } catch (err) { if (!controller.signal.aborted) setError(txt('Recherche indisponible', 'Search unavailable', 'Pesquisa indisponível')); }
+    }, 150);
+    return () => {clearTimeout(timer); controller.abort();};
+  }, [isOpen, patientSearchQuery]);
 
   // Filter patients by query
   const filteredPatients = useMemo(() => {
@@ -164,7 +179,8 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
       setIsPatientDropdownOpen(false);
       setError(null);
     }
-  }, [isOpen, prefilledData, patients]);
+  // Search results must never reset an open form or erase typed input.
+  }, [isOpen, prefilledData]);
 
   // Handle service change to update price and VAT rate
   const handleServiceChange = (slug: string) => {
@@ -306,14 +322,14 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
               )}
 
               {/* ── Searchable Patient Combobox ─────────────────────────── */}
-              {patients.length > 0 && !prefilledData?.patientName && (
+              {!prefilledData?.patientName && (
                 <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#E2E8F0] relative" ref={patientDropdownRef}>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block font-bold text-[#0F172A] text-xs">
                       {txt('Sélectionner un patient existant', 'Select registered patient', 'Preencher a partir de Utente registado')}
                     </label>
                     <span className="text-[10px] text-[#94A3B8]">
-                      {patients.length} {txt('patients enregistrés', 'registered patients', 'utentes registados')}
+                      {patients.length} {txt('résultats', 'results', 'resultados')}
                     </span>
                   </div>
 
