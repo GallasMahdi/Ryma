@@ -13,7 +13,8 @@ interface RecaptchaVerifyResponse {
 }
 
 export async function verifyRecaptchaToken(
-  token?: string | null
+  token?: string | null,
+  expectedAction?: string
 ): Promise<{ valid: boolean; score?: number; reason?: string }> {
   const secretKey = process.env.RECAPTCHA_SECRET_KEY;
 
@@ -42,6 +43,7 @@ export async function verifyRecaptchaToken(
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: params.toString(),
+      signal: AbortSignal.timeout(10_000),
     });
 
     if (!response.ok) {
@@ -54,6 +56,10 @@ export async function verifyRecaptchaToken(
     if (!data.success) {
       console.warn('[reCAPTCHA Verification Failed]:', data['error-codes']);
       return { valid: false, reason: 'invalid_token' };
+    }
+
+    if (expectedAction && data.action !== expectedAction) {
+      return { valid: false, reason: 'action_mismatch' };
     }
 
     // Google reCAPTCHA v3 score: 0.0 (bot) to 1.0 (human)

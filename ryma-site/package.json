@@ -9,7 +9,8 @@
     "db:backup": "node scripts/backup-db.mjs",
     "db:reset": "node scripts/reset-db.mjs",
     "test:dashboard": "node scripts/audit-dashboard.cjs",
-    "test:phone": "node --test scripts/test-phone-validation.cjs"
+    "test:phone": "node --test scripts/test-phone-validation.cjs",
+    "test:reviews": "node --test scripts/test-review-submission.cjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbGetApprovedReviews, dbCreateReview, dbCheckRateLimit, dbRecordRateLimitAttempt } from '@/lib/db';
-import { SERVICES } from '@/data/services';
 import { getClientIp } from '@/lib/validation';
 import { verifyRecaptchaToken } from '@/lib/recaptcha';
 
@@ -55,6 +54,9 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Formato JSON inválido.' }, { status: 400 });
     }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'Formato JSON inválido.' }, { status: 400 });
+    }
 
     const {
       patientName,
@@ -74,11 +76,17 @@ export async function POST(request: NextRequest) {
 
     // Google reCAPTCHA v3 bot verification
     const token = typeof recaptchaToken === 'string' ? recaptchaToken : null;
-    const recaptchaResult = await verifyRecaptchaToken(token);
+    const recaptchaResult = await verifyRecaptchaToken(token, 'review');
     if (!recaptchaResult.valid) {
+      const unavailable = ['unconfigured_production_recaptcha', 'api_http_error', 'network_error'].includes(recaptchaResult.reason ?? '');
       return NextResponse.json(
-        { error: 'Verificação de segurança falhou (atividade automatizada detetada).' },
-        { status: 403 }
+        {
+          error: unavailable
+            ? 'A verificação de segurança está temporariamente indisponível. Por favor, tente novamente mais tarde.'
+            : 'Não foi possível concluir a verificação de segurança. Por favor, atualize a página e tente novamente.',
+          code: unavailable ? 'SECURITY_VERIFICATION_UNAVAILABLE' : 'SECURITY_VERIFICATION_FAILED',
+        },
+        { status: unavailable ? 503 : 403 }
       );
     }
 

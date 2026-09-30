@@ -25,23 +25,38 @@ export async function getRecaptchaToken(action: string = 'booking'): Promise<str
   }
 
   return new Promise((resolve) => {
-    try {
-      if (!window.grecaptcha) {
-        resolve(null);
+    let settled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const finish = (token: string | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      clearTimeout(retryTimer);
+      resolve(token);
+    };
+    // Bound both script loading and execution so a blocked script cannot hang the form.
+    const timeout = setTimeout(() => finish(null), 12_000);
+    const executeWhenReady = () => {
+      if (settled) return;
+      const recaptcha = window.grecaptcha;
+      if (!recaptcha) {
+        retryTimer = setTimeout(executeWhenReady, 100);
         return;
       }
-
-      window.grecaptcha.ready(async () => {
-        try {
-          const token = await window.grecaptcha!.execute(siteKey, { action });
-          resolve(token);
-        } catch (err) {
-          console.warn('[reCAPTCHA Client Execute Warning]:', err);
-          resolve(null);
-        }
-      });
-    } catch {
-      resolve(null);
-    }
+      try {
+        recaptcha.ready(async () => {
+          if (settled) return;
+          try {
+            const token = await recaptcha.execute(siteKey.trim(), { action });
+            finish(token || null);
+          } catch {
+            finish(null);
+          }
+        });
+      } catch {
+        finish(null);
+      }
+    };
+    executeWhenReady();
   });
 }

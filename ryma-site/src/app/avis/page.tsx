@@ -5,12 +5,14 @@ import headerStyles from '@/components/layout/EditorialPageHeader.module.css';
 import { EDITORIAL_PAGES } from '@/data/editorial-pages';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { TESTIMONIALS } from '@/data/testimonials';
 import { SERVICES } from '@/data/services';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { playSoftClick, playNotificationChime } from '@/lib/sound';
+import { getRecaptchaToken } from '@/lib/recaptcha-client';
 import {
   IconStar,
   IconCheck,
@@ -106,6 +108,7 @@ export default function AvisPage() {
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingReview) return;
     if (!formName.trim()) {
       playSoftClick();
       setAlertDialog({
@@ -135,6 +138,20 @@ export default function AvisPage() {
 
     setSubmittingReview(true);
     try {
+      // Generate a fresh token for each submission, after the visitor finishes writing.
+      const recaptchaToken = await getRecaptchaToken('review');
+      if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY?.trim() && !recaptchaToken) {
+        setAlertDialog({
+          title: lang === 'pt' ? 'Verificação indisponível' : lang === 'en' ? 'Verification unavailable' : 'Vérification indisponible',
+          description: lang === 'pt'
+            ? 'Não foi possível carregar a verificação de segurança. Verifique a sua ligação e permita o reCAPTCHA no seu bloqueador de conteúdo, se necessário. Tente novamente; o seu texto foi mantido.'
+            : lang === 'en'
+            ? 'The security check could not load. Check your connection and allow reCAPTCHA in your content blocker if needed. Try again; your review text has been kept.'
+            : 'La vérification de sécurité n’a pas pu se charger. Vérifiez votre connexion et autorisez reCAPTCHA dans votre bloqueur de contenu si nécessaire. Réessayez ; votre texte a été conservé.',
+        });
+        return;
+      }
+
       const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -144,6 +161,7 @@ export default function AvisPage() {
           serviceSlug: formService,
           comment: formComment.trim(),
           location: formLocation.trim() || 'Lisboa',
+          recaptchaToken,
         }),
       });
 
@@ -193,7 +211,13 @@ export default function AvisPage() {
   const averageRating = reviewsList.length ? reviewsList.reduce((total, review) => total + Number(review.rating || 0), 0) / reviewsList.length : 0;
   return (
     <div className="bg-[#FAFAF8] min-h-screen text-[#1A1412]">
-      
+      {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY?.trim() && (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY.trim()}`}
+          strategy="afterInteractive"
+        />
+      )}
+
       <EditorialPageHeader
         eyebrow={intro.eyebrow} title={intro.title} emphasis={intro.emphasis} description={intro.description}
         aside={<><span className={headerStyles.asideLabel}>{intro.asideLabel}</span><p className={headerStyles.price}>{averageRating.toLocaleString(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}<small>/ 5</small></p><div className={headerStyles.stars} aria-hidden="true">{[1, 2, 3, 4, 5].map(star => <IconStar key={star} size={15} fill={star <= Math.round(averageRating) ? 'currentColor' : 'none'} />)}</div><p className={headerStyles.asideText}>{reviewsList.length} {intro.countLabel}</p></>}
@@ -489,10 +513,10 @@ export default function AvisPage() {
                   </h3>
                   <p className="text-xs text-[#6B6058]">
                     {lang === 'pt'
-                      ? 'O seu testemunho foi registado e publicado com sucesso no website da clínica.'
+                      ? 'O seu testemunho foi recebido e será publicado após aprovação da clínica. Obrigado!'
                       : lang === 'en'
-                      ? 'Your feedback has been saved and is now published on the clinic website.'
-                      : 'Votre avis a été enregistré et publié avec succès.'}
+                      ? 'Your review has been received and will be published after approval by the clinic. Thank you!'
+                      : 'Votre avis a été reçu et sera publié après validation par la clinique. Merci !'}
                   </p>
                 </div>
               )}
