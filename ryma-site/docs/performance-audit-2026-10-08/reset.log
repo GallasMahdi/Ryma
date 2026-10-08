@@ -1,0 +1,27 @@
+
+> ryma-site@0.1.0 test:reset
+> node --test scripts/test-reset-db.mjs
+
+✔ sqlite: team reset preserves schedules and auth, verifies backup and is repeatable (1021.1553ms)
+✔ sqlite: legacy reset preserves schedules and auth, verifies backup and is repeatable (723.7747ms)
+✔ sqlite: dry-run changes nothing and creates no backup (856.5604ms)
+✔ sqlite: failDelete rolls back all changes (865.1779ms)
+✔ sqlite: corruptPreserved rolls back all changes (845.3448ms)
+✔ sqlite: unavailable backup destination prevents deletion (639.5894ms)
+✔ libsql: team reset preserves schedules and auth, verifies backup and is repeatable (714.6823ms)
+✔ libsql: legacy reset preserves schedules and auth, verifies backup and is repeatable (467.2812ms)
+✔ libsql: dry-run changes nothing and creates no backup (810.1016ms)
+✔ libsql: failDelete rolls back all changes (836.3583ms)
+✔ libsql: corruptPreserved rolls back all changes (775.478ms)
+✔ libsql: unavailable backup destination prevents deletion (734.5944ms)
+✔ missing target prevents changes to every other target (680.5543ms)
+✔ all target backups exist before a deletion failure; statuses are truthful (1837.4931ms)
+✔ partial cross-database completion is reported accurately (2739.0737ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14997.2677

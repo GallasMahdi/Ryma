@@ -1,17 +1,14 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import {
-  IconCalendarEvent,
-  IconListCheck,
-  IconNotes,
-  IconChartBar,
-  IconReceiptTax,
-  IconMessageHeart,
-  IconStethoscope,
+  IconCalendarEvent, IconListCheck, IconUsers, IconChartBar,
+  IconReceiptTax, IconMessageHeart, IconStethoscope, IconUsersGroup,
+  IconLayoutGrid, IconX, IconChevronRight, IconCheck, IconLock,
+  IconLockOpen, IconPlus, IconLanguage, IconRefresh, IconLifebuoy, IconLogout,
 } from '@tabler/icons-react';
-import { Lang } from '@/lib/i18n';
+import type { Lang } from '@/lib/i18n';
+import styles from './AdminMobileNav.module.css';
 
 export type AdminTab = 'appointments' | 'slots' | 'patients' | 'invoices' | 'reviews' | 'analytics' | 'team' | 'treatments';
 
@@ -25,149 +22,172 @@ interface AdminMobileNavProps {
   totalReviews?: number;
   isAnalyticsUnlocked?: boolean;
   onOpenAddModal: () => void;
+  onToggleLang: () => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
+  onOpenHelpdesk: () => void;
+  onLogout: () => void;
 }
 
-export const AdminMobileNav = React.memo(function AdminMobileNav({
-  activeTab,
-  setActiveTab,
-  lang,
-  totalAppointments,
-  totalNotes,
-  totalInvoices,
-  totalReviews,
-  isAnalyticsUnlocked = false,
-  onOpenAddModal,
-}: AdminMobileNavProps) {
-  const tabs = [
-    {
-      id: 'appointments' as const,
-      label: lang === 'pt' ? 'Consultas' : lang === 'en' ? 'Appts' : 'RDV',
-      icon: IconListCheck,
-      badge: totalAppointments > 0 ? totalAppointments : null,
-    },
-    {
-      id: 'slots' as const,
-      label: lang === 'pt' ? 'Agenda' : lang === 'en' ? 'Schedule' : 'Planning',
-      icon: IconCalendarEvent,
-      badge: null,
-    },
-    {
-      id: 'patients' as const,
-      label: lang === 'pt' ? 'Doentes' : lang === 'en' ? 'Patients' : 'Patients',
-      icon: IconNotes,
-      badge: totalNotes > 0 ? totalNotes : null,
-    },
-    {
-      id: 'invoices' as const,
-      label: lang === 'pt' ? 'Recibos' : lang === 'en' ? 'Invoices' : 'Factures',
-      icon: IconReceiptTax,
-      badge: totalInvoices && totalInvoices > 0 ? totalInvoices : null,
-    },
-    {
-      id: 'reviews' as const,
-      label: lang === 'pt' ? 'Avis' : lang === 'en' ? 'Reviews' : 'Avis',
-      icon: IconMessageHeart,
-      badge: totalReviews && totalReviews > 0 ? totalReviews : null,
-    },
-    {
-      id: 'treatments' as const,
-      label: lang==='pt'?'Tratamentos':lang==='fr'?'Soins':'Treatments',
-      sublabel: 'Catalogue',
-      icon: IconStethoscope,
-      badge: null,
-    },
-    {
-      id: 'team' as const,
-      label: lang === 'pt' ? 'Equipa' : lang === 'fr' ? 'Équipe' : 'Team',
-      sublabel: lang === 'pt' ? 'Profissionais e horários' : lang === 'fr' ? 'Praticiens et horaires' : 'Practitioners and hours',
-      icon: IconCalendarEvent,
-      badge: null,
-    },
-    {
-      id: 'analytics' as const,
-      label: lang === 'pt' ? 'Stats' : lang === 'en' ? 'Stats' : 'Stats',
-      icon: IconChartBar,
-      badge: isAnalyticsUnlocked ? '🔓' : '🔒',
-    },
-  ];
+const prefetchTab = (tab: AdminTab) => {
+  if (tab === 'treatments') void import('./TreatmentsTab');
+  else if (tab === 'slots') void import('./SlotsTab');
+  else if (tab === 'patients') void import('./PatientNotesTab');
+  else if (tab === 'invoices') void import('./InvoicesTab');
+  else if (tab === 'reviews') void import('./ReviewsTab');
+  else if (tab === 'team') void import('./PractitionersTab');
+};
 
-  const handlePrefetch = (tabId: AdminTab) => {
-    if (tabId === 'treatments') import('@/components/admin/TreatmentsTab');
-    else if (tabId === 'slots') import('@/components/admin/SlotsTab');
-    else if (tabId === 'patients') import('@/components/admin/PatientNotesTab');
-    else if (tabId === 'invoices') import('@/components/admin/InvoicesTab');
-    else if (tabId === 'reviews') import('@/components/admin/ReviewsTab');
+export const AdminMobileNav = React.memo(function AdminMobileNav({
+  activeTab, setActiveTab, lang, totalAppointments, totalNotes,
+  totalInvoices = 0, totalReviews = 0, isAnalyticsUnlocked = false,
+  onOpenAddModal, onToggleLang, onRefresh, isRefreshing, onOpenHelpdesk, onLogout,
+}: AdminMobileNavProps) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const sheetId = useId();
+  const txt = (pt: string, en: string, fr: string) => lang === 'pt' ? pt : lang === 'fr' ? fr : en;
+  const primaryTabs = [
+    { id: 'appointments' as const, label: txt('Consultas', 'Visits', 'RDV'), name: txt('Consultas', 'Appointments', 'Rendez-vous'), icon: IconListCheck, count: totalAppointments },
+    { id: 'slots' as const, label: txt('Agenda', 'Schedule', 'Agenda'), name: txt('Agenda', 'Schedule', 'Agenda'), icon: IconCalendarEvent, count: 0 },
+    { id: 'patients' as const, label: txt('Utentes', 'Patients', 'Patients'), name: txt('Utentes', 'Patients', 'Patients'), icon: IconUsers, count: totalNotes },
+    { id: 'invoices' as const, label: txt('Recibos', 'Invoices', 'Factures'), name: txt('Recibos', 'Invoices', 'Factures'), icon: IconReceiptTax, count: totalInvoices },
+  ];
+  const secondaryTabs = [
+    { id: 'reviews' as const, label: txt('Avaliações', 'Reviews', 'Avis'), description: txt('Opiniões dos utentes', 'Patient feedback', 'Retours des patients'), icon: IconMessageHeart, count: totalReviews },
+    { id: 'treatments' as const, label: txt('Tratamentos', 'Treatments', 'Soins'), description: txt('Catálogo de cuidados', 'Your care catalogue', 'Catalogue de soins'), icon: IconStethoscope, count: 0 },
+    { id: 'team' as const, label: txt('Equipa', 'Team', 'Équipe'), description: txt('Profissionais e horários', 'People and working hours', 'Praticiens et horaires'), icon: IconUsersGroup, count: 0 },
+    { id: 'analytics' as const, label: txt('Estatísticas', 'Analytics', 'Statistiques'), description: txt('Relatórios e receitas', 'Reports and revenue', 'Rapports et revenus'), icon: IconChartBar, count: 0 },
+  ];
+  const activeSecondary = secondaryTabs.find(tab => tab.id === activeTab);
+  const MoreIcon = activeSecondary?.icon ?? IconLayoutGrid;
+  const moreLabel = txt('Mais', 'More', 'Plus');
+  const selectedLabel = txt('Selecionado', 'Selected', 'Sélectionné');
+  const lockLabel = isAnalyticsUnlocked ? txt('Desbloqueado', 'Unlocked', 'Déverrouillé') : txt('Protegido', 'Locked', 'Verrouillé');
+  const countLabel = (count: number) => txt(`${count} registos`, `${count} records`, `${count} éléments`);
+
+  const closeMore = () => {
+    dialogRef.current?.close();
+    setMoreOpen(false);
   };
 
+  const runAction = (action: () => void) => {
+    closeMore();
+    action();
+  };
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const dialog = dialogRef.current;
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    if (desktop.matches) {
+      setMoreOpen(false);
+      return;
+    }
+    dialog?.showModal();
+    const closeOnDesktop = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        dialog?.close();
+        setMoreOpen(false);
+      }
+    };
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => {
+      desktop.removeEventListener('change', closeOnDesktop);
+      dialog?.close();
+    };
+  }, [moreOpen]);
+
   return (
-    <nav
-      aria-label="Navigation mobile"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[9990] bg-[#FAF6EE]/95 backdrop-blur-xl border-t border-[#C49A3C]/25 shadow-[0_-4px_25px_rgba(196,154,60,0.1)] px-2 pt-1.5 pb-safe font-sans"
-    >
-      <div className="flex items-center justify-start mx-auto gap-1 overflow-x-auto">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-
-          return (
+    <>
+      <nav className={styles.nav} aria-label={txt('Navegação do painel', 'Dashboard navigation', 'Navigation du tableau de bord')}>
+        <div className={styles.bar}>
+          {primaryTabs.map(({ id, label, name, icon: Icon, count }) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              onTouchStart={() => handlePrefetch(tab.id)}
-              onMouseEnter={() => handlePrefetch(tab.id)}
-              className={`min-w-[64px] flex-1 shrink-0 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all relative min-h-[50px] touch-target select-none ${
-                isActive
-                  ? 'text-[#8A6A24] font-bold'
-                  : 'text-[#8A8078] hover:text-[#1A1412] font-medium'
-              }`}
+              key={id}
+              type="button"
+              className={styles.tab}
+              aria-label={count > 0 ? `${name}, ${countLabel(count)}` : name}
+              aria-current={activeTab === id ? 'page' : undefined}
+              onClick={() => setActiveTab(id)}
+              onPointerEnter={() => prefetchTab(id)}
+              onPointerDown={() => prefetchTab(id)}
+              onFocus={() => prefetchTab(id)}
             >
-              {/* Animated Floating Luxury Gold Pill */}
-              {isActive && (
-                <motion.div
-                  layoutId="activeAdminMobilePill"
-                  className="absolute inset-x-1 top-0.5 bottom-0.5 rounded-xl border border-[#C49A3C]/60 bg-gradient-to-br from-[#F5E9C8] via-[#FAF5EC] to-[#EEDBB2] shadow-[0_2px_12px_rgba(196,154,60,0.25)] -z-10"
-                  transition={{ type: 'spring', stiffness: 450, damping: 30 }}
-                />
-              )}
-
-              <div className="relative flex items-center justify-center">
-                <motion.div
-                  animate={isActive ? { scale: [1, 1.15, 1], y: -1 } : { scale: 1, y: 0 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
-                >
-                  <Icon
-                    size={21}
-                    strokeWidth={isActive ? 2.3 : 1.75}
-                    className={isActive ? 'text-[#8A6A24]' : 'text-[#8A8078]'}
-                  />
-                </motion.div>
-
-                {tab.badge !== null && (
-                  <span
-                    className={`absolute -top-1.5 -right-3 text-[10px] font-black px-1.5 py-0.2 rounded-full leading-none transition-all ${
-                      typeof tab.badge === 'string'
-                        ? (isAnalyticsUnlocked ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300')
-                        : isActive
-                        ? 'bg-gradient-to-r from-[#C49A3C] via-[#D4AF37] to-[#E8C97A] text-[#1A1412] border border-[#FFF8E7] shadow-[0_2px_8px_rgba(196,154,60,0.4)]'
-                        : 'bg-[#F5E9C8] text-[#8A6A24] border border-[#C49A3C]/30'
-                    }`}
-                  >
-                    {typeof tab.badge === 'number' && tab.badge > 99 ? '99+' : tab.badge}
-                  </span>
-                )}
-              </div>
-
-              <span
-                className={`text-[11px] mt-0.5 tracking-tight transition-colors ${
-                  isActive ? 'font-bold text-[#1A1412]' : 'font-medium text-[#7A6B5D]'
-                }`}
-              >
-                {tab.label}
-              </span>
+              <span className={styles.icon}><Icon size={26} strokeWidth={activeTab === id ? 2.2 : 1.9} aria-hidden="true" /></span>
+              <span className={styles.label}>{label}</span>
             </button>
-          );
-        })}
-      </div>
-    </nav>
+          ))}
+          <button
+            type="button"
+            className={styles.tab}
+            data-active={!!activeSecondary || moreOpen}
+            aria-label={activeSecondary ? `${moreLabel}: ${activeSecondary.label}, ${selectedLabel}` : moreLabel}
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            aria-controls={sheetId}
+            onClick={() => setMoreOpen(true)}
+          >
+            <span className={styles.icon}><MoreIcon size={26} strokeWidth={activeSecondary || moreOpen ? 2.2 : 1.9} aria-hidden="true" /></span>
+            <span className={styles.label}>{moreLabel}</span>
+          </button>
+        </div>
+      </nav>
+
+      <dialog
+        ref={dialogRef}
+        id={sheetId}
+        className={styles.sheet}
+        aria-labelledby={`${sheetId}-title`}
+        onCancel={event => { event.preventDefault(); closeMore(); }}
+        onClose={() => setMoreOpen(false)}
+        onClick={event => {
+          if (event.target !== event.currentTarget) return;
+          const bounds = event.currentTarget.getBoundingClientRect();
+          if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeMore();
+        }}
+      >
+        <div className={styles.handle} aria-hidden="true" />
+        <div className={styles.sheetHeader}>
+          <div>
+            <p className={styles.eyebrow}>Digital Clínica</p>
+            <h2 id={`${sheetId}-title`}>{txt('O seu espaço', 'Your workspace', 'Votre espace')}</h2>
+          </div>
+          <button type="button" className={styles.close} onClick={closeMore} aria-label={txt('Fechar menu', 'Close menu', 'Fermer le menu')} autoFocus><IconX size={20} /></button>
+        </div>
+
+        <div className={styles.destinations}>
+          {secondaryTabs.map(({ id, label, description, icon: Icon, count }) => (
+            <button
+              key={id}
+              type="button"
+              className={styles.destination}
+              aria-current={activeTab === id ? 'page' : undefined}
+              onClick={() => runAction(() => setActiveTab(id))}
+              onPointerEnter={() => prefetchTab(id)}
+              onPointerDown={() => prefetchTab(id)}
+              onFocus={() => prefetchTab(id)}
+            >
+              <span className={styles.destinationIcon}><Icon size={25} strokeWidth={1.9} aria-hidden="true" /></span>
+              <span className={styles.destinationText}><span className={styles.destinationLabel}>{label}
+                {count > 0 && <span className={styles.sheetCount}>{count > 99 ? '99+' : count}</span>}
+              </span><span className={styles.description}>{description}</span></span>
+              {id === 'analytics' && <span className={styles.lock} role="img" aria-label={lockLabel}>{isAnalyticsUnlocked ? <IconLockOpen size={16} /> : <IconLock size={16} />}</span>}
+              {activeTab === id ? <IconCheck size={18} className={styles.selected} aria-label={selectedLabel} /> : <IconChevronRight size={16} className={styles.chevron} aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+
+        <button type="button" className={styles.newAppointment} onClick={() => runAction(onOpenAddModal)}>
+          <IconPlus size={19} aria-hidden="true" />{txt('Nova consulta', 'New appointment', 'Nouveau rendez-vous')}
+        </button>
+        <div className={styles.utilities}>
+          <button type="button" onClick={onToggleLang} aria-label={txt('Mudar idioma', 'Switch language', 'Changer de langue')}><IconLanguage size={19} aria-hidden="true" /><span>{lang.toUpperCase()}</span></button>
+          <button type="button" onClick={() => runAction(onRefresh)} disabled={isRefreshing}><IconRefresh size={19} aria-hidden="true" /><span>{txt('Atualizar', 'Refresh', 'Actualiser')}</span></button>
+          <button type="button" onClick={() => runAction(onOpenHelpdesk)}><IconLifebuoy size={19} aria-hidden="true" /><span>{txt('Ajuda', 'Help', 'Aide')}</span></button>
+          <button type="button" onClick={() => runAction(onLogout)}><IconLogout size={19} aria-hidden="true" /><span>{txt('Sair', 'Sign out', 'Quitter')}</span></button>
+        </div>
+      </dialog>
+    </>
   );
 });

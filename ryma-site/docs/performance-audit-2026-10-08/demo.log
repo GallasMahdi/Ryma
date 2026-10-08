@@ -1,0 +1,51 @@
+
+> ryma-site@0.1.0 test:demo
+> node --test scripts/test-demo-seed.cjs scripts/test-demo-publish.cjs
+
+Building isolated demo with the current application schema and booking rules...
+Demo ready: C:\Users\User\Desktop\Ryma\ryma-site\.demo\test-cloud-39312-58fb59\ryma-demo.db
+{
+  "patients": 100,
+  "practitioners": 4,
+  "treatment_catalog": 15,
+  "appointments": 431,
+  "patient_sessions": 421,
+  "invoices": 287,
+  "prescriptions": 50,
+  "reviews": 36,
+  "resources": 3,
+  "schedule_exceptions": 3,
+  "blocked_slots": 3,
+  "clinical_session_revisions": 9,
+  "treatment_revisions": 17,
+  "whatsapp_conversations": 6
+}
+Scenario guide: C:\Users\User\Desktop\Ryma\ryma-site\.demo\test-cloud-39312-58fb59\report.json
+▶ cloud importer tested against an isolated libSQL database
+  ✔ dry run previews counts without changing any table (720.0511ms)
+  ✔ a failure after all inserts rolls back the entire import (3293.9507ms)
+  ✔ an existing clinical record prevents an import (30.7408ms)
+  ✔ import remaps identities and retains settings, clinic hours and existing reviews (3341.9092ms)
+  ✔ repeated import preserves later edits and adds no duplicate data (502.3737ms)
+✔ cloud importer tested against an isolated libSQL database (26212.0322ms)
+▶ complete demo fixture and safety boundaries
+  ✔ current schema contains every intended module with valid foreign keys (77.0682ms)
+  ✔ linked clinical history matches the appointment, patient and practitioner (5.2641ms)
+  ✔ catalogue publication, translations and historical price snapshots work (4.6361ms)
+  ✔ money, document identities and all payment states remain consistent (9.6499ms)
+  ✔ all reservations obey hours, patient, practitioner, buffer and equipment conflicts (105.466ms)
+  ✔ recurring plans, patient directory, reviews and owner analytics consume the fixture (360.4373ms)
+  ✔ demo communications are inert and inherited credentials are cleared (306.9652ms)
+  ✔ normal reruns preserve test edits without duplicating the fixture (329.2868ms)
+  ✔ active demos cannot be reset; named paths cannot escape .demo (360.1824ms)
+  ✔ unknown existing databases are refused even with --reset (248.7194ms)
+  ✔ explicit reset rebuilds the full fixture and leaves real data untouched (13052.764ms)
+✔ complete demo fixture and safety boundaries (24981.7749ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 26465.1126

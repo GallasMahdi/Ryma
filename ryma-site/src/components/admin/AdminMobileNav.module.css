@@ -1,0 +1,108 @@
+.nav {
+  position: relative;
+  z-index: 40;
+  flex-shrink: 0;
+  padding: 10px max(8px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+  background: #f8fafc;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  max-width: 640px;
+  margin-inline: auto;
+  padding: 6px;
+  border: 1px solid #34434c;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #24323c, #14212b);
+  box-shadow: 0 10px 28px -8px #13233140, 0 2px 6px #1323311a, inset 0 1px 0 #ffffff12;
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 76px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 0;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  color: #e0e6eb;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 180ms, color 180ms, border-color 180ms, transform 180ms;
+}
+
+.tab[aria-current='page'], .tab[data-active='true'] {
+  border-color: #efdbaf;
+  color: #24313b;
+  background: linear-gradient(145deg, #f8e8c6, #dfc18a);
+  box-shadow: inset 0 1px 0 #fff6e1, 0 4px 12px #00000025;
+}
+
+.icon { display: flex; justify-content: center; color: #dce3e9; }
+.label { max-width: 100%; font-size: 11px; font-weight: 650; line-height: 1.35; white-space: nowrap; letter-spacing: -.025em; }
+.tab[aria-current='page'] .icon, .tab[data-active='true'] .icon { color: #24313b; }
+.tab[aria-current='page'] .label, .tab[data-active='true'] .label { font-weight: 800; }
+.tab:active { transform: scale(.96); }
+
+.sheet {
+  position: fixed;
+  inset: auto 0 0;
+  width: min(100%, 560px);
+  max-width: 100%;
+  max-height: calc(100dvh - max(20px, env(safe-area-inset-top, 0px)));
+  margin: 0 auto;
+  padding: 10px 20px max(20px, env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #e7dfce;
+  border-bottom: 0;
+  border-radius: 30px 30px 0 0;
+  background: #fffdf8;
+  color: #302b23;
+  box-shadow: 0 -12px 60px #30271b26;
+}
+.sheet[open] { animation: sheetEnter 240ms cubic-bezier(.2,.8,.2,1); }
+.sheet::backdrop { background: #161b2690; backdrop-filter: blur(5px); }
+.handle { width: 34px; height: 4px; margin: 0 auto 18px; border-radius: 3px; background: #ded6c6; }
+.sheetHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.eyebrow { margin: 0 0 5px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .18em; color: #8a6b35; }
+.sheetHeader h2 { margin: 0; font-family: var(--font-serif); font-size: 32px; line-height: 1; font-weight: 600; letter-spacing: -.025em; }
+.close { display: grid; flex-shrink: 0; place-items: center; width: 44px; height: 44px; border: 1px solid #e9e2d5; border-radius: 50%; background: #f6f2e9; color: #766e60; cursor: pointer; }
+.destinations { display: grid; gap: 8px; }
+.destination { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 80px; padding: 12px; border: 1px solid #e1dacd; border-radius: 18px; background: #fff; color: #24313b; text-align: left; cursor: pointer; transition: background 180ms, border-color 180ms; }
+.destination[aria-current='page'] { border-color: #34434c; background: #1e2d37; color: #fffaf0; }
+.destinationIcon { display: grid; flex-shrink: 0; place-items: center; width: 48px; height: 48px; border: 1px solid #e4d6b6; border-radius: 14px; background: #f4ead4; color: #745825; }
+.destination[aria-current='page'] .destinationIcon { background: #ead4a6; border-color: #efdbaf; color: #24313b; }
+.destinationText { flex: 1; min-width: 0; }
+.destinationLabel { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; }
+.description { display: block; margin-top: 4px; color: #686254; font-size: 12px; line-height: 1.5; }
+.destination[aria-current='page'] .description { color: #d3dbe0; }
+.destination[aria-current='page'] .selected, .destination[aria-current='page'] .lock { color: #efdbaf; }
+.sheetCount { padding: 1px 6px; border-radius: 6px; background: #f1e8d5; color: #785b2c; font-size: 10px; }
+.lock { display: flex; color: #907543; }
+.selected { color: #8c6c33; flex-shrink: 0; }
+.chevron { color: #8b7957; flex-shrink: 0; }
+.newAppointment { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 52px; margin-top: 18px; padding: 12px; border: 1px solid #34434c; border-radius: 16px; background: #1e2d37; color: #f8e8c6; font-size: 14px; font-weight: 700; cursor: pointer; }
+.utilities { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #ebe5d9; }
+.utilities button { display: flex; min-width: 0; min-height: 52px; align-items: center; justify-content: center; flex-direction: column; gap: 5px; padding: 4px 0; border-radius: 12px; color: #575144; font-size: 11px; font-weight: 600; cursor: pointer; }
+.utilities button:disabled { opacity: .45; cursor: wait; }
+.tab:focus-visible { outline: 2px solid #f8e8c6; outline-offset: 2px; }
+.sheet button:focus-visible { outline: 2px solid #947039; outline-offset: 2px; }
+@media (hover: hover) {
+  .tab:hover:not([aria-current]):not([data-active='true']) { background: #ffffff12; color: #fff; }
+  .utilities button:hover { background: #f1eada; }
+  .destination:hover:not([aria-current]) { border-color: #d2bc8e; background: #fcf8ef; }
+}
+@media (min-width: 375px) { .label { font-size: 12px; } }
+@media (min-width: 640px) { .label { font-size: 13px; } }
+@media (min-width: 1024px) { .nav { display: none; } }
+@media (max-height: 540px) { .tab { min-height: 64px; gap: 5px; padding-block: 7px; } .sheetHeader { margin-bottom: 12px; } .handle { margin-bottom: 12px; } .destination { min-height: 64px; padding-block: 8px; } }
+@keyframes sheetEnter { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .sheet[open] { animation: none; } .tab, .destination { transition: none; } .tab:active { transform: none; } }

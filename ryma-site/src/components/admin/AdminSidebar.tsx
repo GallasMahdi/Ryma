@@ -117,7 +117,7 @@ export const AdminSidebar = React.memo(function AdminSidebar({
 
   return (
     <aside
-      className={`bg-[#FAFAF9] border-e border-[#E2E8F0] hidden md:flex flex-col justify-between shrink-0 z-20 select-none font-sans transition-all duration-300 ease-in-out ${
+      className={`bg-[#FAFAF9] border-e border-[#E2E8F0] hidden lg:flex flex-col justify-between shrink-0 z-20 select-none font-sans transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-[72px] p-2.5' : 'w-64 p-3.5'
       }`}
     >

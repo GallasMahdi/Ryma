@@ -51,7 +51,7 @@ export const AdminHeader = React.memo(function AdminHeader({
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   return (
-    <header className="h-14 md:h-16 bg-white border-b border-[#E2E8F0] px-3.5 sm:px-5 md:px-6 flex items-center justify-between shrink-0 z-30 sticky top-0 font-sans gap-3">
+    <header className="min-h-16 bg-[#FFFDF8] lg:bg-white border-b border-[#E8E1D3] lg:border-[#E2E8F0] px-3.5 sm:px-5 lg:px-6 flex items-center justify-between shrink-0 z-30 sticky top-0 font-sans gap-3 pt-[env(safe-area-inset-top,0px)]">
       {/* Brand & Status */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {onToggleSidebar && (
@@ -63,7 +63,7 @@ export const AdminHeader = React.memo(function AdminHeader({
                 ? txt('Agrandir la barre latérale (Ctrl+B)', 'Expand sidebar (Ctrl+B)', 'Expandir menu lateral (Ctrl+B)')
                 : txt('Réduire la barre latérale (Ctrl+B)', 'Collapse sidebar (Ctrl+B)', 'Recolher menu lateral (Ctrl+B)')
             }
-            className="hidden md:flex items-center justify-center p-2 rounded-xl border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] active:scale-95 transition-all touch-target shrink-0"
+            className="hidden lg:flex items-center justify-center p-2 rounded-xl border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] active:scale-95 transition-all touch-target shrink-0"
             aria-label="Toggle sidebar drawer"
           >
             {isSidebarCollapsed ? (
@@ -137,8 +137,8 @@ export const AdminHeader = React.memo(function AdminHeader({
           <button
             type="button"
             onClick={onOpenCommandPalette}
-            className="xl:hidden p-2 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors"
-            aria-label="Search command palette"
+            className="xl:hidden p-2.5 rounded-xl border border-[#E8E1D3] text-[#766E60] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors touch-target flex items-center justify-center"
+            aria-label={txt('Rechercher', 'Search', 'Pesquisar')}
           >
             <IconSearch size={16} />
           </button>
@@ -160,7 +160,7 @@ export const AdminHeader = React.memo(function AdminHeader({
           <button
             type="button"
             onClick={onOpenHelpdesk}
-            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-[#C49A3C]/40 bg-[#FAFAF8] text-[#9A7428] hover:bg-[#C49A3C]/10 hover:text-[#1A1412] transition-colors shadow-2xs"
+            className="hidden lg:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-[#C49A3C]/40 bg-[#FAFAF8] text-[#9A7428] hover:bg-[#C49A3C]/10 hover:text-[#1A1412] transition-colors shadow-2xs"
             title={txt('Assistance & Helpdesk Clinique', 'Clinic Support & Helpdesk', 'Suporte Técnico & Helpdesk')}
           >
             <IconLifebuoy size={15} className="text-[#C49A3C]" />
@@ -173,7 +173,7 @@ export const AdminHeader = React.memo(function AdminHeader({
           onClick={onRefresh}
           disabled={loadingAppointments}
           title={txt('Actualiser', 'Refresh', 'Atualizar')}
-          className="p-2 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] active:scale-95 transition-all touch-target flex items-center justify-center"
+          className="p-2 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] active:scale-95 transition-all touch-target hidden lg:flex items-center justify-center"
         >
           <IconRefresh
             size={16}
@@ -199,7 +199,7 @@ export const AdminHeader = React.memo(function AdminHeader({
         <button
           onClick={onOpenAddModal}
           aria-label={txt('Nouveau RDV', 'New appointment', 'Nova Consulta')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs shadow-xs hover:shadow transition-all touch-target"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl lg:rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs shadow-xs hover:shadow transition-all touch-target"
         >
           <IconPlus size={16} />
           <span className="hidden xs:inline sm:inline">
@@ -207,13 +207,13 @@ export const AdminHeader = React.memo(function AdminHeader({
           </span>
         </button>
 
-        <div className="h-4 w-px bg-[#E2E8F0] mx-0.5 sm:mx-1" />
+        <div className="hidden lg:block h-4 w-px bg-[#E2E8F0] mx-1" />
 
         {/* Public Website Link (Desktop) */}
         <Link
           href="/"
           target="_blank"
-          className="hidden md:inline-flex items-center gap-1 text-xs text-[#64748B] hover:text-[#0F172A] px-2 py-1.5 rounded-lg hover:bg-[#F8FAFC] transition-colors font-medium"
+          className="hidden lg:inline-flex items-center gap-1 text-xs text-[#64748B] hover:text-[#0F172A] px-2 py-1.5 rounded-lg hover:bg-[#F8FAFC] transition-colors font-medium"
           title={txt('Voir le site public', 'View public website', 'Ver site público')}
         >
           <span>{txt('Site', 'Site', 'Site')}</span>
@@ -223,7 +223,7 @@ export const AdminHeader = React.memo(function AdminHeader({
         {/* Language Switch */}
         <button
           onClick={toggleLang}
-          className="text-xs px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] text-[#334155] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors font-semibold uppercase touch-target flex items-center justify-center"
+          className="text-xs px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] text-[#334155] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors font-semibold uppercase touch-target hidden lg:flex items-center justify-center"
           title={txt('Changer de langue', 'Switch language', 'Mudar idioma')}
         >
           {lang}
@@ -232,7 +232,7 @@ export const AdminHeader = React.memo(function AdminHeader({
         {/* Logout (Desktop & Tablet) */}
         <button
           onClick={onLogout}
-          className="hidden sm:inline-flex items-center gap-1 text-xs text-[#991B1B] hover:text-[#7F1D1D] px-2.5 py-1.5 rounded-lg hover:bg-[#FEE2E2]/50 transition-colors font-medium"
+          className="hidden lg:inline-flex items-center gap-1 text-xs text-[#991B1B] hover:text-[#7F1D1D] px-2.5 py-1.5 rounded-lg hover:bg-[#FEE2E2]/50 transition-colors font-medium"
           title={txt('Déconnexion', 'Sign Out', 'Terminar Sessão')}
         >
           <IconLock size={14} />

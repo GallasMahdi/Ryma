@@ -19,7 +19,7 @@ interface StatsProps {
   confirmed: number;
   pending: number;
   completed: number;
-  revenue: number;
+  revenue?: number;
 }
 
 interface AdminKpiCardsProps {
@@ -143,7 +143,8 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
       label: isAnalyticsUnlocked
         ? txt('Revenu Estimé', 'Est. Revenue', 'Receita Estimada')
         : txt('Revenu (Propriétaire)', 'Revenue (Owner)', 'Receita (Proprietário)'),
-      value: isAnalyticsUnlocked ? stats.revenue : '•••• €',
+      // The cached admin response omits revenue until an owner-authorized refresh.
+      value: isAnalyticsUnlocked ? (stats.revenue ?? '—') : '•••• €',
       badge: isAnalyticsUnlocked
         ? txt('Déverrouillé', 'Unlocked', 'Desbloqueado')
         : txt('Verrouillé', 'Locked', 'Bloqueado'),

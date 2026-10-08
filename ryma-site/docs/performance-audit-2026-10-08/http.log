@@ -1,0 +1,32 @@
+/: median 38.4 ms, max 115.2 ms, 233761 bytes
+/a-propos: median 28.7 ms, max 52.2 ms, 123407 bytes
+/services: median 30.5 ms, max 40.6 ms, 163863 bytes
+/services/reeducation-posturale: median 29 ms, max 39.2 ms, 146896 bytes
+/tarifs: median 17.6 ms, max 40.3 ms, 132056 bytes
+/avis: median 20.3 ms, max 44.6 ms, 105012 bytes
+/contact: median 18.3 ms, max 39.1 ms, 108701 bytes
+/rendez-vous: median 17.8 ms, max 56.4 ms, 151141 bytes
+/blog: median 16.9 ms, max 29.5 ms, 126380 bytes
+/mentions-legales: median 17.2 ms, max 47.3 ms, 103160 bytes
+/confidentialite: median 17.1 ms, max 34.6 ms, 104474 bytes
+/conditions-utilisation: median 17 ms, max 27.8 ms, 102714 bytes
+/admin/login: median 17.3 ms, max 27.1 ms, 73517 bytes
+/api/health: median 15.8 ms, max 17.8 ms, 239 bytes
+/api/treatments: median 16.4 ms, max 17.7 ms, 31028 bytes
+/api/practitioners: median 16.3 ms, max 19.2 ms, 451 bytes
+/api/reviews: median 14.4 ms, max 21.6 ms, 6997 bytes
+/api/slots?date=2026-10-15&service=reeducation-posturale: median 15.8 ms, max 23.5 ms, 3647 bytes
+/admin: median 17 ms, max 54.6 ms, 62581 bytes
+/api/admin/me: median 16.5 ms, max 18 ms, 186 bytes
+/api/admin/appointments?summary=1&page=1&limit=10: median 14.6 ms, max 20 ms, 9582 bytes
+/api/admin/patients?directory=1&page=1&limit=10: median 16.8 ms, max 50 ms, 6166 bytes
+/api/admin/invoices?page=1&limit=10: median 16.1 ms, max 23.8 ms, 9365 bytes
+/api/admin/reviews: median 16.3 ms, max 18.3 ms, 14845 bytes
+/api/admin/practitioners: median 16.3 ms, max 19.8 ms, 48715 bytes
+/api/admin/treatments?catalogueOnly=1: median 15.8 ms, max 24.9 ms, 37806 bytes
+/api/admin/slots?date=2026-10-15: median 17.5 ms, max 25.9 ms, 4663 bytes
+/api/admin/analytics?range=30d&lang=pt: median 25.2 ms, max 33.9 ms, 6163 bytes
+PHASE steady-4: 1066 reads, p95 39.1 ms, max 79.6 ms, errors 0
+PHASE burst-12: 1581 reads, p95 50.7 ms, max 125.1 ms, errors 0
+PHASE recovery-4: 539 reads, p95 35.4 ms, max 58.5 ms, errors 0
+PHASE soak-4: 2128 reads, p95 40.4 ms, max 188.4 ms, errors 0

@@ -1,0 +1,44 @@
+
+> ryma-site@0.1.0 test:dashboard
+> node scripts/audit-dashboard.cjs
+
+PASS calendar validation rejects rollover dates and accepts leap dates
+PASS absolute eight-hour session expiry cannot be renewed by resealing
+PASS every protected admin read rejects unauthenticated requests
+PASS expired cookie rejected by admin and owner verification
+PASS revoked sessions cannot unlock owner analytics
+PASS admin access alone does not authorize owner exports
+PASS JSON null rejected across mutation endpoints
+PASS repeat booking preserves clinical profile and legacy note
+PASS saving notes preserves omitted patient profile fields
+PASS explicitly clearing coverage is respected
+PASS invalid calendar dates and arbitrary time slots cannot be booked
+PASS clinical session and calendar appointment commit together
+PASS concurrent session writers cannot leave orphan clinical records
+PASS recurring plan records share a deletion-safe appointment link
+PASS recurring plan cannot attach sessions to another patient id
+PASS database guards block reschedules into blocked slots and blocks over bookings
+PASS bulk blocking rejects invalid actions, times and truncated ranges
+PASS invalid pagination falls back to finite values
+PASS invoice updates validate enums and cannot bypass owner cancellation
+PASS payment date is stable for PAID and cleared for PENDING
+PASS cancelled invoices cannot be reactivated by ordinary updates
+PASS review and prescription payloads fail validation before DB writes
+PASS SSE cancellation releases listener and revoked sessions receive no events
+PASS concurrent invoice retries create exactly one financial record
+PASS analytics sums real payments on the payment date and preserves cents
+PASS Lisbon day boundaries account for summer time
+PASS duplicate recurrence preview is rejected
+PASS real login creates a usable session and wrong passwords fail
+PASS prescription create, patient lookup, and deletion complete
+PASS review moderation and removal persist
+PASS owner unlock enables analytics and CSV exports, locking revokes access
+PASS logout clears cookie and invalidates a replayed session
+PASS owner password rotation revokes all existing owner grants
+[AUTH CONFIGURATION] Production requires valid configured credentials: SESSION_SECRET.
+PASS production rejects shared defaults and accepts unique fixture credentials
+PASS missing owner fallback does not disable configured admin credentials
+[AUTH CONFIGURATION] Production requires valid configured credentials: ADMIN_PASSWORD_HASH.
+PASS production accepts explicitly configured admin and owner passwords without enabling fallback credentials
+
+36 dashboard regression checks passed. No live database or email used.

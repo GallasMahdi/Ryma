@@ -1,0 +1,11 @@
+✔ owner unlock safely renders cached redacted revenue while the refresh is pending (37.5645ms)
+✔ refreshed revenue displays real zero and nonzero amounts (11.1995ms)
+✔ locking owner access hides a cached revenue value immediately (6.1142ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 938.9816

@@ -222,7 +222,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
               )}
             </div>
             <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">
-              {effectiveStats?.countTotal ?? 0} {txt('documents émis', 'issued invoices', 'documentos emitidos')}
+              {effectiveStats?.countTotal ?? '—'} {txt('documents émis', 'issued invoices', 'documentos emitidos')}
             </p>
           </div>
         </div>
@@ -253,7 +253,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
                 : '•••• €'}
             </p>
             <p className="text-[10px] text-emerald-600 mt-0.5 font-medium">
-              {effectiveStats?.countPaid ?? 0} {txt('reçus réglés', 'paid receipts', 'recibos quitados')}
+              {effectiveStats?.countPaid ?? '—'} {txt('reçus réglés', 'paid receipts', 'recibos quitados')}
             </p>
           </div>
         </div>
@@ -284,7 +284,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
                 : '•••• €'}
             </p>
             <p className="text-[10px] text-amber-600 mt-0.5 font-medium">
-              {effectiveStats?.countPending ?? 0} {txt('factures en attente', 'pending invoices', 'faturas pendentes')}
+              {effectiveStats?.countPending ?? '—'} {txt('factures en attente', 'pending invoices', 'faturas pendentes')}
             </p>
           </div>
         </div>

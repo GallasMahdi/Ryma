@@ -357,6 +357,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     setAnalyticsExpiresAt(expiresAt);
     setIsOwnerAuthModalOpen(false);
     fetchServerAnalytics();
+    fetchAppointments(true);
     fetchInvoices();
     addToast({
       type: 'success',
@@ -452,7 +453,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   const appointmentQuery = useRef('page=1&limit=10');
   const appointmentRequest = useRef(0);
   const [appointmentTotal, setAppointmentTotal] = useState(0);
-  const [appointmentStats, setAppointmentStats] = useState({total: 0, confirmed: 0, pending: 0, cancelled: 0, completed: 0, noShow: 0, revenue: 0});
+  const [appointmentStats, setAppointmentStats] = useState({total: 0, confirmed: 0, pending: 0, cancelled: 0, completed: 0, noShow: 0, revenue: undefined as number | undefined});
   const fetchAppointments = useCallback(async (isSilent = false, showLoading = false) => {
     if (!isSilent || showLoading) {
       setLoadingAppointments(prev => prev || showLoading || appointmentsRef.current.length === 0);
@@ -1271,7 +1272,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       />
 
       {/* Main Body */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-h-0 min-w-0 overflow-hidden">
         <AdminSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -1287,7 +1288,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
           onOpenHelpdesk={() => setIsHelpdeskOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8 touch-pan-y">
+        <main className="flex-1 min-w-0 overflow-y-auto overscroll-contain p-3.5 sm:p-5 lg:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 touch-pan-y">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             {(activeTab === 'appointments' || activeTab === 'slots') && <div className="max-w-md"><PractitionerSelect admin allowAny="all" lang={lang} value={schedulePractitioner} onChange={setSchedulePractitioner} /></div>}
             {activeTab === 'treatments' && <TreatmentsTab lang={lang} />}
@@ -1461,17 +1462,22 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (< 768px) */}
+      {/* App navigation stays in the layout, so it never covers page content. */}
       <AdminMobileNav
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         lang={lang}
         totalAppointments={stats.total}
-        totalNotes={Math.max(patientsList.length, patientNotes.length)}
-        totalInvoices={invoices.length}
+        totalNotes={recordCounts.patients}
+        totalInvoices={recordCounts.invoices}
         totalReviews={reviews.length}
         isAnalyticsUnlocked={isAnalyticsUnlocked}
         onOpenAddModal={() => setIsAddModalOpen(true)}
+        onToggleLang={toggleLang}
+        onRefresh={() => fetchAppointments(false)}
+        isRefreshing={loadingAppointments || isGlobalBusy}
+        onOpenHelpdesk={() => setIsHelpdeskOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Add Appointment Modal / Bottom Sheet */}

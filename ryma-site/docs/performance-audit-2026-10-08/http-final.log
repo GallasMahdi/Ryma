@@ -1,0 +1,32 @@
+/: median 31.2 ms, max 165.3 ms, 233761 bytes
+/a-propos: median 26.2 ms, max 33.7 ms, 123407 bytes
+/services: median 29.1 ms, max 36.3 ms, 163863 bytes
+/services/reeducation-posturale: median 29.9 ms, max 38.2 ms, 146896 bytes
+/tarifs: median 17 ms, max 36.5 ms, 132056 bytes
+/avis: median 16.2 ms, max 26.7 ms, 105012 bytes
+/contact: median 16.3 ms, max 24.6 ms, 108701 bytes
+/rendez-vous: median 29.9 ms, max 40.6 ms, 151141 bytes
+/blog: median 25.9 ms, max 37.7 ms, 126380 bytes
+/mentions-legales: median 16.7 ms, max 27.8 ms, 103160 bytes
+/confidentialite: median 16.5 ms, max 29.4 ms, 104474 bytes
+/conditions-utilisation: median 17.6 ms, max 30.5 ms, 102714 bytes
+/admin/login: median 20.7 ms, max 29.5 ms, 73517 bytes
+/api/health: median 15.6 ms, max 22.5 ms, 239 bytes
+/api/treatments: median 15.4 ms, max 18.4 ms, 31028 bytes
+/api/practitioners: median 15.4 ms, max 18.5 ms, 451 bytes
+/api/reviews: median 14.4 ms, max 22.5 ms, 6997 bytes
+/api/slots?date=2026-10-15&service=reeducation-posturale: median 13.9 ms, max 26 ms, 3647 bytes
+/admin: median 22.1 ms, max 47.3 ms, 62581 bytes
+/api/admin/me: median 14.3 ms, max 17.6 ms, 186 bytes
+/api/admin/appointments?summary=1&page=1&limit=10: median 15.4 ms, max 17.7 ms, 9582 bytes
+/api/admin/patients?directory=1&page=1&limit=10: median 15.3 ms, max 22.3 ms, 6166 bytes
+/api/admin/invoices?page=1&limit=10: median 15.6 ms, max 20.1 ms, 9365 bytes
+/api/admin/reviews: median 15.3 ms, max 24.3 ms, 14845 bytes
+/api/admin/practitioners: median 16.2 ms, max 27.5 ms, 48715 bytes
+/api/admin/treatments?catalogueOnly=1: median 14.7 ms, max 21.4 ms, 37806 bytes
+/api/admin/slots?date=2026-10-15: median 15.8 ms, max 23.8 ms, 4663 bytes
+/api/admin/analytics?range=30d&lang=pt: median 29.9 ms, max 31.5 ms, 6163 bytes
+PHASE steady-4: 1049 reads, p95 42.3 ms, max 182.5 ms, errors 0
+PHASE burst-12: 1538 reads, p95 64.7 ms, max 473.7 ms, errors 0
+PHASE recovery-4: 531 reads, p95 42.3 ms, max 77.1 ms, errors 0
+PHASE soak-4: 2130 reads, p95 38.3 ms, max 121.3 ms, errors 0
