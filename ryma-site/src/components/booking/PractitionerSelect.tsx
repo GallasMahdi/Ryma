@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Lang } from '@/lib/i18n';
 import type { Practitioner, PractitionerService } from '@/types/scheduling';
+import { readAdminJson } from '@/lib/admin-read';
 
 export function PractitionerSelect({value,onChange,service,lang,admin=false,allowAny='earliest',onReady,onName}:{
   value:string; onChange:(value:string)=>void; service?:string; lang:Lang; admin?:boolean;
@@ -13,8 +14,7 @@ export function PractitionerSelect({value,onChange,service,lang,admin=false,allo
   useEffect(()=>{const refresh=()=>setReload(n=>n+1);window.addEventListener('ryma_schedule_changed',refresh);return()=>window.removeEventListener('ryma_schedule_changed',refresh);},[]);
   useEffect(()=>{
     const controller=new AbortController();setLoading(true);setError(false);callbacks.current.onReady?.(false);
-    fetch(admin?'/api/admin/practitioners':`/api/practitioners${service?'?service='+encodeURIComponent(service):''}`,{cache:'no-store',signal:controller.signal})
-      .then(async r=>{if(!r.ok)throw Error();return r.json();})
+    (admin ? readAdminJson<{practitioners:Practitioner[];services:PractitionerService[]}>('/api/admin/practitioners',30000) : fetch(`/api/practitioners${service?'?service='+encodeURIComponent(service):''}`,{cache:'no-store',signal:controller.signal}).then(async r=>{if(!r.ok)throw Error();return r.json();}))
       .then(data=>{
         if(controller.signal.aborted)return;
         const list:Practitioner[]=admin?data.practitioners.filter((p:Practitioner)=>(allowAny==='all'||p.active)&&(!service||data.services.some((s:PractitionerService)=>s.practitionerId===p.id&&s.service===service))):data.practitioners;

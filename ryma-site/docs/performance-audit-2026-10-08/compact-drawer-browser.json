@@ -1,0 +1,61 @@
+{
+  "sizes": [
+    {
+      "width": 320,
+      "height": 568,
+      "sheet": {
+        "bottom": 568.0000381469727,
+        "clientHeight": 526,
+        "height": 526.6000366210938,
+        "scrollHeight": 526,
+        "top": 41.400001525878906,
+        "width": 320
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "sheet": {
+        "bottom": 844.0000305175781,
+        "clientHeight": 526,
+        "height": 526.6000366210938,
+        "scrollHeight": 526,
+        "top": 317.3999938964844,
+        "width": 390.3999938964844
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "sheet": {
+        "bottom": 1024.000030517578,
+        "clientHeight": 526,
+        "height": 526.6000366210938,
+        "scrollHeight": 526,
+        "top": 497.3999938964844,
+        "width": 520
+      }
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "sheet": {
+        "bottom": 390.3999938964844,
+        "clientHeight": 370,
+        "height": 370.3999938964844,
+        "scrollHeight": 506,
+        "top": 20,
+        "width": 520
+      }
+    }
+  ],
+  "desktopResizeCloses": true,
+  "checks": [
+    "Initial agenda rendered",
+    "Next/previous day rendered",
+    "PT/EN/FR language switching",
+    "Appointment refresh",
+    "Availability tab and active-tab refresh"
+  ],
+  "consoleErrors": []
+}

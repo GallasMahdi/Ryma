@@ -7,6 +7,7 @@ import type { SchedulingConfiguration } from '@/types/scheduling';
 import { copyFor, iconButton, panelClass, primaryButton, secondaryButton, Tabs, TeamSaveError, type SaveTeam } from './team/team-ui';
 import { ClinicEditor, ExceptionEditor, PractitionerEditor, ResourceEditor, type EditorKind, type EditorState } from './team/TeamEditors';
 import { ClinicOverview, ExceptionsOverview, lisbonToday, ResourcesOverview, TeamRoster } from './team/TeamOverview';
+import { readAdminJson } from '@/lib/admin-read';
 
 type Section = 'team' | 'clinic' | 'exceptions' | 'resources';
 
@@ -16,19 +17,21 @@ export function PractitionersTab({lang}: {lang: Lang}) {
   const [section,setSection] = useState<Section>('team'), [editor,setEditor] = useState<EditorState | null>(null), [refreshing,setRefreshing] = useState(false);
   const saveLock = useRef(false);
   const read = useCallback(async () => {
-    const response = await fetch('/api/admin/practitioners',{cache:'no-store'});
-    if (!response.ok) throw new Error(response.status === 401 ? 'AUTH' : 'LOAD');
-    return await response.json() as SchedulingConfiguration;
+    return readAdminJson<SchedulingConfiguration>('/api/admin/practitioners');
   },[]);
   const loadMessage = useCallback((failure: unknown) => {
     const t = copyFor(lang);
     return failure instanceof Error && failure.message === 'AUTH' ? t('A sessão expirou. Atualize a página para iniciar sessão novamente.','Your session expired. Refresh the page to sign in again.','Votre session a expiré. Actualisez la page pour vous reconnecter.') : t('Não foi possível carregar a equipa. Verifique a ligação e tente novamente.','Unable to load your team. Check your connection and try again.','Impossible de charger l’équipe. Vérifiez votre connexion et réessayez.');
   },[lang]);
+  const loadMessageRef = useRef(loadMessage);
+  loadMessageRef.current = loadMessage;
   useEffect(() => {
     let active = true;
-    read().then(data => {if (active) {setConfig(data);setError('');}}).catch(failure => {if (active) setError(loadMessage(failure));});
-    return () => {active = false;};
-  },[read,loadMessage]);
+    const update = () => {void read().then(data => {if (active) {setConfig(data);setError('');}}).catch(failure => {if (active) setError(loadMessageRef.current(failure));});};
+    update();
+    window.addEventListener('ryma_schedule_changed',update);
+    return () => {active = false;window.removeEventListener('ryma_schedule_changed',update);};
+  },[read]);
   useEffect(() => { if (!notice) return; const timeout = setTimeout(() => setNotice(''),7000); return () => clearTimeout(timeout); },[notice]);
   const refresh = async () => {
     if (refreshing) return;

@@ -7,6 +7,7 @@ import { formatMinute } from '@/types/scheduling';
 import { practitionerIntervals } from '@/lib/schedule-math';
 import { clockMinutes } from '@/lib/booking-schedule';
 import { type Appointment, STATUS_CONFIG } from '@/types/admin';
+import { readAdminJson } from '@/lib/admin-read';
 
 export function TeamDayAgenda({date,appointments,practitionerId,onSelect,lang}:{date:string;appointments:Appointment[];practitionerId?:string;onSelect:(a:Appointment)=>void;lang:Lang}) {
   const { getServiceName } = useServiceLabels();
@@ -14,12 +15,12 @@ export function TeamDayAgenda({date,appointments,practitionerId,onSelect,lang}:{
   const [blocksError,setBlocksError]=useState(false),[blocksDate,setBlocksDate]=useState('');
   const [configuration,setConfiguration]=useState<SchedulingConfiguration|null>(null),[error,setError]=useState(false),[reload,setReload]=useState(0);
   useEffect(()=>{
-    const controller=new AbortController();setBlocks([]);setBlocksDate('');setBlocksError(false);
-    fetch('/api/admin/slots?date='+date,{signal:controller.signal,cache:'no-store'}).then(async r=>{if(!r.ok)throw Error();return r.json();}).then(d=>{if(controller.signal.aborted)return;if(!Array.isArray(d.blocks))throw Error();setBlocks(d.blocks);setBlocksDate(date);}).catch(()=>{if(!controller.signal.aborted)setBlocksError(true);});
+    const controller=new AbortController();setBlocksError(false);
+    readAdminJson<{blocks:typeof blocks}>('/api/admin/slots?date='+date,15000).then(d=>{if(controller.signal.aborted)return;if(!Array.isArray(d.blocks))throw Error();setBlocks(d.blocks);setBlocksDate(date);}).catch(()=>{if(!controller.signal.aborted)setBlocksError(true);});
     return()=>controller.abort();
-  },[date,appointments,reload]);
+  },[date,reload]);
   useEffect(()=>{const update=()=>setReload(n=>n+1);window.addEventListener('ryma_schedule_changed',update);return()=>window.removeEventListener('ryma_schedule_changed',update);},[]);
-  useEffect(()=>{const controller=new AbortController();setError(false);fetch('/api/admin/practitioners',{cache:'no-store',signal:controller.signal}).then(async r=>{if(!r.ok)throw Error();return r.json();}).then(data=>{if(!controller.signal.aborted)setConfiguration(data);}).catch(()=>{if(!controller.signal.aborted)setError(true);});return()=>controller.abort();},[reload,appointments]);
+  useEffect(()=>{const controller=new AbortController();setError(false);readAdminJson<SchedulingConfiguration>('/api/admin/practitioners',30000).then(data=>{if(!controller.signal.aborted)setConfiguration(data);}).catch(()=>{if(!controller.signal.aborted)setError(true);});return()=>controller.abort();},[reload]);
   const txt=(pt:string,en:string,fr:string)=>lang==='pt'?pt:lang==='fr'?fr:en;
   if(error||blocksError)return <button type="button" onClick={()=>setReload(n=>n+1)} className="rounded-xl border p-4 text-sm text-red-700">{txt('Falha ao carregar. Tentar novamente.','Could not load the agenda. Retry.','Chargement impossible. Réessayer.')}</button>;
   if(!configuration||blocksDate!==date)return <p role="status" className="p-4 text-sm">{txt('A carregar agenda…','Loading agenda…','Chargement de l’agenda…')}</p>;

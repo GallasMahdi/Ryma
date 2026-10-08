@@ -5,6 +5,7 @@ import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
 import { TreatmentsTab } from '@/components/admin/TreatmentsTab';
 import { PractitionersTab } from '@/components/admin/PractitionersTab';
 import { bookingRequestKey } from '@/lib/booking-request';
+import { readAdminJson, invalidateAdminReads } from '@/lib/admin-read';
 
 import React, { useState, useMemo, useEffect, useCallback, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,7 +52,9 @@ const OwnerAuthModal = dynamic(() => import('@/components/admin/OwnerAuthModal')
 const ChangeOwnerPasswordModal = dynamic(() => import('@/components/admin/ChangeOwnerPasswordModal').then(m => m.ChangeOwnerPasswordModal));
 
 async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
+  if (!opts || !opts.method || opts.method.toUpperCase() === 'GET') return readAdminJson<T>(url);
   const res = await fetch(url, { ...opts, credentials: 'same-origin', cache: 'no-store' });
+  invalidateAdminReads();
   if (res.status === 401) {
     window.location.href = '/admin/login';
     throw new Error('Sessão expirada. A redirecionar...');
@@ -177,7 +180,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   const [loadingSlots, setLoadingSlots] = useState(false);
 
   // In-memory slot cache & abort controller for zero-freeze switching
-  const slotCacheRef = useRef<Record<string, SlotInfo[]>>({});
+  const slotCacheRef = useRef<Record<string, { slots: SlotInfo[]; at: number }>>({});
   const slotAbortRef = useRef<AbortController | null>(null);
 
   // Patient notes & structured EMR state
@@ -353,6 +356,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   }, [analyticsExpiresAt]);
 
   const handleOwnerAuthSuccess = (expiresAt: number) => {
+    invalidateAdminReads();
     setIsAnalyticsUnlocked(true);
     setAnalyticsExpiresAt(expiresAt);
     setIsOwnerAuthModalOpen(false);
@@ -451,10 +455,14 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   useEffect(() => { appointmentsRef.current = appointments; }, [appointments]);
 
   const appointmentQuery = useRef('page=1&limit=10');
+  const appointmentQueryReady = useRef(false);
   const appointmentRequest = useRef(0);
   const [appointmentTotal, setAppointmentTotal] = useState(0);
   const [appointmentStats, setAppointmentStats] = useState({total: 0, confirmed: 0, pending: 0, cancelled: 0, completed: 0, noShow: 0, revenue: undefined as number | undefined});
+  const appointmentContext = useRef({lang, handleNewIncomingAppointment, schedulePractitioner});
+  appointmentContext.current = {lang, handleNewIncomingAppointment, schedulePractitioner};
   const fetchAppointments = useCallback(async (isSilent = false, showLoading = false) => {
+    const {lang, handleNewIncomingAppointment, schedulePractitioner} = appointmentContext.current;
     if (!isSilent || showLoading) {
       setLoadingAppointments(prev => prev || showLoading || appointmentsRef.current.length === 0);
     }
@@ -506,9 +514,10 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     } finally {
       if (request === appointmentRequest.current) setLoadingAppointments(false);
     }
-  }, [lang, handleNewIncomingAppointment, schedulePractitioner]);
+  }, []);
 
   const setAppointmentQuery = useCallback((query: string) => {
+    appointmentQueryReady.current = true;
     appointmentQuery.current = query;
     void fetchAppointments(true, true);
   }, [fetchAppointments]);
@@ -537,19 +546,18 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   // ── Fetch invoices & tax receipts ──────────────────────────────────────────
   const fetchInvoices = useCallback(async () => {
     setLoadingInvoices(true);
+    const request = ++invoiceRequest.current;
     try {
-      const request = ++invoiceRequest.current;
       const data = await apiFetch<{ invoices: Invoice[]; stats: InvoiceStats | null; total: number;financialReviewRequired?:boolean }>('/api/admin/invoices?' + invoiceQuery.current);
       if (request !== invoiceRequest.current) return;
       setInvoiceTotal(data.total);
       setInvoices(data.invoices ?? []);
       setInvoiceStats(data.stats ?? null);
       setFinancialReviewRequired(!!data.financialReviewRequired);
-      void fetchAdminMetadata();
     } catch (err) {
       console.warn('[Invoices Fetch Error]:', err);
     } finally {
-      setLoadingInvoices(false);
+      if (request === invoiceRequest.current) setLoadingInvoices(false);
     }
   }, []);
 
@@ -576,8 +584,10 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   }, []);
 
   const handleInvoiceCreated = useCallback((newInv: Invoice) => {
+    invalidateAdminReads();
     setInvoices(prev => [newInv, ...prev]);
     fetchInvoices();
+    void fetchAdminMetadata();
     addToast({
       type: 'success',
       title: lang === 'pt' ? 'Fatura-Recibo Emitida' : 'Invoice Created',
@@ -633,6 +643,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       await apiFetch(`/api/admin/invoices/${id}`, { method: 'DELETE' });
       setInvoices(prev => prev.filter(inv => inv.id !== id));
       fetchInvoices();
+      void fetchAdminMetadata();
       addToast({
         type: 'success',
         title: lang === 'pt' ? 'Recibo Anulado' : 'Invoice Voided',
@@ -648,10 +659,13 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   }, [addToast, fetchInvoices, lang]);
 
   // ── Server-Sent Events (SSE) Live Real-Time Stream ──────────────────────────
+  const liveContext = useRef({handleNewIncomingAppointment, getServiceName, lang});
+  liveContext.current = {handleNewIncomingAppointment, getServiceName, lang};
   useEffect(() => {
     let eventSource: EventSource | null = null;
     let reconnectTimer: NodeJS.Timeout | null = null;
     let isUnmounted = false;
+    let hasConnected = false;
 
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     const scheduleRefresh = () => {
@@ -669,7 +683,11 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
         eventSource.addEventListener('connected', () => {
           if (!isUnmounted) setIsLiveConnected(true);
-          scheduleRefresh();
+          if (hasConnected) {
+            scheduleRefresh();
+            window.dispatchEvent(new Event('ryma_schedule_changed'));
+          }
+          hasConnected = true;
         });
 
         eventSource.addEventListener('appointments:changed', () => {scheduleRefresh();window.dispatchEvent(new Event('ryma_schedule_changed'));});
@@ -680,7 +698,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
             const appt: Appointment = parsed.data;
             if (appt && appt.id) {
               scheduleRefresh();
-              handleNewIncomingAppointment(appt, false);
+              liveContext.current.handleNewIncomingAppointment(appt, false);
               setAnalyticsRefreshTrigger(prev => prev + 1);
             }
           } catch { /* silent */ }
@@ -700,6 +718,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                 slotCacheRef.current = {};
 
                 // Display EXACTLY 1 consolidated toast for the entire batch
+                const {getServiceName, lang} = liveContext.current;
                 const svcName = getServiceName(service || newAppts[0].service, lang);
                 const toastTitle =
                   lang === 'fr'
@@ -776,7 +795,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       if (eventSource) eventSource.close();
       if (reconnectTimer) clearTimeout(reconnectTimer);
     };
-  }, [handleNewIncomingAppointment, fetchAppointments, fetchAdminMetadata, getServiceName]);
+  }, [fetchAppointments, fetchAdminMetadata]);
 
   // Ref to track live connection status without making it a useEffect dependency
   const isLiveConnectedRef = useRef(isLiveConnected);
@@ -787,7 +806,9 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   // polling interval dynamically adjusts without tearing down/re-mounting this whole effect.
   useEffect(() => {
     // 1. Critical initial data: Appointments & Metadata for immediate display
-    fetchAppointments(false);
+    // The mounted appointment view supplies its real day/week query immediately.
+    // Avoid racing it with an unused generic page request during initial mount.
+    if (activeTab !== 'appointments' || appointmentQueryReady.current) fetchAppointments(false);
     fetchAdminMetadata();
 
     // 3. Preload secondary tab bundles & drawers during idle time to eliminate chunk download delay
@@ -818,6 +839,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       if (now - lastPollAt >= minInterval) {
         lastPollAt = now;
         fetchAppointments(true);
+        if (!isLiveConnectedRef.current) window.dispatchEvent(new Event('ryma_schedule_changed'));
       }
     }, 4000); // tick every 4s; actual fetch respects minInterval above
 
@@ -834,6 +856,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         fetchAppointments(true);
 
         fetchAdminMetadata();
+        window.dispatchEvent(new Event('ryma_schedule_changed'));
       }
     };
 
@@ -842,6 +865,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       if (now - lastFocusRefreshAt < MIN_FOCUS_REFRESH_MS) return;
       lastFocusRefreshAt = now;
       fetchAppointments(true);
+      window.dispatchEvent(new Event('ryma_schedule_changed'));
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -856,7 +880,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       window.removeEventListener('focus', handleWindowFocus);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchAppointments, fetchPatientNotes, fetchInvoices, fetchReviews, fetchAdminMetadata]);
+  }, [fetchAppointments, fetchPatientNotes, fetchInvoices, fetchReviews, fetchAdminMetadata, schedulePractitioner]);
 
   // Load secondary datasets only when their tab is opened.
   useEffect(() => {
@@ -873,33 +897,24 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   const fetchSlots = useCallback(async (date: string, forceRefresh = false) => {
     const cacheKey = date + ":" + schedulePractitioner;
     slotAbortRef.current?.abort();
-    if (!forceRefresh && slotCacheRef.current[cacheKey]) {
-      setSlotList(slotCacheRef.current[cacheKey]);
+    const cached = slotCacheRef.current[cacheKey];
+    if (!forceRefresh && cached && Date.now() - cached.at < 15000) {
+      setSlotList(cached.slots);
       setLoadingSlots(false);
       return;
     }
 
     setLoadingSlots(true);
 
-    if (slotAbortRef.current) {
-      slotAbortRef.current.abort();
-    }
     const controller = new AbortController();
     slotAbortRef.current = controller;
 
     try {
-      const res = await fetch(`/api/admin/slots?date=${date}&practitionerId=${encodeURIComponent(schedulePractitioner)}`, {
-        signal: controller.signal,
-        credentials: 'same-origin',
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const slotsData = data.slots ?? [];
-        if (controller.signal.aborted) return;
-        slotCacheRef.current[cacheKey] = slotsData;
-        setSlotList(slotsData);
-      }
+      const data = await readAdminJson<{ slots: SlotInfo[] }>(`/api/admin/slots?date=${date}&practitionerId=${encodeURIComponent(schedulePractitioner)}`);
+      const slotsData = data.slots ?? [];
+      if (controller.signal.aborted) return;
+      slotCacheRef.current[cacheKey] = {slots: slotsData, at: Date.now()};
+      setSlotList(slotsData);
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
         // Quiet catch
@@ -917,7 +932,19 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     }
   }, [selectedDateForSlots, activeTab, fetchSlots]);
 
-  useEffect(() => { const refresh = () => { slotCacheRef.current = {}; void fetchAppointments(true); if (activeTab === 'slots') void fetchSlots(selectedDateForSlots,true); }; window.addEventListener('ryma_schedule_changed',refresh); return () => window.removeEventListener('ryma_schedule_changed',refresh); }, [fetchAppointments,fetchSlots,activeTab,selectedDateForSlots]);
+  useEffect(() => { const refresh = () => { slotCacheRef.current = {}; if (activeTab === 'slots') void fetchSlots(selectedDateForSlots,true); }; window.addEventListener('ryma_schedule_changed',refresh); return () => window.removeEventListener('ryma_schedule_changed',refresh); }, [fetchSlots,activeTab,selectedDateForSlots]);
+
+  const refreshActiveTab = () => {
+    invalidateAdminReads();
+    if (activeTab === 'slots') void fetchSlots(selectedDateForSlots, true);
+    else if (activeTab === 'patients') void fetchPatientNotes();
+    else if (activeTab === 'invoices') void fetchInvoices();
+    else if (activeTab === 'reviews') void fetchReviews();
+    else if (activeTab === 'analytics' && isAnalyticsUnlocked) void fetchServerAnalytics();
+    else if (activeTab === 'team' || activeTab === 'treatments') window.dispatchEvent(new Event('ryma_schedule_changed'));
+    else void fetchAppointments(false);
+  };
+  const refreshingActiveTab = isGlobalBusy || (activeTab === 'slots' ? loadingSlots : activeTab === 'invoices' ? loadingInvoices : activeTab === 'reviews' ? loadingReviews : activeTab === 'analytics' ? loadingServerAnalytics : loadingAppointments);
 
   const handleLogout = async () => {
     try {
@@ -1259,9 +1286,9 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       <AdminHeader
         lang={lang}
         toggleLang={toggleLang}
-        loadingAppointments={loadingAppointments || isGlobalBusy}
+        loadingAppointments={refreshingActiveTab}
         isLive={isLiveConnected}
-        onRefresh={() => fetchAppointments(false)}
+        onRefresh={refreshActiveTab}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenMultipleSessions={() => setIsMultipleSessionsModalOpen(true)}
         onLogout={handleLogout}
@@ -1341,7 +1368,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                   appointments={appointments}
                   toggleSlot={toggleSlot}
                   refreshSlots={(date) => {
-                    delete slotCacheRef.current[date];
+                    delete slotCacheRef.current[date + ':' + schedulePractitioner];
                     fetchSlots(date, true);
                   }}
                   onActionToast={addToast}
@@ -1474,8 +1501,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         isAnalyticsUnlocked={isAnalyticsUnlocked}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onToggleLang={toggleLang}
-        onRefresh={() => fetchAppointments(false)}
-        isRefreshing={loadingAppointments || isGlobalBusy}
+        onRefresh={refreshActiveTab}
+        isRefreshing={refreshingActiveTab}
         onOpenHelpdesk={() => setIsHelpdeskOpen(true)}
         onLogout={handleLogout}
       />

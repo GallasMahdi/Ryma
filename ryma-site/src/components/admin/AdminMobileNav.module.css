@@ -23,12 +23,12 @@
   position: relative;
   display: flex;
   min-width: 0;
-  min-height: 76px;
+  min-height: 68px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 11px 0;
+  gap: 6px;
+  padding: 8px 0;
   border: 1px solid transparent;
   border-radius: 18px;
   color: #e0e6eb;
@@ -54,11 +54,11 @@
 .sheet {
   position: fixed;
   inset: auto 0 0;
-  width: min(100%, 560px);
+  width: min(100%, 520px);
   max-width: 100%;
   max-height: calc(100dvh - max(20px, env(safe-area-inset-top, 0px)));
   margin: 0 auto;
-  padding: 10px 20px max(20px, env(safe-area-inset-bottom, 0px));
+  padding: 8px 16px max(16px, env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 1px solid #e7dfce;
@@ -70,15 +70,15 @@
 }
 .sheet[open] { animation: sheetEnter 240ms cubic-bezier(.2,.8,.2,1); }
 .sheet::backdrop { background: #161b2690; backdrop-filter: blur(5px); }
-.handle { width: 34px; height: 4px; margin: 0 auto 18px; border-radius: 3px; background: #ded6c6; }
-.sheetHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.handle { width: 34px; height: 4px; margin: 0 auto 12px; border-radius: 3px; background: #ded6c6; }
+.sheetHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .eyebrow { margin: 0 0 5px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .18em; color: #8a6b35; }
-.sheetHeader h2 { margin: 0; font-family: var(--font-serif); font-size: 32px; line-height: 1; font-weight: 600; letter-spacing: -.025em; }
+.sheetHeader h2 { margin: 0; font-family: var(--font-serif); font-size: 28px; line-height: 1; font-weight: 600; letter-spacing: -.025em; }
 .close { display: grid; flex-shrink: 0; place-items: center; width: 44px; height: 44px; border: 1px solid #e9e2d5; border-radius: 50%; background: #f6f2e9; color: #766e60; cursor: pointer; }
-.destinations { display: grid; gap: 8px; }
-.destination { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 80px; padding: 12px; border: 1px solid #e1dacd; border-radius: 18px; background: #fff; color: #24313b; text-align: left; cursor: pointer; transition: background 180ms, border-color 180ms; }
+.destinations { display: grid; gap: 6px; }
+.destination { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 68px; padding: 10px; border: 1px solid #e1dacd; border-radius: 16px; background: #fff; color: #24313b; text-align: left; cursor: pointer; transition: background 180ms, border-color 180ms; }
 .destination[aria-current='page'] { border-color: #34434c; background: #1e2d37; color: #fffaf0; }
-.destinationIcon { display: grid; flex-shrink: 0; place-items: center; width: 48px; height: 48px; border: 1px solid #e4d6b6; border-radius: 14px; background: #f4ead4; color: #745825; }
+.destinationIcon { display: grid; flex-shrink: 0; place-items: center; width: 40px; height: 40px; border: 1px solid #e4d6b6; border-radius: 12px; background: #f4ead4; color: #745825; }
 .destination[aria-current='page'] .destinationIcon { background: #ead4a6; border-color: #efdbaf; color: #24313b; }
 .destinationText { flex: 1; min-width: 0; }
 .destinationLabel { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; }
@@ -89,9 +89,9 @@
 .lock { display: flex; color: #907543; }
 .selected { color: #8c6c33; flex-shrink: 0; }
 .chevron { color: #8b7957; flex-shrink: 0; }
-.newAppointment { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 52px; margin-top: 18px; padding: 12px; border: 1px solid #34434c; border-radius: 16px; background: #1e2d37; color: #f8e8c6; font-size: 14px; font-weight: 700; cursor: pointer; }
-.utilities { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #ebe5d9; }
-.utilities button { display: flex; min-width: 0; min-height: 52px; align-items: center; justify-content: center; flex-direction: column; gap: 5px; padding: 4px 0; border-radius: 12px; color: #575144; font-size: 11px; font-weight: 600; cursor: pointer; }
+.newAppointment { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 48px; margin-top: 14px; padding: 10px; border: 1px solid #34434c; border-radius: 14px; background: #1e2d37; color: #f8e8c6; font-size: 14px; font-weight: 700; cursor: pointer; }
+.utilities { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #ebe5d9; }
+.utilities button { display: flex; min-width: 0; min-height: 44px; align-items: center; justify-content: center; flex-direction: column; gap: 5px; padding: 4px 0; border-radius: 12px; color: #575144; font-size: 11px; font-weight: 600; cursor: pointer; }
 .utilities button:disabled { opacity: .45; cursor: wait; }
 .tab:focus-visible { outline: 2px solid #f8e8c6; outline-offset: 2px; }
 .sheet button:focus-visible { outline: 2px solid #947039; outline-offset: 2px; }

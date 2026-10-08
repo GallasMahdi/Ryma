@@ -1,5 +1,7 @@
 # Mobile admin navigation and solution audit — 8 October 2026
 
+Subsequent drawer sizing and dashboard request improvements are documented in the [follow-up verification report](dashboard-reads-followup.md).
+
 The admin navigation now uses a spacious navy and champagne app dock with four primary destinations and a More sheet. The final production build, TypeScript check, regression suites, both database adapters and live HTTP workflows pass. Testing found an owner-unlock crash, which was corrected and verified in the final browser build.
 
 ## Changes and corrections
