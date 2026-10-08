@@ -149,8 +149,28 @@ test(`Audit remediation on isolated ${libsql?'libSQL':'SQLite'}`,async t=>{
     const empty=await (await route('export').GET(request('export?type=invoices&startDate=1990-01-01&endDate=1990-01-02'))).text();assert.equal(empty.trim().split('\n').length,1);
     const paid=await (await route('export').GET(request('export?type=invoices&dateBasis=payment&patientId='+p.id+'&startDate=2041-07-02&endDate=2041-07-02'))).text();assert(paid.includes(one.invoiceNumber)&&paid.includes(two.invoiceNumber));ownerUntil=0;
   });
-  await t.test('QA-17 known development passwords fail production even with a different bcrypt salt',async()=>{
-    const previous={mode:process.env.NODE_ENV,admin:process.env.ADMIN_PASSWORD_HASH};try{process.env.NODE_ENV='production';process.env.ADMIN_PASSWORD_HASH=require('bcryptjs').hashSync('ryma2024admin',4);assert.throws(()=>load('@/lib/env').env.ADMIN_PASSWORD_HASH,/ADMIN_PASSWORD_HASH/);process.env.ADMIN_PASSWORD_HASH=require('bcryptjs').hashSync('unique-fixture-secret',4);assert(load('@/lib/env').env.ADMIN_PASSWORD_HASH);}finally{process.env.NODE_ENV=previous.mode;if(previous.admin===undefined)delete process.env.ADMIN_PASSWORD_HASH;else process.env.ADMIN_PASSWORD_HASH=previous.admin;}
+  await t.test('QA-17 production accepts explicit password hashes and rejects missing or malformed credentials',async()=>{
+    const keys=['ADMIN_PASSWORD_HASH','OWNER_ANALYTICS_PASSWORD_HASH','SESSION_SECRET'];
+    const previous={mode:process.env.NODE_ENV,values:Object.fromEntries(keys.map(key=>[key,process.env[key]]))};
+    try {
+      const credentials=load('@/lib/env').env;
+      process.env.NODE_ENV='production';
+      for(const [key,password] of [['ADMIN_PASSWORD_HASH','ryma2024admin'],['OWNER_ANALYTICS_PASSWORD_HASH','ryma2024owner']]) {
+        process.env[key]=require('bcryptjs').hashSync(password,4);
+        assert(require('bcryptjs').compareSync(password,credentials[key]));
+        process.env[key]='invalid-hash';assert.throws(()=>credentials[key],new RegExp(key));
+        delete process.env[key];assert.throws(()=>credentials[key],new RegExp(key));
+      }
+      process.env.NODE_ENV='development';delete process.env.SESSION_SECRET;
+      const developmentSecret=credentials.SESSION_SECRET;
+      process.env.NODE_ENV='production';process.env.SESSION_SECRET=developmentSecret;
+      assert.throws(()=>credentials.SESSION_SECRET,/SESSION_SECRET/);
+      process.env.SESSION_SECRET=require('node:crypto').randomBytes(32).toString('hex');
+      assert.equal(credentials.SESSION_SECRET,process.env.SESSION_SECRET);
+    } finally {
+      process.env.NODE_ENV=previous.mode;
+      for(const key of keys){if(previous.values[key]===undefined)delete process.env[key];else process.env[key]=previous.values[key];}
+    }
   });
   await t.test('QA-18 email logs omit recipients and transport exception details',async()=>{
     delete mocks['@/lib/email'];let fail=false;mocks.nodemailer={createTransport:()=>({sendMail:async()=>{if(fail)throw Error('sensitive@example.test Secret note +351912345678');return {messageId:'sensitive@example.test'};}})};

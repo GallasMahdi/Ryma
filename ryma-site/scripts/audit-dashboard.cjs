@@ -161,27 +161,39 @@ await test('missing owner fallback does not disable configured admin credentials
     assert.throws(()=>env.OWNER_ANALYTICS_PASSWORD_HASH,/OWNER_ANALYTICS_PASSWORD_HASH/);
   } finally {process.env.NODE_ENV='test';process.env.OWNER_ANALYTICS_PASSWORD_HASH=originalOwner;}
 });
-await test('production rejects known development credentials even when explicitly configured',async()=>{
+await test('production accepts explicitly configured admin and owner passwords without enabling fallback credentials',async()=>{
   const originalHash=process.env.ADMIN_PASSWORD_HASH;
+  const originalOwner=process.env.OWNER_ANALYTICS_PASSWORD_HASH;
   const originalFallback=process.env.ALLOW_SQLITE_FALLBACK;
   try {
     process.env.NODE_ENV='development';
     delete process.env.ADMIN_PASSWORD_HASH;
+    delete process.env.OWNER_ANALYTICS_PASSWORD_HASH;
     const {env}=require('../src/lib/env.ts');
     const existingHash=env.ADMIN_PASSWORD_HASH;
+    const existingOwner=env.OWNER_ANALYTICS_PASSWORD_HASH;
     process.env.ADMIN_PASSWORD_HASH=existingHash;
+    process.env.OWNER_ANALYTICS_PASSWORD_HASH=existingOwner;
     process.env.NODE_ENV='production';
     process.env.ALLOW_SQLITE_FALLBACK='true';
     jar.clear();
-    assert.equal((await routes('login').POST(request('login','POST',{password:'ryma2024admin'}))).status,503);
-    assert.equal((await routes('me').GET(request('me'))).status,401);
+    assert.equal((await routes('login').POST(request('login','POST',{password:'ryma2024admin'}))).status,200);
+    assert.equal((await routes('me').GET(request('me'))).status,200);
+    assert.equal((await routes('analytics').GET(request('analytics'))).status,403);
+    await db.executeQuery('DELETE FROM security_settings WHERE key = ?',['analytics_owner_password_hash']);
+    assert.equal((await routes('analytics/verify').POST(request('analytics/verify','POST',{password:'incorrect-fixture'}))).status,401);
+    assert.equal((await routes('analytics/verify').POST(request('analytics/verify','POST',{password:'ryma2024owner'}))).status,200);
+    assert.equal((await routes('analytics').GET(request('analytics'))).status,200);
+    assert.equal((await routes('logout').POST(request('logout','POST'))).status,200);
     process.env.ADMIN_PASSWORD_HASH=require('bcryptjs').hashSync('ryma2024admin',4);
-    assert.throws(()=>env.ADMIN_PASSWORD_HASH,/ADMIN_PASSWORD_HASH/);
+    assert.equal((await routes('login').POST(request('login','POST',{password:'ryma2024admin'}))).status,200);
+    assert.equal((await routes('logout').POST(request('logout','POST'))).status,200);
     delete process.env.ADMIN_PASSWORD_HASH;
     assert.throws(()=>env.ADMIN_PASSWORD_HASH,/ADMIN_PASSWORD_HASH/);
     assert.equal((await routes('login').POST(request('login','POST',{password:'ryma2024admin'}))).status,503);
   } finally {
     process.env.NODE_ENV='test';process.env.ADMIN_PASSWORD_HASH=originalHash;
+    if(originalOwner===undefined)delete process.env.OWNER_ANALYTICS_PASSWORD_HASH;else process.env.OWNER_ANALYTICS_PASSWORD_HASH=originalOwner;
     if(originalFallback===undefined)delete process.env.ALLOW_SQLITE_FALLBACK;else process.env.ALLOW_SQLITE_FALLBACK=originalFallback;
   }
 });

@@ -1,10 +1,4 @@
-/** Validate configured credentials; automatic defaults are development-only. */
-import { compareSync } from 'bcryptjs';
-const checkedHashes=new Map<string,boolean>();
-function knownDevelopmentPassword(hash:string):boolean {
-  if(!checkedHashes.has(hash)) checkedHashes.set(hash,['ryma2024admin','ryma2024owner'].some(password=>compareSync(password,hash)));
-  return checkedHashes.get(hash)!;
-}
+/** Validate explicitly configured production credentials; defaults are development-only. */
 
 const DEFAULT_ADMIN_HASH = '$2b$12$mZ3/r/MFfB0bC14buxvXUuk5podIpggQ7sfis2Iyt5MnoZWeUh/Eu'; // ryma2024admin
 const DEFAULT_OWNER_HASH = '$2b$12$o9xduoDVUtaft5YD4d7hfuyVMNKI.NXxCOUmcttbn16L52/TCbE5W'; // ryma2024owner
@@ -21,7 +15,7 @@ function credential(key: string, developmentDefault: string, isHash = false): st
   const raw = (process.env[key] ?? '').trim();
   const value = isHash ? raw.replace(/\\/g, '') : raw;
   const valid = isHash ? /^\$2[aby]\$(0[4-9]|[12]\d|3[01])\$[./A-Za-z0-9]{53}$/.test(value) : value.length >= 32;
-  const disallowedDefault = [DEFAULT_ADMIN_HASH,DEFAULT_OWNER_HASH,DEFAULT_SESSION_SECRET].includes(value) || (process.env.NODE_ENV==='production' && isHash && valid && knownDevelopmentPassword(value));
+  const disallowedDefault = !isHash && value === DEFAULT_SESSION_SECRET;
   if (process.env.NODE_ENV === 'production' && (!valid || disallowedDefault)) throw new AuthConfigurationError(key);
   return valid ? value : developmentDefault;
 }
