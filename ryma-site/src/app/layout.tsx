@@ -1,3 +1,5 @@
+import { ServiceCatalogProvider } from '@/components/ServiceCatalogProvider';
+import { getPublicServices } from '@/lib/treatments';
 import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import { Cormorant_Garamond, Plus_Jakarta_Sans, Fraunces } from 'next/font/google';
@@ -34,7 +36,7 @@ const fraunces = Fraunces({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-fraunces',
-  weight: ['400', '600', '700'],
+  weight: 'variable',
 });
 
 const siteUrl =
@@ -277,11 +279,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         }}
       >
         <LanguageProvider initialLang={initialLang}>
+          <ServiceCatalogProvider initialServices={await getPublicServices()}>
           <SplashScreen />
           <Navbar />
           <main className="min-h-screen" suppressHydrationWarning>{children}</main>
           <Footer />
           <WhatsAppBubble />
+        </ServiceCatalogProvider>
         </LanguageProvider>
       </body>
     </html>

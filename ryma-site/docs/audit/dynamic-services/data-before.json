@@ -1,0 +1,66 @@
+[
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\1-sqlite.db",
+    "sha256": "f76e653a1916babf4f11ad4f3a554afce2e79745db2da6ad133b4c53cb454c57"
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\1-sqlite.db-shm",
+    "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\1-sqlite.db-wal",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\2-sqlite.db",
+    "sha256": "dbc165d81f33ab6e52a39f454afe600df00986069975090717b04c73913dd2b3"
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\2-sqlite.db-shm",
+    "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\2-sqlite.db-wal",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\3-libsql.json",
+    "sha256": "ecd64ea3366be051e658131db80df4cc93a35fdf2b7432612c7689ef3e261da8"
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\report.json",
+    "sha256": "bd2bf38bd1c6668f278af5aa944663c2fcfe7e92182384a7efab8c3357682c3f"
+  },
+  {
+    "file": "data\\backups\\ryma_backup_2026-08-12T08-54-02-268Z.db",
+    "sha256": "ab1882c5e01533af00507ccba4f6031d6ebc6984734cc61ea28bff62de50e347"
+  },
+  {
+    "file": "data\\backups\\ryma_backup_2026-09-09T13-22-58-701Z.db",
+    "sha256": "2d9775f390082c31782899f889f9aaccb028989447322919ede4f2b1e48c45be"
+  },
+  {
+    "file": "data\\backups\\ryma_pre_reset_backup_2026-08-14T13-41-13-347Z.db",
+    "sha256": "922e76734362d4dfcdc12767a66df36a3a7672e93cfb9b04cf1e49198d875bc4"
+  },
+  {
+    "file": "data\\backups\\ryma_pre_reset_backup_2026-08-14T13-41-55-514Z.db",
+    "sha256": "9304c444891ce5ddcdfc552674d8666a02c58c7bd25ff7246eca76e1cb0f1ce3"
+  },
+  {
+    "file": "data\\backups\\ryma_pre_reset_backup_2026-08-14T13-42-15-704Z.db",
+    "sha256": "6fac53e9e13ac6a788579b54c1125a2acd11959b1ac1709d3456b460a41ae5d8"
+  },
+  {
+    "file": "data\\backups\\ryma_pre_reset_backup_2026-08-14T13-44-31-641Z.db",
+    "sha256": "92171d173d72e91bbb8b6054a5675f4a0cc78316c6e88d7ee067c6419c4b862d"
+  },
+  {
+    "file": "data\\backups\\ryma_turso_backup_2026-09-09T13-22-58-701Z.json",
+    "sha256": "a17c7d2b234dbaf89c85e580db556c233c747a28d83effb541f68b3f8cf4200b"
+  },
+  {
+    "file": "data\\ryma.db",
+    "sha256": "042c695274ed738faf6f7562d7237a2ca056051117181e0a1ab4f291dcf9d611"
+  }
+]

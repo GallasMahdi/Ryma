@@ -1,8 +1,9 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
 import React, { useState, useMemo, memo, useId, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useLanguage, type Translations, type Lang } from '@/lib/i18n';
-import { SERVICES, Service, getLocalizedText, getLocalizedList } from '@/data/services';
+import { Service, getLocalizedText, getLocalizedList } from '@/data/services';
 import { Button } from '@/components/ui/Button';
 import { IconX, IconArrowRight, IconClock, IconCalendarPlus, IconCheck, IconBan, IconChevronDown, IconChevronUp, IconBodyScan, IconLungs, IconHandGrab, IconWalk, IconBone, IconMapPin, IconSearch, IconAdjustmentsHorizontal, IconStethoscope, IconFlame, IconDroplet, IconSparkles } from '@tabler/icons-react';
 import { AnatomicalSVGViewer } from './body3d/AnatomicalSVGViewer';
@@ -39,26 +40,6 @@ const ZONE_LABELS: Record<BodyZone, { fr: string; pt: string; en: string }> = {
 };
 
 const ZONE_ORDER: BodyZone[] = ['all', 'torso', 'legs', 'arms', 'back'];
-
-const FRONT_POINTS: MapPoint[] = [
-  { serviceSlug: 'bilan-minceur', cx: 50, cy: 14, position3D: [0.0, 1.54, 0.12], zone: 'all', label: { fr: 'Diagnostic Global', pt: 'Avaliação Global', en: 'Global Assessment' } },
-  { serviceSlug: 'electrotherapie', cx: 76, cy: 36, position3D: [0.20, 1.34, 0.10], zone: 'arms', label: { fr: 'Articulations Épaules', pt: 'Ombros e Articulações', en: 'Shoulders & Joints' } },
-  { serviceSlug: 'drainage-lymphatique', cx: 24, cy: 42, position3D: [-0.22, 1.22, 0.08], zone: 'arms', label: { fr: 'Membres Supérieurs', pt: 'Membros Superiores', en: 'Upper Limbs' } },
-  { serviceSlug: 'cavitation', cx: 50, cy: 50, position3D: [0.0, 1.02, 0.20], zone: 'torso', label: { fr: 'Sangle Abdominale', pt: 'Zona Abdominal', en: 'Abdominal Wall' } },
-  { serviceSlug: 'radiofrequence', cx: 31, cy: 50, position3D: [-0.15, 0.98, 0.16], zone: 'torso', label: { fr: 'Hanches & Taille', pt: 'Ancas e Cintura', en: 'Hips & Waist' } },
-  { serviceSlug: 'cryolipolyse', cx: 39, cy: 57, position3D: [0.15, 0.94, 0.16], zone: 'torso', label: { fr: "Poignées d'amour", pt: 'Gordura Localizada', en: 'Love Handles' } },
-  { serviceSlug: 'reeducation-post-partum', cx: 50, cy: 58, position3D: [0.0, 0.84, 0.18], zone: 'torso', label: { fr: 'Périnée & Bassin', pt: 'Períneo e Bacia', en: 'Pelvic Floor & Pelvis' } },
-  { serviceSlug: 'ultrasons', cx: 73, cy: 52, position3D: [0.11, 0.68, 0.15], zone: 'legs', label: { fr: 'Quadriceps / Cuisse', pt: 'Quadríceps / Coxa', en: 'Quadriceps / Thigh' } },
-  { serviceSlug: 'laser-lipo', cx: 67, cy: 56, position3D: [-0.10, 0.48, 0.16], zone: 'legs', label: { fr: 'Genoux & Articulations', pt: 'Joelhos e Articulações', en: 'Knees & Joints' } },
-  { serviceSlug: 'pressotherapie', cx: 50, cy: 72, position3D: [0.0, 0.32, 0.14], zone: 'legs', label: { fr: 'Membres Inférieurs', pt: 'Membros Inferiores', en: 'Lower Limbs' } },
-];
-
-const BACK_POINTS: MapPoint[] = [
-  { serviceSlug: 'reeducation-posturale', cx: 50, cy: 28, position3D: [0.0, 1.30, 0.16], zone: 'back', label: { fr: 'Rachis & Omoplates', pt: 'Coluna e Omoplatas', en: 'Spine & Shoulder Blades' } },
-  { serviceSlug: 'massage-therapeutique', cx: 50, cy: 42, position3D: [0.0, 1.05, 0.18], zone: 'back', label: { fr: 'Région Lombaire', pt: 'Região Lombar', en: 'Lumbar Region' } },
-  { serviceSlug: 'massage-amincissant', cx: 55, cy: 62, position3D: [0.11, 0.82, 0.18], zone: 'legs', label: { fr: 'Fessiers & Ischios', pt: 'Glúteos e Isquiotibiais', en: 'Glutes & Hamstrings' } },
-  { serviceSlug: 'drainage-lymphatique', cx: 26, cy: 44, position3D: [-0.22, 1.20, 0.08], zone: 'arms', label: { fr: 'Bras Postérieur', pt: 'Braço Posterior', en: 'Posterior Arm' } },
-];
 
 export type MedicalGoal = 'all' | 'douleur' | 'minceur' | 'drainage' | 'post-partum';
 
@@ -170,7 +151,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
   const reduced = useReducedMotion();
 
   const isKine = service.pole === 'kinesitherapie';
-  const poleBadgeLabel = isKine
+  const poleBadgeLabel = service.pole === 'bilan' ? (lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : isKine
     ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
     : lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming Care' : 'Soin Minceur';
 
@@ -370,6 +351,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
 
 export interface BodyMapProps { embedded?: boolean; hideHeader?: boolean; }
 export const BodyMap = memo(function BodyMap({ embedded = false, hideHeader = false }: BodyMapProps = {}) {
+  const SERVICES = useServices();
   const { lang, t } = useLanguage();
   const [view, setView] = useState<ViewSide>('front');
   const [zone, setZone] = useState<BodyZone>('all');
@@ -384,21 +366,21 @@ export const BodyMap = memo(function BodyMap({ embedded = false, hideHeader = fa
     if (window.innerWidth < 900) detailRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
   }, [selection]);
   const copy = (pt: string, en: string, fr: string) => lang === 'pt' ? pt : lang === 'en' ? en : fr;
-  const serviceBySlug = useMemo(() => new Map(SERVICES.map(s => [s.slug, s])), []);
-  // Search all views: a treatment should never disappear because the body faces forward.
-  const points = useMemo(() => [...FRONT_POINTS, ...BACK_POINTS].filter((p, i, all) =>
-    all.findIndex(other => other.serviceSlug === p.serviceSlug) === i), []);
+  const serviceBySlug = useMemo(() => new Map(SERVICES.map(s => [s.slug, s])), [SERVICES]);
+  // Areas and goals are chosen by the administrator, independent of treatment identifiers.
+  const points = useMemo<MapPoint[]>(() => SERVICES.map(s=>({serviceSlug:s.slug,cx:s.bodyMapPoint?.x??50,cy:s.bodyMapPoint?.y??50,zone:s.bodyZones?.[0]??'all',label:ZONE_LABELS[s.bodyZones?.[0]??'all']})), [SERVICES]);
+  const inZone=(p:MapPoint,z:BodyZone)=>z==='all'||serviceBySlug.get(p.serviceSlug)?.bodyZones?.includes(z)===true;
   const matching = points.filter(p => {
     const s = serviceBySlug.get(p.serviceSlug);
     if (!s) return false;
     if (goal === 'douleur' && s.pole !== 'kinesitherapie') return false;
     if (goal === 'minceur' && s.pole !== 'minceur') return false;
-    if (goal === 'drainage' && !['drainage-lymphatique', 'pressotherapie'].includes(s.slug)) return false;
-    if (goal === 'post-partum' && s.slug !== 'reeducation-post-partum') return false;
+    if (goal === 'drainage' && !s.careGoals?.includes('drainage')) return false;
+    if (goal === 'post-partum' && !s.careGoals?.includes('postpartum')) return false;
     const normalize = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     return normalize([getLocalizedText(s.name, lang), getLocalizedText(s.shortDesc, lang), getLocalizedText(p.label, lang)].join(' ')).includes(normalize(query.trim()));
   });
-  const results = matching.filter(p => zone === 'all' || p.zone === zone);
+  const results = matching.filter(p => inZone(p,zone));
   const chooseZone = (next: BodyZone) => {
     setZone(next); setSelection(null);
     if (next === 'back') setView('back');
@@ -428,7 +410,7 @@ export const BodyMap = memo(function BodyMap({ embedded = false, hideHeader = fa
           </div>
           <AnatomicalSVGViewer view={view} selectedZone={zone} onZoneSelect={chooseZone} lang={lang} />
           <div className={styles.zones} role="group" aria-label={copy('Zonas do corpo', 'Body areas', 'Zones du corps')}>
-            {ZONE_ORDER.map(z => <button type="button" key={z} aria-pressed={zone === z} onClick={() => chooseZone(z)}>{ZONE_ICONS[z]}<span>{ZONE_LABELS[z][lang]}</span><span className={styles.count}>{matching.filter(p => z === 'all' || p.zone === z).length}</span></button>)}
+            {ZONE_ORDER.map(z => <button type="button" key={z} aria-pressed={zone === z} onClick={() => chooseZone(z)}>{ZONE_ICONS[z]}<span>{ZONE_LABELS[z][lang]}</span><span className={styles.count}>{matching.filter(p => inZone(p,z)).length}</span></button>)}
           </div>
         </div>
         <div className={styles.resultsPanel}>
@@ -436,7 +418,7 @@ export const BodyMap = memo(function BodyMap({ embedded = false, hideHeader = fa
           <div ref={detailRef} tabIndex={-1} className={styles.detail} onKeyDown={e => { if (e.key === 'Escape') closeDetail(); }}>
             {selection && activeService ? <><button type="button" className={styles.back} onClick={closeDetail}>← {copy('Voltar aos cuidados', 'Back to treatments', 'Retour aux soins')}</button><ServiceDetailCard point={selection} service={activeService} lang={lang} t={t} onClose={closeDetail} hideClose /></> : <div className={styles.list}>
               {results.map(p => { const s = serviceBySlug.get(p.serviceSlug)!; return <button type="button" key={p.serviceSlug} className={styles.treatment} data-treatment={p.serviceSlug} onClick={() => { lastTrigger.current = p.serviceSlug; setSelection(p); }}>
-                <span className={styles.treatmentIcon}>{ZONE_ICONS[p.zone]}</span><span className={styles.treatmentCopy}><span className={styles.category}>{s.pole === 'kinesitherapie' ? copy('Fisioterapia', 'Physiotherapy', 'Kinésithérapie') : copy('Emagrecimento', 'Slimming care', 'Minceur')}</span><strong>{getLocalizedText(s.name, lang)}</strong><span className={styles.meta}><IconClock size={13} />{s.duration}<span>·</span>{getLocalizedText(p.label, lang)}</span></span><span className={styles.price}>{s.price} {t.common.currency}<IconArrowRight size={18} /></span>
+                <span className={styles.treatmentIcon}>{ZONE_ICONS[p.zone]}</span><span className={styles.treatmentCopy}><span className={styles.category}>{s.pole === 'bilan' ? copy('Avaliação', 'Assessment', 'Bilan') : s.pole === 'kinesitherapie' ? copy('Fisioterapia', 'Physiotherapy', 'Kinésithérapie') : copy('Emagrecimento', 'Slimming care', 'Minceur')}</span><strong>{getLocalizedText(s.name, lang)}</strong><span className={styles.meta}><IconClock size={13} />{s.duration}<span>·</span>{getLocalizedText(p.label, lang)}</span></span><span className={styles.price}>{s.price} {t.common.currency}<IconArrowRight size={18} /></span>
               </button>; })}
               {results.length === 0 && <div className={styles.empty}><IconSearch size={30} /><h4>{copy('Nenhum cuidado encontrado', 'No treatments found', 'Aucun soin trouvé')}</h4><p>{copy('Experimente outra zona ou ajuste a pesquisa.', 'Try another area or adjust your search.', 'Essayez une autre zone ou modifiez votre recherche.')}</p><button type="button" onClick={reset}>{copy('Ver todos os cuidados', 'Show all treatments', 'Voir tous les soins')}</button></div>}
             </div>}

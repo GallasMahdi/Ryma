@@ -1,4 +1,5 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import { EditorialPageHeader } from '@/components/layout/EditorialPageHeader';
 import headerStyles from '@/components/layout/EditorialPageHeader.module.css';
@@ -164,6 +165,7 @@ const TIMELINE = [
 ];
 
 export default function AboutPage() {
+  const SERVICES=useServices();
   const { lang, t } = useLanguage();
 
   const intro = EDITORIAL_PAGES.about[lang];
@@ -295,7 +297,7 @@ export default function AboutPage() {
             {[
               { end: 1200, suffix: '+', label: { fr: 'Patients Accompagnés', pt: 'Pacientes Acompanhados', en: 'Treated Patients' } },
               { end: 12,   suffix: '+', label: { fr: 'Années d\'Expérience', pt: 'Anos de Experiência', en: 'Years Experience' } },
-              { end: 13,   suffix: '',  label: { fr: 'Soins Spécialisés', pt: 'Protocolos Clínicos', en: 'Clinical Protocols' } },
+              { end: SERVICES.length,   suffix: '',  label: { fr: 'Soins Spécialisés', pt: 'Protocolos Clínicos', en: 'Clinical Protocols' } },
               { end: 100,  suffix: '%', label: { fr: 'Séances Individuelles', pt: 'Atendimento Individual', en: 'Individual Sessions' } },
             ].map((stat, i) => (
               <ScrollReveal key={i} delay={i * 0.08}>

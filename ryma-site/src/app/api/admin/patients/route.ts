@@ -1,15 +1,18 @@
-import { isJsonObject, pageNumber } from '@/lib/admin-validation';
+import { isJsonObject, pageNumber, patientProfileError } from '@/lib/admin-validation';
+import { getLisbonDateTime } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, requireOwnerAnalytics } from '@/lib/requireAdmin';
 import {
   dbGetAllPatients,
   dbGetPatientDirectory,
   dbGetPatientByPhone,
+  dbGetPatientById,
   dbGetPatientNote,
   dbGetPatientsPaginated,
   dbGetAllPatientNotes,
   dbUpsertPatient,
   dbDeletePatientRecord,
+  PatientWriteError,
 } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -23,10 +26,16 @@ export async function GET(request: NextRequest) {
   if ('status' in auth) return auth;
 
   const url = request.nextUrl;
+  const id = url.searchParams.get('id');
+  if (id) {
+    const patient = await dbGetPatientById(id);
+    if (!patient) return NextResponse.json({error:'Patient not found'}, {status:404});
+    return NextResponse.json({patient, note:{patientId:patient.id,phone:patient.phone,patientName:patient.patientName,content:patient.medicalHistory,tags:patient.pathologyTags,updatedAt:patient.updatedAt}}, {headers:{'Cache-Control':'no-store'}});
+  }
   const phone = url.searchParams.get('phone');
   if (phone) {
     const [patient, note] = await Promise.all([dbGetPatientByPhone(phone), dbGetPatientNote(phone)]);
-    return NextResponse.json({patient, note}, {headers: {'Cache-Control': 'no-store'}});
+    return NextResponse.json({patient, note:note ? {...note,patientId:patient?.id} : null}, {headers: {'Cache-Control': 'no-store'}});
   }
   if (url.searchParams.get('directory') === '1') {
     const result = await dbGetPatientDirectory({page: pageNumber(url.searchParams.get('page'), 1), limit: pageNumber(url.searchParams.get('limit'), 10, 100), search: url.searchParams.get('search') || '', coverageType: url.searchParams.get('coverage') || 'ALL'});
@@ -99,6 +108,8 @@ export async function POST(request: NextRequest) {
   }
 
   const rawPhone = body.phone;
+  const profileError=patientProfileError(body,getLisbonDateTime().todayStr);
+  if (profileError) return NextResponse.json({error:profileError},{status:422});
   const patientName = String(body.patientName ?? '').trim().slice(0, 100);
 
   if (!rawPhone || !patientName) {
@@ -117,6 +128,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: phoneValidation.error, errorCode: phoneValidation.errorCode }, { status: 422 });
   }
   const phone = phoneValidation.normalized;
+  let legacyPhone: string | undefined;
+  if (body.legacyPhone) {
+    const validation = validateAndNormalizePhone(body.legacyPhone);
+    if (!validation.isValid) return NextResponse.json({error:validation.error}, {status:422});
+    legacyPhone = validation.normalized;
+  }
 
   // Validate optional email
   let email: string | null | undefined = body.email === undefined ? undefined : null;
@@ -134,8 +151,10 @@ export async function POST(request: NextRequest) {
     ? Math.min(100, Math.max(1, Math.round(parsedSessions)))
     : 10;
 
-  const patient = await dbUpsertPatient({
+  let patient;
+  try { patient = await dbUpsertPatient({
     id: body.id ? String(body.id) : undefined,
+    legacyPhone,
     patientName,
     phone,
     email,
@@ -148,9 +167,12 @@ export async function POST(request: NextRequest) {
     pathologyTags: body.pathologyTags === undefined && body.tags === undefined ? undefined : String(body.pathologyTags ?? body.tags ?? ''),
     medicalHistory: body.medicalHistory === undefined && body.content === undefined ? undefined : String(body.medicalHistory ?? body.content ?? ''),
     totalPrescribedSessions,
-  });
+  }); } catch (error) {
+    if (error instanceof PatientWriteError) return NextResponse.json({error:error.message,code:error.code}, {status:error.code==='PATIENT_NOT_FOUND'?404:409});
+    throw error;
+  }
 
-  return NextResponse.json({ patient, note: { phone: patient.phone, patientName: patient.patientName, content: patient.medicalHistory, tags: patient.pathologyTags, updatedAt: patient.updatedAt } });
+  return NextResponse.json({ patient, note: { patientId:patient.id, phone: patient.phone, patientName: patient.patientName, content: patient.medicalHistory, tags: patient.pathologyTags, updatedAt: patient.updatedAt } });
 }
 
 // DELETE /api/admin/patients?id=xxx OR ?phone=xxx
@@ -166,6 +188,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'ID ou téléphone requises' }, { status: 422 });
   }
 
-  await dbDeletePatientRecord(target);
+  try { await dbDeletePatientRecord(target); } catch (error) {
+    if (error instanceof PatientWriteError) return NextResponse.json({error:error.message,code:error.code},{status:409});
+    throw error;
+  }
   return NextResponse.json({ ok: true });
 }

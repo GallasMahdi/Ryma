@@ -1,0 +1,19 @@
+{
+  "reviewedAt": "2026-10-08T08:22:26.636Z",
+  "method": "Visual inspection of rendered contact sheet after successful final generation",
+  "documents": [
+    "invoice",
+    "invoice-long",
+    "prescription",
+    "prescription-long"
+  ],
+  "pages": 7,
+  "status": "PASS",
+  "observations": [
+    "No overlapping or clipped text observed",
+    "All four long-prescription pages identify the patient and document and show page number",
+    "Instruction cards remain intact in the supplied long fixture",
+    "Invoice amount 60.25 retained in normal and long fixtures"
+  ],
+  "limits": "Not a guarantee for arbitrary text lengths, other print engines or the native print dialog"
+}

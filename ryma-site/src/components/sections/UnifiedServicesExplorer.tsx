@@ -1,4 +1,5 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -27,6 +28,7 @@ const BodyMap = dynamic(() => import('./BodyMap').then((module) => module.BodyMa
 const VIEW_MODES: ExplorerViewMode[] = ['carousel', 'anatomy'];
 
 export function UnifiedServicesExplorer() {
+  const SERVICES=useServices();
   const { lang } = useLanguage();
   const [viewMode, setViewMode] = useState<ExplorerViewMode>('carousel');
   const [hasOpenedAnatomy, setHasOpenedAnatomy] = useState(false);
@@ -125,10 +127,10 @@ export function UnifiedServicesExplorer() {
 
           <p className="text-[#6B6058] text-xs sm:text-sm md:text-base leading-relaxed font-normal max-w-2xl mx-auto">
             {lang === 'pt'
-              ? '13 protocolos clínicos estruturados. Navegue pelo catálogo em carrossel ou explore o mapa anatómico interativo.'
+              ? `${SERVICES.length} protocolos clínicos estruturados. Navegue pelo catálogo em carrossel ou explore o mapa anatómico interativo.`
               : lang === 'en'
-              ? '13 tailored clinical protocols. Browse the treatment carousel or explore the interactive anatomical map.'
-              : '13 protocoles médicaux sur-mesure. Parcourez le catalogue en carrousel ou explorez la carte anatomique interactive.'}
+              ? `${SERVICES.length} tailored clinical protocols. Browse the treatment carousel or explore the interactive anatomical map.`
+              : `${SERVICES.length} protocoles médicaux sur-mesure. Parcourez le catalogue en carrousel ou explorez la carte anatomique interactive.`}
           </p>
 
           {/* ── Haute-Couture View Mode Switcher ─────────────────────── */}
@@ -175,7 +177,7 @@ export function UnifiedServicesExplorer() {
                         isSelected ? 'bg-white/20 text-[#F5E9C8]' : 'bg-[#FAF5EA] text-[#9A7428] border border-[#C49A3C]/20'
                       }`}>
                         {isCarousel
-                          ? lang === 'pt' ? '13 Cuidados' : lang === 'en' ? '13 Treatments' : '13 Soins'
+                          ? lang === 'pt' ? `${SERVICES.length} Cuidados` : lang === 'en' ? `${SERVICES.length} Treatments` : `${SERVICES.length} Soins`
                           : lang === 'pt' ? 'Zonas' : 'Zones'}
                       </span>
                     </span>

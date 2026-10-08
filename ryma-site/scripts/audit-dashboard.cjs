@@ -36,6 +36,7 @@ async function login(session=freshSession()){jar.set('ryma_admin_session',await 
 const patientInput={patientName:'Audit Fixture',phone:'+351912000001',email:'fixture@example.invalid',gender:'F',dob:'1990-02-20',medicalHistory:'Preserve clinical history',pathologyTags:'fixture',referringDoctor:'Fixture doctor',totalPrescribedSessions:24,coverageType:'INSURANCE',coverageProvider:'Fixture provider'};
 const date='2099-01-05';
 async function main(){
+await require('./fixtures/services.cjs').seedTestServices(db);
 await test('calendar validation rejects rollover dates and accepts leap dates',async()=>{assert.equal(validation.isCalendarDate('2099-02-31'),false);assert.equal(validation.isCalendarDate('2100-02-29'),false);assert.equal(validation.isCalendarDate('2096-02-29'),true);});
 await test('absolute eight-hour session expiry cannot be renewed by resealing',async()=>{assert.equal(policy.isAdminSessionValid({...freshSession(),loginAt:Date.now()-8*3600000}),false);assert.equal(policy.isAdminSessionValid({...freshSession(),loginAt:Date.now()+60000}),false);assert.equal(policy.isAdminSessionValid(freshSession()),true);});
 await test('every protected admin read rejects unauthenticated requests',async()=>{jar.clear();for(const p of ['appointments','patients','invoices','reviews','slots','analytics','me','events','export','invoices/export','prescriptions'])assert.equal((await routes(p).GET(request(p+'?date='+date))).status,401,p);});
@@ -45,15 +46,15 @@ await login();
 await test('admin access alone does not authorize owner exports',async()=>{assert.equal((await routes('export').GET(request('export'))).status,403);assert.equal((await routes('analytics').GET(request('analytics'))).status,403);});
 await test('JSON null rejected across mutation endpoints',async()=>{for(const p of ['appointments','appointments/multiple','appointments/multiple/preview','patients','invoices','prescriptions','slots','slots/bulk','analytics/verify','login'])assert.equal((await routes(p).POST(request(p,'POST',null))).status,400,p);});
 let patient;
-await test('repeat booking preserves clinical profile and legacy note',async()=>{patient=await db.dbUpsertPatient(patientInput);const res=await db.dbCreateAppointment({patientName:'Booking display name',phone:patientInput.phone,service:'cavitation',date,startTime:'09:00',notes:'Appointment-only note'});assert.equal(res.success,true);const after=await db.dbGetPatientById(patient.id);for(const key of ['patientName','email','gender','dob','medicalHistory','pathologyTags','referringDoctor','totalPrescribedSessions','coverageType','coverageProvider'])assert.equal(after[key],patientInput[key],key);assert.equal((await db.dbGetPatientNote(patient.phone)).content,patientInput.medicalHistory);});
-await test('saving notes preserves omitted patient profile fields',async()=>{const res=await routes('patients').POST(request('patients','POST',{phone:patientInput.phone,patientName:patientInput.patientName,content:'Updated history',tags:'updated'}));assert.equal(res.status,200);const after=await db.dbGetPatientById(patient.id);assert.equal(after.email,patientInput.email);assert.equal(after.gender,'F');assert.equal(after.totalPrescribedSessions,24);assert.equal(after.coverageProvider,patientInput.coverageProvider);assert.equal(after.medicalHistory,'Updated history');});
+await test('repeat booking preserves clinical profile and legacy note',async()=>{patient=await db.dbUpsertPatient(patientInput);const res=await db.dbCreateAppointment({patientName:patientInput.patientName,phone:patientInput.phone,service:'cavitation',date,startTime:'09:00',notes:'Appointment-only note'});assert.equal(res.success,true);const after=await db.dbGetPatientById(patient.id);for(const key of ['patientName','email','gender','dob','medicalHistory','pathologyTags','referringDoctor','totalPrescribedSessions','coverageType','coverageProvider'])assert.equal(after[key],patientInput[key],key);assert.equal((await db.dbGetPatientNote(patient.phone)).content,patientInput.medicalHistory);});
+await test('saving notes preserves omitted patient profile fields',async()=>{const res=await routes('patients').POST(request('patients','POST',{id:patient.id,phone:patientInput.phone,patientName:patientInput.patientName,content:'Updated history',tags:'updated'}));assert.equal(res.status,200);const after=await db.dbGetPatientById(patient.id);assert.equal(after.email,patientInput.email);assert.equal(after.gender,'F');assert.equal(after.totalPrescribedSessions,24);assert.equal(after.coverageProvider,patientInput.coverageProvider);assert.equal(after.medicalHistory,'Updated history');});
 await test('explicitly clearing coverage is respected',async()=>{await db.dbUpsertPatient({...patientInput,id:patient.id,coverageProvider:null});assert.equal((await db.dbGetPatientById(patient.id)).coverageProvider,null);});
 await test('invalid calendar dates and arbitrary time slots cannot be booked',async()=>{assert.equal((await db.dbCheckSlotAvailability('2099-02-31','09:00')).reason,'invalid_date');assert.equal((await db.dbCheckSlotAvailability(date,'02:17')).reason,'invalid_time');});
 await test('clinical session and calendar appointment commit together',async()=>{const session=await db.dbAddPatientSession({patientId:patient.id,date,time:'10:00',serviceSlug:'cavitation'});assert.ok(await db.dbGetAppointmentById('apt_'+session.id));const before=await db.executeQuery('SELECT COUNT(*) AS n FROM patient_sessions');await assert.rejects(()=>db.dbAddPatientSession({patientId:patient.id,date,time:'10:00',serviceSlug:'cavitation'}));assert.equal((await db.executeQuery('SELECT COUNT(*) AS n FROM patient_sessions'))[0].n,before[0].n);await db.dbDeletePatientSession(session.id,patient.id);assert.equal(await db.dbGetAppointmentById('apt_'+session.id),null);});
 await test('concurrent session writers cannot leave orphan clinical records',async()=>{const results=await Promise.allSettled([1,2].map(()=>db.dbAddPatientSession({patientId:patient.id,date,time:'10:30',serviceSlug:'cavitation'})));assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal((await db.executeQuery('SELECT COUNT(*) AS n FROM patient_sessions WHERE date=? AND time=?',[date,'10:30']))[0].n,1);});
-await test('recurring plan records share a deletion-safe appointment link',async()=>{const result=await db.dbCreateMultipleAppointments({patientName:patient.patientName,phone:patient.phone,patientId:patient.id,service:'cavitation',sessions:[{date,startTime:'11:00'},{date,startTime:'11:30'}]});assert.equal(result.success,true);const sess=result.patientSessions[0];assert.ok(await db.dbGetAppointmentById('apt_'+sess.id));await db.dbDeletePatientSession(sess.id,patient.id);assert.equal(await db.dbGetAppointmentById('apt_'+sess.id),null);});
+await test('recurring plan records share a deletion-safe appointment link',async()=>{const result=await db.dbCreateMultipleAppointments({patientName:patient.patientName,phone:patient.phone,patientId:patient.id,service:'cavitation',sessions:[{date,startTime:'11:30'},{date,startTime:'14:30'}]});assert.equal(result.success,true);const sess=result.patientSessions[0];assert.ok(await db.dbGetAppointmentById('apt_'+sess.id));await db.dbDeletePatientSession(sess.id,patient.id);assert.equal(await db.dbGetAppointmentById('apt_'+sess.id),null);});
 await test('recurring plan cannot attach sessions to another patient id',async()=>{const result=await db.dbCreateMultipleAppointments({patientName:patient.patientName,phone:patient.phone,patientId:'missing-patient',service:'cavitation',sessions:[{date,startTime:'12:00'}]});assert.equal(result.success,false);assert.equal(result.error,'invalid_input');});
-await test('database guards block reschedules into blocked slots and blocks over bookings',async()=>{await db.dbToggleBlockSlot(date,'14:00');const appt=(await db.dbGetAppointments({date}))[0];await assert.rejects(()=>db.dbUpdateAppointment(appt.id,{startTime:'14:00'}),/slot_blocked/);await assert.rejects(()=>db.dbToggleBlockSlot(appt.date,appt.startTime),/slot_taken/);});
+await test('database guards block reschedules into blocked slots and blocks over bookings',async()=>{await db.dbToggleBlockSlot(date,'14:00');const appt=(await db.dbGetAppointments({date}))[0];await assert.rejects(()=>db.dbUpdateAppointment(appt.id,{startTime:'14:00'}),e=>e.code==='SLOT_CONFLICT');await assert.rejects(()=>db.dbToggleBlockSlot(appt.date,appt.startTime),/slot_taken/);});
 await test('bulk blocking rejects invalid actions, times and truncated ranges',async()=>{for(const data of [{date,action:'typo'},{date,scope:'custom',times:['25:00']},{startDate:date,endDate:'2099-12-31'},{startDate:date,endDate:'2098-01-01'}])assert.equal((await routes('slots/bulk').POST(request('slots/bulk','POST',data))).status,422);});
 await test('invalid pagination falls back to finite values',async()=>{const res=await routes('appointments').GET(request('appointments?page=NaN&limit=garbage'));assert.equal(res.status,200);const data=await res.json();assert.equal(data.page,1);assert.equal(data.limit,50);});
 let invoice;
@@ -138,10 +139,10 @@ await test('production rejects shared defaults and accepts unique fixture creden
   try {
     process.env.NODE_ENV='production';
     const exported={};
-    new Function('exports',code)(exported);
+    new Function('exports','require',code)(exported,require);
     assert.equal(exported.env.SESSION_SECRET,original);
     delete process.env.SESSION_SECRET;
-    assert.doesNotThrow(()=>new Function('exports',code)({}));
+    assert.doesNotThrow(()=>new Function('exports','require',code)({},require));
     assert.throws(()=>exported.env.SESSION_SECRET,/Production requires/);
     const result=await routes('login').POST(request('login','POST',{password:'test-only-password'}));
     assert.equal(result.status,503);
@@ -160,7 +161,7 @@ await test('missing owner fallback does not disable configured admin credentials
     assert.throws(()=>env.OWNER_ANALYTICS_PASSWORD_HASH,/OWNER_ANALYTICS_PASSWORD_HASH/);
   } finally {process.env.NODE_ENV='test';process.env.OWNER_ANALYTICS_PASSWORD_HASH=originalOwner;}
 });
-await test('production accepts the explicitly configured existing admin password but never an absent hash',async()=>{
+await test('production rejects known development credentials even when explicitly configured',async()=>{
   const originalHash=process.env.ADMIN_PASSWORD_HASH;
   const originalFallback=process.env.ALLOW_SQLITE_FALLBACK;
   try {
@@ -172,8 +173,10 @@ await test('production accepts the explicitly configured existing admin password
     process.env.NODE_ENV='production';
     process.env.ALLOW_SQLITE_FALLBACK='true';
     jar.clear();
-    assert.equal((await routes('login').POST(request('login','POST',{password:'ryma2024admin'}))).status,200);
-    assert.equal((await routes('me').GET(request('me'))).status,200);
+    assert.equal((await routes('login').POST(request('login','POST',{password:'ryma2024admin'}))).status,503);
+    assert.equal((await routes('me').GET(request('me'))).status,401);
+    process.env.ADMIN_PASSWORD_HASH=require('bcryptjs').hashSync('ryma2024admin',4);
+    assert.throws(()=>env.ADMIN_PASSWORD_HASH,/ADMIN_PASSWORD_HASH/);
     delete process.env.ADMIN_PASSWORD_HASH;
     assert.throws(()=>env.ADMIN_PASSWORD_HASH,/ADMIN_PASSWORD_HASH/);
     assert.equal((await routes('login').POST(request('login','POST',{password:'ryma2024admin'}))).status,503);

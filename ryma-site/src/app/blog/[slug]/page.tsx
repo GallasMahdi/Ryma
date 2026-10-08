@@ -1,4 +1,6 @@
 'use client';
+import { getLocalizedText } from '@/data/services';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import { use } from 'react';
 import { notFound } from 'next/navigation';
@@ -6,7 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { IconArrowLeft, IconArrowUpRight } from '@tabler/icons-react';
 import { useLanguage } from '@/lib/i18n';
-import { getServiceBySlug } from '@/data/services';
+
 import { JOURNAL_COPY, JOURNAL_POSTS, journalCategoryLabel, journalDate } from '@/data/journal';
 import { parseArticleContent } from '@/lib/journal-content';
 import { ArticleContent } from '@/components/blog/ArticleContent';
@@ -14,9 +16,17 @@ import { BlogCard } from '@/components/ui/blog-card';
 import styles from '@/components/blog/Journal.module.css';
 
 export default function BlogArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
+  const SERVICES = useServices();
+  const getServiceBySlug = (slug: string) => SERVICES.find(s => s.slug === slug);
+  const { slug: routeSlug } = use(params);
   const { lang } = useLanguage();
   const copy = JOURNAL_COPY[lang];
+  let slug: string;
+  try {
+    slug = decodeURIComponent(routeSlug);
+  } catch {
+    notFound();
+  }
   const post = JOURNAL_POSTS.find(article => article.slug === slug);
   if (!post) notFound();
   const blocks = parseArticleContent(post.content[lang]);
@@ -46,7 +56,7 @@ export default function BlogArticlePage({ params }: { params: Promise<{ slug: st
         <article className={styles.articleBody}>
           <ArticleContent blocks={blocks} tableLabel={copy.table} />
           <div className={styles.articleAuthor}><span className={styles.monogram} aria-hidden="true">dc</span><div><p>{copy.author}</p><span>{copy.authorRole}</span></div></div>
-          {relatedService && <section className={styles.service} aria-labelledby="related-treatment"><span className={styles.eyebrow}>{copy.service}</span><h2 id="related-treatment">{relatedService.name[lang]}</h2><p>{relatedService.shortDesc[lang]}</p><div className={styles.serviceActions}><Link href={`/services/${relatedService.slug}`} className={styles.primaryButton}>{copy.serviceLink}<IconArrowUpRight size={18} aria-hidden="true" /></Link><Link href="/rendez-vous" className={styles.textLink}>{copy.book}<IconArrowUpRight size={18} aria-hidden="true" /></Link></div></section>}
+          {relatedService && <section className={styles.service} aria-labelledby="related-treatment"><span className={styles.eyebrow}>{copy.service}</span><h2 id="related-treatment">{getLocalizedText(relatedService.name,lang)}</h2><p>{getLocalizedText(relatedService.shortDesc,lang)}</p><div className={styles.serviceActions}><Link href={`/services/${relatedService.slug}`} className={styles.primaryButton}>{copy.serviceLink}<IconArrowUpRight size={18} aria-hidden="true" /></Link><Link href="/rendez-vous" className={styles.textLink}>{copy.book}<IconArrowUpRight size={18} aria-hidden="true" /></Link></div></section>}
         </article>
       </div>
       <section className={`${styles.container} ${styles.related}`} aria-labelledby="related-articles">

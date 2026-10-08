@@ -76,7 +76,7 @@ export function ServiceCard({ service, featured = false }: ServiceCardProps) {
             </div>
 
             <span className="font-mono text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#FAF8F5] border border-[#E8E2D8] text-[#7A7065]">
-              {isKine
+              {service.pole === 'bilan' ? (lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : isKine
                 ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
                 : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
             </span>

@@ -1,0 +1,40 @@
+[Public practitioners read]
+▶ Treatments lifecycle on isolated SQLite
+  ✔ fresh database has no treatments or service mappings; first admin creation updates the revision (342.9986ms)
+  ✔ drafts stay out of public catalogue and cannot receive website or dashboard bookings (54.0265ms)
+  ✔ publishing requires an eligible practitioner and valid working hours (119.0276ms)
+  ✔ custom treatment books with exact price, name and full duration snapshots (24.5725ms)
+  ✔ catalogue updates preserve existing bookings and historical revenue (72.8372ms)
+  ✔ future appointments prevent removing practitioner assignments (8.1121ms)
+  ✔ archive removes public access, keeps existing care editable and allows confirmed-request replay (76.7507ms)
+  ✔ existing archived-treatment appointment can still be invoiced (161.7277ms)
+  ✔ parallel editors reject stale updates instead of overwriting (33.2876ms)
+  ✔ duplicate creation and edits using an old version cannot replace a treatment (56.0257ms)
+  ✔ invalid fields and malicious shapes leave the entire database unchanged (201.7374ms)
+  ✔ transaction failure rolls back treatment, mappings and audit history together (23.2276ms)
+  ✔ Team and resource assignment accept a custom treatment and preserve duration overrides (31.1412ms)
+  ✔ recurring custom treatment plans reserve and record the correct service (32.5119ms)
+  ✔ new backup format restores custom catalogue, assignments, snapshots and revisions (50.9387ms)
+  ✔ admin API requires authentication, validates JSON and records hashed actor identity (100.6884ms)
+  ✔ WhatsApp menus include published custom services and recover when selection is archived (386.0587ms)
+  ✔ empty published catalogue returns an empty list and a useful WhatsApp reply (27.6242ms)
+  ✔ migration reruns preserve archives, custom services and intentionally empty catalogues (158.8037ms)
+  ✔ optional clinical content, goals and areas round-trip, preserve omissions and clear explicitly (31.686ms)
+  ✔ malformed discovery and clinical fields reject atomically, including inherited object keys (160.9228ms)
+  ✔ zero price and numeric boundaries persist exactly without invented charges (21.6196ms)
+  ✔ every publication-state transition enforces public availability and supports republishing (121.2048ms)
+  ✔ a new practitioner with no selected treatments handles none; selecting three handles only those three (110.5652ms)
+  ✔ recurring preview and commit use the custom duration rather than the old 30-minute fallback (131.9868ms)
+  ✔ reviews and clinical records require a real treatment instead of substituting a static default (58.2995ms)
+  ✔ legacy-only mapping backups remain restorable without making those treatments bookable (197.4089ms)
+  ✔ SQL duration guards use the persisted catalogue even for direct legacy writers (26.2282ms)
+  ✔ catalogue outages return retryable JSON without internal database details (8.4318ms)
+✔ Treatments lifecycle on isolated SQLite (2853.0552ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7748.9166

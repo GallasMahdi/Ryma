@@ -1,3 +1,4 @@
+import { isKnownTreatment } from '@/lib/treatments';
 import { NextRequest, NextResponse } from 'next/server';
 import { dbGetApprovedReviews, dbCreateReview, dbCheckRateLimit, dbRecordRateLimitAttempt } from '@/lib/db';
 import { getClientIp } from '@/lib/validation';
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (err) {
-    console.error('[GET /api/reviews Error]:', err);
+    console.error('[GET /api/reviews Error]:');
     return NextResponse.json(
       { error: 'Não foi possível carregar as avaliações.' },
       { status: 500 }
@@ -120,7 +121,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Formato inválido no comentário.' }, { status: 422 });
     }
 
-    const validSlug = typeof serviceSlug === 'string' && serviceSlug.trim() ? serviceSlug.trim() : 'reeducation-posturale';
+    const validSlug = typeof serviceSlug === 'string' ? serviceSlug.trim() : '';
+
+    // A patient can review a treatment received before it was archived; all reviews are moderated.
+    if(!await isKnownTreatment(validSlug))return NextResponse.json({error:'Escolha um tratamento existente.'},{status:422});
 
     // Anti-defacement: Reviews require moderation (PENDING) before appearing publicly
     const review = await dbCreateReview({
@@ -155,7 +159,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    console.error('[POST /api/reviews Error]:', err);
+    console.error('[POST /api/reviews Error]:');
     return NextResponse.json(
       { error: 'Erro ao registar a avaliação. Por favor tente novamente.' },
       { status: 500 }

@@ -1,10 +1,10 @@
+import { isJsonObject } from '@/lib/admin-validation';
+import { findBookingReplay } from '@/lib/booking-service';
+import type { CreateAppointmentInput } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   dbCreateAppointment,
-  dbCheckRateLimit,
-  dbRecordRateLimitAttempt,
-  dbGetIdempotencyKey,
-  dbSaveIdempotencyKey,
+  dbConsumeRateLimit,
 } from '@/lib/db';
 import { validateAppointmentInput, getClientIp } from '@/lib/validation';
 import { broadcastAppointmentCreated } from '@/lib/events';
@@ -22,27 +22,27 @@ export const revalidate = 0;
  * Protected by:
  *  - Google reCAPTCHA v3 bot scoring
  *  - Per-phone rate limiting (3 bookings per phone number per hour)
- *  - IP rate limiting (20 bookings per IP per hour — generous to handle Vercel shared IPs)
+ *  - IP rate limiting (100 attempts per IP per hour)
  *  - Server-side input validation
- *  - DB-level UNIQUE(date, startTime) constraint for atomic double-booking prevention
+ *  - Database interval guards and transactional practitioner allocation
  */
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request);
 
     // IP-level rate limit: 100 bookings per IP per hour (generous to accommodate mobile Carrier-Grade NAT)
-    const ipAllowed = await dbCheckRateLimit(ip, 'booking_ip', 100, 60 * 60);
+    const ipAllowed = await dbConsumeRateLimit(ip, 'booking_ip', 100, 60 * 60);
     if (!ipAllowed) {
       return NextResponse.json(
         { error: 'Trop de demandes. Veuillez réessayer plus tard.' },
         { status: 429 }
       );
     }
-    await dbRecordRateLimitAttempt(ip, 'booking_ip');
 
     let body: Record<string, unknown>;
     try {
       body = await request.json();
+      if (!isJsonObject(body)) return NextResponse.json({error:"JSON object required"},{status:400});
     } catch {
       return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
     }
@@ -89,16 +89,6 @@ export async function POST(request: NextRequest) {
     // Per-phone rate limit: 3 bookings per normalized phone number per hour
     const normalizedPhone = validateAndNormalizePhone(body.phone).normalized;
 
-    if (normalizedPhone) {
-      const phoneAllowed = await dbCheckRateLimit(`phone:${normalizedPhone}`, 'booking_phone', 3, 60 * 60);
-      if (!phoneAllowed) {
-        return NextResponse.json(
-          { error: 'Vous avez déjà effectué plusieurs réservations. Veuillez patienter avant d\'en faire une nouvelle.' },
-          { status: 429 }
-        );
-      }
-    }
-
     // Validate & sanitize coverage fields
     const rawCoverage = typeof body.coverageType === 'string' ? body.coverageType.trim().toUpperCase() : 'PARTICULAR';
     const coverageType = ['PARTICULAR', 'INSURANCE', 'ADSE'].includes(rawCoverage) ? rawCoverage : 'PARTICULAR';
@@ -115,17 +105,10 @@ export async function POST(request: NextRequest) {
       (typeof body.clientRequestId === 'string' ? body.clientRequestId : undefined) ||
       `booking_${normalizedPhone}_${String(body.date).trim()}_${String(body.startTime).trim()}`;
 
-    if (idempotencyKey) {
-      const cached = await dbGetIdempotencyKey(idempotencyKey, 'public_booking');
-      if (cached) {
-        return NextResponse.json(cached.responseBody, {
-          status: cached.statusCode,
-          headers: { 'X-Cache-Lookup': 'HIT_IDEMPOTENT' },
-        });
-      }
-    }
-
-    const result = await dbCreateAppointment({
+    const bookingInput: CreateAppointmentInput = {
+      source: 'website',
+      practitionerId: typeof body.practitionerId === 'string' ? body.practitionerId : undefined,
+      bookingRequestId: 'web:' + idempotencyKey,
       patientName:      String(body.patientName).trim().slice(0, 100),
       email:            body.email ? String(body.email).trim().slice(0, 254) : undefined,
       phone:            normalizedPhone,
@@ -136,9 +119,20 @@ export async function POST(request: NextRequest) {
       coverageType,
       coverageProvider,
       coverageNumber,
-    });
+    };
+    // A verified replay is the same booking, even if the patient has since reached
+    // their new-booking allowance. Never use a request key without checking its payload.
+    const replay = await findBookingReplay(bookingInput);
+    const result = replay ?? await dbCreateAppointment(bookingInput);
+    if (!result.success && result.error === 'rate_limited') {
+      return NextResponse.json(
+        { error: 'Vous avez déjà effectué plusieurs réservations. Veuillez patienter avant d\'en faire une nouvelle.' },
+        { status: 429 }
+      );
+    }
 
     if (!result.success) {
+      if (result.error === 'schedule_changed') return NextResponse.json({error:'Schedule temporarily busy. Please retry.',errorCode:'SCHEDULE_BUSY'}, {status:503,headers:{'Retry-After':'1'}});
       if (result.error === 'slot_taken') {
         return NextResponse.json(
           { error: 'slot_taken', message: 'Ce créneau vient d\'être réservé. Veuillez choisir un autre horaire.' },
@@ -154,17 +148,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Données invalides' }, { status: 422 });
     }
 
-    // Record legitimate successful booking rate limit against the normalized phone number
-    if (normalizedPhone) {
-      await dbRecordRateLimitAttempt(`phone:${normalizedPhone}`, 'booking_phone');
-    }
-
     // Broadcast the new appointment in real-time to active admin calendar dashboards
-    broadcastAppointmentCreated(result.appointment);
+    if (!result.replayed) broadcastAppointmentCreated(result.appointment);
 
     // Reliably dispatch confirmation emails before serverless execution freeze
     const clientLang = typeof body.lang === 'string' ? body.lang : 'fr';
-    try {
+    if (!result.replayed) try {
       const emailPromise = Promise.all([
         sendAppointmentConfirmationEmail(result.appointment, clientLang),
         sendAdminNewBookingNotification(result.appointment),
@@ -174,7 +163,7 @@ export async function POST(request: NextRequest) {
       );
       await Promise.race([emailPromise, timeoutPromise]);
     } catch (emailErr) {
-      console.error('[Booking Email Dispatch Warning]:', emailErr);
+      console.error('[Booking Email Dispatch Warning]:');
     }
 
     const confirmationPayload = {
@@ -183,16 +172,19 @@ export async function POST(request: NextRequest) {
         date: result.appointment.date,
         startTime: result.appointment.startTime,
         service: result.appointment.service,
+        serviceName: result.appointment.serviceNameJson ? JSON.parse(result.appointment.serviceNameJson) : null,
+        servicePriceCents: result.appointment.servicePriceCents,
+        id: result.appointment.id,
+        practitionerId: result.appointment.practitionerId,
+        practitionerName: result.appointment.practitionerName,
+        durationMinutes: result.appointment.durationMinutes,
+        status: result.appointment.status,
       },
     };
 
-    if (idempotencyKey) {
-      await dbSaveIdempotencyKey(idempotencyKey, 'public_booking', 201, confirmationPayload, 300); // 5 min TTL
-    }
-
     return NextResponse.json(confirmationPayload, { status: 201 });
   } catch (err) {
-    console.error('[API /api/appointments Error]:', err);
+    console.error('[API /api/appointments Error]:');
     return NextResponse.json(
       { error: 'Erreur lors de l\'enregistrement de la réservation. Veuillez réessayer.' },
       { status: 500 }

@@ -1,0 +1,330 @@
+Browser tab: 1, Title: "Digital Clínica — Fisioterapia & Estética Avançada em Lisboa", URL: "http://127.0.0.1:3117/admin?tab=invoices".
+1 AXWebArea Digital Clínica — Fisioterapia & Estética Avançada em Lisboa, URL: 127.0.0.1:3117/admin?tab=invoices
+	2 container
+		3 button Description: Toggle sidebar drawer, Help: Recolher menu lateral (Ctrl+B)
+			4 image
+		5 image Digital Clínica Emblem
+		6 text Digital Clínica / Gestão Clínica
+		7 text Direto
+		8 button Pesquisar utente, ação... ⌘K, Help: Abrir Paleta de Comandos (Ctrl+K)
+			9 image
+			10 text Pesquisar utente, ação...
+			11 text ⌘K
+		12 link Description: CSV, Help: Exportar consultas em CSV, Value: 127.0.0.1:3117/api/admin/export?type=appointments
+		13 button Ajuda, Help: Suporte Técnico & Helpdesk
+			14 image
+			15 text Ajuda
+		16 button Atualizar
+			17 image
+		18 button Múltiplas Sessões, Help: Marcar múltiplas sessões recorrentes
+			19 image
+			20 text Múltiplas Sessões
+		21 button Nova Consulta
+			22 image
+			23 text Nova Consulta
+		24 link Description: Site, Help: Ver site público, Value: 127.0.0.1:3117/
+		25 button PT, Help: Mudar idioma
+		26 button Sair, Help: Terminar Sessão
+			27 image
+			28 text Sair
+		29 text NAVEGAÇÃO
+		30 button Description: Collapse sidebar, Help: Recolher menu (Ctrl+B)
+			31 image
+		32 container Menu latéral
+			33 button Consultas 14
+				34 image
+				35 text Consultas
+				36 text 14
+			37 button Horários & Vagas
+				38 image
+				39 text Horários & Vagas
+			40 button Fichas de Utentes 13
+				41 image
+				42 text Fichas de Utentes
+				43 text 13
+			44 button Faturação & Recibos 7
+				45 image
+				46 text Faturação & Recibos
+				47 text 7
+			48 button Avaliações & Opiniões
+				49 image
+				50 text Avaliações & Opiniões
+			51 button Equipa
+				52 image
+				53 text Equipa
+			54 button Estatísticas 🔓
+				55 image
+				56 text Estatísticas
+				57 text 🔓
+		58 button Suporte & Ajuda, Help: Suporte Técnico & Ajuda
+			59 image
+			60 text Suporte & Ajuda
+		61 text Sistema Ativo v2.4
+		62 container
+			340 text FATURAÇÃO TOTAL
+			341 image
+			342 text 200,995 €
+			343 container
+				344 text 7 documentos emitidos
+			345 text TOTAL LIQUIDADO
+			346 image
+			347 text 139,495 €
+			348 container
+				349 text 6 recibos quitados
+			350 text EM ABERTO
+			351 image
+			352 text 61,50 €
+			353 container
+				354 text 1 faturas pendentes
+			355 text TICKET MÉDIO
+			356 image
+			357 text 29.00 €
+			358 text por ato clínico
+			359 text SEGUROS & ADSE
+			360 image
+			361 text 0 %
+			362 text dos tratamentos faturados
+			93 image
+			94 text field (settable)
+			95 pop up button (collapsed, settable) Value: Todos os Estados, Secondary Actions: Expand
+				96 menu
+					97 (selected) Todos os Estados
+					98 ✓ Pagos / Quitados
+					99 ⏱ Pendentes
+			100 pop up button (collapsed, settable) Value: Todos os Meios, Secondary Actions: Expand
+				101 menu
+					102 (selected) Todos os Meios
+					103 Multibanco (TPA)
+					104 MB Way
+					105 Numerário
+					106 Cartão
+					107 Transferência
+			108 button Atualizar lista
+				109 image
+			110 button Exportar CSV
+				111 image
+				112 text Exportar CSV
+			113 button Emitir Recibo
+				114 image
+				115 text Emitir Recibo
+			116 text A mostrar 1 – 7 de 7 faturas e recibos Linhas por página:
+			117 pop up button (collapsed, settable) Description: Itens por página, Value: 10 / pág, Secondary Actions: Expand
+				118 menu
+					119 (selected) 10 / pág
+					120 25 / pág
+					121 50 / pág
+					122 100 / pág
+			123 table
+				124 row
+					125 cell
+						126 text DOCUMENTO
+					127 cell
+						128 text UTENTE & NIF
+					129 cell
+						130 text TRATAMENTO / SERVIÇO
+					131 cell
+						132 text SEGURO / ADSE
+					133 cell
+						134 text PAGAMENTO
+					135 cell
+						136 text VALOR TOTAL
+					137 cell
+						138 text ESTADO
+					139 cell
+						140 text AÇÕES
+				141 row
+					142 cell
+						143 text FT 2026/0007
+						144 image
+						145 text 2026-10-07
+					146 cell
+						147 text Audit Élodie São
+						148 text NIF: 
+						149 text 999999990
+						150 text • +351963000029
+					151 cell
+						152 text Reeducação Postural Global (RPG)
+						153 text IVA 23%
+					154 cell
+						155 text Particular
+					156 cell
+						157 text MULTIBANCO
+					158 cell
+						159 text 61.50  €
+					160 cell
+						161 button PENDENTE, Help: Clique para marcar como PAGO
+					162 cell
+						163 button Ver / Imprimir Fatura-Recibo
+							164 image
+						165 button Enviar por WhatsApp
+							166 image
+				167 row
+					168 cell
+						169 text FT 2026/0006
+						170 image
+						171 text 2026-10-07
+					172 cell
+						173 text Audit Élodie São
+						174 text NIF: 
+						175 text 999999990
+						176 text • +351963000029
+					177 cell
+						178 text Reeducação Postural Global (RPG)
+						179 text Isento Art. 9º CIVA
+					180 cell
+						181 text Particular
+					182 cell
+						183 text MULTIBANCO
+					184 cell
+						185 text 23.45  €
+					186 cell
+						187 button PAGO, Help: Pago em 07/10/2026 • Clique para marcar como PENDENTE
+							188 image
+							189 text PAGO
+					190 cell
+						191 button Ver / Imprimir Fatura-Recibo
+							192 image
+						193 button Enviar por WhatsApp
+							194 image
+				195 row
+					196 cell
+						197 text FT 2026/0005
+						198 image
+						199 text 2026-10-07
+					200 cell
+						201 text Audit Élodie São
+						202 text NIF: 
+						203 text 999999990
+						204 text • +351963000029
+					205 cell
+						206 text Reeducação Postural Global (RPG)
+						207 text Isento Art. 9º CIVA
+					208 cell
+						209 text Particular
+					210 cell
+						211 text MULTIBANCO
+					212 cell
+						213 text 23.45  €
+					214 cell
+						215 button PAGO, Help: Pago em 07/10/2026 • Clique para marcar como PENDENTE
+							216 image
+							217 text PAGO
+					218 cell
+						219 button Ver / Imprimir Fatura-Recibo
+							220 image
+						221 button Enviar por WhatsApp
+							222 image
+				223 row
+					224 cell
+						225 text FT 2026/0004
+						226 image
+						227 text 2026-10-07
+					228 cell
+						229 text Audit Élodie São
+						230 text NIF: 
+						231 text 999999990
+						232 text • +351963000001
+					233 cell
+						234 text Reeducação Postural Global (RPG)
+						235 text Isento Art. 9º CIVA
+					236 cell
+						237 text Particular
+					238 cell
+						239 text MULTIBANCO
+					240 cell
+						241 text 10.01  €
+					242 cell
+						243 button PAGO, Help: Pago em 07/10/2026 • Clique para marcar como PENDENTE
+							244 image
+							245 text PAGO
+					246 cell
+						247 button Ver / Imprimir Fatura-Recibo
+							248 image
+						249 button Enviar por WhatsApp
+							250 image
+				251 row
+					252 cell
+						253 text FT 2026/0003
+						254 image
+						255 text 2026-10-07
+					256 cell
+						257 text Audit Élodie São
+						258 text NIF: 
+						259 text 999999990
+						260 text • +351963000001
+					261 cell
+						262 text Reeducação Postural Global (RPG)
+						263 text Isento Art. 9º CIVA
+					264 cell
+						265 text Particular
+					266 cell
+						267 text MULTIBANCO
+					268 cell
+						269 text 12.34  €
+					270 cell
+						271 button PAGO, Help: Pago em 07/10/2026 • Clique para marcar como PENDENTE
+							272 image
+							273 text PAGO
+					274 cell
+						275 button Ver / Imprimir Fatura-Recibo
+							276 image
+						277 button Enviar por WhatsApp
+							278 image
+				279 row
+					280 cell
+						281 text FT 2026/0002
+						282 image
+						283 text 2026-10-07
+					284 cell
+						285 text Audit Autre
+						286 text NIF: 
+						287 text 999999990
+						288 text • +351963000002
+					289 cell
+						290 text Reeducação Postural Global (RPG)
+						291 text Isento Art. 9º CIVA
+					292 cell
+						293 text Particular
+					294 cell
+						295 text MULTIBANCO
+					296 cell
+						297 text 10.00  €
+					298 cell
+						299 button PAGO, Help: Pago em 07/10/2026 • Clique para marcar como PENDENTE
+							300 image
+							301 text PAGO
+					302 cell
+						303 button Ver / Imprimir Fatura-Recibo
+							304 image
+						305 button Enviar por WhatsApp
+							306 image
+				307 row
+					308 cell
+						309 text FT 2026/0001
+						310 image
+						311 text 2026-10-07
+					312 cell
+						313 text Audit Élodie São
+						314 text NIF: 
+						315 text 999999990
+						316 text • +351963000001
+					317 cell
+						318 text Reeducação Postural Global (RPG)
+						319 text Isento Art. 9º CIVA
+					320 cell
+						321 text Particular
+					322 cell
+						323 text MULTIBANCO
+					324 cell
+						325 text 60.25  €
+					326 cell
+						327 button PAGO, Help: Pago em 07/10/2026 • Clique para marcar como PENDENTE
+							328 image
+							329 text PAGO
+					330 cell
+						331 button Ver / Imprimir Fatura-Recibo
+							332 image
+						333 button Enviar por WhatsApp
+							334 image
+
+The focused UI element is 1 AXWebArea Digital Clínica — Fisioterapia & Estética Avançada em Lisboa, URL: 127.0.0.1:3117/admin?tab=invoices

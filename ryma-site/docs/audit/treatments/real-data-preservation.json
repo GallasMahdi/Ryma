@@ -1,0 +1,66 @@
+[
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\1-sqlite.db",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\1-sqlite.db-shm",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\1-sqlite.db-wal",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\2-sqlite.db",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\2-sqlite.db-shm",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\2-sqlite.db-wal",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\3-libsql.json",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\reset-2026-10-07T14-54-11-436Z-10d27a50\\report.json",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\ryma_backup_2026-08-12T08-54-02-268Z.db",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\ryma_backup_2026-09-09T13-22-58-701Z.db",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\ryma_pre_reset_backup_2026-08-14T13-41-13-347Z.db",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\ryma_pre_reset_backup_2026-08-14T13-41-55-514Z.db",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\ryma_pre_reset_backup_2026-08-14T13-42-15-704Z.db",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\ryma_pre_reset_backup_2026-08-14T13-44-31-641Z.db",
+    "unchanged": true
+  },
+  {
+    "file": "data\\backups\\ryma_turso_backup_2026-09-09T13-22-58-701Z.json",
+    "unchanged": true
+  },
+  {
+    "file": "data\\ryma.db",
+    "unchanged": true
+  }
+]

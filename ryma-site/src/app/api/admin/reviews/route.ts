@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (err) {
-    console.error('[GET /api/admin/reviews Error]:', err);
+    console.error('[GET /api/admin/reviews Error]:');
     return NextResponse.json(
       { error: 'Falha ao carregar as avaliações de administração.' },
       { status: 500 }
@@ -66,7 +66,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, review: updated });
   } catch (err) {
-    console.error('[PATCH /api/admin/reviews Error]:', err);
+    console.error('[PATCH /api/admin/reviews Error]:');
     return NextResponse.json(
       { error: 'Erro ao atualizar a avaliação.' },
       { status: 500 }
@@ -100,7 +100,7 @@ export async function DELETE(request: NextRequest) {
     await dbDeleteReview(id);
     return NextResponse.json({ success: true, message: 'Avaliação removida com sucesso.' });
   } catch (err) {
-    console.error('[DELETE /api/admin/reviews Error]:', err);
+    console.error('[DELETE /api/admin/reviews Error]:');
     return NextResponse.json(
       { error: 'Erro ao remover a avaliação.' },
       { status: 500 }

@@ -1,0 +1,133 @@
+{
+  "method": "Independent SQL counts/sums and minute-by-minute default-hours oracle; current synthetic fixture",
+  "rows": [
+    {
+      "metric": "stats.total",
+      "expected": 15,
+      "observed": 15,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.pending",
+      "expected": 6,
+      "observed": 6,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.confirmed",
+      "expected": 6,
+      "observed": 6,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.completed",
+      "expected": 1,
+      "observed": 1,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.cancelled",
+      "expected": 1,
+      "observed": 1,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.noShow",
+      "expected": 1,
+      "observed": 1,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.totalPaid",
+      "expected": 72.59,
+      "observed": 72.59,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.totalPending",
+      "expected": 61.5,
+      "observed": 61.5,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.totalBilled",
+      "expected": 134.09,
+      "observed": 134.09,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.countPaid",
+      "expected": 2,
+      "observed": 2,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.invoicesCount",
+      "expected": 3,
+      "observed": 3,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.uniquePatients",
+      "expected": 10,
+      "observed": 10,
+      "status": "PASS"
+    },
+    {
+      "metric": "timeline.appointments.sum",
+      "expected": 15,
+      "observed": 15,
+      "status": "PASS"
+    },
+    {
+      "metric": "timeline.revenue.sum",
+      "expected": 72.59,
+      "observed": 72.59,
+      "status": "PASS"
+    },
+    {
+      "metric": "heatmap.sum",
+      "expected": 15,
+      "observed": 15,
+      "status": "PASS"
+    },
+    {
+      "metric": "department.count.sum",
+      "expected": 15,
+      "observed": 15,
+      "status": "PASS"
+    },
+    {
+      "metric": "department.revenue.sum",
+      "expected": 72.59,
+      "observed": 72.59,
+      "status": "PASS"
+    },
+    {
+      "metric": "payments.byMethod.sum",
+      "expected": 72.59,
+      "observed": 72.59,
+      "status": "PASS"
+    },
+    {
+      "metric": "stats.occupancyRate.defaultFixture",
+      "expected": 1,
+      "observed": 1,
+      "status": "PASS"
+    },
+    {
+      "metric": "invoiceExport.emptyPeriod",
+      "expected": "header only",
+      "observed": "Different",
+      "status": "PASS"
+    }
+  ],
+  "capacityMinutes": 48570,
+  "occupiedMinutes": 700,
+  "range": {
+    "type": "all",
+    "startDate": "2026-10-01",
+    "endDate": "2027-02-03",
+    "pole": "all"
+  }
+}

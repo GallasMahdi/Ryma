@@ -1,11 +1,12 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES, getLocalizedText } from '@/data/services';
+import { getLocalizedText } from '@/data/services';
 import { Button } from '@/components/ui/Button';
 import { LogoIcon } from '@/components/ui/Logo';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
@@ -28,10 +29,11 @@ import {
   IconChevronRight,
 } from '@tabler/icons-react';
 
-const kineServices = SERVICES.filter((s) => s.pole === 'kinesitherapie').slice(0, 4);
-const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4);
 
 export function Navbar() {
+  const SERVICES = useServices();
+const kineServices = SERVICES.filter((s) => s.pole === 'kinesitherapie').slice(0, 4);
+const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4);
   const { lang, t, toggleLang, setLang } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();

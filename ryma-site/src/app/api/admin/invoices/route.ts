@@ -1,14 +1,18 @@
+import { getLocalizedText } from '@/data/services';
 import type { CoverageType } from '@/types/admin';
-import { isJsonObject, pageNumber, COVERAGE_TYPES } from '@/lib/admin-validation';
+import { isJsonObject, pageNumber, COVERAGE_TYPES, invoiceFilters } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import {
   dbGetInvoices,
+  dbGetAppointmentById,
   dbGetInvoicesPaginated,
   dbCreateInvoice,
   dbGetInvoiceStats,
+  dbIsOwnerStepUpActive,
+  DocumentError,
 } from '@/lib/db';
-import { SERVICES } from '@/data/services';
+import { getTreatments } from '@/lib/treatments';
 import { validateAndNormalizePhone } from '@/lib/phone';
 
 export const dynamic = 'force-dynamic';
@@ -20,27 +24,21 @@ export async function GET(request: NextRequest) {
   if ('status' in auth) return auth; // 401
 
   const { searchParams } = request.nextUrl;
-  const status        = searchParams.get('status') ?? undefined;
-  const search        = searchParams.get('search') ?? undefined;
-  const dateFrom      = searchParams.get('dateFrom') ?? undefined;
-  const dateTo        = searchParams.get('dateTo') ?? undefined;
-  const patientPhone  = searchParams.get('patientPhone') ?? undefined;
-  const paymentMethod = searchParams.get('paymentMethod') ?? undefined;
+  let filters;
+  try { filters=invoiceFilters(searchParams); } catch { return NextResponse.json({error:'Invalid invoice filters'},{status:422}); }
   const pageParam     = searchParams.get('page');
   const limitParam    = searchParams.get('limit');
 
-  const stats = await dbGetInvoiceStats();
+  const owner=!!auth.session.analyticsUnlockedUntil && Date.now()<auth.session.analyticsUnlockedUntil && await dbIsOwnerStepUpActive(auth.session.sessionId);
+  let stats=null;
+  let financialReviewRequired=false;
+  if (owner) { try { stats=await dbGetInvoiceStats(); } catch(error) { if (!(error instanceof DocumentError)) throw error; financialReviewRequired=true; } }
 
   if (pageParam !== null || limitParam !== null) {
     const page = pageNumber(pageParam, 1);
     const limit = pageNumber(limitParam, 50, 100);
     const paginated = await dbGetInvoicesPaginated({
-      status,
-      search,
-      dateFrom,
-      dateTo,
-      patientPhone,
-      paymentMethod,
+      ...filters,
       page,
       limit,
     });
@@ -53,6 +51,7 @@ export async function GET(request: NextRequest) {
         limit: paginated.limit,
         totalPages: paginated.totalPages,
         stats,
+        financialReviewRequired,
       },
       {
         status: 200,
@@ -61,10 +60,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const invoices = await dbGetInvoices({ status, search, dateFrom, dateTo, patientPhone, paymentMethod });
+  const invoices = await dbGetInvoices(filters);
 
   return NextResponse.json(
-    { invoices, stats },
+    { invoices, stats, financialReviewRequired },
     {
       status: 200,
       headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
@@ -98,8 +97,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.coverageType !== undefined && !COVERAGE_TYPES.includes(String(body.coverageType))) return NextResponse.json({ error: 'Invalid coverage type' }, { status: 422 });
-  const service = SERVICES.find(s => s.slug === body.serviceSlug);
-  const serviceName = (typeof body.serviceName === 'string' ? body.serviceName.trim() : '') || (service ? (service.name.pt || service.name.fr) : String(body.serviceSlug));
+  const currentService = (await getTreatments()).find(s => s.slug === body.serviceSlug);
+  const appointment = typeof body.appointmentId==='string' ? await dbGetAppointmentById(body.appointmentId) : null;
+  const service = appointment?.serviceNameJson && appointment.service===body.serviceSlug ? {name:JSON.parse(appointment.serviceNameJson),price:appointment.servicePriceCents!=null?appointment.servicePriceCents/100:currentService?.price} : currentService;
+  const serviceName = (typeof body.serviceName === 'string' ? body.serviceName.trim() : '') || (service ? getLocalizedText(service.name,'pt') : String(body.serviceSlug));
   
   // Validate Amount strictly > 0 and <= 50,000 EUR
   const rawAmount = body.amount !== undefined ? Number(body.amount) : (service?.price || 0);
@@ -155,10 +156,11 @@ export async function POST(request: NextRequest) {
                          request.headers.get('x-idempotency-key') ||
                          (body.clientRequestId as string | undefined);
 
-  if (idempotencyKey && (typeof idempotencyKey !== 'string' || idempotencyKey.length > 200)) return NextResponse.json({error: 'Invalid idempotency key'}, {status: 422});
+  if (!idempotencyKey || typeof idempotencyKey !== 'string' || !idempotencyKey.trim() || idempotencyKey.length > 200) return NextResponse.json({error: 'A stable idempotency key is required to issue an invoice'}, {status: 422});
 
   try {
     const invoice = await dbCreateInvoice({
+      practitionerId: typeof body.practitionerId === "string" ? body.practitionerId : undefined,
       appointmentId: typeof body.appointmentId === 'string' ? body.appointmentId.trim() : undefined,
       patientId: typeof body.patientId === 'string' ? body.patientId.trim() : undefined,
       patientName: String(body.patientName).trim().slice(0, 100),
@@ -185,8 +187,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(responsePayload, { status: 201 });
   } catch (err: any) {
+    if (err instanceof DocumentError) return NextResponse.json({error:err.message},{status:422});
     if (err.message === 'idempotency_conflict') return NextResponse.json({error: 'Idempotency key already used for a different invoice'}, {status: 409});
-    console.error('[API Create Invoice Error]:', err);
-    return NextResponse.json({ error: err.message || 'Erro ao criar fatura/recibo' }, { status: 500 });
+    console.error('[API Create Invoice Error]');
+    return NextResponse.json({ error: 'Erro ao criar fatura/recibo' }, { status: 500 });
   }
 }

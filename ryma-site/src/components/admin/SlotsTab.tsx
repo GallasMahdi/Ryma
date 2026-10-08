@@ -1,4 +1,5 @@
 'use client';
+import { useServiceLabels } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,17 +18,12 @@ import {
   IconSparkles,
   IconAlertCircle,
 } from '@tabler/icons-react';
-import {
-  SlotInfo,
-  Appointment,
-  formatSlotDateLabel,
-  shiftDateString,
-  getServiceName,
-} from '@/types/admin';
+import { SlotInfo, Appointment, formatSlotDateLabel, shiftDateString } from '@/types/admin';
 import { Lang } from '@/lib/i18n';
 import { ResponsiveModal } from './ResponsiveModal';
 
 interface SlotsTabProps {
+  practitionerId?: string;
   lang: Lang;
   selectedDateForSlots: string;
   setSelectedDateForSlots: React.Dispatch<React.SetStateAction<string>>;
@@ -47,6 +43,7 @@ const AFTERNOON_TIMES = ['14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '
 type BatchActionType = 'block_morning' | 'block_afternoon' | 'block_all' | 'unblock_all' | 'range' | null;
 
 export const SlotsTab = React.memo(function SlotsTab({
+  practitionerId,
   lang,
   selectedDateForSlots,
   setSelectedDateForSlots,
@@ -59,6 +56,7 @@ export const SlotsTab = React.memo(function SlotsTab({
   refreshSlots,
   onActionToast,
 }: SlotsTabProps) {
+  const { getServiceName } = useServiceLabels();
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
@@ -85,11 +83,11 @@ export const SlotsTab = React.memo(function SlotsTab({
   }, [slotList]);
 
   const morningSlots = useMemo(() => {
-    return slotList.filter((s) => MORNING_TIMES.includes(s.time));
+    return slotList.filter((s) => s.time < '13:00');
   }, [slotList]);
 
   const afternoonSlots = useMemo(() => {
-    return slotList.filter((s) => AFTERNOON_TIMES.includes(s.time));
+    return slotList.filter((s) => s.time >= '13:00');
   }, [slotList]);
 
   // Handle individual slot click with local loading state
@@ -105,7 +103,7 @@ export const SlotsTab = React.memo(function SlotsTab({
 
   // Handle batch blocking actions (morning, afternoon, full day, unblock all)
   const handleBatchAction = async (action: 'block_morning' | 'block_afternoon' | 'block_all' | 'unblock_all') => {
-    if (batchLoadingAction || slotDateMeta.isSunday) return;
+    if (batchLoadingAction) return;
     setBatchLoadingAction(action);
 
     try {
@@ -129,7 +127,7 @@ export const SlotsTab = React.memo(function SlotsTab({
       const res = await fetch('/api/admin/slots/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: selectedDateForSlots, scope, action: act }),
+        body: JSON.stringify({ date: selectedDateForSlots, scope, action: act, practitionerId: practitionerId || undefined }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -180,6 +178,7 @@ export const SlotsTab = React.memo(function SlotsTab({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          practitionerId: practitionerId || undefined,
           startDate: rangeStartDate,
           endDate: rangeEndDate,
           scope: rangeScope,
@@ -242,7 +241,7 @@ export const SlotsTab = React.memo(function SlotsTab({
 
     const isBlocked = st.reason === 'blocked';
     const isBooked = !st.available && st.reason === 'booked';
-    const isSunday = st.reason === 'sunday';
+    const isSunday = !!st.inheritedBlock || st.reason === 'sunday' || st.reason === 'closed' || st.reason === 'past' || st.reason === 'ineligible';
     const isThisSlotToggling = togglingSlotTime === st.time;
 
     return (
@@ -305,16 +304,16 @@ export const SlotsTab = React.memo(function SlotsTab({
             </div>
             {bookedAppt && (
               <div className="text-[11px] text-[#64748B] truncate">
-                {getServiceName(bookedAppt.service, lang)}
+                {getServiceName(bookedAppt.service, lang, bookedAppt)}
               </div>
             )}
           </div>
         ) : (
           <div className="text-xs text-[#64748B] mb-2">
             {isBlocked
-              ? txt('Indisponible aux réservations', 'Unavailable for booking', 'Indisponível para marcações')
+              ? (st.inheritedBlock ? txt('Fermeture de la clinique — modifier dans Tous les praticiens.', 'Clinic block — edit under All practitioners.', 'Bloqueio da clínica — editar em Todos os profissionais.') : txt('Indisponible aux réservations', 'Unavailable for booking', 'Indisponível para marcações'))
               : isSunday
-              ? txt('Fermeture hebdomadaire', 'Weekly closing', 'Encerramento semanal')
+              ? txt('Indisponible à cet horaire', 'Unavailable at this time', 'Indisponível neste horário')
               : txt('Disponible à la réservation', 'Available for booking', 'Livre para marcação')}
           </div>
         )}
@@ -397,7 +396,7 @@ export const SlotsTab = React.memo(function SlotsTab({
               <h3 className="font-bold text-base sm:text-lg text-[#0F172A] tracking-tight">
                 {txt('Créneaux & Horaires', 'Schedule & Slot Management', 'Gestão de Horários & Agenda')}
               </h3>
-              {slotDateMeta.isSunday ? (
+              {false ? (
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B]">
                   {txt('Dimanche fermé', 'Sunday closed', 'Domingo fechado')}
                 </span>
@@ -482,7 +481,7 @@ export const SlotsTab = React.memo(function SlotsTab({
                   className={`p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 touch-target ${
                     isSelected
                       ? 'bg-[#0F172A] border-[#0F172A] text-white shadow-xs font-semibold'
-                      : meta.isSunday
+                      : false
                       ? 'bg-[#F8FAFC] border-[#E2E8F0] text-[#94A3B8]'
                       : 'bg-white border-[#E2E8F0] text-[#475569] hover:bg-[#F8FAFC] hover:border-[#CBD5E1]'
                   }`}
@@ -493,7 +492,7 @@ export const SlotsTab = React.memo(function SlotsTab({
                   <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-[#64748B]'}`}>
                     {meta.subtitle}
                   </span>
-                  {meta.isSunday ? (
+                  {false ? (
                     <span className="text-[9px] font-medium text-rose-500/80 mt-0.5">
                       {txt('Fermé', 'Closed', 'Fechado')}
                     </span>
@@ -572,7 +571,7 @@ export const SlotsTab = React.memo(function SlotsTab({
           </div>
 
           {/* Batch Actions Toolbar with Live Spinners */}
-          {!slotDateMeta.isSunday && (
+          {!false && (
             <div className="flex flex-wrap items-center gap-1.5">
               <button
                 onClick={() => handleBatchAction('block_morning')}

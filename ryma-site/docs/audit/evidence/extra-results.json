@@ -1,0 +1,110 @@
+[
+  {
+    "id": "BILL-01",
+    "title": "Nouvelle soumission de facture sans clé, comme le formulaire réel",
+    "status": "FAIL",
+    "observed": "{\"first\":\"FT 2026/0005\",\"second\":\"FT 2026/0006\",\"count\":2}\n+ actual - expected\n\n+ 'inv_muy9ptxoon0o0'\n- 'inv_muy9ptxxx6ewl'\n              ^\n"
+  },
+  {
+    "id": "BILL-02",
+    "title": "NIF manquant, mauvais format, TVA et paiements",
+    "status": "PASS",
+    "details": {
+      "invoice": "FT 2026/0007",
+      "defaultNif": true,
+      "tax": 23,
+      "paymentTransitions": true
+    }
+  },
+  {
+    "id": "CLIN-01",
+    "title": "Erreur SQL au second champ : aucune écriture partielle",
+    "status": "FAIL",
+    "observed": "{\"http\":500,\"after\":{\"evaPainScore\":9,\"notes\":\"avant\"}}\n\n9 !== 2\n"
+  },
+  {
+    "id": "CLIN-02",
+    "title": "Champs patient invalides rejetés",
+    "status": "FAIL",
+    "observed": "{\"status\":200,\"dob\":\"2026-02-31\",\"gender\":\"arbitrary\",\"coverageType\":\"INVALID\"}\n\n200 !== 422\n"
+  },
+  {
+    "id": "SEARCH-01",
+    "title": "Recherche accents, espaces, caractères et chaîne longue",
+    "status": "PASS",
+    "details": [
+      {
+        "term": "Élodie",
+        "status": 200,
+        "total": 2,
+        "ms": 21.81
+      },
+      {
+        "term": "Elodie",
+        "status": 200,
+        "total": 0,
+        "ms": 14.75
+      },
+      {
+        "term": "  Élodie  ",
+        "status": 200,
+        "total": 2,
+        "ms": 16.64
+      },
+      {
+        "term": "' OR 1=1 --",
+        "status": 200,
+        "total": 0,
+        "ms": 4.98
+      },
+      {
+        "term": "%",
+        "status": 200,
+        "total": 11,
+        "ms": 9.5
+      },
+      {
+        "term": "[10000 caractères]",
+        "status": 200,
+        "total": 0,
+        "ms": 18.8
+      }
+    ]
+  },
+  {
+    "id": "CSV-01",
+    "title": "Échappement et absence de formule exécutable",
+    "status": "PASS",
+    "details": {
+      "status": 200,
+      "formulaPrefixed": true,
+      "quotesDoubled": true,
+      "multiline": true,
+      "utf8": true
+    }
+  },
+  {
+    "id": "CSV-02",
+    "title": "Export facturation applique le filtre paiement transmis",
+    "status": "FAIL",
+    "observed": "Export CASH identique à export complet avec uniquement des lignes MULTIBANCO"
+  },
+  {
+    "id": "AUTH-09",
+    "title": "Requête cross-site CSV refusée",
+    "status": "PASS",
+    "details": 403
+  },
+  {
+    "id": "AUTH-10",
+    "title": "CSRF : refus explicite Origin étranger sur mutation",
+    "status": "FAIL",
+    "observed": "HTTP 200; cookie attaché manuellement. Ne démontre PAS le contournement de SameSite dans un navigateur.\n\n200 !== 403\n"
+  },
+  {
+    "id": "PUBLIC-01",
+    "title": "Données publiques minimales et fichiers privés non servis",
+    "status": "FAIL",
+    "observed": "Expected values to be strictly equal:\n\n200 !== 404\n"
+  }
+]

@@ -1,0 +1,774 @@
+[
+  {
+    "file": "src\\app\\a-propos\\page.tsx",
+    "sha256": "664286a46d1315d54d3ee0c48f803436a5a08a9956711fe1b64f3fa7bb30aa3a"
+  },
+  {
+    "file": "src\\app\\admin\\login\\layout.tsx",
+    "sha256": "3ac25cb3b5e551e9caeeb280978edf5973259f0f869982c7627e597e766986f4"
+  },
+  {
+    "file": "src\\app\\admin\\login\\page.tsx",
+    "sha256": "7544b8e1a93d9e5962ad9737b0e7fd6d6e318396944d8f6066db493a5520f132"
+  },
+  {
+    "file": "src\\app\\admin\\page.tsx",
+    "sha256": "e450cfed3f6a53656d7b8a132e803d423922ea74f11196b8ae14b73391053ca7"
+  },
+  {
+    "file": "src\\app\\api\\admin\\analytics\\lock\\route.ts",
+    "sha256": "dc4cf172cb5dfc9ef9d2a6b05e772f53ed0061b3e8a4a426970ffea8d6f5c217"
+  },
+  {
+    "file": "src\\app\\api\\admin\\analytics\\password\\route.ts",
+    "sha256": "64813eb7b05d24f66fcf1fe4e34335c873789776aed268c20517b8056f8d9703"
+  },
+  {
+    "file": "src\\app\\api\\admin\\analytics\\route.ts",
+    "sha256": "cf125ef3e31df530e253b2cbc3453ea35f5393ab7f083f97a0c2258237e985fd"
+  },
+  {
+    "file": "src\\app\\api\\admin\\analytics\\verify\\route.ts",
+    "sha256": "88a44e3a5a671925762d3f8450651eafc0123b3beadb92bdb51ab1fadda1a51c"
+  },
+  {
+    "file": "src\\app\\api\\admin\\appointments\\multiple\\preview\\route.ts",
+    "sha256": "8b55a0a2bfdf37104b0f6a7cd9f08d68ebe8f0ebcc17108ed30d5d260e224f50"
+  },
+  {
+    "file": "src\\app\\api\\admin\\appointments\\multiple\\route.ts",
+    "sha256": "d785235a17984f7403bc75a861d4efe436bdeedd03da16aa0a3b460616aedb68"
+  },
+  {
+    "file": "src\\app\\api\\admin\\appointments\\route.ts",
+    "sha256": "deebd998f932a824872257fc4f84e2225a239bbc7c2f664c7f6dd607722048ac"
+  },
+  {
+    "file": "src\\app\\api\\admin\\appointments\\[id]\\route.ts",
+    "sha256": "7774fd18c015b0b094276c7001a45e2c49b65474c6341fe3fa06f6e6e227bc6f"
+  },
+  {
+    "file": "src\\app\\api\\admin\\events\\route.ts",
+    "sha256": "ad03226315451d41b0ec14d2a4e89231e6a3acc498c239b1091e23ec7f52733b"
+  },
+  {
+    "file": "src\\app\\api\\admin\\export\\route.ts",
+    "sha256": "b2d2a43d22aeaa31c91a539ba2fc0a8b277a9e535f2ce641a825876e40a41066"
+  },
+  {
+    "file": "src\\app\\api\\admin\\invoices\\export\\route.ts",
+    "sha256": "e17c9aba2166213885c0618b865bf5f68a3800ff6ab5340b3d505f0159f72cfc"
+  },
+  {
+    "file": "src\\app\\api\\admin\\invoices\\route.ts",
+    "sha256": "659bf518e7a814cabaa5f1cb71736433dd767e0755166ad07c986daaffae1399"
+  },
+  {
+    "file": "src\\app\\api\\admin\\invoices\\[id]\\route.ts",
+    "sha256": "0e04ef28d6287b89040db82bc2616d8b21a230eec690198ffd30d68f22142033"
+  },
+  {
+    "file": "src\\app\\api\\admin\\login\\route.ts",
+    "sha256": "a7ef77e2605427f22ade6a51ae416a43df487c0334258acb8c7e2cf23e05ef28"
+  },
+  {
+    "file": "src\\app\\api\\admin\\logout\\route.ts",
+    "sha256": "90f868d9d505b3cced359c9555c3a62250730999bd334a5a6737fbe6c6353d88"
+  },
+  {
+    "file": "src\\app\\api\\admin\\me\\route.ts",
+    "sha256": "2d66685a436ea45b244d3e354d704bcb6fd48db3ad219943cbad841dae555016"
+  },
+  {
+    "file": "src\\app\\api\\admin\\patients\\route.ts",
+    "sha256": "f602b331f74bdf7da4b0ba66424bb4cf90b791c233493d6bd6d78f99c6f57933"
+  },
+  {
+    "file": "src\\app\\api\\admin\\patients\\[id]\\sessions\\route.ts",
+    "sha256": "e6b7780324d321788f8b7432cd44950a4bde2ae32d810138a6f34b9c54e05249"
+  },
+  {
+    "file": "src\\app\\api\\admin\\practitioners\\route.ts",
+    "sha256": "4e1c28adbc9383555d0cd74f751a259490cb1393ff25bfe74db9aa39add33e6f"
+  },
+  {
+    "file": "src\\app\\api\\admin\\prescriptions\\route.ts",
+    "sha256": "4cff5106a9c96e785e9218092e4bd903e032e0c0145e90044906272c126d26a9"
+  },
+  {
+    "file": "src\\app\\api\\admin\\prescriptions\\[id]\\route.ts",
+    "sha256": "6d70d48cb872d067ac9928b004b4a687efac2747bb07215feb960807bfdaa83b"
+  },
+  {
+    "file": "src\\app\\api\\admin\\reviews\\route.ts",
+    "sha256": "14fe7d4abe48f81811742ec8fc2633507e8da79342e5843fc27cb9e32fe77d5d"
+  },
+  {
+    "file": "src\\app\\api\\admin\\slots\\bulk\\route.ts",
+    "sha256": "4158856000d29452509662612d2d89093bf3cf9e8e686551b3ed58e5a23b6e8d"
+  },
+  {
+    "file": "src\\app\\api\\admin\\slots\\route.ts",
+    "sha256": "b5a0a15baaa64878b9fb5d0ed7b964a4313a2a732ce5de01048091b36dac6465"
+  },
+  {
+    "file": "src\\app\\api\\admin\\treatments\\route.ts",
+    "sha256": "17b4369373e9f5cca5238cf282dfe432834f6c2d29b2f11b8ff8669ecb27fdd8"
+  },
+  {
+    "file": "src\\app\\api\\admin\\whatsapp\\route.ts",
+    "sha256": "d669adf82ed8ed9012e8811313d7834885d303fbca02eea78d6c3a0143524716"
+  },
+  {
+    "file": "src\\app\\api\\appointments\\route.ts",
+    "sha256": "5a3471e88858f5cc124919888269dd1176d797d2b41eb04522a4add7130cfe9f"
+  },
+  {
+    "file": "src\\app\\api\\health\\route.ts",
+    "sha256": "9779f4a7c73ced0202242a58e3b8536291755a9542ebb5233ecc17bb1b09520d"
+  },
+  {
+    "file": "src\\app\\api\\practitioners\\route.ts",
+    "sha256": "a541ff2b1b255190a13608f29419a353fbbe9a51d796fe960e61d4a4abb717af"
+  },
+  {
+    "file": "src\\app\\api\\reviews\\route.ts",
+    "sha256": "28f7274f46705281c73c3e63e653308d583f5fc6226db21d980790d8a38d8e4b"
+  },
+  {
+    "file": "src\\app\\api\\slots\\route.ts",
+    "sha256": "a19090445bf5846fd6a78693803b6662ae887afc3ab3181b10c42a377299609e"
+  },
+  {
+    "file": "src\\app\\api\\treatments\\route.ts",
+    "sha256": "2632ef7102be9eaff3eae7c54263e15cc9d67f2d337bdd0d8b8a4190cdb50d34"
+  },
+  {
+    "file": "src\\app\\api\\whatsapp\\jobs\\route.ts",
+    "sha256": "1cc8f8c303c2daa351a32d774e9a95cd7f7fced8f8c3fdac8837696755938f45"
+  },
+  {
+    "file": "src\\app\\api\\whatsapp\\webhook\\route.ts",
+    "sha256": "b52b90a5d0faf1a693c840e93fc39743e7abc242495adb1023f75ce1e350b289"
+  },
+  {
+    "file": "src\\app\\apple-icon.png",
+    "sha256": "ea60cf3b52945f2c0fc478e74563d9778d804e9830c20fde44b2e1cb79770671"
+  },
+  {
+    "file": "src\\app\\avis\\page.tsx",
+    "sha256": "17ffac30842bf03183849c3259f29083c1531385de52a0504c4281a5e6195360"
+  },
+  {
+    "file": "src\\app\\blog\\page.tsx",
+    "sha256": "101315825e371e9f3e3069cfaec4438db862630511043d9428a5aad7f1afcc4b"
+  },
+  {
+    "file": "src\\app\\blog\\[slug]\\page.tsx",
+    "sha256": "97ff4cd837e1f7a1e0020bea46ea30c2ed4bbcc5a7f82f2b341cd05f5e49f989"
+  },
+  {
+    "file": "src\\app\\conditions-utilisation\\page.tsx",
+    "sha256": "f3efb5fde3d48eed4ca15e6996ffb9dc978c638fd8bbc455515331dab7e1bd45"
+  },
+  {
+    "file": "src\\app\\confidentialite\\page.tsx",
+    "sha256": "a0b791d88847eb0ddd3608cc263558f10598c7a0772f8cbed8527b53e9a91b4e"
+  },
+  {
+    "file": "src\\app\\contact\\page.tsx",
+    "sha256": "0983cc4982af641a9b919f2dcb56f71ae27c5a660d04d1c10778a67a3988174f"
+  },
+  {
+    "file": "src\\app\\favicon-32x32.png",
+    "sha256": "7713eb9537736b8f4d62849b875cd398265a6c2068e06f04150e651c862239df"
+  },
+  {
+    "file": "src\\app\\favicon-48x48.png",
+    "sha256": "b44398fa6e31ea08afaed9ca540fbd7555512725c77b242ec6aaec5419ec9127"
+  },
+  {
+    "file": "src\\app\\favicon.ico",
+    "sha256": "8747e5a2e5d89dd53359fba8b3c980e6c156e8253a2f9657752e035981dc7f4e"
+  },
+  {
+    "file": "src\\app\\globals.css",
+    "sha256": "dbcffe85aea023d02ec5ba21e3ace260b119868f4a7af0e767d58008c5813a3c"
+  },
+  {
+    "file": "src\\app\\icon.png",
+    "sha256": "7713eb9537736b8f4d62849b875cd398265a6c2068e06f04150e651c862239df"
+  },
+  {
+    "file": "src\\app\\icon.svg",
+    "sha256": "44c5ae66956e3d2ea91a8bb844272950756a5d8ee143fd02665e659c94f5d215"
+  },
+  {
+    "file": "src\\app\\layout.tsx",
+    "sha256": "955b4dc51c5cca458c07430fd1fb7fba083a4921b9082d77926bf3519ccec338"
+  },
+  {
+    "file": "src\\app\\mentions-legales\\page.tsx",
+    "sha256": "384d05af8bd28c3b55b4b5150b2d8fb8a869fc6e12892ee608e1a86b74d9c1dc"
+  },
+  {
+    "file": "src\\app\\not-found.tsx",
+    "sha256": "eadcb467d92840bdf18753a01add101afb3f6d65177ec904994d908d65b508f3"
+  },
+  {
+    "file": "src\\app\\page.tsx",
+    "sha256": "1a527ca7cd8264eefa4746c0ff61a5e4182f3c1ac0d180dd87585863952589c6"
+  },
+  {
+    "file": "src\\app\\rendez-vous\\page.tsx",
+    "sha256": "a4da0297acf08216167a244b50af26497f8d475b4c3bfb58750d5a8a9c431244"
+  },
+  {
+    "file": "src\\app\\robots.ts",
+    "sha256": "d3a8e316357d46bf51203a5b34984b14574923f94cfd676bf3a49916a774476a"
+  },
+  {
+    "file": "src\\app\\services\\page.tsx",
+    "sha256": "3a9c758ce458e4dd321f43725e9889fb8a700735fd8f9679f1bc1829f53a6d0b"
+  },
+  {
+    "file": "src\\app\\services\\[slug]\\page.tsx",
+    "sha256": "d271d07c241797b8c02d25e06893eb785cffee1390423d6cdd304e41366f5cd7"
+  },
+  {
+    "file": "src\\app\\services\\[slug]\\ServiceDetail.tsx",
+    "sha256": "7bf7047fd4537be895313b94a15e620634669ccd22a6efcfdd8da0e2fba20260"
+  },
+  {
+    "file": "src\\app\\sitemap.ts",
+    "sha256": "ce3e771bda3a96ecde080bafa336cb0b441bf6d0580eefbe14e0012baaa3013f"
+  },
+  {
+    "file": "src\\app\\tarifs\\page.tsx",
+    "sha256": "acdfd8a8bfbcb4de5460df8d8e2e561380088fa1592148257626ea80428adfef"
+  },
+  {
+    "file": "src\\components\\admin\\AddAppointmentModal.tsx",
+    "sha256": "a237bd6bfb6fb9577a7cfb7701d0df6a1dabcfe1f68559b640c5c661d03fd8e4"
+  },
+  {
+    "file": "src\\components\\admin\\AdminCommandPalette.tsx",
+    "sha256": "1761f1e20e0c65226d99479e51abc660e15991f9b1b8a80146daf6749249ca49"
+  },
+  {
+    "file": "src\\components\\admin\\AdminDateJumpPicker.tsx",
+    "sha256": "57ed5887ee4bca716af175d2159b3fcfa222b5022416dd41df75f38bf81a285b"
+  },
+  {
+    "file": "src\\components\\admin\\AdminHeader.tsx",
+    "sha256": "8d5a60711003132a419bba3295e572b2c087d0aefba40414d6c0a3ad50882ed8"
+  },
+  {
+    "file": "src\\components\\admin\\AdminKpiCards.tsx",
+    "sha256": "0094d2a6d881f3d692a90741c757bacf344d2a8ecebcdadcd5a3bb4d5f6c2741"
+  },
+  {
+    "file": "src\\components\\admin\\AdminMobileNav.tsx",
+    "sha256": "da034acaa389c52c6db19cc86afc8673c96fb86544c7faa814968e003c0f3b3d"
+  },
+  {
+    "file": "src\\components\\admin\\AdminSidebar.tsx",
+    "sha256": "c5988df1bb2580a9c6c6e16a66c93ab81cd82aab183ddc3fa8eacf5b93bb0160"
+  },
+  {
+    "file": "src\\components\\admin\\AgendaContent.tsx",
+    "sha256": "74450c987c7b93232963395720067bda0bd28d4992e76803a4db2a8e98ba0041"
+  },
+  {
+    "file": "src\\components\\admin\\AnalyticsInteractiveCharts.tsx",
+    "sha256": "a469ae0c7de35564b5e28b4df38652bae9b3d53ac937f91f65fc3a114240d9cd"
+  },
+  {
+    "file": "src\\components\\admin\\AnalyticsTab.tsx",
+    "sha256": "79bae1017d742f1d2a118827896e3ca1e78116e5e3efba67e1d87c76762e7c11"
+  },
+  {
+    "file": "src\\components\\admin\\AppointmentDetailModal.tsx",
+    "sha256": "25d7287e993bd63553c47d963ced53dec29c663cb4b8c68ad788a8d00e2ce39c"
+  },
+  {
+    "file": "src\\components\\admin\\AppointmentsTab.tsx",
+    "sha256": "612adc64f4846a70e6ff3b2a7be4713cede6f974441553be90df3a5a6bb7a359"
+  },
+  {
+    "file": "src\\components\\admin\\ChangeOwnerPasswordModal.tsx",
+    "sha256": "16c2f52d4e4a567a78162ebb28cdf3447d702a77d866c04c56edce73bb7460dd"
+  },
+  {
+    "file": "src\\components\\admin\\ClinicHelpdeskDrawer.tsx",
+    "sha256": "0446892837d93f3e3e55a0e9512c6355b596cd2cb97b491be3979394f65bce41"
+  },
+  {
+    "file": "src\\components\\admin\\CreateInvoiceModal.tsx",
+    "sha256": "ab75c40acb0368103094fe3fd32a4a8d3750ab54d6fa0c11d0c40fec973a986d"
+  },
+  {
+    "file": "src\\components\\admin\\CreatePrescriptionModal.tsx",
+    "sha256": "309b0517df5ec536233e71568e5f36e9d5a4848539bdb71323d144207e8c0519"
+  },
+  {
+    "file": "src\\components\\admin\\DayAgendaView.tsx",
+    "sha256": "a7eabf56425de8e0ffa557213fdaaa07e91d56645b7e3a654fdbdb6c19036bde"
+  },
+  {
+    "file": "src\\components\\admin\\EvaScorePicker.tsx",
+    "sha256": "8349b62387478baf8dc8741f5778757455a8acb8f66a8aa71210a276f7903269"
+  },
+  {
+    "file": "src\\components\\admin\\FilterSheet.tsx",
+    "sha256": "01b3f49333bf8c347e048dc7a55ee7490a07cf0d45c43700b19faee1fe5e9f86"
+  },
+  {
+    "file": "src\\components\\admin\\InvoiceDetailModal.tsx",
+    "sha256": "a68fe8dc3d44bccd345b9117691d7fe112d30b192ba7965bb593f8dfc3dcda41"
+  },
+  {
+    "file": "src\\components\\admin\\InvoicesTab.tsx",
+    "sha256": "5e3e36c760e01bb33bd7fd49fd742183189c12c933fb44aaa2a185d987bf121d"
+  },
+  {
+    "file": "src\\components\\admin\\LuxuryFeedback.tsx",
+    "sha256": "0432905b8d1a2613575c73a892a6febc58f9052238a4d902a98ae389d23d4246"
+  },
+  {
+    "file": "src\\components\\admin\\MultipleSessionsModal.tsx",
+    "sha256": "785ccc302bccc7b6e9c15fa014ec91c3d7d2849d4417d5f4c11dbcf090a358f2"
+  },
+  {
+    "file": "src\\components\\admin\\OwnerAuthModal.tsx",
+    "sha256": "6b08f1f3fff5dccbe67b6b7f94ebfd1f23a40169fb124f2123547b2558c1a773"
+  },
+  {
+    "file": "src\\components\\admin\\PatientNotesTab.tsx",
+    "sha256": "7f44667dcdaf6b2d2598856d5cf8c54c96635a50bf3609135cfa2ff3b56ad36c"
+  },
+  {
+    "file": "src\\components\\admin\\PractitionersTab.tsx",
+    "sha256": "bbc1466d007b65e766c0e75c2183e8095c3c1667c1c16d422b647bf5c2699ff2"
+  },
+  {
+    "file": "src\\components\\admin\\PrescriptionDetailModal.tsx",
+    "sha256": "9401baaccb79bc980092fc3f0f7df5667d77ef68ad4f833a2d8e5e46040642f8"
+  },
+  {
+    "file": "src\\components\\admin\\RescheduleAppointment.tsx",
+    "sha256": "ba7225b517415ea8f7c837b461c47db73215eb418c3f5fc6098e07342b7f08ca"
+  },
+  {
+    "file": "src\\components\\admin\\ResponsiveModal.tsx",
+    "sha256": "212c7cb85847ea9644046c426add5f257c0c98147d04142ef65fbca98e452037"
+  },
+  {
+    "file": "src\\components\\admin\\ReviewsTab.tsx",
+    "sha256": "d8fa8473fea8c3d89cd02c58202fc06c48d3020f03d566e5968cb3b1d9a09e7d"
+  },
+  {
+    "file": "src\\components\\admin\\SlotsTab.tsx",
+    "sha256": "da8294147fc7d45fb7b2f8a931a24a9b1c534bc437549eabf55d51dd5eb2cc5a"
+  },
+  {
+    "file": "src\\components\\admin\\team\\HoursEditor.tsx",
+    "sha256": "eadea8fdc41b4acfb5e44583aa4d5080a89492137e4b36d5e0d80e3159d5124d"
+  },
+  {
+    "file": "src\\components\\admin\\team\\ServicePicker.tsx",
+    "sha256": "04a76729ff008c3bcc4d3ae3acc917b068726add4af05545c7e1533546e8b30c"
+  },
+  {
+    "file": "src\\components\\admin\\team\\team-ui.tsx",
+    "sha256": "2324316ab1e85f7517b3cb7cc6794cd3419f90393ed7b0922e2b8d1627386c7a"
+  },
+  {
+    "file": "src\\components\\admin\\team\\team.module.css",
+    "sha256": "01a2ec6e97ef2f5b4d38e38206361a1b277e04fb76c7a28a837ff1769c481954"
+  },
+  {
+    "file": "src\\components\\admin\\team\\TeamEditors.tsx",
+    "sha256": "2ba389610c97862419b7df83a539eceb3de822787d3cc7c72021dd940e73210e"
+  },
+  {
+    "file": "src\\components\\admin\\team\\TeamOverview.tsx",
+    "sha256": "b3639d94184852cd80ee5d266bdc2b30d3bbfa0eb2e783409323fee9a4aae365"
+  },
+  {
+    "file": "src\\components\\admin\\TeamDayAgenda.tsx",
+    "sha256": "89d0539975ce5cc6238033319fd4c4da8d48239145691bbd321c2fcae571bd11"
+  },
+  {
+    "file": "src\\components\\admin\\TreatmentsTab.tsx",
+    "sha256": "86fceba4e0edef7ced6fe0d7a5ea5f8477fbe6500b662464d9ac463e08c62d27"
+  },
+  {
+    "file": "src\\components\\admin\\WhatsAppCommunicationModal.tsx",
+    "sha256": "f17c398fb8a0f13719f3c142f717014b054d01d143e3debb738a00c188fee72e"
+  },
+  {
+    "file": "src\\components\\animation\\CounterAnimation.tsx",
+    "sha256": "bece6f0526b0203ef6af5b865e0c7b93f0cfc2c42a86b54ca4ba16ed6c77a83d"
+  },
+  {
+    "file": "src\\components\\animation\\ScrollReveal.tsx",
+    "sha256": "b433dba611409b5821ce1278ea568a1a46638778fa9b358536d1d1027bd77557"
+  },
+  {
+    "file": "src\\components\\blog\\ArticleContent.tsx",
+    "sha256": "e62f9a6ec32d52b92b712fd2edaccb8d64b27e74b97f00b38aed72ff90d00e9f"
+  },
+  {
+    "file": "src\\components\\blog\\Journal.module.css",
+    "sha256": "95ae9bbc59a630c00f3800513292a1aa7a513be706b9c2867f6a95ba34b7463a"
+  },
+  {
+    "file": "src\\components\\booking\\AppointmentConfirmation.module.css",
+    "sha256": "7ed345eb1db4a2d4a93e42d10d4c653014e28d8ccbbc1c855d6df7ca475b24a8"
+  },
+  {
+    "file": "src\\components\\booking\\AppointmentConfirmation.tsx",
+    "sha256": "a4498055d2d6a4683486e40eefd2314d13e5d1891420c788f58184d3c9cf83f2"
+  },
+  {
+    "file": "src\\components\\booking\\PractitionerSelect.tsx",
+    "sha256": "77c420a4f072641fc722b46dbbec4e7621ba5f4d94a308a1b38024a52d3c8575"
+  },
+  {
+    "file": "src\\components\\booking\\TreatmentSelector.module.css",
+    "sha256": "5b8a4470c70abeba41949be85a496f665c37ae7481b69b5a71aab41c754ad447"
+  },
+  {
+    "file": "src\\components\\booking\\TreatmentSelector.tsx",
+    "sha256": "bb5082161f7407437314973916ea535892cf7ae05130c51ad37ccc2c53a3e02b"
+  },
+  {
+    "file": "src\\components\\layout\\EditorialPageHeader.module.css",
+    "sha256": "561e6811e4eb7147703219f093b0fcf7da06847c67878da7f1aebf4db4bd08f1"
+  },
+  {
+    "file": "src\\components\\layout\\EditorialPageHeader.tsx",
+    "sha256": "7734d80b8d782b853300b38cee68681c79c3e7877227d805a0a9b2d84a4bfef3"
+  },
+  {
+    "file": "src\\components\\layout\\Footer.tsx",
+    "sha256": "db2ad8ee6f53d7b1096b1e82f75be96cb26ad499535c0bca787e09b347697e5b"
+  },
+  {
+    "file": "src\\components\\layout\\Navbar.tsx",
+    "sha256": "b8ee52ae107343de7f2a062be5e871d182b9514912543fb1ee066abcc3ddde98"
+  },
+  {
+    "file": "src\\components\\sections\\BlogPreview.tsx",
+    "sha256": "1826f410a091b9024cae08ac9972b738f4d57cc3a0e9a030e8b8ac274edfd736"
+  },
+  {
+    "file": "src\\components\\sections\\body3d\\AnatomicalModel.tsx",
+    "sha256": "05cce351996fb6e68bceedaa705a885fe535fbc90081f126df7b59ba50d9698a"
+  },
+  {
+    "file": "src\\components\\sections\\body3d\\AnatomicalSVGViewer.tsx",
+    "sha256": "c32ddb5467502f16f6e4d3e77b475647376c6a24fd4b52210a82ff2548a9d9d5"
+  },
+  {
+    "file": "src\\components\\sections\\body3d\\BodyViewer3D.tsx",
+    "sha256": "bf6676377c9bd4597aad620da69a12483a7535d84b972963a83eba165aa0e251"
+  },
+  {
+    "file": "src\\components\\sections\\body3d\\Hotspots.tsx",
+    "sha256": "fd7b9c020543372aae090682676cb0af945dca59351e284c09e65dc2997c88cc"
+  },
+  {
+    "file": "src\\components\\sections\\body3d\\scene-effects.tsx",
+    "sha256": "c45aefbbf010b21af9f7c016561e099ec6a303a0c0385b9fbe244b39f5886406"
+  },
+  {
+    "file": "src\\components\\sections\\body3d\\zone.ts",
+    "sha256": "329207312d962c6181aaeb935a26812c587f1d7b690aaa01383b3e8666461c0c"
+  },
+  {
+    "file": "src\\components\\sections\\BodyMap.module.css",
+    "sha256": "d43a1d4e1d1805ef0dc2f5076609ac53439d5659c8fdd1c7c58f29fe3c8f4ea5"
+  },
+  {
+    "file": "src\\components\\sections\\BodyMap.tsx",
+    "sha256": "c76eaa012de4bc7f1596cd280533501e234c13a88a6840ba70a20e60eeefa4b2"
+  },
+  {
+    "file": "src\\components\\sections\\CTABanner.tsx",
+    "sha256": "87bd8b8ea4f59f57351f856b0285bfc5e9cd71400a56acf03208e140249c1403"
+  },
+  {
+    "file": "src\\components\\sections\\Hero.tsx",
+    "sha256": "265ea1c618a4a3e0234aa342892d5a2e2516632c2c45906add7558502ab3be5b"
+  },
+  {
+    "file": "src\\components\\sections\\ServicesHub.tsx",
+    "sha256": "37bc0e14b48223b2ba3a12e6b8d3b805fff2939d71f92aa5e24ef56adec8ee8f"
+  },
+  {
+    "file": "src\\components\\sections\\TestimonialsSection.tsx",
+    "sha256": "59d18a8960cf970977f72877ac1bd330f765a4c162a1c7cf120193beb8d02b09"
+  },
+  {
+    "file": "src\\components\\sections\\UnifiedServicesExplorer.tsx",
+    "sha256": "0323916a9680806fa0f84499dbd31e5eaf7009b78654f484123fe13280252283"
+  },
+  {
+    "file": "src\\components\\ServiceCatalogProvider.tsx",
+    "sha256": "70f9cf9c2cca67565db5a65d2a07a0d3bf97553bcee893e9c4d610f06bc14a72"
+  },
+  {
+    "file": "src\\components\\ui\\Badge.tsx",
+    "sha256": "a2e3a67a2ea86c8a3a660fdcf51748bf36829469c5b94d5845188f58e7208a33"
+  },
+  {
+    "file": "src\\components\\ui\\blog-card.tsx",
+    "sha256": "d66332e4cafcbe954f14fa6c3143e1c7d3b3bbc9593e371253df2421ec67950a"
+  },
+  {
+    "file": "src\\components\\ui\\Button.tsx",
+    "sha256": "db28b42f0285162d19b8642a9e8655bfd0f9e5adfbd9c9a25208ae2529bf8d84"
+  },
+  {
+    "file": "src\\components\\ui\\FAQAccordion.tsx",
+    "sha256": "ec1d36f7f1443d72b7eb93be5e78f7a86b915330e4bd7f35aff04256b72cb9f7"
+  },
+  {
+    "file": "src\\components\\ui\\GlassCard.tsx",
+    "sha256": "c13101242ae8f8017e53a8b59aa01c4da080391aa4c0272e4fcac50dd2343d6b"
+  },
+  {
+    "file": "src\\components\\ui\\LanguageSwitcher.tsx",
+    "sha256": "827c47f88b3ccb37584f052a1324b8b2c86592ca598be0974f6b0a8c4d7172a0"
+  },
+  {
+    "file": "src\\components\\ui\\Logo.tsx",
+    "sha256": "fddcf68ac6da84842f4501909ab77a28787d1d6c6164e1a8571448d316a4fb49"
+  },
+  {
+    "file": "src\\components\\ui\\Modal.tsx",
+    "sha256": "d7c243a360b780d6ca7fd64d15c57abf6a95dd6c8c067b47c6dde2b86a4ed039"
+  },
+  {
+    "file": "src\\components\\ui\\PhoneInput.tsx",
+    "sha256": "f4afcec6a4fc91e36c8fa6618be01b91383148d291a7246d751e0d43508f80ef"
+  },
+  {
+    "file": "src\\components\\ui\\ServiceCard.tsx",
+    "sha256": "420b2979b06e0d463b49dcfc0f4e55c859b27501146257a3079bf1ee411efd97"
+  },
+  {
+    "file": "src\\components\\ui\\SplashScreen.tsx",
+    "sha256": "ac57a61f5ecd1395ed1588b6beb596811fb5c961d912a0f6c876b015c62632d3"
+  },
+  {
+    "file": "src\\components\\ui\\WhatsAppBubble.tsx",
+    "sha256": "4de4259508279a8bff8fd534d344b5d79c6a8f26b545e5f009e514a5b7d86350"
+  },
+  {
+    "file": "src\\data\\blog-posts.ts",
+    "sha256": "695dd1d0c3f97dbe39dd85ca8acca3185dfb8b6325edcf1f10fa0c7c7b8a61e8"
+  },
+  {
+    "file": "src\\data\\editorial-pages.ts",
+    "sha256": "55feba8dbc5fda3ee38d020105226c4a8c82a35bb971ae8b7a54dcf7f2261032"
+  },
+  {
+    "file": "src\\data\\journal.ts",
+    "sha256": "84accb96d99a9ae45a212f830e3946644c49449679c8cf58f1e9c1058ddabeaa"
+  },
+  {
+    "file": "src\\data\\prescriptionLibrary.ts",
+    "sha256": "4d7e47418499d0a76758c35646f6a6e3ae9bdbb6c51bd7823412f7e8cb08f946"
+  },
+  {
+    "file": "src\\data\\services.ts",
+    "sha256": "6e509c0c15bcb5f87c6783ef055e92b68714c3a3f4ff443ad996e7ae342703ef"
+  },
+  {
+    "file": "src\\data\\translations\\en.ts",
+    "sha256": "34f8795efe5becf219b808c0deac0c7e7a1d7810dada3ea9d762e3d79bc473f8"
+  },
+  {
+    "file": "src\\data\\translations\\fr.ts",
+    "sha256": "a78f88f7de8955f5da411997e241d54451eb6a4207c6772382263f98f9083eb5"
+  },
+  {
+    "file": "src\\data\\translations\\pt.ts",
+    "sha256": "f1c6573c9e9a46ab3956a4f32549e0e74ed45b2c944c4818460379a13413b0bd"
+  },
+  {
+    "file": "src\\lib\\admin-validation.ts",
+    "sha256": "d7d3b7770dfb86ea0ca0d6d60ebfbc77921add67273493026f65421ea4c4eb7c"
+  },
+  {
+    "file": "src\\lib\\appointment-calendar.ts",
+    "sha256": "03de563bd58480401f1e94e256380373cb191bdc39e8a99cf8bfd4fc308ee57b"
+  },
+  {
+    "file": "src\\lib\\appointmentSystem.ts",
+    "sha256": "5b353264cad3ed9e4c7247a493dc77db473c1ac5089e2df856c9521c9c264995"
+  },
+  {
+    "file": "src\\lib\\booking-request.ts",
+    "sha256": "c773243c13bb4a7b615a25cec5980ce13a4ec49a738106d0766907c693ed205e"
+  },
+  {
+    "file": "src\\lib\\booking-schedule.ts",
+    "sha256": "36ca3b322482951fd80edbaa29f8c594184a35567b1b2b5d2c6fb14aa2b96fd4"
+  },
+  {
+    "file": "src\\lib\\booking-service.ts",
+    "sha256": "7e06d89ecddc5e3cca7ad80ebf1fad0efafae15c26d929dc25cc9d84958cf6b4"
+  },
+  {
+    "file": "src\\lib\\clinical.ts",
+    "sha256": "91f45e3f51fec15b7a0bed4162c9f061543984f68ddfd43ce2fd3ddd7c462c13"
+  },
+  {
+    "file": "src\\lib\\db-retry.ts",
+    "sha256": "b1ba4f547b5a34ffbc61bb891a0979fefa0719fa1ed40931aa887f4032ae9359"
+  },
+  {
+    "file": "src\\lib\\db.ts",
+    "sha256": "5870b9af27558949bc05ed7ad26a805c55d41b7652c5fc636209f6723eb38f3c"
+  },
+  {
+    "file": "src\\lib\\email.ts",
+    "sha256": "e6c76321babb8400c4c84416918dec1e71de67daff935224f015f98ff386ebbb"
+  },
+  {
+    "file": "src\\lib\\env.ts",
+    "sha256": "a42ba6db98b46a4afdaf7735acaedcf3825e5a7186c6c04eb77c12de52d781a7"
+  },
+  {
+    "file": "src\\lib\\events.ts",
+    "sha256": "35c53c8d2c14d2d6cf3f9343201bb7e951847ffd6736577a6bc948d14a22e3e1"
+  },
+  {
+    "file": "src\\lib\\i18n.tsx",
+    "sha256": "94de39393c8fc9099f1a14afd988eab529c5edb5f670597cd3f4cf185f1c0b57"
+  },
+  {
+    "file": "src\\lib\\invoicePdf.ts",
+    "sha256": "bf5be1965f5910a7d6ccdd5e7e4fe3a2e14809a5f6005e654151a7101669e51e"
+  },
+  {
+    "file": "src\\lib\\journal-content.ts",
+    "sha256": "8d6ffa5a4a874b9e031775ecc704c469fb447a1a9381c354b54047858dc37f33"
+  },
+  {
+    "file": "src\\lib\\money.ts",
+    "sha256": "010c0016fdd6ef5e39ed4404e91e1df3a9949ef3ca6914fa41e97e0b973ccb62"
+  },
+  {
+    "file": "src\\lib\\phone.ts",
+    "sha256": "33ae3a99521f95778dd2c4f2fb544f36328c3d3f1b6417cb36f0d6ae651c007a"
+  },
+  {
+    "file": "src\\lib\\prescriptionPdf.ts",
+    "sha256": "a10fa0acdf9f7cf8087f79db70b0df6e279d4b813f75d8ecbfea3a2af6b114b9"
+  },
+  {
+    "file": "src\\lib\\recaptcha-client.ts",
+    "sha256": "da2e2aaed2532bc9254b15b43a8d0b71345445425933e2545b9c92a4b92cb1a6"
+  },
+  {
+    "file": "src\\lib\\recaptcha.ts",
+    "sha256": "84f84e271d4d2b8ba0b5d314eaae36a9e0e35fbd58dc33ce2e749a1eee41e874"
+  },
+  {
+    "file": "src\\lib\\requireAdmin.ts",
+    "sha256": "f60968520cef1c968955f28ef535b37811c0530787f85eeb3282c476b4c6ad90"
+  },
+  {
+    "file": "src\\lib\\schedule-math.ts",
+    "sha256": "222fb1a8edceee1bb277c678a3326a71e166e027f73e2629626d0b49031b57f4"
+  },
+  {
+    "file": "src\\lib\\scheduling-schema.ts",
+    "sha256": "8956e011fe562e886329968653c52cb3c3482b5bdb4d2b5c0acc3564c3b4eb79"
+  },
+  {
+    "file": "src\\lib\\scheduling.ts",
+    "sha256": "a6b4a2bcaffb565e0ea194c09b298161c683c46f231ac1e70d2ae95426c3486a"
+  },
+  {
+    "file": "src\\lib\\session-policy.ts",
+    "sha256": "b21bc8e91b8282406569ab258d1dede5a5ca0ad87cc3781c811ffeb938a7fb24"
+  },
+  {
+    "file": "src\\lib\\session.ts",
+    "sha256": "c0c506669380f088919db62c190766c28c0ca2c406a07b6cd5a7f2db74421942"
+  },
+  {
+    "file": "src\\lib\\site.ts",
+    "sha256": "5aa05ba2215200629f02d3eeae13e1b9e53bee964511926dca72725c55961b5b"
+  },
+  {
+    "file": "src\\lib\\sound.ts",
+    "sha256": "35d43dd37f379a8d6d28def3b4722d1193f77292731f7e70b80575cf7fd3d51e"
+  },
+  {
+    "file": "src\\lib\\treatment-schema.ts",
+    "sha256": "72d853447bcff4710fdfecacfbcfa75cacf6fa5b56bb4c6c7a110e90a722334e"
+  },
+  {
+    "file": "src\\lib\\treatments.ts",
+    "sha256": "6161e004ae98575ee6a9a42dc602d7873f339747cf509eb00b606690c7d7242e"
+  },
+  {
+    "file": "src\\lib\\useIntersection.tsx",
+    "sha256": "8f7c7e9cf1bbee252a94149598a57445968509b12abd4b3da5aa263d0b6512bf"
+  },
+  {
+    "file": "src\\lib\\usePublicReviews.ts",
+    "sha256": "3175614a973fd161440624641ee04fa917b26ad44aa351a60250b31113a71d8e"
+  },
+  {
+    "file": "src\\lib\\validation.ts",
+    "sha256": "5f69eb7ea194654e4d479d295dddeb8bbf9ff52c3a92df9edfe3f4af27cf70dc"
+  },
+  {
+    "file": "src\\lib\\whatsapp\\config.ts",
+    "sha256": "9e64abc9795b74926c49915db75e8be1cbc2595c27052c5586b62a86940ef7f6"
+  },
+  {
+    "file": "src\\lib\\whatsapp\\conversation.ts",
+    "sha256": "46307f2787183d6b720e3111c098b7e8099e1bb608650f9ef33af7dc09a4b741"
+  },
+  {
+    "file": "src\\lib\\whatsapp\\store.ts",
+    "sha256": "58bb079b1021c556fb3ce2d405fb99a8dd82fe7996144e77d879d8542f140fda"
+  },
+  {
+    "file": "src\\lib\\whatsapp\\types.ts",
+    "sha256": "81552716dd393be833243d3581eef25af20a41d918ca167186e6e1030edf273a"
+  },
+  {
+    "file": "src\\lib\\whatsapp\\webhook.ts",
+    "sha256": "82a7d1bd66315ffadf411951bdb9b47becfff73c00b10cbce590230963ab5a68"
+  },
+  {
+    "file": "src\\lib\\whatsapp\\worker.ts",
+    "sha256": "139718adb9544ffa8b6370e54bfa691f7bb641c82ddff26097f9523cf5cd0275"
+  },
+  {
+    "file": "src\\proxy.ts",
+    "sha256": "93e9e81de98c3f896d37dbdec712ede2080d3d3d57160596ef78b0d75bdfbcd7"
+  },
+  {
+    "file": "src\\types\\admin.ts",
+    "sha256": "4901699b1bb25311a14840174c337c99edca5c25ca87e7d058190d650ba51f00"
+  },
+  {
+    "file": "src\\types\\scheduling.ts",
+    "sha256": "d8fb64aa3e75799d2b40368444f8c5c31ce7a2d843b0ed185a07c1547cf31e0b"
+  },
+  {
+    "file": "src\\types\\treatments.ts",
+    "sha256": "cbe1717323cf97ae5d4c42bf742505cc298bd9049a14780e57cb078a65933cff"
+  }
+]

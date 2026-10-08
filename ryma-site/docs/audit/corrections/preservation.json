@@ -1,0 +1,22 @@
+{
+  "dataFilesChecked": 16,
+  "changedExistingSourceFiles": [
+    "src\\app\\admin\\page.tsx",
+    "src\\app\\api\\admin\\appointments\\route.ts",
+    "src\\app\\api\\admin\\appointments\\[id]\\route.ts",
+    "src\\app\\api\\admin\\invoices\\route.ts",
+    "src\\app\\api\\admin\\patients\\route.ts",
+    "src\\app\\api\\admin\\prescriptions\\route.ts",
+    "src\\components\\admin\\PatientNotesTab.tsx",
+    "src\\lib\\booking-service.ts",
+    "src\\lib\\db.ts",
+    "src\\lib\\scheduling-schema.ts",
+    "src\\types\\admin.ts",
+    "scripts\\audit-dashboard.cjs",
+    "scripts\\scheduling-adversarial.cjs"
+  ],
+  "date": "2026-10-07",
+  "dataUnchanged": true,
+  "changedDataFiles": [],
+  "baseline": "../tmp/dashboard-fixes-20261007/before.json"
+}

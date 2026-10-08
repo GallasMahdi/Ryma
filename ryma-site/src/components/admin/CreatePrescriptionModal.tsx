@@ -17,7 +17,7 @@ import {
   PrescriptionTemplateItem,
   PRESCRIPTION_LIBRARY,
 } from '@/data/prescriptionLibrary';
-import { SITE } from '@/lib/site';
+import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
 
 interface SelectedItemDraft {
   category: PrescriptionItemCategory;
@@ -52,6 +52,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
   const [customTitle, setCustomTitle] = useState('');
   const [customInstructions, setCustomInstructions] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [practitionerId, setPractitionerId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const txt = (fr: string, en: string, pt: string) => {
@@ -149,7 +150,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
           patientId,
           patientPhone,
           patientName,
-          practitioner: SITE.professionalName,
+          practitionerId: practitionerId || undefined,
           diagnosisOrGoal: diagnosisOrGoal || undefined,
           items: selectedItems,
           generalNotes: generalNotes || undefined,
@@ -228,6 +229,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
 
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-6 flex-1 text-xs text-[#1E293B]">
+              <PractitionerSelect admin lang={lang} value={practitionerId} onChange={setPractitionerId} allowAny={false} />
               {error && (
                 <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl font-medium">
                   {error}

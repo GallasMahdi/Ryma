@@ -1,10 +1,11 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useMemo, useCallback, useRef, useEffect, memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES, Service, getLocalizedText, getLocalizedList } from '@/data/services';
+import { Service, getLocalizedText, getLocalizedList } from '@/data/services';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { playSoftClick, playSlideChange } from '@/lib/sound';
 import {
@@ -58,16 +59,8 @@ const CATEGORIES: CategoryTab[] = [
   },
 ];
 
-function getServiceHeroImage(service: Service): string {
-  if (['reeducation-posturale', 'massage-therapeutique', 'electrostimulation'].includes(service.slug))
-    return '/hero/therapy.jpg';
-  if (service.slug === 'drainage-lymphatique') return '/results/before_after_drainage.png';
-  if (service.slug === 'reeducation-post-partum') return '/results/before_after_postpartum.png';
-  if (service.slug === 'cryolipolyse') return '/results/before_after_cryolipolyse.png';
-  if (service.slug === 'radiofrequence') return '/results/before_after_radiofrequence.png';
-  if (['cavitation', 'laser-lipo', 'pressotherapie'].includes(service.slug)) return '/hero/slimming.jpg';
-  if (service.slug === 'massage-drainant') return '/results/before_after_cellulite.png';
-  return service.pole === 'kinesitherapie' ? '/hero/therapy.jpg' : '/hero/slimming.jpg';
+function getServiceHeroImage(service: {pole:string}): string {
+  return service.pole === 'kinesitherapie' ? '/hero/therapy.jpg' : service.pole === 'bilan' ? '/hero/consultation.jpg' : '/hero/slimming.jpg';
 }
 
 function getServiceIcon(iconKey: string, size = 18) {
@@ -130,7 +123,7 @@ const ServiceCarouselCard = memo(function ServiceCarouselCard({ service, index, 
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md text-[10px] font-sans font-bold uppercase tracking-wider text-[#8A6A24] border border-[#C49A3C]/30 shadow-xs">
             {getServiceIcon(service.icon, 13)}
             <span>
-              {isKine
+              {service.pole === 'bilan' ? (lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : isKine
                 ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
                 : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming' : 'Soins Minceur'}
             </span>
@@ -227,6 +220,7 @@ export interface ServicesHubProps {
 }
 
 export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHeader = false }: ServicesHubProps = {}) {
+  const SERVICES = useServices();
   const { lang } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -241,18 +235,13 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
   const matchesCategory = useCallback((service: Service, cat: CategoryFilter): boolean => {
     if (cat === 'all') return true;
     if (cat === 'kine') {
-      return service.pole === 'kinesitherapie' && service.slug !== 'reeducation-post-partum' && service.slug !== 'drainage-lymphatique';
+      return service.pole === 'kinesitherapie';
     }
     if (cat === 'slimming') {
-      return service.pole === 'minceur' && service.slug !== 'pressotherapie' && service.slug !== 'massage-drainant';
+      return service.pole === 'minceur';
     }
     if (cat === 'postpartum_drainage') {
-      return [
-        'reeducation-post-partum',
-        'drainage-lymphatique',
-        'pressotherapie',
-        'massage-drainant',
-      ].includes(service.slug);
+      return service.careGoals?.some(g=>g==='postpartum'||g==='drainage') ?? false;
     }
     return true;
   }, []);
@@ -268,7 +257,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
       const tags = service.keywords?.join(' ').toLowerCase() ?? '';
       return name.includes(q) || desc.includes(q) || tags.includes(q);
     });
-  }, [activeCategory, searchQuery, lang, matchesCategory]);
+  }, [activeCategory, searchQuery, lang, matchesCategory, SERVICES]);
 
   const categoryCounts = useMemo(() => {
     return {
@@ -277,7 +266,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
       slimming: SERVICES.filter((s) => matchesCategory(s, 'slimming')).length,
       postpartum_drainage: SERVICES.filter((s) => matchesCategory(s, 'postpartum_drainage')).length,
     };
-  }, [matchesCategory]);
+  }, [matchesCategory, SERVICES]);
 
   // Measure only when the content or viewport changes, never inside a scroll frame.
   useEffect(() => {
@@ -397,10 +386,10 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
 
             <p className="text-[#6B6058] max-w-2xl mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-normal">
               {lang === 'pt'
-                ? '13 protocolos clínicos estruturados para postura, alívio de dor e remodelação corporal não invasiva.'
+                ? `${SERVICES.length} protocolos clínicos estruturados para postura, alívio de dor e remodelação corporal não invasiva.`
                 : lang === 'en'
-                ? '13 tailored clinical protocols for spinal posture, joint relief, and non-invasive body contouring.'
-                : '13 protocoles médicaux sur-mesure alliant précision biomécanique et technologies esthétiques de pointe.'}
+                ? `${SERVICES.length} tailored clinical protocols for spinal posture, joint relief, and non-invasive body contouring.`
+                : `${SERVICES.length} protocoles médicaux sur-mesure alliant précision biomécanique et technologies esthétiques de pointe.`}
             </p>
           </ScrollReveal>
         )}

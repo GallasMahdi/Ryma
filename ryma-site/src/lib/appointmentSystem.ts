@@ -30,56 +30,8 @@ const BROADCAST_CHANNEL_NAME = 'ryma_broadcast_v1';
 // Default production state is completely clean (zero mock data)
 const INITIAL_APPOINTMENTS: Appointment[] = [];
 
-// Optional demo seed data for admin testing/staging
-export const DEMO_APPOINTMENTS: Appointment[] = [
-  {
-    id: 'demo_1',
-    patientName: 'Mariana Silva',
-    phone: '+351 912 000 001',
-    email: 'mariana.silva@gmail.com',
-    service: 'reeducation-post-partum',
-    date: '2026-08-06',
-    time: '09:00',
-    status: 'confirmed',
-    notes: 'Acompanhamento pós-parto 3ª semana.',
-    createdAt: '2026-08-01T10:00:00Z',
-  },
-  {
-    id: 'demo_2',
-    patientName: 'Inês Ferreira',
-    phone: '+351 912 000 002',
-    email: 'ines.ferreira@hotmail.com',
-    service: 'cavitation',
-    date: '2026-08-06',
-    time: '10:30',
-    status: 'confirmed',
-    notes: 'Tratamento corporal zona abdominal.',
-    createdAt: '2026-08-02T11:30:00Z',
-  },
-  {
-    id: 'demo_3',
-    patientName: 'Gonçalo Santos',
-    phone: '+351 912 000 003',
-    service: 'reeducation-posturale',
-    date: '2026-08-07',
-    time: '09:30',
-    status: 'pending',
-    notes: 'Dores lombares crónicas.',
-    createdAt: '2026-08-03T14:15:00Z',
-  },
-  {
-    id: 'demo_4',
-    patientName: 'Beatriz Costa',
-    phone: '+351 912 000 004',
-    email: 'beatriz.costa@gmail.com',
-    service: 'drainage-lymphatique',
-    date: '2026-08-07',
-    time: '11:00',
-    status: 'confirmed',
-    notes: 'Sensação de pernas pesadas.',
-    createdAt: '2026-08-04T09:00:00Z',
-  },
-];
+// Demo appointments are supplied explicitly by test fixtures.
+export const DEMO_APPOINTMENTS: Appointment[] = [];
 
 export const DAILY_TIME_SLOTS = [
   '08:30',

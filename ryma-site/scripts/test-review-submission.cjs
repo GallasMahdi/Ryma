@@ -121,7 +121,9 @@ function fixture(options = {}) {
     '@/components/layout/EditorialPageHeader.module.css': {},
     '@/components/animation/ScrollReveal': { ScrollReveal: 'fixture-reveal' },
     '@/data/editorial-pages': { EDITORIAL_PAGES: { reviews: { en: { secondary: 'Write review' } } } },
-    '@/data/testimonials': { TESTIMONIALS: [] }, '@/data/services': { SERVICES: [] },
+    '@/components/ServiceCatalogProvider': {useServices:()=>require('./fixtures/services.cjs').SERVICES},
+    '@/lib/treatments': {isKnownTreatment:async slug=>require('./fixtures/services.cjs').SERVICES.some(s=>s.slug===slug)},
+    '@/data/testimonials': { TESTIMONIALS: [] },
     '@/lib/i18n': { useLanguage: () => ({ lang: 'en', t: { common: { bookAppointment: 'Book', readMore: 'Read reviews' } } }) },
     '@/lib/sound': { playSoftClick() {}, playNotificationChime() {} },
     '@/lib/validation': { getClientIp: () => 'fixture-ip' },
@@ -173,6 +175,7 @@ function fixture(options = {}) {
     find(render(), node => node.type === 'button' && node.props.children === 'Write review').props.onClick();
     const tree = render();
     find(tree, node => node.props?.placeholder === 'Ex: Beatriz Lima').props.onChange({ target: { value: 'Review Fixture' } });
+    find(tree, node => node.type === 'select').props.onChange({target:{value:'reeducation-posturale'}});
     find(tree, node => node.type === 'textarea').props.onChange({ target: { value: 'Isolated review submission test.' } });
   };
   return {
@@ -231,7 +234,7 @@ test('blocked Google scripts and missing or placeholder keys do not delay review
 });
 
 test('public review endpoint accepts submissions without a token, including stale clients', async () => {
-  const body = { patientName: 'Review Fixture', rating: 5, comment: 'Isolated review test.' };
+  const body = { serviceSlug:'reeducation-posturale', patientName: 'Review Fixture', rating: 5, comment: 'Isolated review test.' };
   for (const recaptchaToken of [undefined, 'expired-legacy-token']) {
     const f = fixture({ env: { RECAPTCHA_SECRET_KEY: '' } });
     const response = await f.post({ ...body, recaptchaToken });
@@ -258,7 +261,7 @@ test('network failure preserves the review text and allows retry', async () => {
 
 test('review validation still rejects incomplete and unsafe input', async () => {
   const f = fixture();
-  const valid = { patientName: 'Review Fixture', rating: 5, comment: 'Isolated review test.' };
+  const valid = { serviceSlug:'reeducation-posturale', patientName: 'Review Fixture', rating: 5, comment: 'Isolated review test.' };
   for (const [override, status] of [
     [{ patientName: '' }, 400], [{ rating: 6 }, 400], [{ comment: 'Bad' }, 400],
     [{ patientName: '<script>' }, 422], [{ comment: '<script>alert(1)</script>' }, 422],
@@ -289,7 +292,7 @@ test('approval refreshes an already-open public page without exposing pending or
   f.render();
   await f.flushEffects();
   assert.equal(f.reads[0].cache, 'no-store');
-  const response = await f.post({ patientName: 'New Approved Visitor', rating: 5, comment: 'Moderation visibility fixture.' });
+  const response = await f.post({ serviceSlug:'reeducation-posturale', patientName: 'New Approved Visitor', rating: 5, comment: 'Moderation visibility fixture.' });
   const { review } = await response.json();
   assert.equal((await (await f.get()).json()).reviews.length, 0);
   assert.match((await f.get()).headers.get('cache-control'), /no-store/);
@@ -313,7 +316,7 @@ test('homepage refreshes approved reviews and clears its carousel when none rema
   await f.flushEffects();
   assert.equal(f.reads[0].url, '/api/reviews?limit=16');
   assert.equal(f.reads[0].cache, 'no-store');
-  const response = await f.post({ patientName: 'Homepage Visitor', rating: 5, comment: 'Homepage visibility fixture.' });
+  const response = await f.post({ serviceSlug:'reeducation-posturale', patientName: 'Homepage Visitor', rating: 5, comment: 'Homepage visibility fixture.' });
   const { review } = await response.json();
   await f.moderate(review.id, 'APPROVED');
   f.document.dispatchEvent(new Event('visibilitychange'));
@@ -351,7 +354,7 @@ test('background refresh pauses while hidden and stops after unmount', async () 
 test('a failed refresh preserves the last approved data and recovers on focus', async () => {
   const options = {};
   const f = fixture(options);
-  const response = await f.post({ patientName: 'Existing Visitor', rating: 5, comment: 'Network recovery fixture.' });
+  const response = await f.post({ serviceSlug:'reeducation-posturale', patientName: 'Existing Visitor', rating: 5, comment: 'Network recovery fixture.' });
   const { review } = await response.json();
   await f.moderate(review.id, 'APPROVED');
   f.render();

@@ -1,0 +1,37 @@
+[
+  {
+    "name": "invoice",
+    "pages": 1,
+    "accentsPresent": true,
+    "endMarkers": 0
+  },
+  {
+    "name": "invoice-long",
+    "pages": 1,
+    "accentsPresent": true,
+    "endMarkers": 0
+  },
+  {
+    "name": "prescription",
+    "pages": 1,
+    "accentsPresent": true,
+    "endMarkers": 0,
+    "identityOnEveryPage": true,
+    "pageNumbers": [
+      true
+    ]
+  },
+  {
+    "name": "prescription-long",
+    "pages": 4,
+    "accentsPresent": true,
+    "endMarkers": 18,
+    "identityOnEveryPage": true,
+    "pageNumbers": [
+      true,
+      true,
+      true,
+      true
+    ]
+  }
+]

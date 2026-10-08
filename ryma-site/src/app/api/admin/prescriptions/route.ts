@@ -1,7 +1,7 @@
 import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
-import { dbCreatePrescription, dbGetPrescriptionsByPatientPhone } from '@/lib/db';
+import { dbCreatePrescription, dbGetPrescriptionsByPatientPhone, dbGetPrescriptionsByPatientId } from '@/lib/db';
 import { validateAndNormalizePhone } from '@/lib/phone';
 
 export const dynamic = 'force-dynamic';
@@ -14,12 +14,13 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
   const patientPhone = searchParams.get('patientPhone');
+  const patientId = searchParams.get('patientId');
 
-  if (!patientPhone) {
-    return NextResponse.json({ error: 'patientPhone query parameter is required' }, { status: 400 });
+  if (!patientPhone && !patientId) {
+    return NextResponse.json({ error: 'patientId or patientPhone query parameter is required' }, { status: 400 });
   }
 
-  const prescriptions = await dbGetPrescriptionsByPatientPhone(patientPhone);
+  const prescriptions = patientId ? await dbGetPrescriptionsByPatientId(patientId) : await dbGetPrescriptionsByPatientPhone(patientPhone!);
   return NextResponse.json({ prescriptions }, { status: 200 });
 }
 
@@ -50,7 +51,9 @@ export async function POST(request: NextRequest) {
   }
 
   if (items.length > 50 || items.some(it => !isJsonObject(it) || typeof it.title !== 'string' || !it.title.trim() || it.title.length > 200 || typeof it.instructions !== 'string' || it.instructions.length > 2000 || (it.category !== undefined && !['care_product', 'ergonomic_equipment', 'lifestyle_habit'].includes(String(it.category))))) return NextResponse.json({ error: 'Invalid prescription items' }, { status: 422 });
+  try {
   const prescription = await dbCreatePrescription({
+    practitionerId: typeof body.practitionerId === "string" ? body.practitionerId : undefined,
     patientId: typeof body.patientId === 'string' ? body.patientId.trim().slice(0, 2000) : undefined,
     patientPhone: phoneValidation.normalized,
     patientName: String(patientName).trim(),
@@ -66,4 +69,5 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ prescription }, { status: 201 });
+  } catch(error) { return NextResponse.json({error: error instanceof Error ? error.message : 'Unable to create prescription'}, {status:422}); }
 }

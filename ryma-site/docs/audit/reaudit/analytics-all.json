@@ -1,0 +1,320 @@
+{
+  "stats": {
+    "total": 14,
+    "confirmed": 6,
+    "pending": 5,
+    "completed": 1,
+    "cancelled": 1,
+    "noShow": 1,
+    "revenue": 72.59,
+    "totalRevenue": 72.59,
+    "totalBilled": 72.59,
+    "totalPaid": 72.59,
+    "totalPending": 0,
+    "countPaid": 2,
+    "countPending": 0,
+    "invoicesCount": 2,
+    "paidInvoicesRevenue": 72.59,
+    "avgTicket": 36.3,
+    "occupancyRate": 2,
+    "lostRevenue": 130,
+    "uniquePatients": 9
+  },
+  "comparison": {
+    "revenueGrowthPct": 100,
+    "appointmentsGrowthPct": 100,
+    "priorRevenue": 0,
+    "priorAppointments": 0
+  },
+  "timeline": {
+    "granularity": "month",
+    "points": [
+      {
+        "key": "2026-10",
+        "label": "oct. 26",
+        "revenue": 72.59,
+        "appointments": 3,
+        "completed": 1,
+        "cancelled": 0
+      },
+      {
+        "key": "2026-11",
+        "label": "nov. 26",
+        "revenue": 0,
+        "appointments": 9,
+        "completed": 0,
+        "cancelled": 2
+      },
+      {
+        "key": "2026-12",
+        "label": "déc. 26",
+        "revenue": 0,
+        "appointments": 1,
+        "completed": 0,
+        "cancelled": 0
+      },
+      {
+        "key": "2027-01",
+        "label": "janv. 27",
+        "revenue": 0,
+        "appointments": 1,
+        "completed": 0,
+        "cancelled": 0
+      }
+    ]
+  },
+  "departmentData": {
+    "poles": [
+      {
+        "pole": "kinesitherapie",
+        "name": "Kinésithérapie & Rééducation",
+        "color": "#3B82F6",
+        "count": 14,
+        "revenue": 72.59,
+        "percentage": 100
+      },
+      {
+        "pole": "minceur",
+        "name": "Soins Minceur & Esthétique",
+        "color": "#C49A3C",
+        "count": 0,
+        "revenue": 0,
+        "percentage": 0
+      },
+      {
+        "pole": "bilan",
+        "name": "Bilans & Consultations Initiales",
+        "color": "#10B981",
+        "count": 0,
+        "revenue": 0,
+        "percentage": 0
+      }
+    ],
+    "topServices": [
+      {
+        "slug": "reeducation-posturale",
+        "name": "Rééducation Posturale Globale",
+        "pole": "kinesitherapie",
+        "count": 14,
+        "revenue": 72.59,
+        "share": 100
+      }
+    ]
+  },
+  "heatmap": {
+    "dowLabels": [
+      "Lun",
+      "Mar",
+      "Mer",
+      "Jeu",
+      "Ven",
+      "Sam"
+    ],
+    "hours": [
+      "08:00",
+      "09:00",
+      "10:00",
+      "11:00",
+      "12:00",
+      "13:00",
+      "14:00",
+      "15:00",
+      "16:00",
+      "17:00",
+      "18:00",
+      "19:00"
+    ],
+    "matrix": [
+      [
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "maxCount": 5,
+    "peakSlot": {
+      "dow": "Lun",
+      "hour": "14:00",
+      "count": 5
+    }
+  },
+  "funnel": {
+    "stages": [
+      {
+        "id": "booked",
+        "name": "Consultations Planifiées",
+        "count": 14,
+        "percentage": 100
+      },
+      {
+        "id": "confirmed",
+        "name": "Confirmées par le Cabinet",
+        "count": 7,
+        "percentage": 50
+      },
+      {
+        "id": "completed",
+        "name": "Séances Honorées & Réalisées",
+        "count": 1,
+        "percentage": 7
+      },
+      {
+        "id": "retained",
+        "name": "Patients Fidélisés (> 1 séance)",
+        "count": 3,
+        "percentage": 21
+      }
+    ],
+    "cancellationsCount": 1,
+    "noShowsCount": 1,
+    "lostRevenue": 130,
+    "retentionRate": 33
+  },
+  "payments": {
+    "byMethod": [
+      {
+        "method": "MULTIBANCO",
+        "count": 2,
+        "amount": 72.59,
+        "percentage": 100
+      }
+    ],
+    "byCoverage": [
+      {
+        "coverage": "PARTICULAR",
+        "count": 2,
+        "percentage": 100
+      }
+    ],
+    "unpaidCount": 0,
+    "unpaidAmount": 0
+  },
+  "analyticsData": {
+    "dowLabels": [
+      "Lun",
+      "Mar",
+      "Mer",
+      "Jeu",
+      "Ven",
+      "Sam",
+      "Dim"
+    ],
+    "dowCounts": [
+      7,
+      2,
+      3,
+      2,
+      0,
+      0,
+      0
+    ],
+    "topServices": [
+      [
+        "reeducation-posturale",
+        14
+      ]
+    ],
+    "peakHours": [
+      [
+        "09:00",
+        7
+      ],
+      [
+        "14:00",
+        5
+      ],
+      [
+        "10:00",
+        2
+      ]
+    ],
+    "cancelRate": 14,
+    "completionRate": 7
+  },
+  "range": {
+    "type": "all",
+    "startDate": "2026-10-01",
+    "endDate": "2027-01-04",
+    "pole": "all"
+  },
+  "expiresAt": 1791393171353
+}

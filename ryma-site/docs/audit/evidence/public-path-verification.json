@@ -1,0 +1,24 @@
+{
+  "supersedes": "extra-results PUBLIC-01: original assertion followed the application redirect and mistook the home page HTTP 200 for a private file response. No file leak observed.",
+  "status": "PASS",
+  "paths": [
+    {
+      "path": "/data/ryma.db",
+      "status": 307,
+      "location": "/",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "/.env",
+      "status": 307,
+      "location": "/",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "/api/admin/invoices/not-real/pdf",
+      "status": 307,
+      "location": "/",
+      "contentType": "text/html; charset=utf-8"
+    }
+  ]
+}

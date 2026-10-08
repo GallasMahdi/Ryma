@@ -1,6 +1,6 @@
 'use client';
-
-import { PhoneInput } from '@/components/ui/PhoneInput';
+import { getLocalizedText } from '@/data/services';
+import { useAllServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ import {
   IconCheck,
   IconChevronDown,
 } from '@tabler/icons-react';
-import { SERVICES } from '@/data/services';
+
 import { Lang } from '@/lib/i18n';
 import {
   Invoice,
@@ -27,6 +27,7 @@ import {
   calculateVatBreakdown,
 } from '@/types/admin';
 import { SITE } from '@/lib/site';
+import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
 
 interface CreateInvoiceModalProps {
   isOpen: boolean;
@@ -43,10 +44,11 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
   onClose,
   onCreated,
   lang,
-  patients: initialPatients,
+  patients,
   appointments,
   prefilledData,
 }: CreateInvoiceModalProps) {
+  const SERVICES = useAllServices();
   const txt = (frStr: string, enStr: string, ptStr: string) => {
     if (lang === 'fr') return frStr;
     if (lang === 'en') return enStr;
@@ -61,37 +63,26 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
   const [coverageType, setCoverageType] = useState<CoverageType>('PARTICULAR');
   const [coverageProvider, setCoverageProvider] = useState('');
   const [coverageNumber, setCoverageNumber] = useState('');
-  const [serviceSlug, setServiceSlug] = useState(SERVICES[0]?.slug || 'reeducacao-postural');
-  const [serviceName, setServiceName] = useState(SERVICES[0]?.name.pt || '');
-  const [amount, setAmount] = useState<number>(SERVICES[0]?.price || 50);
+  const [serviceSlug, setServiceSlug] = useState(SERVICES[0]?.slug || '');
+  const [serviceName, setServiceName] = useState(getLocalizedText(SERVICES[0]?.name,lang) || '');
+  const [amount, setAmount] = useState<number>(SERVICES[0]?.price ?? 0);
   const [vatRate, setVatRate] = useState<number>(0);
   const [vatExemptionReason, setVatExemptionReason] = useState('Isento de IVA - Artigo 9.º do CIVA');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('MULTIBANCO');
   const [paymentStatus, setPaymentStatus] = useState<InvoicePaymentStatus>('PAID');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [practitionerId, setPractitionerId] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const requestKey=useRef('');
+  const inFlight=useRef(false);
+  useEffect(()=>{ if (isOpen) requestKey.current=crypto.randomUUID(); },[isOpen]);
 
   // Searchable Patient Combobox state
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
   const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
   const [selectedPatientObject, setSelectedPatientObject] = useState<PatientRecord | null>(null);
   const patientDropdownRef = useRef<HTMLDivElement>(null);
-
-  const [patients, setPatients] = useState(initialPatients);
-  useEffect(() => {
-    if (!isOpen) return;
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const response = await fetch('/api/admin/patients?directory=1&limit=30&search=' + encodeURIComponent(patientSearchQuery), {signal: controller.signal});
-        if (!response.ok) throw new Error('Patient search failed');
-        const data = await response.json();
-        if (!controller.signal.aborted) setPatients(data.patients);
-      } catch (err) { if (!controller.signal.aborted) setError(txt('Recherche indisponible', 'Search unavailable', 'Pesquisa indisponível')); }
-    }, 150);
-    return () => {clearTimeout(timer); controller.abort();};
-  }, [isOpen, patientSearchQuery]);
 
   // Filter patients by query
   const filteredPatients = useMemo(() => {
@@ -126,6 +117,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
   // Sync prefilled data whenever modal opens
   useEffect(() => {
     if (isOpen) {
+      setPractitionerId(prefilledData?.practitionerId || appointments.find(a=>a.id===prefilledData?.appointmentId)?.practitionerId || '');
       if (prefilledData) {
         setPatientName(prefilledData.patientName || '');
         setPatientPhone(prefilledData.patientPhone || '');
@@ -136,17 +128,13 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
         setCoverageProvider(prefilledData.coverageProvider || '');
         setCoverageNumber(prefilledData.coverageNumber || '');
 
-        const slug = prefilledData.serviceSlug || SERVICES[0]?.slug || 'reeducacao-postural';
+        const slug = prefilledData.serviceSlug || SERVICES[0]?.slug || '';
         setServiceSlug(slug);
         const srv = SERVICES.find((s) => s.slug === slug);
-        setServiceName(prefilledData.serviceName || srv?.name.pt || slug);
-        setAmount(prefilledData.amount ?? srv?.price ?? 50);
+        setServiceName(prefilledData.serviceName || getLocalizedText(srv?.name,lang) || slug);
+        setAmount(prefilledData.amount ?? srv?.price ?? 0);
 
-        const isKine =
-          !slug.includes('minceur') &&
-          !slug.includes('cryolipolyse') &&
-          !slug.includes('cavitation') &&
-          !slug.includes('radiofrequence');
+        const isKine = (appointments.find(a=>a.id===prefilledData.appointmentId)?.servicePole ?? srv?.pole) === 'kinesitherapie';
         setVatRate(isKine ? 0 : 23);
         setVatExemptionReason(isKine ? 'Isento de IVA - Artigo 9.º do CIVA' : '');
         setPaymentMethod(prefilledData.paymentMethod || 'MULTIBANCO');
@@ -167,9 +155,9 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
         setCoverageType('PARTICULAR');
         setCoverageProvider('');
         setCoverageNumber('');
-        setServiceSlug(SERVICES[0]?.slug || 'reeducacao-postural');
-        setServiceName(SERVICES[0]?.name.pt || '');
-        setAmount(SERVICES[0]?.price || 50);
+        setServiceSlug(SERVICES[0]?.slug || '');
+        setServiceName(getLocalizedText(SERVICES[0]?.name,lang) || '');
+        setAmount(SERVICES[0]?.price ?? 0);
         setVatRate(0);
         setVatExemptionReason('Isento de IVA - Artigo 9.º do CIVA');
         setPaymentMethod('MULTIBANCO');
@@ -181,15 +169,14 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
       setIsPatientDropdownOpen(false);
       setError(null);
     }
-  // Search results must never reset an open form or erase typed input.
-  }, [isOpen, prefilledData]);
+  }, [isOpen, prefilledData, patients]);
 
   // Handle service change to update price and VAT rate
   const handleServiceChange = (slug: string) => {
     setServiceSlug(slug);
     const srv = SERVICES.find((s) => s.slug === slug);
     if (srv) {
-      setServiceName(srv.name.pt || srv.name.fr || slug);
+      setServiceName(getLocalizedText(srv.name,lang) || slug);
       setAmount(srv.price);
       const isKine = srv.pole === 'kinesitherapie';
       if (isKine) {
@@ -222,6 +209,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (inFlight.current) return;
     if (!patientName.trim() || !patientPhone.trim()) {
       setError(
         txt('Nom et téléphone requis', 'Name and phone are required', 'Nome e telefone são obrigatórios')
@@ -229,13 +217,14 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
       return;
     }
 
+    inFlight.current=true;
     setSubmitting(true);
     setError(null);
 
     try {
       const res = await fetch('/api/admin/invoices', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': requestKey.current },
         body: JSON.stringify({
           appointmentId: prefilledData?.appointmentId,
           patientId: selectedPatientObject?.id || prefilledData?.patientId,
@@ -249,7 +238,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
           coverageNumber: coverageNumber || undefined,
           serviceSlug,
           serviceName,
-          practitioner: SITE.professionalName,
+          practitionerId: practitionerId || undefined,
           amount,
           vatRate,
           vatExemptionReason: vatRate === 0 ? vatExemptionReason : undefined,
@@ -269,6 +258,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
     } catch (err: any) {
       setError(err.message || txt('Erreur de communication', 'Communication error', 'Erro de comunicação'));
     } finally {
+      inFlight.current=false;
       setSubmitting(false);
     }
   };
@@ -317,6 +307,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
 
             {/* Form Body */}
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5 text-xs text-[#1E293B] flex-1">
+              {!prefilledData?.appointmentId && <PractitionerSelect admin lang={lang} value={practitionerId} onChange={setPractitionerId} allowAny={false} />}
               {error && (
                 <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl font-medium">
                   {error}
@@ -324,14 +315,14 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
               )}
 
               {/* ── Searchable Patient Combobox ─────────────────────────── */}
-              {!prefilledData?.patientName && (
+              {patients.length > 0 && !prefilledData?.patientName && (
                 <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#E2E8F0] relative" ref={patientDropdownRef}>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block font-bold text-[#0F172A] text-xs">
                       {txt('Sélectionner un patient existant', 'Select registered patient', 'Preencher a partir de Utente registado')}
                     </label>
                     <span className="text-[10px] text-[#94A3B8]">
-                      {patients.length} {txt('résultats', 'results', 'resultados')}
+                      {patients.length} {txt('patients enregistrés', 'registered patients', 'utentes registados')}
                     </span>
                   </div>
 
@@ -461,12 +452,11 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                     />
                   </div>
                   <div>
-                    <label htmlFor="invoice-phone" className="block text-[11px] font-medium text-[#64748B] mb-1">
+                    <label className="block text-[11px] font-medium text-[#64748B] mb-1">
                       {txt('Téléphone / WhatsApp *', 'Phone / WhatsApp *', 'Telefone / WhatsApp *')}
                     </label>
-                    <PhoneInput
-                      id="invoice-phone"
-                      lang={lang}
+                    <input
+                      type="tel"
                       required
                       value={patientPhone}
                       onChange={(e) => setPatientPhone(e.target.value)}
@@ -566,10 +556,10 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                       onChange={(e) => handleServiceChange(e.target.value)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none font-medium"
                     >
-                      {SERVICES.map((s) => (
+                      <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
                         <option key={s.slug} value={s.slug}>
-                          {s.name[lang] || s.name.pt} ({s.price} € -{' '}
-                          {s.pole === 'kinesitherapie'
+                          {getLocalizedText(s.name,lang)} ({s.price} € -{' '}
+                          {s.pole === 'bilan' ? txt('Bilan', 'Assessment', 'Avaliação') : s.pole === 'kinesitherapie'
                             ? txt('Kinésithérapie', 'Physiotherapy', 'Fisioterapia')
                             : txt('Esthétique', 'Aesthetics', 'Estética')}
                           )

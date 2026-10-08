@@ -1,11 +1,12 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES, ServicePole } from '@/data/services';
+import { ServicePole } from '@/data/services';
 import { ServiceCard } from '@/components/ui/ServiceCard';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { playSoftClick } from '@/lib/sound';
@@ -20,6 +21,7 @@ import {
 } from '@tabler/icons-react';
 
 export default function ServicesPage() {
+  const SERVICES = useServices();
   const { lang, t } = useLanguage();
   const [activePole, setActivePole] = useState<'all' | 'kinesitherapie' | 'minceur'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,21 +39,7 @@ export default function ServicesPage() {
       if (!name.includes(query) && !desc.includes(query)) return false;
     }
 
-    // Goal tag filter
-    if (activeGoal === 'posture') {
-      return ['reeducation-posturale', 'massage-therapeutique', 'electrostimulation'].includes(s.slug);
-    }
-    if (activeGoal === 'slimming') {
-      return ['cryolipolyse', 'cavitation', 'radiofrequence', 'laser-lipo'].includes(s.slug);
-    }
-    if (activeGoal === 'drainage') {
-      return ['drainage-lymphatique', 'pressotherapie', 'massage-drainant'].includes(s.slug);
-    }
-    if (activeGoal === 'postpartum') {
-      return ['reeducation-post-partum', 'pressotherapie', 'massage-therapeutique'].includes(s.slug);
-    }
-
-    return true;
+    return activeGoal === 'all' || (s.careGoals ?? []).some(goal=>goal===activeGoal);
   });
 
   const kineCount = SERVICES.filter((s) => s.pole === 'kinesitherapie').length;
@@ -127,10 +115,10 @@ export default function ServicesPage() {
 
             <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-3 sm:mb-4 tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.6)]">
               {lang === 'pt'
-                ? '13 Tratamentos de Vanguarda'
+                ? `${SERVICES.length} Tratamentos de Vanguarda`
                 : lang === 'en'
-                ? '13 Cutting-Edge Treatments'
-                : '13 Soins Spécialisés'}
+                ? `${SERVICES.length} Cutting-Edge Treatments`
+                : `${SERVICES.length} Soins Spécialisés`}
             </h1>
 
             <p className="text-[#E8E2D8] text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal mb-8">
@@ -154,7 +142,7 @@ export default function ServicesPage() {
                       : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                   }`}
                 >
-                  {lang === 'pt' ? 'Todos (13)' : lang === 'en' ? 'All (13)' : 'Tous (13)'}
+                  {lang === 'pt' ? `Todos (${SERVICES.length})` : lang === 'en' ? `All (${SERVICES.length})` : `Tous (${SERVICES.length})`}
                 </button>
                 <button
                   onClick={() => { setActivePole('kinesitherapie'); playSoftClick(); }}

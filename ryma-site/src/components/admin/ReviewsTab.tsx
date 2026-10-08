@@ -1,4 +1,6 @@
 'use client';
+import { getLocalizedText } from '@/data/services';
+import { useAllServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,7 +30,7 @@ import {
   IconAlertTriangle,
 } from '@tabler/icons-react';
 import { Review, ReviewStatus } from '@/types/admin';
-import { SERVICES } from '@/data/services';
+
 import { Lang } from '@/lib/i18n';
 import { playSoftClick } from '@/lib/sound';
 import { ResponsiveModal } from './ResponsiveModal';
@@ -61,6 +63,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
   onAddToast,
   setConfirmDialog,
 }: ReviewsTabProps) {
+  const SERVICES = useAllServices();
   const [localReviews, setLocalReviews] = useState<Review[]>([]);
   const reviews = parentReviews ?? localReviews;
   const setReviews = parentSetReviews ?? setLocalReviews;
@@ -105,7 +108,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
   const [formEmail, setFormEmail] = useState('');
   const [formRating, setFormRating] = useState(5);
   const [formHoverRating, setFormHoverRating] = useState<number | null>(null);
-  const [formService, setFormService] = useState(SERVICES[0]?.slug || 'kinesitherapie-generale');
+  const [formService, setFormService] = useState(SERVICES[0]?.slug || '');
   const [formComment, setFormComment] = useState('');
   const [formLocation, setFormLocation] = useState('Lisboa');
   const [formStatus, setFormStatus] = useState<ReviewStatus>('APPROVED');
@@ -418,7 +421,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
           const serviceObj = SERVICES.find((s) => s.slug === r.serviceSlug);
-          const serviceName = serviceObj ? (serviceObj.name[lang] || serviceObj.name.pt || '').toLowerCase() : '';
+          const serviceName = serviceObj ? (getLocalizedText(serviceObj.name,lang) || '').toLowerCase() : '';
           const match =
             r.patientName.toLowerCase().includes(q) ||
             r.comment.toLowerCase().includes(q) ||
@@ -444,7 +447,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
         }
         return 0;
       });
-  }, [reviews, filterStatus, filterRating, filterService, searchQuery, sortBy, lang]);
+  }, [reviews, filterStatus, filterRating, filterService, searchQuery, sortBy, lang, SERVICES]);
 
   // Dynamic label for the star rating picker
   const getRatingLabel = (rating: number) => {
@@ -895,9 +898,9 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               className="text-xs bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg px-2 py-1 font-medium focus:outline-none focus:border-[#0F172A]"
             >
               <option value="ALL">{txt('Todos os Tratamentos', 'All Treatments', 'Tous les Soins')}</option>
-              {SERVICES.map((s) => (
+              <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
                 <option key={s.slug} value={s.slug}>
-                  {s.name[lang] || s.name.pt || s.name.fr}
+                  {getLocalizedText(s.name,lang)}
                 </option>
               ))}
             </select>
@@ -1116,7 +1119,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
 
                     {service && (
                       <span className="text-[10px] font-semibold text-[#8C6B1F] bg-[#FAF8F5] border border-[#E8DCC4] px-2 py-0.5 rounded-lg truncate max-w-[200px]">
-                        {service.name[lang] || service.name.pt}
+                        {getLocalizedText(service.name,lang)}
                       </span>
                     )}
                   </div>
@@ -1252,7 +1255,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                         <div className="text-[11px] text-[#94A3B8]">{rev.location}</div>
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap text-[#64748B]">
-                        {service ? service.name[lang] || service.name.pt : rev.serviceSlug}
+                        {service ? getLocalizedText(service.name,lang) : rev.serviceSlug}
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-1 text-amber-500 font-bold font-mono">
@@ -1425,9 +1428,9 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                 onChange={(e) => setFormService(e.target.value)}
                 className="w-full px-3 py-2 bg-white border border-[#CBD5E1] rounded-xl text-[#0F172A] focus:outline-none focus:border-[#0F172A]"
               >
-                {SERVICES.map((s) => (
+                <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
                   <option key={s.slug} value={s.slug}>
-                    {s.name[lang] || s.name.pt || s.name.fr}
+                    {getLocalizedText(s.name,lang)}
                   </option>
                 ))}
               </select>

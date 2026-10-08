@@ -1,4 +1,5 @@
 'use client';
+import { useServiceLabels } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,18 +27,11 @@ import {
   IconCalendarEvent,
   IconReceiptTax,
 } from '@tabler/icons-react';
-import {
-  Appointment,
-  AppointmentStatus,
-  STATUS_CONFIG,
-  getServiceName,
-  getServicePrice,
-  formatLocalDate,
-  shiftDateString,
-} from '@/types/admin';
+import { Appointment, AppointmentStatus, STATUS_CONFIG, formatLocalDate, shiftDateString } from '@/types/admin';
 import { Lang } from '@/lib/i18n';
 import dynamic from 'next/dynamic';
 import { DayAgendaView } from './DayAgendaView';
+import { AgendaContent } from './AgendaContent';
 import { FilterSheet } from './FilterSheet';
 
 const CreateInvoiceModal = dynamic(
@@ -235,21 +229,17 @@ function WeekCalendarView({
       </div>
 
       {/* Calendar Grid Container */}
-      {loading ? (
-        <div role="status" className="bg-white border border-[#E2E8F0] rounded-xl p-12 text-center text-sm text-[#64748B] animate-pulse">
-          {txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…')}
-        </div>
-      ) : (
+      <AgendaContent loading={loading} loadingLabel={txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…')}>
       <div className="bg-white border border-[#E2E8F0] rounded-xl overflow-x-auto shadow-xs no-scrollbar">
         <div className="min-w-[700px]">
           {/* Day Headers */}
-          <div className="grid grid-cols-7 border-b border-[#E2E8F0]">
+          <div className="grid min-h-[85px] grid-cols-7 border-b border-[#E2E8F0]">
             {weekDays.map((day, i) => {
               const ds = toDateStr(day);
               const isToday = ds === todayStr;
-              const sunday = isSunday(day);
+              const sunday = false;
               const count = (apptByDate[ds] ?? []).length;
-              const occupancy = count / WEEK_HOUR_SLOTS.length;
+
 
               return (
                 <div
@@ -272,18 +262,6 @@ function WeekCalendarView({
                   }`}>
                     {dayNum(day)}
                   </div>
-                  <div className="mt-1.5 h-1 rounded-full bg-[#E2E8F0] overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min(occupancy * 100 * 1.5, 100)}%`,
-                        background:
-                          occupancy > 0.6 ? '#EF4444' :
-                          occupancy > 0.3 ? '#F59E0B' :
-                          occupancy > 0   ? '#22C55E' : 'transparent',
-                      }}
-                    />
-                  </div>
                   {count > 0 && (
                     <div className="text-[10px] text-[#64748B] font-medium mt-0.5">
                       {count} {count === 1 ? txt('rdv', 'appt', 'cons.') : txt('rdvs', 'appts', 'cons.')}
@@ -299,7 +277,7 @@ function WeekCalendarView({
             {weekDays.map((day, i) => {
               const ds = toDateStr(day);
               const dayAppts = apptByDate[ds] ?? [];
-              const sunday = isSunday(day);
+              const sunday = false;
 
               return (
                 <div
@@ -343,7 +321,7 @@ function WeekCalendarView({
                             )}
                           </div>
                           <div className="font-semibold truncate">
-                            {appt.patientName.split(' ')[0]}
+                            {appt.patientName.split(' ')[0]}<span className="block truncate text-[9px] font-normal">{appt.practitionerName}</span>
                           </div>
                         </button>
                       );
@@ -356,7 +334,7 @@ function WeekCalendarView({
         </div>
       </div>
 
-      )}
+      </AgendaContent>
 
       {/* Modal for Appointment Details */}
       <AppointmentDetailModal
@@ -378,6 +356,7 @@ function WeekCalendarView({
 // ─── Main AppointmentsTab Component ──────────────────────────────────────────
 
 interface AppointmentsTabProps {
+  practitionerId?: string;
   total: number;
   onQueryChange: (query: string) => void;
   lang: Lang;
@@ -398,6 +377,7 @@ interface AppointmentsTabProps {
 }
 
 export const AppointmentsTab = React.memo(function AppointmentsTab({
+  practitionerId,
   lang,
   searchQuery,
   setSearchQuery,
@@ -416,13 +396,14 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
   noShowCounts,
   recentNewIds,
 }: AppointmentsTabProps) {
+  const { getServiceName, getServicePrice } = useServiceLabels();
   const txt = (frStr: string, enStr: string, ptStr: string) => {
     if (lang === 'fr') return frStr;
     if (lang === 'en') return enStr;
     return ptStr;
   };
 
-  const [viewMode, setViewMode] = useState<'agenda' | 'week' | 'cards' | 'table' | 'grouped'>('week');
+  const [viewMode, setViewMode] = useState<'agenda' | 'week' | 'cards' | 'table' | 'grouped'>('agenda');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'upcoming'>('all');
   const [specificDateFilter, setSpecificDateFilter] = useState<string | null>(null);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
@@ -543,7 +524,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
 
   const renderAppointmentCard = (item: Appointment) => {
     const st = STATUS_CONFIG[item.status];
-    const price = getServicePrice(item.service);
+    const price = getServicePrice(item.service, item);
     const initials = getInitials(item.patientName);
     const isRecentNew = recentNewIds?.has(item.id);
     const noShows = noShowCounts?.[item.phone] ?? 0;
@@ -568,7 +549,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
           <div className="space-y-1 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="font-semibold text-sm sm:text-base text-[#0F172A] group-hover:text-[#2563EB] transition-colors truncate">
-                {item.patientName}
+                {item.patientName}<span className="block text-[11px] font-normal text-slate-500">{item.practitionerName}</span>
               </span>
               {isRecentNew && (
                 <span className="bg-[#C49A3C] text-white text-[9px] font-bold px-1.5 py-0.2 rounded uppercase animate-pulse">
@@ -593,7 +574,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
 
             <div className="flex flex-wrap items-center gap-y-1 gap-x-2.5 text-xs text-[#64748B]">
               <span className="font-medium text-[#334155]">
-                {getServiceName(item.service, lang)}
+                {getServiceName(item.service, lang, item)}
               </span>
               <span className="text-[#CBD5E1]">•</span>
               <span className="font-semibold text-[#0F172A]">
@@ -938,7 +919,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
       ) : (
         <>
           {viewMode === 'agenda' ? (
-            <DayAgendaView
+            <DayAgendaView practitionerId={practitionerId}
               selectedDate={calendarDate}
               loading={loading}
               onDateChange={selectDate}
@@ -990,7 +971,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                   <tbody className="divide-y divide-[#E2E8F0]">
                     {paginatedAppointments.map(item => {
                       const st = STATUS_CONFIG[item.status];
-                      const price = getServicePrice(item.service);
+                      const price = getServicePrice(item.service, item);
                       const initials = getInitials(item.patientName);
                       const isRecentNew = recentNewIds?.has(item.id);
 
@@ -1011,7 +992,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                               </div>
                               <div className="min-w-0">
                                 <div className="font-semibold text-[#0F172A] group-hover:text-[#2563EB] text-xs flex items-center gap-1.5 transition-colors">
-                                  <span>{item.patientName}</span>
+                                  <span>{item.patientName}<span className="block text-[11px] text-slate-500">{item.practitionerName}</span></span>
                                   {isRecentNew && (
                                     <span className="bg-[#C49A3C] text-white text-[8px] font-bold px-1.5 py-0.2 rounded uppercase animate-pulse">
                                       {txt('NOUV.', 'NEW', 'NOVO')}
@@ -1026,7 +1007,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                             onClick={() => setSelectedDetailAppt(item)}
                             className="py-3.5 px-4 cursor-pointer"
                           >
-                            <div className="font-medium text-[#0F172A]">{getServiceName(item.service, lang)}</div>
+                            <div className="font-medium text-[#0F172A]">{getServiceName(item.service, lang, item)}</div>
                             <div className="text-[11px] text-[#64748B]">{price} €</div>
                           </td>
                           <td
@@ -1247,7 +1228,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
             patientPhone: selectedApptForInvoice.phone,
             patientEmail: selectedApptForInvoice.email || undefined,
             serviceSlug: selectedApptForInvoice.service,
-            amount: getServicePrice(selectedApptForInvoice.service),
+            amount: getServicePrice(selectedApptForInvoice.service, selectedApptForInvoice),
             coverageType: selectedApptForInvoice.coverageType || 'PARTICULAR',
             coverageProvider: selectedApptForInvoice.coverageProvider || undefined,
             coverageNumber: selectedApptForInvoice.coverageNumber || undefined,

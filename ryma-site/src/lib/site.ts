@@ -19,8 +19,8 @@ export const SITE = {
     fr: 'Lisbonne, Portugal',
   } as LocalizedText,
   phone: '+351 912 345 678',
-  whatsapp: '351912345678',
-  whatsappDisplay: '+351 912 345 678',
+  whatsapp: '351933467880',
+  whatsappDisplay: '+351 933 467 880',
   email: 'contacto@digitalclinica.pt',
   address: {
     pt: 'Avenida da Liberdade 120, 1250-146 Lisboa, Portugal',
@@ -57,7 +57,6 @@ export const SITE = {
   analytics: {
     gaMeasurementId: process.env.NEXT_PUBLIC_GA_ID ?? '',
     metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID ?? '',
-    whatsappBusinessApiToken: process.env.WHATSAPP_API_TOKEN ?? '',
   },
 };
 

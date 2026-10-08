@@ -1,0 +1,18 @@
+▶ Patient integrity on isolated libSQL
+  ✔ duplicate creation and changing to another patient phone are explicit conflicts (155.421ms)
+  ✔ concurrent creation never overwrites an existing patient (15.7218ms)
+  ✔ legacy-only records require an explicit promotion and keep their historical contact links (32.5784ms)
+  ✔ contact changes retain ID-based histories and immutable document snapshots (148.0416ms)
+  ✔ failure saving the new contact mirror rolls back profile and legacy links (34.0837ms)
+  ✔ archive retains clinical data and document links while releasing active capacity (115.8213ms)
+  ✔ failure to write archive audit rolls back the archive and keeps capacity occupied (46.0417ms)
+  ✔ patient ID reads and archive mutations remain authenticated (2.0407ms)
+✔ Patient integrity on isolated libSQL (552.6375ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2616.4903

@@ -1,8 +1,10 @@
 import { MetadataRoute } from 'next';
-import { SERVICES } from '@/data/services';
+import { getPublicServices } from '@/lib/treatments';
+export const dynamic='force-dynamic';
 import { BLOG_POSTS } from '@/data/blog-posts';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const SERVICES=await getPublicServices();
   const baseUrl = 'https://digitalclinica.pt';
   const lastModified = new Date();
 

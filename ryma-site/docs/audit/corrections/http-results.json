@@ -1,0 +1,36 @@
+{
+  "context": "Development server using isolated fixture, integrations disabled; production build blocked by font network access",
+  "patientId": "pat_muyb5m20qif7",
+  "appointmentId": "apt_sess_213b05fa-b6d3-457d-8324-f94901c7cf4c",
+  "phone": "+351969974002",
+  "rows": [
+    {
+      "test": "Duplicate patient creation",
+      "status": "PASS",
+      "http": 409,
+      "code": "PATIENT_PHONE_CONFLICT"
+    },
+    {
+      "test": "appointments after phone change",
+      "status": "PASS",
+      "count": 1
+    },
+    {
+      "test": "invoices after phone change",
+      "status": "PASS",
+      "count": 1
+    },
+    {
+      "test": "prescriptions after phone change",
+      "status": "PASS",
+      "count": 1
+    },
+    {
+      "test": "Archive preserves patient history and session",
+      "status": "PASS",
+      "active": 0,
+      "archived": 1,
+      "sessions": 1
+    }
+  ]
+}

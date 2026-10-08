@@ -64,22 +64,20 @@ async function backupDatabase() {
         'security_audit_logs',
         'blocked_slots',
         'patient_notes',
+        'practitioners', 'practitioner_services', 'working_hours', 'schedule_exceptions',
+        'resources', 'service_resources', 'idempotency_keys', 'treatment_catalog', 'treatment_revisions',
       ];
 
       const dump = {
+        version: '3.0.0',
         exportedAt: new Date().toISOString(),
         engine: 'turso-libsql',
         tables: {},
       };
 
-      for (const table of tables) {
-        try {
-          const res = await client.execute(`SELECT * FROM ${table}`);
-          dump.tables[table] = res.rows;
-        } catch {
-          dump.tables[table] = [];
-        }
-      }
+      const tx=await client.transaction('read');
+      try { for(const table of tables) dump.tables[table]=(await tx.execute('SELECT * FROM '+table)).rows; await tx.commit(); }
+      finally {tx.close();client.close();}
 
       const tursoBackupFile = `ryma_turso_backup_${timestamp}.json`;
       const tursoBackupPath = path.join(BACKUP_DIR, tursoBackupFile);

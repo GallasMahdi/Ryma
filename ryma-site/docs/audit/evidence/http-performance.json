@@ -1,0 +1,59 @@
+{
+  "context": "local production build, loopback, current synthetic fixture, five warm sequential requests after one warm-up, not browser paint",
+  "counts": {
+    "patients": 12,
+    "appointments": 14,
+    "invoices": 7
+  },
+  "measures": [
+    {
+      "url": "/admin",
+      "samples": 5,
+      "medianMs": 28.11,
+      "maxMs": 28.62,
+      "bytes": 25778
+    },
+    {
+      "url": "/api/admin/appointments?summary=1&page=1&limit=50",
+      "samples": 5,
+      "medianMs": 15.36,
+      "maxMs": 16.19,
+      "bytes": 10309
+    },
+    {
+      "url": "/api/admin/patients?directory=1&page=1&limit=10",
+      "samples": 5,
+      "medianMs": 16.02,
+      "maxMs": 16.76,
+      "bytes": 4241
+    },
+    {
+      "url": "/api/admin/appointments?search=Audit",
+      "samples": 5,
+      "medianMs": 14.52,
+      "maxMs": 16.38,
+      "bytes": 10163
+    },
+    {
+      "url": "/api/slots?date=2027-02-01&service=reeducation-posturale",
+      "samples": 5,
+      "medianMs": 8.18,
+      "maxMs": 15.93,
+      "bytes": 3498
+    },
+    {
+      "url": "/api/admin/analytics?range=30d",
+      "samples": 5,
+      "medianMs": 16.56,
+      "maxMs": 20.44,
+      "bytes": 5245
+    },
+    {
+      "url": "/api/admin/export?type=appointments",
+      "samples": 5,
+      "medianMs": 15.44,
+      "maxMs": 20.78,
+      "bytes": 2982
+    }
+  ]
+}

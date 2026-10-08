@@ -1,4 +1,6 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
+import { getLocalizedText } from '@/data/services';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,9 +21,10 @@ import {
 } from '@tabler/icons-react';
 import { useLanguage } from '@/lib/i18n';
 import { usePathname } from 'next/navigation';
+import { SITE } from '@/lib/site';
 import { playSoftClick, playNotificationChime } from '@/lib/sound';
 
-const WA_NUMBER = '351912345678';
+const WA_NUMBER = SITE.whatsapp;
 
 interface QuickAction {
   id: string;
@@ -58,54 +61,6 @@ const QUICK_ACTIONS: QuickAction[] = [
     },
   },
   {
-    id: 'physio',
-    icon: <IconStethoscope size={16} className="text-[#9A7428]" />,
-    title: {
-      pt: 'Fisioterapia & RPG',
-      en: 'Physiotherapy & GPR',
-      fr: 'Kinésithérapie & RPG',
-    },
-    desc: {
-      pt: 'Coluna, dores, postura e pós-parto',
-      en: 'Spine, posture, pain & pelvic rehab',
-      fr: 'Dos, posture, rééducation post-partum',
-    },
-    answer: {
-      pt: 'Dispomos de protocolos especializados de Reeducação Postural Global (RPG), reabilitação perineal e tratamento de lesões musculoesqueléticas.',
-      en: 'We offer specialized Global Postural Reeducation (GPR), postpartum pelvic floor therapy, and targeted musculoskeletal rehab.',
-      fr: 'Nous proposons la Rééducation Posturale Globale (RPG), la rééducation périnéale post-partum et le traitement des douleurs musculo-squelettiques.',
-    },
-    waText: {
-      pt: 'Olá! Tenho interesse numa consulta de Fisioterapia / Reeducação Postural (RPG).',
-      en: 'Hello! I am interested in a Physiotherapy / GPR consultation.',
-      fr: 'Bonjour ! Je suis intéressé(e) par une séance de Kinésithérapie / RPG.',
-    },
-  },
-  {
-    id: 'slimming',
-    icon: <IconFlame size={16} className="text-[#C49A3C]" />,
-    title: {
-      pt: 'Protocolos de Emagrecimento',
-      en: 'Body Sculpting Protocols',
-      fr: 'Protocoles Minceur',
-    },
-    desc: {
-      pt: 'Criolipólise, cavitação e RF',
-      en: 'Cryolipolysis, cavitation & RF',
-      fr: 'Cryolipolyse, cavitation & RF',
-    },
-    answer: {
-      pt: 'Utilizamos tecnologias médicas de vanguarda 100% não invasivas para destruição de gordura localizada, firmeza cutânea e eliminação de celulite.',
-      en: 'We provide certified 100% non-invasive technologies for localized fat reduction, collagen tightening, and deep cellulite remodeling.',
-      fr: 'Nous utilisons des technologies médicales certifiées 100% non invasives pour le déstockage graisseux et le raffermissement cutané.',
-    },
-    waText: {
-      pt: 'Olá! Gostaria de informações sobre os tratamentos de Criolipólise e remodelação corporal.',
-      en: 'Hello! I would like details about Cryolipolysis and body sculpting treatments.',
-      fr: 'Bonjour ! J\'aimerais des informations sur la Cryolipolyse et les soins minceur.',
-    },
-  },
-  {
     id: 'insurance',
     icon: <IconReceipt2 size={16} className="text-[#6F8F72]" />,
     title: {
@@ -132,6 +87,15 @@ const QUICK_ACTIONS: QuickAction[] = [
 ];
 
 export function WhatsAppBubble() {
+  const services=useServices();
+  const names=(lang:string)=>services.map(s=>getLocalizedText(s.name,lang)).join(', ');
+  const quickActions:QuickAction[]=[QUICK_ACTIONS[0],{
+    id:'treatments',icon:<IconStethoscope size={16}/>,
+    title:{pt:'Tratamentos disponíveis',en:'Available treatments',fr:'Soins disponibles'},
+    desc:{pt:services.length+' tratamentos',en:services.length+' treatments',fr:services.length+' soins'},
+    answer:{pt:services.length?names('pt'):'Sem tratamentos disponíveis. Contacte a clínica.',en:services.length?names('en'):'No treatments available. Please contact the clinic.',fr:services.length?names('fr'):'Aucun soin disponible. Contactez la clinique.'},
+    waText:{pt:'Olá! Gostaria de informações sobre os tratamentos disponíveis.',en:'Hello! I would like information about the available treatments.',fr:'Bonjour ! Je souhaite des informations sur les soins disponibles.'}
+  },...QUICK_ACTIONS.slice(1)];
   const { lang } = useLanguage();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -368,7 +332,7 @@ export function WhatsAppBubble() {
                     {lang === 'pt' ? 'Ações Rápidas & FAQ' : lang === 'en' ? 'Quick Actions & FAQ' : 'Actions Rapides'}
                   </p>
                   <div className="grid grid-cols-1 gap-1.5 max-h-[140px] overflow-y-auto pe-0.5">
-                    {QUICK_ACTIONS.map((action) => (
+                    {quickActions.map((action) => (
                       <button
                         key={action.id}
                         onClick={() => handleActionClick(action)}

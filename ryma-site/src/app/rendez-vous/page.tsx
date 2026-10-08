@@ -1,4 +1,6 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
+import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
 
 import { PhoneInput } from '@/components/ui/PhoneInput';
 
@@ -7,7 +9,7 @@ import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES, Service } from '@/data/services';
+import { Service } from '@/data/services';
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -28,7 +30,7 @@ import { validateAndNormalizePhone } from '@/lib/phone';
 interface SlotInfo {
   time: string;
   available: boolean;
-  reason: 'booked' | 'blocked' | 'sunday' | null;
+  reason: 'booked' | 'blocked' | 'sunday' | 'closed' | 'past' | 'ineligible' | null;
   appointmentId: string | null;
 }
 
@@ -219,10 +221,16 @@ function StepIndicator({ step, lang }: { step: BookingStep; lang: string }) {
 
 // ── Main Component ───────────────────────────────────────────
 function BookingWizardContent() {
+  const SERVICES = useServices();
   const { lang, t } = useLanguage();
   const searchParams = useSearchParams();
   const serviceParam = searchParams.get('service') || searchParams.get('slug') || searchParams.get('id');
 
+  const [practitionerId, setPractitionerId] = useState('');
+  const [practitionerName,setPractitionerName] = useState('');
+  const [practitionerReady,setPractitionerReady] = useState(false);
+  const [committedBooking,setCommittedBooking] = useState<{serviceName?:Service['name'];servicePriceCents?:number|null;id:string;practitionerName:string;durationMinutes:number;status:string;date:string;startTime:string}|null>(null);
+  const bookingRequestRef = useRef('');
   const [step, setStep] = useState<BookingStep>(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -244,7 +252,7 @@ function BookingWizardContent() {
   // Auto-sync treatment from URL query parameter
   const initialSyncDone = useRef(false);
   useEffect(() => {
-    if (!serviceParam) return;
+    if (!serviceParam || initialSyncDone.current) return;
     const cleanParam = serviceParam.toLowerCase().trim();
     const matched = SERVICES.find(
       (s) =>
@@ -258,7 +266,17 @@ function BookingWizardContent() {
         initialSyncDone.current = true;
       }
     }
-  }, [serviceParam]);
+  }, [serviceParam, SERVICES]);
+
+  // A catalogue refresh invalidates a selected time when treatment details change.
+  useEffect(()=>{
+    if(!selectedService || committedBooking || loading)return;
+    const current=SERVICES.find(s=>s.slug===selectedService.slug);
+    if(!current){setSelectedService(null);setSelectedSlot(null);setStep(1);return;}
+    if(JSON.stringify(current)!==JSON.stringify(selectedService)){
+      setSelectedService(current);setSelectedSlot(null);setStep(2);
+    }
+  },[SERVICES,selectedService,committedBooking,loading]);
 
   // ── Enterprise Toast System ─────────────────────────────────────────────────
   const [toasts, setToasts] = useState<BookingToast[]>([]);
@@ -313,7 +331,7 @@ function BookingWizardContent() {
       const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const isPast = dateStr < todayStr;
       const isSunday = new Date(calYear, calMonth, d).getDay() === 0;
-      if (!isPast && !isSunday) {
+      if (!isPast) {
         validDates.push(dateStr);
       }
     }
@@ -323,7 +341,7 @@ function BookingWizardContent() {
     let isMounted = true;
     const fetchMonth = async () => {
       try {
-        const res = await fetch(`/api/slots?dates=${validDates.join(',')}`);
+        const res = await fetch(`/api/slots?dates=${validDates.join(',')}&service=${encodeURIComponent(selectedService?.slug ?? '')}&practitionerId=${encodeURIComponent(practitionerId)}`, {cache: 'no-store'});
         if (res.ok) {
           const data = await res.json();
           if (isMounted && data.availability) {
@@ -339,7 +357,9 @@ function BookingWizardContent() {
     return () => {
       isMounted = false;
     };
-  }, [step, calYear, calMonth, todayStr]);
+  }, [step, calYear, calMonth, todayStr, selectedService?.slug, practitionerId]);
+
+  useEffect(() => { setSelectedDate(null); setSelectedSlot(null); setMonthAvailability({}); bookingRequestRef.current = ''; }, [selectedService?.slug, practitionerId]);
 
   // Fetch real slot availability from the API when a date is selected
   const fetchSlots = useCallback(async (date: string) => {
@@ -350,7 +370,7 @@ function BookingWizardContent() {
     setAvailableSlots([]);
     setSlotError(null);
     try {
-      const res = await fetch(`/api/slots?date=${date}`, { cache: 'no-store', signal: request.signal });
+      const res = await fetch(`/api/slots?date=${date}&service=${encodeURIComponent(selectedService?.slug ?? '')}&practitionerId=${encodeURIComponent(practitionerId)}`, { cache: 'no-store', signal: request.signal });
       if (res.ok) {
         const data = await res.json();
         const slots = data.slots ?? [];
@@ -375,7 +395,7 @@ function BookingWizardContent() {
     } finally {
       if (!request.signal.aborted) setLoadingSlots(false);
     }
-  }, [lang]);
+  }, [lang, selectedService?.slug, practitionerId]);
 
   // Keep the chosen slot stable while submitting and showing confirmation.
   // The booking transaction revalidates availability and handles conflicts.
@@ -529,6 +549,7 @@ function BookingWizardContent() {
     });
 
     try {
+      bookingRequestRef.current ||= crypto.randomUUID();
       // Execute invisible Google reCAPTCHA v3 verification
       const recaptchaToken = await getRecaptchaToken('booking');
 
@@ -536,6 +557,8 @@ function BookingWizardContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          practitionerId: practitionerId || undefined,
+          clientRequestId: bookingRequestRef.current,
           patientName: nameTrimmed,
           phone: phoneCheck.normalized,
           email: emailTrimmed || undefined,
@@ -591,6 +614,9 @@ function BookingWizardContent() {
         } else {
           // Translate known server error messages or error codes to the active language
           let errorMsg = data.error;
+          if (data.errorCode === 'SCHEDULE_BUSY') {
+            errorMsg = lang === 'pt' ? 'A agenda está temporariamente ocupada. Tente novamente dentro de instantes.' : lang === 'en' ? 'The schedule is temporarily busy. Please retry in a moment.' : 'Le planning est temporairement occupé. Veuillez réessayer dans un instant.';
+          }
           if (
             data.errorCode === 'INVALID_PHONE' ||
             data.errorCode === 'PHONE_REQUIRED' ||
@@ -637,6 +663,7 @@ function BookingWizardContent() {
 
       // The confirmation screen provides the success feedback.
       setToasts([]);
+      setCommittedBooking(data.confirmation);
       setStep(5);
     } catch {
       dismissToast(loadingToastId);
@@ -665,7 +692,7 @@ function BookingWizardContent() {
     }`;
 
   if (step === 5 && selectedService && selectedDate && selectedSlot) {
-    return <AppointmentConfirmation service={selectedService} date={selectedDate} time={selectedSlot} patient={form} />;
+    return <AppointmentConfirmation service={{...selectedService,...(committedBooking?.serviceName?{name:committedBooking.serviceName}:{}),...(committedBooking?.servicePriceCents!=null?{price:committedBooking.servicePriceCents/100}:{})}} date={committedBooking?.date ?? selectedDate} time={committedBooking?.startTime ?? selectedSlot} patient={form} practitionerName={committedBooking?.practitionerName} durationMinutes={committedBooking?.durationMinutes} appointmentId={committedBooking?.id} status={committedBooking?.status} />;
   }
 
   return (
@@ -725,6 +752,7 @@ function BookingWizardContent() {
                 initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
+                <div className="mb-5"><PractitionerSelect value={practitionerId} onChange={setPractitionerId} service={selectedService?.slug} lang={lang} onReady={setPractitionerReady} onName={setPractitionerName} /></div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
                   <div>
                     <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412]">{t.booking.step2Title}</h2>
@@ -800,8 +828,8 @@ function BookingWizardContent() {
                       const isPast = dateStr < todayStr;
                       const isSelected = dateStr === selectedDate;
                       const isSunday = new Date(calYear, calMonth, d).getDay() === 0;
-                      const isFullyBooked = !isPast && !isSunday && monthAvailability[dateStr] === false;
-                      const isDisabled = isPast || isSunday || isFullyBooked;
+                      const isFullyBooked = !isPast && monthAvailability[dateStr] === false;
+                      const isDisabled = isPast || isFullyBooked;
 
                       return (
                         <button
@@ -816,7 +844,7 @@ function BookingWizardContent() {
                           className={`aspect-square rounded-xl text-[15px] font-semibold transition-all duration-200 flex flex-col items-center justify-center relative ${
                             isSelected
                               ? 'bg-[#C49A3C] text-white shadow-[0_4px_12px_rgba(196,154,60,0.3)]'
-                              : isPast || isSunday
+                              : isPast
                               ? 'text-[#D4CEBE] bg-[#FAFAF8] cursor-not-allowed'
                               : isFullyBooked
                               ? 'text-[#A8A095] bg-[#F7F4F0] cursor-not-allowed border border-dashed border-[#E0D8CC]'
@@ -849,7 +877,7 @@ function BookingWizardContent() {
                   <Button
                     variant="primary"
                     onClick={() => setStep(3)}
-                    disabled={!selectedDate}
+                    disabled={!selectedDate || !practitionerReady}
                     className="px-8"
                   >
                     {t.common.next}
@@ -893,7 +921,7 @@ function BookingWizardContent() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
-                    {availableSlots.map((slot) => (
+                    {availableSlots.filter(slot=>slot.available||slot.reason==='booked'||slot.reason==='blocked').map((slot) => (
                       <button
                         key={slot.time}
                         id={`slot-${slot.time}`}
@@ -953,6 +981,7 @@ function BookingWizardContent() {
               >
                 <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412] mb-6">{t.booking.step4Title}</h2>
 
+                <p className="mb-4 text-sm text-slate-700">{lang==='pt'?'Profissional':lang==='fr'?'Praticien':'Practitioner'}: <strong>{practitionerName||(lang==='pt'?'Primeira disponibilidade':lang==='fr'?'Premier créneau disponible':'Earliest available')}</strong></p>
                 {/* Summary */}
                 <div className="bg-white border border-[#C49A3C]/30 rounded-2xl p-5 md:p-6 mb-8 shadow-sm">
                   <div className="grid grid-cols-3 gap-4 text-center divide-x divide-[#E8E2D8]">

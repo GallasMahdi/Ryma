@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import type { Appointment } from '@/types/admin';
 
 export type AdminEventType =
+  | 'appointments:changed'
   | 'appointment:created'
   | 'appointment:updated'
   | 'appointment:deleted'

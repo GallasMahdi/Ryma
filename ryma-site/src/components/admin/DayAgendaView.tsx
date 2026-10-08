@@ -1,4 +1,7 @@
 'use client';
+import { useServiceLabels } from '@/components/ServiceCatalogProvider';
+import { TeamDayAgenda } from './TeamDayAgenda';
+import { AgendaContent } from './AgendaContent';
 
 import React, { useState, useMemo } from 'react';
 import {
@@ -13,22 +16,14 @@ import {
   IconAlertCircle,
   IconCalendar,
 } from '@tabler/icons-react';
-import {
-  Appointment,
-  AppointmentStatus,
-  STATUS_CONFIG,
-  getServiceName,
-  getServicePrice,
-  formatSlotDateLabel,
-  shiftDateString,
-  formatLocalDate,
-} from '@/types/admin';
+import { Appointment, AppointmentStatus, STATUS_CONFIG, formatSlotDateLabel, shiftDateString, formatLocalDate } from '@/types/admin';
 import { Lang } from '@/lib/i18n';
 
 import { AdminDateJumpPicker } from './AdminDateJumpPicker';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 interface DayAgendaViewProps {
+  practitionerId?: string;
   selectedDate: string;
   loading: boolean;
   onDateChange: (date: string) => void;
@@ -52,6 +47,7 @@ function getInitials(name: string): string {
 }
 
 export const DayAgendaView = React.memo(function DayAgendaView({
+  practitionerId,
   appointments,
   selectedDate,
   loading,
@@ -66,10 +62,12 @@ export const DayAgendaView = React.memo(function DayAgendaView({
   recentNewIds,
   openWhatsAppModal,
 }: DayAgendaViewProps) {
+  const { getServiceName, getServicePrice } = useServiceLabels();
   const txt = (fr: string, en: string, pt: string) =>
     lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const todayStr = useMemo(() => formatLocalDate(new Date()), []);
+  const [teamView,setTeamView] = useState(true);
   const [selectedDetailAppt, setSelectedDetailAppt] = useState<Appointment | null>(null);
 
   // Map of date -> appointment count for calendar dots
@@ -202,12 +200,11 @@ export const DayAgendaView = React.memo(function DayAgendaView({
         </div>
       </div>
 
+      <div className="flex gap-2"><button type="button" onClick={()=>setTeamView(true)} className={'rounded-lg border px-3 py-2 text-sm '+(teamView?'bg-slate-900 text-white':'bg-white')}>{txt('Équipe','Team view','Equipa')}</button><button type="button" onClick={()=>setTeamView(false)} className={'rounded-lg border px-3 py-2 text-sm '+(!teamView?'bg-slate-900 text-white':'bg-white')}>{txt('Liste','List','Lista')}</button></div>
+      <AgendaContent loading={loading} loadingLabel={txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…')}>
+      {teamView && <TeamDayAgenda date={selectedDate} appointments={appointments} practitionerId={practitionerId} lang={lang} onSelect={setSelectedDetailAppt} />}
       {/* Day Timeline List */}
-      {loading ? (
-        <div role="status" className="bg-white border border-[#E2E8F0] rounded-xl p-12 text-center text-sm text-[#64748B] animate-pulse">
-          {txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…')}
-        </div>
-      ) : dayAppointments.length === 0 ? (
+      {teamView ? null : dayAppointments.length === 0 ? (
         <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 sm:p-12 text-center space-y-2">
           <div className="w-12 h-12 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] flex items-center justify-center mx-auto">
             <IconCalendar size={24} />
@@ -227,7 +224,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
         <div className="space-y-2.5">
           {dayAppointments.map(appt => {
             const st = STATUS_CONFIG[appt.status];
-            const price = getServicePrice(appt.service);
+            const price = getServicePrice(appt.service, appt);
             const initials = getInitials(appt.patientName);
             const isNew = recentNewIds?.has(appt.id);
             const noShows = noShowCounts?.[appt.phone] ?? 0;
@@ -290,7 +287,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
 
                       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#64748B]">
                         <span className="font-medium text-[#334155]">
-                          {getServiceName(appt.service, lang)}
+                          {getServiceName(appt.service, lang, appt)} · {appt.practitionerName}
                         </span>
                         {price > 0 && (
                           <>
@@ -384,6 +381,8 @@ export const DayAgendaView = React.memo(function DayAgendaView({
           })}
         </div>
       )}
+
+      </AgendaContent>
 
       {/* Appointment Detail Modal for Day Agenda View */}
       <AppointmentDetailModal

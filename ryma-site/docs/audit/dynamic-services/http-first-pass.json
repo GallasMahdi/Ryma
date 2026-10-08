@@ -1,0 +1,82 @@
+[
+  {
+    "title": "anonymous catalogue management is denied",
+    "status": "PASS"
+  },
+  {
+    "title": "fixture login and Treatments route are available",
+    "status": "PASS"
+  },
+  {
+    "title": "lightweight admin catalogue reads are protected and omit unrelated scheduling data",
+    "status": "PASS"
+  },
+  {
+    "title": "fresh installation has no seeded treatments or practitioner service assignments",
+    "status": "PASS"
+  },
+  {
+    "title": "unknown and formerly built-in services cannot be booked, selected or reviewed",
+    "status": "PASS"
+  },
+  {
+    "title": "create draft through protected API and read it back",
+    "status": "PASS"
+  },
+  {
+    "title": "draft is absent from public catalogue, direct detail and sitemap",
+    "status": "PASS"
+  },
+  {
+    "title": "publish once updates public catalogue, detail, prices, booking and sitemap",
+    "status": "PASS"
+  },
+  {
+    "title": "administrator-owned care goals, body areas and clinical content reach the public service",
+    "status": "PASS"
+  },
+  {
+    "title": "an English-only assessment and zero fee display without a code-defined translation or price",
+    "status": "PASS"
+  },
+  {
+    "title": "assigned practitioner and duration-aware availability are live",
+    "status": "PASS"
+  },
+  {
+    "title": "public booking accepts custom treatment and returns committed exact cents",
+    "status": "PASS"
+  },
+  {
+    "title": "the 45-minute reservation blocks the overlapping half-hour",
+    "status": "PASS"
+  },
+  {
+    "title": "price and duration edits preserve booking and invoice defaults",
+    "status": "PASS"
+  },
+  {
+    "title": "stale writers and cross-origin writes are rejected",
+    "status": "PASS"
+  },
+  {
+    "title": "invalid price and unavailable duration fail without mutation",
+    "status": "PASS"
+  },
+  {
+    "title": "plain text in treatment content cannot inject HTML",
+    "status": "PASS"
+  },
+  {
+    "title": "archive removes direct and public access, retains the original reservation and invoice",
+    "status": "PASS"
+  },
+  {
+    "title": "safe fixture cleanup leaves the treatment archived and removes capacity from the test appointment",
+    "status": "PASS"
+  },
+  {
+    "title": "archiving the last treatment returns every public surface to a clean empty catalogue",
+    "status": "PASS"
+  }
+]

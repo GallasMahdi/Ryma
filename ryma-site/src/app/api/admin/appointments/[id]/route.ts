@@ -1,3 +1,4 @@
+import { SchedulingError } from '@/lib/scheduling';
 import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
@@ -60,12 +61,22 @@ export async function PATCH(
   }
 
   const updates: Partial<{
+    practitionerId: string;
+    expectedVersion: number;
     status: AppointmentStatus;
     notes: string;
     date: string;
     startTime: string;
   }> = {};
 
+  if (body.practitionerId !== undefined) {
+    if (typeof body.practitionerId !== 'string' || !body.practitionerId) return NextResponse.json({error:'Invalid practitioner'}, {status:422});
+    updates.practitionerId = body.practitionerId;
+  }
+  if (body.expectedVersion !== undefined) {
+    if (typeof body.expectedVersion !== 'number' || !Number.isSafeInteger(body.expectedVersion) || body.expectedVersion < 1) return NextResponse.json({error:'Invalid version'}, {status:422});
+    updates.expectedVersion = body.expectedVersion;
+  }
   if (body.status !== undefined) {
     if (!VALID_STATUSES.includes(body.status as AppointmentStatus)) {
       return NextResponse.json({ error: 'Statut invalide' }, { status: 422 });
@@ -77,9 +88,12 @@ export async function PATCH(
     updates.notes = String(body.notes).trim().slice(0, 1000);
   }
 
-  const newDate = body.date ? String(body.date).trim() : existing.date;
-  const newTime = body.startTime ? String(body.startTime).trim() : existing.startTime;
-  const newStatus = body.status !== undefined ? (body.status as AppointmentStatus) : existing.status;
+  if ((body.date !== undefined && (typeof body.date !== 'string' || !body.date.trim())) ||
+      (body.startTime !== undefined && (typeof body.startTime !== 'string' || !body.startTime.trim()))) {
+    return NextResponse.json({ error: 'Invalid date or time' }, { status: 422 });
+  }
+  const newDate = body.date !== undefined ? String(body.date).trim() : existing.date;
+  const newTime = body.startTime !== undefined ? String(body.startTime).trim() : existing.startTime;
 
   if (body.date !== undefined || body.startTime !== undefined) {
     if (!isCalendarDate(newDate)) {
@@ -91,27 +105,15 @@ export async function PATCH(
     }
 
     const { todayStr, currentHHMM } = getLisbonDateTime();
-    if (newDate < todayStr || (newDate === todayStr && newTime <= currentHHMM) || new Date(newDate + 'T12:00:00Z').getUTCDay() === 0) return NextResponse.json({ error: 'Choose a future clinic opening time' }, { status: 422 });
+    if (newDate < todayStr || (newDate === todayStr && newTime <= currentHHMM)) return NextResponse.json({ error: 'Choose a future clinic opening time' }, { status: 422 });
     updates.date = newDate;
     updates.startTime = newTime;
-  }
-
-  // If the appointment will be ACTIVE, verify slot is not taken by another active appointment
-  if (newStatus !== 'CANCELLED' && (body.date !== undefined || body.startTime !== undefined || existing.status === 'CANCELLED')) {
-    const appts = await dbGetAppointments({ date: newDate });
-    const conflict = appts.some(a => a.startTime === newTime && a.status !== 'CANCELLED' && a.id !== id);
-
-    const blockedList = await dbGetBlockedSlots();
-    const blocked = blockedList.some(b => b.date === newDate && b.time === newTime);
-
-    if (conflict || blocked) {
-      return NextResponse.json({ error: 'Ce créneau est déjà occupé par un autre rendez-vous actif.' }, { status: 409 });
-    }
   }
 
   let updated;
   try { updated = await dbUpdateAppointment(id, updates); }
   catch (err) {
+    if (err instanceof SchedulingError) return NextResponse.json({error:err.message,code:err.code},{status:409});
     if (/UNIQUE|slot_taken|slot_blocked/i.test(String(err))) return NextResponse.json({ error: 'Slot no longer available' }, { status: 409 });
     throw err;
   }
@@ -122,7 +124,7 @@ export async function PATCH(
   return NextResponse.json({ appointment: updated });
 }
 
-// ─── DELETE /api/admin/appointments/:id — Permanent Removal ─────────────────
+// DELETE archives the reservation while retaining the clinical record.
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -137,7 +139,11 @@ export async function DELETE(
     return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 });
   }
 
-  await dbDeleteAppointment(id);
+  try { await dbDeleteAppointment(id, auth.session.sessionId); }
+  catch (err) {
+    if (err instanceof SchedulingError) return NextResponse.json({error:err.message,code:err.code},{status:409});
+    throw err;
+  }
   broadcastAppointmentDeleted(id);
-  return NextResponse.json({ deleted: true, id, message: 'Rendez-vous supprimé' });
+  return NextResponse.json({ deleted: true, archived: true, id, message: 'Rendez-vous archivé ; dossier clinique conservé' });
 }

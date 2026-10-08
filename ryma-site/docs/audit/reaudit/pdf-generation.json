@@ -1,0 +1,26 @@
+[
+  {
+    "name": "invoice",
+    "exitCode": 0,
+    "ms": 1612,
+    "bytes": 129635
+  },
+  {
+    "name": "prescription",
+    "exitCode": 0,
+    "ms": 1933,
+    "bytes": 127910
+  },
+  {
+    "name": "prescription-long",
+    "exitCode": 0,
+    "ms": 1829,
+    "bytes": 276075
+  },
+  {
+    "name": "invoice-long",
+    "exitCode": 0,
+    "ms": 1442,
+    "bytes": 130494
+  }
+]

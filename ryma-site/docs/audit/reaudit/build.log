@@ -1,0 +1,79 @@
+▲ Next.js 16.3.6 (webpack)
+✓ Running next.config.ts took 46ms
+- Experiments (use with caution):
+  · optimizePackageImports
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 7.3s
+  Running TypeScript ...
+  Finished TypeScript in 5.7s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/24) ...
+  Generating static pages using 7 workers (6/24) 
+  Generating static pages using 7 workers (12/24) 
+  Generating static pages using 7 workers (18/24) 
+✓ Generating static pages using 7 workers (24/24) in 1137ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /a-propos
+├ ƒ /admin
+├ ƒ /admin/login
+├ ƒ /api/admin/analytics
+├ ƒ /api/admin/analytics/lock
+├ ƒ /api/admin/analytics/password
+├ ƒ /api/admin/analytics/verify
+├ ƒ /api/admin/appointments
+├ ƒ /api/admin/appointments/[id]
+├ ƒ /api/admin/appointments/multiple
+├ ƒ /api/admin/appointments/multiple/preview
+├ ƒ /api/admin/events
+├ ƒ /api/admin/export
+├ ƒ /api/admin/invoices
+├ ƒ /api/admin/invoices/[id]
+├ ƒ /api/admin/invoices/export
+├ ƒ /api/admin/login
+├ ƒ /api/admin/logout
+├ ƒ /api/admin/me
+├ ƒ /api/admin/patients
+├ ƒ /api/admin/patients/[id]/sessions
+├ ƒ /api/admin/practitioners
+├ ƒ /api/admin/prescriptions
+├ ƒ /api/admin/prescriptions/[id]
+├ ƒ /api/admin/reviews
+├ ƒ /api/admin/slots
+├ ƒ /api/admin/slots/bulk
+├ ƒ /api/admin/whatsapp
+├ ƒ /api/appointments
+├ ƒ /api/health
+├ ƒ /api/practitioners
+├ ƒ /api/reviews
+├ ƒ /api/slots
+├ ƒ /api/whatsapp/jobs
+├ ƒ /api/whatsapp/webhook
+├ ○ /apple-icon.png
+├ ƒ /avis
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ƒ /conditions-utilisation
+├ ƒ /confidentialite
+├ ƒ /contact
+├ ○ /icon.png
+├ ○ /icon.svg
+├ ƒ /mentions-legales
+├ ƒ /rendez-vous
+├ ○ /robots.txt
+├ ƒ /services
+├ ƒ /services/[slug]
+├ ○ /sitemap.xml
+└ ƒ /tarifs
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

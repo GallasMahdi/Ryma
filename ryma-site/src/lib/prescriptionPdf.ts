@@ -11,6 +11,10 @@ function escapeHtml(str: unknown): string {
     .replace(/'/g, '&#39;');
 }
 
+function cssText(value:string):string {
+  return '"'+value.replace(/[\\"\r\n<>]/g,c=>'\\'+c.charCodeAt(0).toString(16)+' ')+'"';
+}
+
 /**
  * Generate a standalone, pristine HTML document for an official Recommendation / Prescription Pad.
  * Formatted for A4 portrait printing without any background app bleed-through.
@@ -28,7 +32,19 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
   <style>
     @page {
       size: A4 portrait;
-      margin: 12mm 15mm;
+      margin: 22mm 15mm 18mm;
+      @top-left {
+        content: ${cssText(prescription.patientName+' | '+prescription.id)};
+        font: 8pt Arial, sans-serif;
+        color: #334155;
+        vertical-align: middle;
+        white-space: normal;
+      }
+      @bottom-right {
+        content: "Página " counter(page) " / " counter(pages);
+        font: 8pt Arial, sans-serif;
+        color: #475569;
+      }
     }
     * {
       box-sizing: border-box;
@@ -156,6 +172,8 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
       margin-bottom: 8px;
     }
     .item-card {
+      break-inside: avoid;
+      overflow-wrap: anywhere;
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
       border-radius: 8px;
@@ -163,11 +181,15 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
       margin-bottom: 6px;
     }
     .item-title {
+      break-after: avoid;
       font-size: 11px;
       font-weight: 700;
       color: #0F172A;
     }
     .item-instructions {
+      orphans: 3;
+      widows: 3;
+      white-space: pre-wrap;
       font-size: 10px;
       color: #334155;
       margin-top: 3px;
@@ -176,6 +198,9 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
       color: #0F172A;
     }
     .notes-box {
+      orphans: 3;
+      widows: 3;
+      overflow-wrap: anywhere;
       background: #FAF8F5;
       border: 1px solid #E8E2D8;
       border-radius: 10px;

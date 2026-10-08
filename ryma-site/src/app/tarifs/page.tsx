@@ -1,4 +1,6 @@
 'use client';
+import { getLocalizedText } from '@/data/services';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import { EditorialPageHeader } from '@/components/layout/EditorialPageHeader';
 import headerStyles from '@/components/layout/EditorialPageHeader.module.css';
@@ -6,8 +8,7 @@ import { EDITORIAL_PAGES } from '@/data/editorial-pages';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES } from '@/data/services';
-import { PRICING_PACKAGES } from '@/data/pricing';
+
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { playSoftClick } from '@/lib/sound';
 import {
@@ -24,151 +25,38 @@ import {
 } from '@tabler/icons-react';
 
 export default function TarifsPage() {
+  const SERVICES = useServices();
   const { lang, t } = useLanguage();
-  const [activeCategory, setActiveCategory] = useState<'all' | 'packages' | 'single'>('all');
   const [activePole, setActivePole] = useState<'all' | 'kinesitherapie' | 'minceur'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter individual services
   const filteredServices = SERVICES.filter((s) => {
     const matchesPole = activePole === 'all' || s.pole === activePole;
-    const name = (s.name[lang] || s.name.pt || s.name.en || s.name.fr || '').toLowerCase();
+    const name = (getLocalizedText(s.name,lang) || '').toLowerCase();
     const query = searchQuery.toLowerCase().trim();
     const matchesSearch = !query || name.includes(query);
     return matchesPole && matchesSearch;
   });
 
   const kineServices = filteredServices.filter((s) => s.pole === 'kinesitherapie');
+  const assessments=filteredServices.filter(s=>s.pole==='bilan');
   const minceurServices = filteredServices.filter((s) => s.pole === 'minceur');
 
   const intro = EDITORIAL_PAGES.pricing[lang];
-  const startingPrice = Math.min(...SERVICES.map(service => service.price).filter(price => price > 0));
+  const startingPrice = Math.min(...SERVICES.map(service => service.price).filter(price => price >= 0));
   return (
     <div className="bg-[#FAFAF8] min-h-screen text-[#1A1412]">
       
       <EditorialPageHeader
         eyebrow={intro.eyebrow} title={intro.title} emphasis={intro.emphasis} description={intro.description}
-        aside={<><span className={headerStyles.asideLabel}>{intro.asideLabel}</span><p className={headerStyles.price}>{startingPrice} €<small>{intro.unit}</small></p><p className={headerStyles.asideText}>{intro.asideText}</p></>}
+        aside={<><span className={headerStyles.asideLabel}>{intro.asideLabel}</span><p className={headerStyles.price}>{Number.isFinite(startingPrice)?`${startingPrice} €`:'—'}<small>{intro.unit}</small></p><p className={headerStyles.asideText}>{intro.asideText}</p></>}
       >
-        <div className={headerStyles.tabs} role="group" aria-label={intro.eyebrow}>
-          {(['all', 'packages', 'single'] as const).map(category => <button key={category} type="button" aria-pressed={activeCategory === category} onClick={() => { setActiveCategory(category); playSoftClick(); }}>{intro[category]}</button>)}
-        </div>
         <p className={headerStyles.footnote}>{intro.note}</p>
       </EditorialPageHeader>
 
-      {/* ── Featured Packages Section ─────────────────────────────────── */}
-      {(activeCategory === 'all' || activeCategory === 'packages') && (
-        <section className="py-12 sm:py-16 bg-[#FAFAF8]">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-12">
-            
-            <ScrollReveal className="text-center md:text-left mb-8 sm:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-bold block mb-1">
-                  — {lang === 'pt' ? 'Programas Estruturados' : lang === 'en' ? 'Clinical Packages' : 'Programmes Complets'} —
-                </span>
-                <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-[#1A1412]">
-                  {lang === 'pt' ? 'Pacotes de Tratamento Recomendados' : lang === 'en' ? 'Recommended Treatment Packages' : 'Forfaits Recommandés'}
-                </h2>
-              </div>
-
-              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6F8F72] bg-[#EBF5EE] border border-[#6F8F72]/30 px-3.5 py-1.5 rounded-full self-center md:self-auto">
-                <IconShieldCheck size={15} />
-                <span>{lang === 'pt' ? 'Economize até 30% em protocolos' : lang === 'en' ? 'Save up to 30% on full programs' : 'Économisez jusqu\'à 30%'}</span>
-              </div>
-            </ScrollReveal>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 sm:gap-6">
-              {PRICING_PACKAGES.map((pkg, i) => (
-                <ScrollReveal key={pkg.id} delay={i * 0.06}>
-                  <div
-                    className={`relative h-full flex flex-col justify-between rounded-3xl p-6 sm:p-7 transition-all duration-300 hover:-translate-y-1.5 ${
-                      pkg.popular
-                        ? 'bg-white border-2 border-[#C49A3C] shadow-[0_12px_40px_rgba(196,154,60,0.18)]'
-                        : 'bg-white/90 border border-[#E8E2D8] hover:border-[#C49A3C]/50 shadow-sm hover:shadow-md'
-                    }`}
-                  >
-                    {/* Popular Pill */}
-                    {pkg.popular && (
-                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#C49A3C] via-[#E8C97A] to-[#9A7428] text-[#1A1412] text-[10px] sm:text-[11px] font-bold font-mono px-4 py-1 rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap">
-                        <IconStar size={12} fill="currentColor" className="text-[#1A1412]" />
-                        <span>{pkg.badge?.[lang] || pkg.badge?.pt || pkg.badge?.fr}</span>
-                      </div>
-                    )}
-
-                    <div>
-                      {!pkg.popular && pkg.badge && (
-                        <span className="inline-block font-mono text-[10px] font-bold tracking-wider uppercase text-[#8A6A24] bg-[#FAF5EA] border border-[#C49A3C]/25 px-2.5 py-0.5 rounded-full mb-3">
-                          {pkg.badge[lang] || pkg.badge?.pt || pkg.badge?.fr}
-                        </span>
-                      )}
-
-                      <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412] mb-2 leading-snug">
-                        {pkg.name[lang] || pkg.name?.pt || pkg.name?.fr}
-                      </h3>
-
-                      <p className="text-xs sm:text-sm text-[#6B6058] mb-5 leading-relaxed font-normal">
-                        {pkg.description[lang] || pkg.description?.pt || pkg.description?.fr}
-                      </p>
-
-                      {/* Price Block */}
-                      <div className="mb-5 pb-5 border-b border-[#E8E2D8]">
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="font-mono text-3xl sm:text-4xl font-bold text-[#C49A3C]">
-                            {pkg.price}
-                          </span>
-                          <span className="font-mono text-sm font-bold text-[#8A8078]">
-                            {t.common.currency}
-                          </span>
-                          {pkg.originalPrice && (
-                            <span className="font-mono text-xs text-[#A49C90] line-through ms-2">
-                              {pkg.originalPrice} {t.common.currency}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-[11px] font-mono font-bold text-[#9A7428] bg-[#F5E9C8] px-2 py-0.5 rounded-md">
-                            {pkg.sessions} {lang === 'pt' ? 'sessões incluídas' : lang === 'en' ? 'sessions included' : 'séances incluses'}
-                          </span>
-                          <span className="text-[10px] text-[#8A8078] font-mono">
-                            ≈ {Math.round(pkg.price / pkg.sessions)} {t.common.currency} / {lang === 'pt' ? 'sessão' : lang === 'en' ? 'session' : 'séance'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Included Treatments Checklist */}
-                      <ul className="space-y-2.5 mb-6 text-xs sm:text-sm text-[#4A4540]">
-                        {(pkg.features[lang] || pkg.features.pt || pkg.features.fr).map((feat, fi) => (
-                          <li key={fi} className="flex items-start gap-2">
-                            <IconCheck size={15} className="text-[#9A7428] mt-0.5 shrink-0" />
-                            <span className="leading-snug">{feat}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <Link
-                      href="/rendez-vous"
-                      onClick={playSoftClick}
-                      className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 ${
-                        pkg.popular
-                          ? 'bg-[#C49A3C] hover:bg-[#E8C97A] text-[#1A1412] shadow-[0_4px_16px_rgba(196,154,60,0.3)]'
-                          : 'bg-[#FAF8F5] hover:bg-[#F3EFE6] text-[#1A1412] border border-[#E8E2D8]'
-                      }`}
-                    >
-                      <IconCalendarEvent size={16} />
-                      <span>{t.common.bookAppointment}</span>
-                    </Link>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ── Single Treatment Session Rates ─────────────────────────── */}
-      {(activeCategory === 'all' || activeCategory === 'single') && (
+      {(
         <section className="py-12 sm:py-16 bg-[#FDFBF7] border-t border-[#E8E2D8]/80">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 md:px-12">
             
@@ -196,7 +84,7 @@ export default function TarifsPage() {
                       activePole === 'all' ? 'bg-[#C49A3C] text-white shadow-xs' : 'text-[#6B6058] hover:text-[#1A1412]'
                     }`}
                   >
-                    {lang === 'pt' ? 'Todos (13)' : lang === 'en' ? 'All (13)' : 'Tous (13)'}
+                    {lang === 'pt' ? 'Todos' : lang === 'en' ? 'All' : 'Tous'} ({SERVICES.length})
                   </button>
                   <button
                     onClick={() => { setActivePole('kinesitherapie'); playSoftClick(); }}
@@ -249,7 +137,7 @@ export default function TarifsPage() {
                           <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3C] shrink-0" />
                           <div className="min-w-0">
                             <span className="font-semibold text-[#1A1412] text-sm sm:text-base group-hover:text-[#9A7428] transition-colors block truncate">
-                              {service.name[lang] || service.name.pt || service.name.en || service.name.fr}
+                              {getLocalizedText(service.name,lang)}
                             </span>
                             <span className="text-[11px] text-[#8A8078] line-clamp-1">
                               {service.shortDesc[lang] || service.shortDesc.pt || service.shortDesc.en || service.shortDesc.fr}
@@ -271,7 +159,7 @@ export default function TarifsPage() {
                             href={`/rendez-vous?service=${service.slug}`}
                             onClick={playSoftClick}
                             className="hidden sm:inline-flex items-center justify-center p-2 rounded-xl text-[#9A7428] bg-[#FAF5EA] hover:bg-[#C49A3C] hover:text-white transition-all shadow-xs"
-                            aria-label={`Agendar ${service.name.pt}`}
+                            aria-label={`Agendar ${getLocalizedText(service.name,lang)}`}
                           >
                             <IconArrowRight size={15} />
                           </Link>
@@ -283,6 +171,7 @@ export default function TarifsPage() {
               </div>
             )}
 
+            {activePole==='all'&&assessments.length>0&&<div className="mb-10"><h3 className="mb-4 font-serif text-xl font-bold">{lang==='pt'?'Avaliações':lang==='fr'?'Bilans':'Assessments'}</h3><div className="space-y-2.5">{assessments.map(service=><div key={service.slug} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E8E2D8] bg-white p-5"><div className="min-w-0"><h4 className="font-semibold">{getLocalizedText(service.name,lang)}</h4><p className="mt-1 text-sm text-[#6B6058]">{service.duration}</p></div><div className="flex items-center gap-4"><strong>{service.price} €</strong><Link className="rounded-xl border border-[#C49A3C]/40 px-4 py-2 text-sm" href={`/rendez-vous?service=${service.slug}`}>{t.common.bookAppointment}</Link></div></div>)}</div></div>}
             {/* ── Minceur Category Table ── */}
             {(activePole === 'all' || activePole === 'minceur') && minceurServices.length > 0 && (
               <div className="mb-10">
@@ -303,7 +192,7 @@ export default function TarifsPage() {
                           <span className="w-1.5 h-1.5 rounded-full bg-[#9A7428] shrink-0" />
                           <div className="min-w-0">
                             <span className="font-semibold text-[#1A1412] text-sm sm:text-base group-hover:text-[#9A7428] transition-colors block truncate">
-                              {service.name[lang] || service.name.pt || service.name.en || service.name.fr}
+                              {getLocalizedText(service.name,lang)}
                             </span>
                             <span className="text-[11px] text-[#8A8078] line-clamp-1">
                               {service.shortDesc[lang] || service.shortDesc.pt || service.shortDesc.en || service.shortDesc.fr}

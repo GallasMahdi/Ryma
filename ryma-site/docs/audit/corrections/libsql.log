@@ -1,0 +1,167 @@
+▶ Patient integrity on isolated libSQL
+  ✔ duplicate creation and changing to another patient phone are explicit conflicts (3018.7426ms)
+  ✔ concurrent creation never overwrites an existing patient (42.3983ms)
+  ✔ legacy-only records require an explicit promotion and keep their historical contact links (97.3764ms)
+  ✔ contact changes retain ID-based histories and immutable document snapshots (408.5195ms)
+  ✔ failure saving the new contact mirror rolls back profile and legacy links (283.6367ms)
+  ✔ archive retains clinical data and document links while releasing active capacity (553.2536ms)
+  ✔ failure to write archive audit rolls back the archive and keeps capacity occupied (485.9062ms)
+  ✔ patient ID reads and archive mutations remain authenticated (2.2037ms)
+✔ Patient integrity on isolated libSQL (4899.4421ms)
+▶ Team scheduling on isolated libSQL
+  ✔ intentional review reset stays empty on admin and public reads (2133.7128ms)
+  ✔ migration seeds one practitioner and is recorded once (9.8591ms)
+  ✔ admin can create practitioners with services and split shifts (408.9287ms)
+  ✔ two practitioners can book the same time; partial overlap on one is rejected (243.2166ms)
+  ✔ duration is persisted, and one patient cannot book two practitioners simultaneously (54.4818ms)
+  ✔ parallel earliest requests fill capacity without duplicates (260.7888ms)
+  ✔ parallel retry has exactly one assignment and rejects a changed payload (136.319ms)
+  ✔ full treatment must fit inside working hours and lunch breaks (18.3636ms)
+  ✔ practitioner blocks preserve other practitioners and cover partial intervals (200.4375ms)
+  ✔ leave closes only one practitioner and clinic closure closes everyone (246.2074ms)
+  ✔ schedule changes cannot strand future appointments (10.423ms)
+  ✔ stale configuration revision is rejected (110.937ms)
+  ✔ shared equipment prevents simultaneous reservations across practitioners (236.403ms)
+  ✔ raw database writers cannot bypass interval and resource collision guards (8.4022ms)
+  ✔ recurring sessions maintain one practitioner and commit atomically (107.2165ms)
+  ✔ reassignment checks conflicts and edit version (162.8385ms)
+  ✔ admin slot API marks all occupied intervals (67.7075ms)
+  ✔ public availability and profile APIs never return patient details (53.3915ms)
+  ✔ management endpoints require authentication (19.38ms)
+  ✔ manual future entries reserve practitioner; past entries only record history (365.9216ms)
+  ✔ documents preserve practitioner identity and reject ambiguous authors (158.3434ms)
+  ✔ bulk blocks are scoped, preserve booked intervals and commit the complete range (86.9049ms)
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+  ✔ concurrent edits reject a stale appointment version (193.1511ms)
+  ✔ backup restores team configuration and every assignment atomically (223.8075ms)
+  ✔ duration overrides, buffers, cancellation and dated Sunday opening agree (195.7544ms)
+  ✔ populated single-practitioner migration preserves historical data (296.513ms)
+  ✔ clinic blocks are distinguished from practitioner blocks in the admin UI data (27.2309ms)
+  ✔ CSV headers align with practitioner and duration fields (44.0776ms)
+  ✔ invalid configuration is rejected without partial changes (270.4499ms)
+  ✔ private and archived practitioners never become public fallback assignments (302.8169ms)
+  ✔ an explicitly ineligible practitioner is never silently substituted (106.6399ms)
+  ✔ cancelled reassignment updates the saved name and linked session (84.2467ms)
+  ✔ reopening a cancelled appointment checks its old reservation again (124.8929ms)
+  ✔ retry keys reject changes to notes, coverage and status (21.8192ms)
+  ✔ public retries do not exhaust the three-booking patient allowance (286.5405ms)
+  ✔ booking APIs reject malformed practitioner preferences instead of choosing someone else (93.6416ms)
+  ✔ patch rejects null/empty date, time and invalid versions without changing a booking (73.1025ms)
+  ✔ recurrence preview rejects fractional counts and partially malformed patterns (72.7181ms)
+  ✔ overlapping recurring sessions fail atomically in preview and commit (27.6069ms)
+  ✔ existing appointments retain duration snapshots after service settings change (196.0854ms)
+  ✔ resource deactivation cannot invalidate reserved equipment (38.9261ms)
+  ✔ deleting a special Sunday opening cannot strand a reservation (67.4793ms)
+  ✔ restore rejects malformed resource allocations without corrupting the live snapshot (248.1459ms)
+  ✔ invalid bulk actions and ranges do not write any blocks (34.5421ms)
+  ✔ interval boundaries match an independent minute-by-minute oracle (526.1589ms)
+  ✔ calendar exports preserve Lisbon summer/winter time, pending status and UTF-8 lines (21.572ms)
+  ✔ database integrity and foreign keys survive all failure scenarios (7.5244ms)
+  ✔ failed single and recurring bookings never leave empty patient profiles (48.8189ms)
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+  ✔ simultaneous public requests cannot exceed the per-phone booking allowance (507.5083ms)
+  ✔ deleting a patient does not allow their retained confirmed appointment to overlap (37.1063ms)
+  ✔ appointment archival preserves its linked clinical session (38.3082ms)
+  ✔ a database failure midway through recurring creation rolls back every write (34.7972ms)
+  ✔ a lost commit acknowledgement recovers the booking with one rate-limit charge (59.4117ms)
+  ✔ an obsolete response-cache failure cannot turn a committed booking into an error (33.5328ms)
+  ✔ recurring APIs reject malformed practitioner preferences and patient names (21.7109ms)
+  ✔ retrying a recurring plan after a lost acknowledgement returns exactly the committed plan (40.8007ms)
+  ✔ patient deletion during booking cannot create a dangling patient reference (40.8906ms)
+  ✔ racing reschedules of different appointments have exactly one winner (101.5566ms)
+  ✔ restore failure after deletes rolls back data and the schedule revision (159.6223ms)
+  ✔ deletion failure preserves both the appointment and its linked clinical session (39.4828ms)
+  ✔ simultaneous IP requests cannot overrun an atomic rate-limit window (179.1193ms)
+  ✔ SQL guards prevent a patient-phone collision after their profile is removed (29.2311ms)
+  ✔ recurring request keys survive restore and refuse recreation of a removed session (243.7701ms)
+  ✔ malformed scheduling references in backups fail without writes (62.0432ms)
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+  ✔ twenty concurrent bookings on independent days do not report false capacity conflicts (488.8454ms)
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[Booking Email Dispatch Warning]: Error: Injected SMTP outage
+    at email.sendAppointmentConfirmationEmail (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\scheduling-adversarial.cjs:208:60)
+    at Object.POST (evalmachine.<anonymous>:127:66)
+    at async TestContext.<anonymous> (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\scheduling-adversarial.cjs:211:22)
+    at async Test.run (node:internal/test_runner/test:1332:7)
+    at async module.exports (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\scheduling-adversarial.cjs:206:3)
+    at async TestContext.<anonymous> (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\test-scheduling.cjs:145:3)
+    at async Test.run (node:internal/test_runner/test:1332:7)
+    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3)
+[Schedule configuration read] Error: private-db-location unavailable
+    at schedule.getSchedulingConfiguration (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\team-assignment-audit.cjs:45:62)
+    at Object.GET (evalmachine.<anonymous>:18:93)
+    at async TestContext.<anonymous> (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\team-assignment-audit.cjs:48:26)
+    at async Test.run (node:internal/test_runner/test:1332:7)
+    at async teamAudit (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\team-assignment-audit.cjs:43:3)
+    at async TestContext.<anonymous> (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\test-scheduling.cjs:146:3)
+    at async Test.run (node:internal/test_runner/test:1332:7)
+    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3)
+[Public practitioners read] Error: private-db-location unavailable
+    at schedule.getSchedulingConfiguration (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\team-assignment-audit.cjs:45:62)
+    at Object.GET (evalmachine.<anonymous>:14:74)
+    at TestContext.<anonymous> (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\team-assignment-audit.cjs:48:60)
+    at async Test.run (node:internal/test_runner/test:1332:7)
+    at async teamAudit (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\team-assignment-audit.cjs:43:3)
+    at async TestContext.<anonymous> (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\test-scheduling.cjs:146:3)
+    at async Test.run (node:internal/test_runner/test:1332:7)
+    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3)
+  ✔ exhausted contention returns retryable 503 and the same request can recover (1422.5124ms)
+  ✔ notification transport failure cannot roll back a successful reservation (29.0591ms)
+  ✔ linked clinical sessions use the appointment index for lookup and reassignment (1.2298ms)
+  ✔ malformed team identifiers cannot accidentally create new records (178.7143ms)
+  ✔ coercible color arrays return validation errors instead of database errors (15.0365ms)
+  ✔ configuration read outages produce retryable JSON without database details (2.8814ms)
+  ✔ a failure inside a team write rolls back the profile, services, hours and revision (39.6276ms)
+  ✔ two simultaneous team edits have one winner and no partial losing profile (65.4439ms)
+  ✔ a booking arriving during team editing prevents a stale archive atomically (91.8822ms)
+  ✔ rescheduling availability still protects patients after their profile is recreated (55.7466ms)
+  ✔ rescheduling a deleted appointment fails explicitly instead of offering slots (9.9004ms)
+  ✔ public availability rejects impossible calendar dates (1.08ms)
+  ✔ a reassignment transaction failure preserves both agenda and clinical session (30.4577ms)
+  ✔ migration is idempotent after parallel bookings exist (11.4113ms)
+✔ Team scheduling on isolated libSQL (12841.2337ms)
+▶ WhatsApp booking integration against isolated libSQL
+  ✔ webhook verifies exact raw signatures and challenge tokens (110.7551ms)
+  ✔ other phone IDs, delivery notifications and non-allowlisted senders do not book (0.947ms)
+  ✔ complete conversation saves one pending appointment visible to dashboard queries (4412.7359ms)
+  ✔ duplicate webhook deliveries do not create duplicate replies (237.2304ms)
+  ✔ stale confirmation buttons cannot reserve a different selection (453.1294ms)
+  ✔ a crash after booking but before conversation commit recovers the same appointment (384.149ms)
+  ✔ delivery failure retains the booking and retries the saved reply (568.5909ms)
+  ✔ treatment overlaps and blocked intervals are enforced for every database writer (95.0125ms)
+  ✔ per-conversation leases prevent concurrent processing and stale commits (29.2426ms)
+  ✔ Portuguese and French conversations understand service, tomorrow and afternoon (38.9254ms)
+  ✔ automatic confirmation is explicit and expiry cannot make a new booking (647.7954ms)
+  ✔ jobs and configuration status require separate authorization (2.8708ms)
+  ✔ dashboard stream detects a database change without a process-local event (3024.7698ms)
+  ✔ disabled integration does not accept incoming messages (1.4863ms)
+✔ WhatsApp booking integration against isolated libSQL (10014.5759ms)
+ℹ tests 104
+ℹ suites 0
+ℹ pass 104
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27956.6623

@@ -7,7 +7,12 @@ import { fr } from '../src/data/translations/fr.ts';
 import { en } from '../src/data/translations/en.ts';
 
 const TRANSLATIONS = { pt, fr, en };
-import { SERVICES } from '../src/data/services.ts';
+// Audit the administrator-managed public catalogue, never a built-in service list.
+const catalogueUrl=process.env.SERVICE_AUDIT_URL;
+if(!catalogueUrl)throw new Error('Set SERVICE_AUDIT_URL to the explicit /api/treatments endpoint to audit.');
+const catalogueResponse=await fetch(catalogueUrl);
+if(!catalogueResponse.ok)throw new Error('Catalogue unavailable: '+catalogueResponse.status);
+const {services:SERVICES}=await catalogueResponse.json();
 import { BLOG_POSTS } from '../src/data/blog-posts.ts';
 
 const summary = {

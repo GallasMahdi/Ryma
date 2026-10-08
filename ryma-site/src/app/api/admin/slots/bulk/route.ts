@@ -1,7 +1,8 @@
+import { clockMinutes } from '@/lib/booking-schedule';
 import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
-import { dbBulkBlockSlots, dbGetAppointments } from '@/lib/db';
+import { commitScheduling, loadScheduleState } from '@/lib/scheduling';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
   }
 
+  const practitionerId = typeof body.practitionerId === 'string' ? body.practitionerId : '*';
   const singleDate = body.date ? String(body.date).trim() : '';
   const startDate = body.startDate ? String(body.startDate).trim() : singleDate;
   const endDate = body.endDate ? String(body.endDate).trim() : startDate;
@@ -41,11 +43,7 @@ export async function POST(request: NextRequest) {
   let iterations = 0;
   while (curr <= end && iterations < 60) {
     const dStr = curr.toISOString().split('T')[0];
-    const dayOfWeek = curr.getUTCDay();
-    // Only process non-Sundays
-    if (dayOfWeek !== 0) {
-      targetDates.push(dStr);
-    }
+    targetDates.push(dStr);
     curr.setUTCDate(curr.getUTCDate() + 1);
     iterations++;
   }
@@ -71,26 +69,14 @@ export async function POST(request: NextRequest) {
   }
 
   let totalSlotsAffected = 0;
-
-  for (const d of targetDates) {
-    let daySlots = [...slotsToProcess];
-
-    // If blocking, preserve any active appointments on that day
-    if (action === 'block') {
-      const appts = await dbGetAppointments({ date: d });
-      const bookedSet = new Set(appts.filter(a => a.status !== 'CANCELLED').map(a => a.startTime));
-      daySlots = daySlots.filter(t => !bookedSet.has(t));
-    }
-
-    if (daySlots.length > 0) {
-      try { await dbBulkBlockSlots(d, [...new Set(daySlots)], action); }
-      catch (err) {
-        if (/slot_taken/i.test(String(err))) return NextResponse.json({ error: 'A slot was booked during this operation. Refresh availability.', processedSlots: totalSlotsAffected }, { status: 409 });
-        throw err;
-      }
-      totalSlotsAffected += daySlots.length;
-    }
+  const state=await loadScheduleState(targetDates);
+  if(practitionerId!=='*'&&!state.practitioners.some(p=>p.id===practitionerId))return NextResponse.json({error:'Invalid practitioner'},{status:422});
+  const statements:{sql:string;args:any[]}[]=[];
+  for(const date of targetDates)for(const time of new Set(slotsToProcess)){
+    if(action==='block'&&state.appointments.some(a=>a.date===date&&a.status!=='CANCELLED'&&(practitionerId==='*'||a.practitionerId===practitionerId)&&clockMinutes(a.startTime)-a.bufferBefore<clockMinutes(time)+30&&clockMinutes(time)<clockMinutes(a.startTime)+a.durationMinutes+a.bufferAfter))continue;
+    statements.push(action==='block'?{sql:'INSERT OR IGNORE INTO blocked_slots(id,date,time,practitionerId) VALUES(?,?,?,?)',args:['blk_'+crypto.randomUUID(),date,time,practitionerId]}:{sql:'DELETE FROM blocked_slots WHERE date=? AND time=? AND practitionerId=?',args:[date,time,practitionerId]});totalSlotsAffected++;
   }
+  if(statements.length&&!await commitScheduling(state,statements))return NextResponse.json({error:'The schedule changed. Refresh and try again.'},{status:409});
 
   return NextResponse.json({
     success: true,

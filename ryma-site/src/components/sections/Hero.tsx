@@ -1,4 +1,5 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
@@ -38,14 +39,14 @@ const HERO_SLIDES: Slide[] = [
       fr: 'Kinésithérapie & Biomécanique Clinique',
     },
     title: {
-      pt: 'Reeducação Postural & Alívio Clínico',
-      en: 'Postural Reeducation & Clinical Relief',
-      fr: 'Rééducation Posturale & Soulagement',
+      pt: 'Cuidado & Movimento',
+      en: 'Care & Movement',
+      fr: 'Soin & Mouvement',
     },
     subtitle: {
-      pt: 'Recupere o bem-estar e a liberdade de movimento através do método RPG e reabilitação especializada.',
-      en: 'Restore natural pain-free movement through specialized GPR protocols and personalized therapy.',
-      fr: 'Retrouvez votre liberté de mouvement et votre sérénité grâce à la méthode RPG et aux soins ciblés.',
+      pt: 'Conheça os cuidados disponíveis e encontre o acompanhamento adequado aos seus objetivos.',
+      en: 'Explore available care and find support suited to your goals.',
+      fr: 'Découvrez les soins disponibles et un accompagnement adapté à vos objectifs.',
     },
   },
   {
@@ -61,9 +62,9 @@ const HERO_SLIDES: Slide[] = [
       fr: 'Remodelage Corporel & Fermeté',
     },
     subtitle: {
-      pt: 'Criolipólise, cavitação e radiofrequência médica para definição corporal e textura de excelência.',
-      en: 'Cryolipolysis, cavitation, and medical radiofrequency for lasting body contouring and radiant skin.',
-      fr: 'Cryolipolyse, cavitation et radiofréquence médicale pour un raffermissement naturel et durable.',
+      pt: 'Consulte o catálogo atualizado de cuidados corporais, com preços e durações.',
+      en: 'Browse the current body-care catalogue, including prices and durations.',
+      fr: 'Consultez le catalogue actuel des soins corporels, avec leurs tarifs et durées.',
     },
   },
   {
@@ -107,6 +108,7 @@ const HERO_SLIDES: Slide[] = [
 const SLIDE_DURATION_MS = 6500;
 
 export function Hero() {
+  const SERVICES=useServices();
   const { lang, t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -145,7 +147,7 @@ export function Hero() {
   const stats = [
     { end: 420, suffix: '+', label: t.hero.stat1Label },
     { end: 8, suffix: '+', label: t.hero.stat2Label },
-    { end: 13, suffix: '', label: lang === 'pt' ? 'Protocolos Clínicos' : lang === 'en' ? 'Clinical Protocols' : 'Protocoles Dédiés' },
+    { end: SERVICES.length, suffix: '', label: lang === 'pt' ? 'Protocolos Clínicos' : lang === 'en' ? 'Clinical Protocols' : 'Protocoles Dédiés' },
     { end: 99, suffix: '%', label: t.hero.stat4Label },
   ];
 

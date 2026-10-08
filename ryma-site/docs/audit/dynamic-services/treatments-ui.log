@@ -1,0 +1,16 @@
+✔ treatment editor preserves drafts, protects close, validates cents and blocks duplicate submits (445.7532ms)
+✔ public catalogue context refreshes, hides archived treatments and avoids unchanged rerenders (11.4642ms)
+✔ Team online badges require a published treatment, not just an assignment (222.4999ms)
+✔ an empty admin response clears a stale parent catalogue and never invents an internal service (11.2165ms)
+✔ editor submits administrator-selected areas, goals, clinical details and FAQ translations (147.3812ms)
+✔ booking selector shows a first treatment from any category, supports aliases and clears after archive (144.6019ms)
+✔ assessment promotion is displayed only when the public catalogue contains an assessment (17.314ms)
+✔ custom assessments retain their category on service cards and booking confirmations in every language (446.6641ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6610.1622

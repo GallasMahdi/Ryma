@@ -1,0 +1,95 @@
+{
+  "checkedAt": "2026-10-08T10:21:15.159Z",
+  "realData": {
+    "files": 16,
+    "changed": [],
+    "added": []
+  },
+  "previewSourceMatches": true,
+  "tests": {
+    "suite": {
+      "tests": 150,
+      "pass": 150,
+      "fail": 0
+    },
+    "libsql": {
+      "tests": 120,
+      "pass": 120,
+      "fail": 0
+    },
+    "treatments": {
+      "tests": 30,
+      "pass": 30,
+      "fail": 0
+    },
+    "treatments-libsql": {
+      "tests": 30,
+      "pass": 30,
+      "fail": 0
+    },
+    "treatments-ui": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0
+    },
+    "dashboard": {
+      "pass": 36,
+      "fail": 0
+    },
+    "http": {
+      "pass": 20,
+      "fail": 0
+    }
+  },
+  "changedSources": [
+    "src\\app\\a-propos\\page.tsx",
+    "src\\app\\api\\admin\\appointments\\multiple\\preview\\route.ts",
+    "src\\app\\api\\admin\\invoices\\route.ts",
+    "src\\app\\api\\admin\\patients\\[id]\\sessions\\route.ts",
+    "src\\app\\api\\reviews\\route.ts",
+    "src\\app\\avis\\page.tsx",
+    "src\\app\\blog\\[slug]\\page.tsx",
+    "src\\app\\page.tsx",
+    "src\\app\\services\\page.tsx",
+    "src\\app\\services\\[slug]\\ServiceDetail.tsx",
+    "src\\app\\tarifs\\page.tsx",
+    "src\\components\\admin\\AddAppointmentModal.tsx",
+    "src\\components\\admin\\CreateInvoiceModal.tsx",
+    "src\\components\\admin\\MultipleSessionsModal.tsx",
+    "src\\components\\admin\\PatientNotesTab.tsx",
+    "src\\components\\admin\\ReviewsTab.tsx",
+    "src\\components\\admin\\team\\ServicePicker.tsx",
+    "src\\components\\admin\\team\\TeamOverview.tsx",
+    "src\\components\\admin\\TreatmentsTab.tsx",
+    "src\\components\\booking\\AppointmentConfirmation.tsx",
+    "src\\components\\booking\\TreatmentSelector.tsx",
+    "src\\components\\layout\\Footer.tsx",
+    "src\\components\\sections\\BeforeAfterGallery.tsx",
+    "src\\components\\sections\\BodyMap.tsx",
+    "src\\components\\sections\\CTABanner.tsx",
+    "src\\components\\sections\\Hero.tsx",
+    "src\\components\\sections\\ServicesHub.tsx",
+    "src\\components\\sections\\UnifiedServicesExplorer.tsx",
+    "src\\components\\ServiceCatalogProvider.tsx",
+    "src\\components\\ui\\ServiceCard.tsx",
+    "src\\components\\ui\\WhatsAppBubble.tsx",
+    "src\\data\\editorial-pages.ts",
+    "src\\data\\pricing.ts",
+    "src\\data\\services.ts",
+    "src\\data\\testimonials.ts",
+    "src\\data\\translations\\en.ts",
+    "src\\data\\translations\\fr.ts",
+    "src\\data\\translations\\pt.ts",
+    "src\\lib\\appointmentSystem.ts",
+    "src\\lib\\booking-schedule.ts",
+    "src\\lib\\db.ts",
+    "src\\lib\\email.ts",
+    "src\\lib\\scheduling-schema.ts",
+    "src\\lib\\scheduling.ts",
+    "src\\lib\\treatment-schema.ts",
+    "src\\lib\\treatments.ts",
+    "src\\lib\\validation.ts",
+    "src\\lib\\whatsapp\\conversation.ts",
+    "src\\types\\admin.ts"
+  ]
+}

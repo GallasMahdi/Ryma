@@ -1,0 +1,446 @@
+[
+  {
+    "id": "BILL-01",
+    "title": "Nouvelle soumission de facture sans clé, comme le formulaire réel",
+    "status": "PASS"
+  },
+  {
+    "id": "BILL-02",
+    "title": "NIF manquant, mauvais format, TVA et paiements",
+    "status": "PASS",
+    "details": {
+      "invoice": "FT 2026/0003",
+      "defaultNif": true,
+      "tax": 23,
+      "paymentTransitions": true
+    }
+  },
+  {
+    "id": "CLIN-01",
+    "title": "Erreur SQL au second champ : aucune écriture partielle",
+    "status": "PASS"
+  },
+  {
+    "id": "CLIN-02",
+    "title": "Champs patient invalides rejetés",
+    "status": "PASS"
+  },
+  {
+    "id": "SEARCH-01",
+    "title": "Recherche accents, espaces, caractères et chaîne longue",
+    "status": "PASS",
+    "details": [
+      {
+        "term": "Élodie",
+        "status": 200,
+        "total": 1,
+        "ms": 13.15
+      },
+      {
+        "term": "Elodie",
+        "status": 200,
+        "total": 0,
+        "ms": 17.88
+      },
+      {
+        "term": "  Élodie  ",
+        "status": 200,
+        "total": 1,
+        "ms": 15.26
+      },
+      {
+        "term": "' OR 1=1 --",
+        "status": 200,
+        "total": 0,
+        "ms": 4.45
+      },
+      {
+        "term": "%",
+        "status": 200,
+        "total": 10,
+        "ms": 10.58
+      },
+      {
+        "term": "[10000 caractères]",
+        "status": 200,
+        "total": 0,
+        "ms": 20.44
+      }
+    ]
+  },
+  {
+    "id": "CSV-01",
+    "title": "Échappement et absence de formule exécutable",
+    "status": "PASS",
+    "details": {
+      "status": 200,
+      "formulaPrefixed": true,
+      "quotesDoubled": true,
+      "multiline": true,
+      "utf8": true
+    }
+  },
+  {
+    "id": "CSV-02",
+    "title": "Export facturation applique le filtre paiement transmis",
+    "status": "PASS"
+  },
+  {
+    "id": "AUTH-09",
+    "title": "Requête cross-site CSV refusée",
+    "status": "PASS",
+    "details": 403
+  },
+  {
+    "id": "PUBLIC-01",
+    "title": "Données publiques minimales et fichiers privés non servis",
+    "status": "PASS",
+    "details": [
+      {
+        "url": "/api/health",
+        "status": 200,
+        "body": {
+          "status": "healthy",
+          "timestamp": "2026-10-07T16:59:01.222Z",
+          "uptimeSeconds": 109,
+          "database": {
+            "status": "connected",
+            "engine": "local_sqlite",
+            "latencyMs": 0,
+            "writable": true
+          },
+          "memory": {
+            "heapUsedMb": 47.78,
+            "rssMb": 116.68
+          },
+          "environment": "production"
+        }
+      },
+      {
+        "url": "/api/practitioners",
+        "status": 200,
+        "body": {
+          "practitioners": [
+            {
+              "id": "legacy",
+              "name": "Digital Clínica",
+              "profession": "Physiotherapist",
+              "color": "#2563eb"
+            }
+          ]
+        }
+      },
+      {
+        "url": "/api/slots?date=2027-02-03&service=reeducation-posturale",
+        "status": 200,
+        "body": {
+          "slots": [
+            {
+              "time": "00:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "00:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "01:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "01:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "02:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "02:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "03:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "03:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "04:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "04:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "05:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "05:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "06:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "06:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "07:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "07:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "08:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "08:30",
+              "available": false,
+              "reason": "booked",
+              "appointmentId": null
+            },
+            {
+              "time": "09:00",
+              "available": false,
+              "reason": "booked",
+              "appointmentId": null
+            },
+            {
+              "time": "09:30",
+              "available": false,
+              "reason": "booked",
+              "appointmentId": null
+            },
+            {
+              "time": "10:00",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "10:30",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "11:00",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "11:30",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "12:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "12:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "13:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "13:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "14:00",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "14:30",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "15:00",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "15:30",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "16:00",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "16:30",
+              "available": true,
+              "reason": null,
+              "appointmentId": null
+            },
+            {
+              "time": "17:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "17:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "18:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "18:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "19:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "19:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "20:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "20:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "21:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "21:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "22:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "22:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "23:00",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            },
+            {
+              "time": "23:30",
+              "available": false,
+              "reason": "closed",
+              "appointmentId": null
+            }
+          ]
+        }
+      },
+      {
+        "url": "/data/ryma.db",
+        "status": 307,
+        "body": "<!DOCTYPE html><html id=\"__next_error__\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=5\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/webpack-4253fd06bc408b85.js\"/><script src=\"/_next/static/chunks/7"
+      },
+      {
+        "url": "/.env",
+        "status": 307,
+        "body": "<!DOCTYPE html><html id=\"__next_error__\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=5\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/webpack-4253fd06bc408b85.js\"/><script src=\"/_next/static/chunks/7"
+      },
+      {
+        "url": "/api/admin/invoices/not-real/pdf",
+        "status": 307,
+        "body": "<!DOCTYPE html><html id=\"__next_error__\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=5\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_next/static/chunks/webpack-4253fd06bc408b85.js\"/><script src=\"/_next/static/chunks/7"
+      }
+    ]
+  }
+]

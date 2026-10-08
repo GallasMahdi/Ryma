@@ -1,0 +1,713 @@
+{
+  "journalMode": "wal",
+  "integrity": [
+    {
+      "integrity_check": "ok"
+    }
+  ],
+  "foreignKeyCheck": [],
+  "schema": [
+    {
+      "type": "index",
+      "name": "idx_appointments_date",
+      "tbl_name": "appointments",
+      "sql": "CREATE INDEX idx_appointments_date ON appointments(date)"
+    },
+    {
+      "type": "index",
+      "name": "idx_appointments_date_status",
+      "tbl_name": "appointments",
+      "sql": "CREATE INDEX idx_appointments_date_status ON appointments(date, status, startTime)"
+    },
+    {
+      "type": "index",
+      "name": "idx_appointments_patient_date",
+      "tbl_name": "appointments",
+      "sql": "CREATE INDEX idx_appointments_patient_date ON appointments(patientId,date)"
+    },
+    {
+      "type": "index",
+      "name": "idx_appointments_phone_date",
+      "tbl_name": "appointments",
+      "sql": "CREATE INDEX idx_appointments_phone_date ON appointments(phone, date DESC)"
+    },
+    {
+      "type": "index",
+      "name": "idx_appointments_practitioner_date",
+      "tbl_name": "appointments",
+      "sql": "CREATE INDEX idx_appointments_practitioner_date ON appointments(practitionerId,date,status)"
+    },
+    {
+      "type": "index",
+      "name": "idx_appointments_practitioner_slot",
+      "tbl_name": "appointments",
+      "sql": "CREATE UNIQUE INDEX idx_appointments_practitioner_slot ON appointments(practitionerId,date,startTime) WHERE status != 'CANCELLED'"
+    },
+    {
+      "type": "index",
+      "name": "idx_appointments_status",
+      "tbl_name": "appointments",
+      "sql": "CREATE INDEX idx_appointments_status ON appointments(status)"
+    },
+    {
+      "type": "index",
+      "name": "idx_audit_logs_created",
+      "tbl_name": "security_audit_logs",
+      "sql": "CREATE INDEX idx_audit_logs_created ON security_audit_logs(createdAt DESC)"
+    },
+    {
+      "type": "index",
+      "name": "idx_blocked_slots_date_time",
+      "tbl_name": "blocked_slots",
+      "sql": "CREATE INDEX idx_blocked_slots_date_time ON blocked_slots(date,time,practitionerId)"
+    },
+    {
+      "type": "index",
+      "name": "idx_booking_request",
+      "tbl_name": "appointments",
+      "sql": "CREATE UNIQUE INDEX idx_booking_request ON appointments(bookingRequestId) WHERE bookingRequestId IS NOT NULL"
+    },
+    {
+      "type": "index",
+      "name": "idx_exceptions_scope_date",
+      "tbl_name": "schedule_exceptions",
+      "sql": "CREATE INDEX idx_exceptions_scope_date ON schedule_exceptions(practitionerId,date)"
+    },
+    {
+      "type": "index",
+      "name": "idx_idempotency_expiry",
+      "tbl_name": "idempotency_keys",
+      "sql": "CREATE INDEX idx_idempotency_expiry ON idempotency_keys(expiresAt)"
+    },
+    {
+      "type": "index",
+      "name": "idx_invoices_date",
+      "tbl_name": "invoices",
+      "sql": "CREATE INDEX idx_invoices_date ON invoices(createdAt)"
+    },
+    {
+      "type": "index",
+      "name": "idx_invoices_number",
+      "tbl_name": "invoices",
+      "sql": "CREATE INDEX idx_invoices_number ON invoices(invoiceNumber)"
+    },
+    {
+      "type": "index",
+      "name": "idx_invoices_patient",
+      "tbl_name": "invoices",
+      "sql": "CREATE INDEX idx_invoices_patient ON invoices(patientPhone)"
+    },
+    {
+      "type": "index",
+      "name": "idx_invoices_patient_created",
+      "tbl_name": "invoices",
+      "sql": "CREATE INDEX idx_invoices_patient_created ON invoices(patientPhone, createdAt DESC)"
+    },
+    {
+      "type": "index",
+      "name": "idx_invoices_status",
+      "tbl_name": "invoices",
+      "sql": "CREATE INDEX idx_invoices_status ON invoices(paymentStatus)"
+    },
+    {
+      "type": "index",
+      "name": "idx_owner_step_up_expiry",
+      "tbl_name": "owner_step_up_grants",
+      "sql": "CREATE INDEX idx_owner_step_up_expiry ON owner_step_up_grants(expiresAt)"
+    },
+    {
+      "type": "index",
+      "name": "idx_patient_sessions_appointment",
+      "tbl_name": "patient_sessions",
+      "sql": "CREATE INDEX idx_patient_sessions_appointment ON patient_sessions(appointmentId) WHERE appointmentId IS NOT NULL"
+    },
+    {
+      "type": "index",
+      "name": "idx_patient_sessions_patient",
+      "tbl_name": "patient_sessions",
+      "sql": "CREATE INDEX idx_patient_sessions_patient ON patient_sessions(patientId)"
+    },
+    {
+      "type": "index",
+      "name": "idx_patient_sessions_patient_date",
+      "tbl_name": "patient_sessions",
+      "sql": "CREATE INDEX idx_patient_sessions_patient_date ON patient_sessions(patientId,date DESC,createdAt DESC)"
+    },
+    {
+      "type": "index",
+      "name": "idx_patients_coverage",
+      "tbl_name": "patients",
+      "sql": "CREATE INDEX idx_patients_coverage ON patients(coverageType)"
+    },
+    {
+      "type": "index",
+      "name": "idx_patients_phone",
+      "tbl_name": "patients",
+      "sql": "CREATE INDEX idx_patients_phone ON patients(phone)"
+    },
+    {
+      "type": "index",
+      "name": "idx_patients_updated",
+      "tbl_name": "patients",
+      "sql": "CREATE INDEX idx_patients_updated ON patients(updatedAt DESC)"
+    },
+    {
+      "type": "index",
+      "name": "idx_prescriptions_date",
+      "tbl_name": "prescriptions",
+      "sql": "CREATE INDEX idx_prescriptions_date ON prescriptions(date)"
+    },
+    {
+      "type": "index",
+      "name": "idx_prescriptions_patient",
+      "tbl_name": "prescriptions",
+      "sql": "CREATE INDEX idx_prescriptions_patient ON prescriptions(patientPhone)"
+    },
+    {
+      "type": "index",
+      "name": "idx_rate_limit",
+      "tbl_name": "rate_limit_log",
+      "sql": "CREATE INDEX idx_rate_limit ON rate_limit_log(ip, action, timestamp)"
+    },
+    {
+      "type": "index",
+      "name": "idx_reviews_service",
+      "tbl_name": "reviews",
+      "sql": "CREATE INDEX idx_reviews_service ON reviews(serviceSlug)"
+    },
+    {
+      "type": "index",
+      "name": "idx_reviews_status",
+      "tbl_name": "reviews",
+      "sql": "CREATE INDEX idx_reviews_status ON reviews(status, createdAt DESC)"
+    },
+    {
+      "type": "index",
+      "name": "idx_revoked_sessions_expiry",
+      "tbl_name": "revoked_sessions",
+      "sql": "CREATE INDEX idx_revoked_sessions_expiry ON revoked_sessions(expiresAt)"
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_appointments_1",
+      "tbl_name": "appointments",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_blocked_slots_1",
+      "tbl_name": "blocked_slots",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_blocked_slots_2",
+      "tbl_name": "blocked_slots",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_clinical_session_revisions_1",
+      "tbl_name": "clinical_session_revisions",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_idempotency_keys_1",
+      "tbl_name": "idempotency_keys",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_invoices_1",
+      "tbl_name": "invoices",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_invoices_2",
+      "tbl_name": "invoices",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_owner_step_up_grants_1",
+      "tbl_name": "owner_step_up_grants",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_patient_notes_1",
+      "tbl_name": "patient_notes",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_patient_sessions_1",
+      "tbl_name": "patient_sessions",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_patients_1",
+      "tbl_name": "patients",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_patients_2",
+      "tbl_name": "patients",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_practitioner_services_1",
+      "tbl_name": "practitioner_services",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_practitioners_1",
+      "tbl_name": "practitioners",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_prescriptions_1",
+      "tbl_name": "prescriptions",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_resources_1",
+      "tbl_name": "resources",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_reviews_1",
+      "tbl_name": "reviews",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_revoked_sessions_1",
+      "tbl_name": "revoked_sessions",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_schedule_exceptions_1",
+      "tbl_name": "schedule_exceptions",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_security_audit_logs_1",
+      "tbl_name": "security_audit_logs",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_security_settings_1",
+      "tbl_name": "security_settings",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_service_resources_1",
+      "tbl_name": "service_resources",
+      "sql": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_working_hours_1",
+      "tbl_name": "working_hours",
+      "sql": null
+    },
+    {
+      "type": "table",
+      "name": "appointments",
+      "tbl_name": "appointments",
+      "sql": "CREATE TABLE appointments (\n      id               TEXT PRIMARY KEY,\n      patientName      TEXT NOT NULL,\n      email            TEXT,\n      phone            TEXT NOT NULL,\n      service          TEXT NOT NULL,\n      date             TEXT NOT NULL,\n      startTime        TEXT NOT NULL,\n      status           TEXT NOT NULL DEFAULT 'PENDING'\n                       CHECK (status IN ('PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')),\n      notes            TEXT,\n      coverageType     TEXT DEFAULT 'PARTICULAR',\n      coverageProvider TEXT,\n      coverageNumber   TEXT,\n      createdAt        TEXT NOT NULL,\n      updatedAt        TEXT NOT NULL\n    , source TEXT NOT NULL DEFAULT 'unknown', bookingRequestId TEXT, practitionerId TEXT NOT NULL DEFAULT 'legacy', practitionerName TEXT NOT NULL DEFAULT '', durationMinutes INTEGER CHECK(durationMinutes > 0 AND durationMinutes <= 720), bufferBefore INTEGER NOT NULL DEFAULT 0 CHECK(bufferBefore BETWEEN 0 AND 120), bufferAfter INTEGER NOT NULL DEFAULT 0 CHECK(bufferAfter BETWEEN 0 AND 120), resourceIds TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(resourceIds)), patientId TEXT, version INTEGER NOT NULL DEFAULT 1, bookingRequestHash TEXT, archivedAt TEXT, archivedStatus TEXT)"
+    },
+    {
+      "type": "table",
+      "name": "blocked_slots",
+      "tbl_name": "blocked_slots",
+      "sql": "CREATE TABLE blocked_slots (id TEXT PRIMARY KEY, date TEXT NOT NULL, time TEXT NOT NULL, practitionerId TEXT NOT NULL DEFAULT '*', UNIQUE(date,time,practitionerId))"
+    },
+    {
+      "type": "table",
+      "name": "booking_sync",
+      "tbl_name": "booking_sync",
+      "sql": "CREATE TABLE booking_sync (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL DEFAULT 0)"
+    },
+    {
+      "type": "table",
+      "name": "clinical_session_revisions",
+      "tbl_name": "clinical_session_revisions",
+      "sql": "CREATE TABLE clinical_session_revisions(id TEXT PRIMARY KEY,sessionId TEXT NOT NULL,patientId TEXT NOT NULL,beforeJson TEXT NOT NULL,createdAt TEXT NOT NULL,actor TEXT)"
+    },
+    {
+      "type": "table",
+      "name": "idempotency_keys",
+      "tbl_name": "idempotency_keys",
+      "sql": "CREATE TABLE idempotency_keys (\n      key          TEXT PRIMARY KEY,\n      scope        TEXT NOT NULL,\n      statusCode   INTEGER NOT NULL,\n      responseBody TEXT NOT NULL,\n      createdAt    INTEGER NOT NULL,\n      expiresAt    INTEGER NOT NULL\n    )"
+    },
+    {
+      "type": "table",
+      "name": "invoice_sequences",
+      "tbl_name": "invoice_sequences",
+      "sql": "CREATE TABLE invoice_sequences (\n      year         INTEGER PRIMARY KEY,\n      lastSequence INTEGER NOT NULL DEFAULT 0\n    )"
+    },
+    {
+      "type": "table",
+      "name": "invoices",
+      "tbl_name": "invoices",
+      "sql": "CREATE TABLE invoices (\n      id                  TEXT PRIMARY KEY,\n      invoiceNumber       TEXT NOT NULL UNIQUE,\n      appointmentId       TEXT,\n      patientId           TEXT,\n      patientName         TEXT NOT NULL,\n      patientNif          TEXT DEFAULT '999999990',\n      patientEmail        TEXT,\n      patientPhone        TEXT NOT NULL,\n      patientAddress      TEXT,\n      coverageType        TEXT DEFAULT 'PARTICULAR',\n      coverageProvider    TEXT,\n      coverageNumber      TEXT,\n      serviceSlug         TEXT NOT NULL,\n      serviceName         TEXT NOT NULL,\n      practitioner        TEXT,\n      amount              REAL NOT NULL,\n      vatRate             REAL NOT NULL DEFAULT 0,\n      vatExemptionReason  TEXT DEFAULT 'Artigo 9.º do CIVA',\n      paymentMethod       TEXT NOT NULL DEFAULT 'MULTIBANCO',\n      paymentStatus       TEXT NOT NULL DEFAULT 'PAID',\n      paidAt              TEXT,\n      notes               TEXT,\n      createdAt           TEXT NOT NULL,\n      updatedAt           TEXT NOT NULL\n    , practitionerId TEXT, amountCents INTEGER, moneyReview INTEGER NOT NULL DEFAULT 0)"
+    },
+    {
+      "type": "table",
+      "name": "owner_step_up_grants",
+      "tbl_name": "owner_step_up_grants",
+      "sql": "CREATE TABLE owner_step_up_grants (\n      sessionId  TEXT PRIMARY KEY,\n      unlockedAt INTEGER NOT NULL,\n      expiresAt  INTEGER NOT NULL\n    )"
+    },
+    {
+      "type": "table",
+      "name": "patient_notes",
+      "tbl_name": "patient_notes",
+      "sql": "CREATE TABLE patient_notes (\n      phone       TEXT PRIMARY KEY,\n      patientName TEXT NOT NULL,\n      content     TEXT NOT NULL DEFAULT '',\n      tags        TEXT NOT NULL DEFAULT '',\n      updatedAt   TEXT NOT NULL\n    )"
+    },
+    {
+      "type": "table",
+      "name": "patient_sessions",
+      "tbl_name": "patient_sessions",
+      "sql": "CREATE TABLE patient_sessions (\n    id TEXT PRIMARY KEY, patientId TEXT NOT NULL REFERENCES patients(id) ON DELETE CASCADE,\n    date TEXT NOT NULL, time TEXT, serviceSlug TEXT NOT NULL DEFAULT 'kinesitherapie-generale',\n    evaPainScore INTEGER CHECK(evaPainScore IS NULL OR (typeof(evaPainScore)='integer' AND evaPainScore BETWEEN 0 AND 10)),\n    legacyEvaPainScore REAL,\n    clinicalStatus TEXT NOT NULL DEFAULT 'PLANNED' CHECK(clinicalStatus IN('PLANNED','COMPLETED','LEGACY_REVIEW')),\n    completedAt TEXT, version INTEGER NOT NULL DEFAULT 1 CHECK(version>0), archivedAt TEXT,\n    sessionType TEXT NOT NULL DEFAULT 'MANUAL', notes TEXT, practitioner TEXT,\n    practitionerId TEXT, appointmentId TEXT, createdAt TEXT NOT NULL,\n    CHECK((clinicalStatus='COMPLETED' AND completedAt IS NOT NULL) OR (clinicalStatus!='COMPLETED' AND completedAt IS NULL)),\n    CHECK(clinicalStatus='COMPLETED' OR evaPainScore IS NULL)\n  )"
+    },
+    {
+      "type": "table",
+      "name": "patients",
+      "tbl_name": "patients",
+      "sql": "CREATE TABLE patients (\n      id                      TEXT PRIMARY KEY,\n      patientName             TEXT NOT NULL,\n      phone                   TEXT NOT NULL UNIQUE,\n      email                   TEXT,\n      gender                  TEXT,\n      dob                     TEXT,\n      coverageType            TEXT DEFAULT 'PARTICULAR',\n      coverageProvider        TEXT,\n      coverageNumber          TEXT,\n      referringDoctor         TEXT,\n      pathologyTags           TEXT NOT NULL DEFAULT '',\n      medicalHistory          TEXT NOT NULL DEFAULT '',\n      totalPrescribedSessions INTEGER NOT NULL DEFAULT 10,\n      createdAt               TEXT NOT NULL,\n      updatedAt               TEXT NOT NULL\n    )"
+    },
+    {
+      "type": "table",
+      "name": "practitioner_services",
+      "tbl_name": "practitioner_services",
+      "sql": "CREATE TABLE practitioner_services (practitionerId TEXT NOT NULL REFERENCES practitioners(id), service TEXT NOT NULL, durationMinutes INTEGER CHECK(durationMinutes BETWEEN 5 AND 720), bufferBefore INTEGER NOT NULL DEFAULT 0 CHECK(bufferBefore BETWEEN 0 AND 120), bufferAfter INTEGER NOT NULL DEFAULT 0 CHECK(bufferAfter BETWEEN 0 AND 120), PRIMARY KEY(practitionerId,service))"
+    },
+    {
+      "type": "table",
+      "name": "practitioners",
+      "tbl_name": "practitioners",
+      "sql": "CREATE TABLE practitioners (id TEXT PRIMARY KEY, name TEXT NOT NULL, profession TEXT NOT NULL DEFAULT 'Physiotherapist', color TEXT NOT NULL DEFAULT '#2563eb', active INTEGER NOT NULL DEFAULT 1 CHECK(active IN(0,1)), bookable INTEGER NOT NULL DEFAULT 1 CHECK(bookable IN(0,1)), priority INTEGER NOT NULL DEFAULT 0)"
+    },
+    {
+      "type": "table",
+      "name": "prescriptions",
+      "tbl_name": "prescriptions",
+      "sql": "CREATE TABLE prescriptions (\n      id                TEXT PRIMARY KEY,\n      patientId         TEXT,\n      patientPhone      TEXT NOT NULL,\n      patientName       TEXT NOT NULL,\n      practitioner      TEXT NOT NULL,\n      date              TEXT NOT NULL,\n      diagnosisOrGoal   TEXT,\n      itemsJson         TEXT NOT NULL,\n      generalNotes      TEXT,\n      createdAt         TEXT NOT NULL\n    , practitionerId TEXT)"
+    },
+    {
+      "type": "table",
+      "name": "rate_limit_log",
+      "tbl_name": "rate_limit_log",
+      "sql": "CREATE TABLE rate_limit_log (\n      ip        TEXT NOT NULL,\n      action    TEXT NOT NULL,\n      timestamp INTEGER NOT NULL\n    )"
+    },
+    {
+      "type": "table",
+      "name": "resources",
+      "tbl_name": "resources",
+      "sql": "CREATE TABLE resources (id TEXT PRIMARY KEY, name TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1 CHECK(active IN(0,1)))"
+    },
+    {
+      "type": "table",
+      "name": "reviews",
+      "tbl_name": "reviews",
+      "sql": "CREATE TABLE reviews (\n      id           TEXT PRIMARY KEY,\n      patientName  TEXT NOT NULL,\n      patientEmail TEXT,\n      rating       INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),\n      serviceSlug  TEXT NOT NULL,\n      comment      TEXT NOT NULL,\n      location     TEXT NOT NULL DEFAULT 'Lisboa',\n      status       TEXT NOT NULL DEFAULT 'APPROVED' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),\n      verified     INTEGER NOT NULL DEFAULT 1,\n      isFeatured   INTEGER NOT NULL DEFAULT 0,\n      createdAt    TEXT NOT NULL,\n      updatedAt    TEXT NOT NULL\n    )"
+    },
+    {
+      "type": "table",
+      "name": "revoked_sessions",
+      "tbl_name": "revoked_sessions",
+      "sql": "CREATE TABLE revoked_sessions (\n      sessionId  TEXT PRIMARY KEY,\n      revokedAt  INTEGER NOT NULL,\n      expiresAt  INTEGER NOT NULL\n    )"
+    },
+    {
+      "type": "table",
+      "name": "schedule_exceptions",
+      "tbl_name": "schedule_exceptions",
+      "sql": "CREATE TABLE schedule_exceptions (id TEXT PRIMARY KEY, practitionerId TEXT NOT NULL, date TEXT NOT NULL, startMinute INTEGER NOT NULL CHECK(startMinute BETWEEN 0 AND 1439), endMinute INTEGER NOT NULL CHECK(endMinute > startMinute AND endMinute <= 1440), kind TEXT NOT NULL CHECK(kind IN('closed','open')), label TEXT NOT NULL DEFAULT '')"
+    },
+    {
+      "type": "table",
+      "name": "schema_migrations",
+      "tbl_name": "schema_migrations",
+      "sql": "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, appliedAt TEXT NOT NULL)"
+    },
+    {
+      "type": "table",
+      "name": "security_audit_logs",
+      "tbl_name": "security_audit_logs",
+      "sql": "CREATE TABLE security_audit_logs (\n      id        TEXT PRIMARY KEY,\n      eventType TEXT NOT NULL,\n      ip        TEXT NOT NULL,\n      userAgent TEXT,\n      details   TEXT,\n      createdAt TEXT NOT NULL\n    )"
+    },
+    {
+      "type": "table",
+      "name": "security_settings",
+      "tbl_name": "security_settings",
+      "sql": "CREATE TABLE security_settings (\n      key        TEXT PRIMARY KEY,\n      value      TEXT NOT NULL,\n      updatedAt  TEXT NOT NULL\n    )"
+    },
+    {
+      "type": "table",
+      "name": "service_resources",
+      "tbl_name": "service_resources",
+      "sql": "CREATE TABLE service_resources (service TEXT NOT NULL, resourceId TEXT NOT NULL REFERENCES resources(id), PRIMARY KEY(service,resourceId))"
+    },
+    {
+      "type": "table",
+      "name": "working_hours",
+      "tbl_name": "working_hours",
+      "sql": "CREATE TABLE working_hours (practitionerId TEXT NOT NULL, dayOfWeek INTEGER NOT NULL CHECK(dayOfWeek BETWEEN 0 AND 6), startMinute INTEGER NOT NULL CHECK(startMinute BETWEEN 0 AND 1439), endMinute INTEGER NOT NULL CHECK(endMinute > startMinute AND endMinute <= 1440), PRIMARY KEY(practitionerId,dayOfWeek,startMinute))"
+    },
+    {
+      "type": "trigger",
+      "name": "appointment_archive_guard_insert",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER appointment_archive_guard_insert BEFORE INSERT ON appointments\n   WHEN NEW.archivedAt IS NOT NULL AND NEW.status!='CANCELLED'\n   BEGIN SELECT RAISE(ABORT,'archived_appointment_inactive'); END"
+    },
+    {
+      "type": "trigger",
+      "name": "appointment_archive_guard_update",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER appointment_archive_guard_update BEFORE UPDATE ON appointments\n   WHEN NEW.archivedAt IS NOT NULL AND NEW.status!='CANCELLED'\n   BEGIN SELECT RAISE(ABORT,'archived_appointment_inactive'); END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_appointments_delete",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER booking_sync_appointments_delete AFTER DELETE ON appointments BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_appointments_insert",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER booking_sync_appointments_insert AFTER INSERT ON appointments BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_appointments_update",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER booking_sync_appointments_update AFTER UPDATE ON appointments BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_blocked_slots_delete",
+      "tbl_name": "blocked_slots",
+      "sql": "CREATE TRIGGER booking_sync_blocked_slots_delete AFTER DELETE ON blocked_slots BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_blocked_slots_insert",
+      "tbl_name": "blocked_slots",
+      "sql": "CREATE TRIGGER booking_sync_blocked_slots_insert AFTER INSERT ON blocked_slots BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_blocked_slots_update",
+      "tbl_name": "blocked_slots",
+      "sql": "CREATE TRIGGER booking_sync_blocked_slots_update AFTER UPDATE ON blocked_slots BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_patients_delete",
+      "tbl_name": "patients",
+      "sql": "CREATE TRIGGER booking_sync_patients_delete AFTER DELETE ON patients BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_patients_insert",
+      "tbl_name": "patients",
+      "sql": "CREATE TRIGGER booking_sync_patients_insert AFTER INSERT ON patients BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_patients_update",
+      "tbl_name": "patients",
+      "sql": "CREATE TRIGGER booking_sync_patients_update AFTER UPDATE ON patients BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_practitioner_services_delete",
+      "tbl_name": "practitioner_services",
+      "sql": "CREATE TRIGGER booking_sync_practitioner_services_delete AFTER DELETE ON practitioner_services BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_practitioner_services_insert",
+      "tbl_name": "practitioner_services",
+      "sql": "CREATE TRIGGER booking_sync_practitioner_services_insert AFTER INSERT ON practitioner_services BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_practitioner_services_update",
+      "tbl_name": "practitioner_services",
+      "sql": "CREATE TRIGGER booking_sync_practitioner_services_update AFTER UPDATE ON practitioner_services BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_practitioners_delete",
+      "tbl_name": "practitioners",
+      "sql": "CREATE TRIGGER booking_sync_practitioners_delete AFTER DELETE ON practitioners BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_practitioners_insert",
+      "tbl_name": "practitioners",
+      "sql": "CREATE TRIGGER booking_sync_practitioners_insert AFTER INSERT ON practitioners BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_practitioners_update",
+      "tbl_name": "practitioners",
+      "sql": "CREATE TRIGGER booking_sync_practitioners_update AFTER UPDATE ON practitioners BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_resources_delete",
+      "tbl_name": "resources",
+      "sql": "CREATE TRIGGER booking_sync_resources_delete AFTER DELETE ON resources BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_resources_insert",
+      "tbl_name": "resources",
+      "sql": "CREATE TRIGGER booking_sync_resources_insert AFTER INSERT ON resources BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_resources_update",
+      "tbl_name": "resources",
+      "sql": "CREATE TRIGGER booking_sync_resources_update AFTER UPDATE ON resources BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_schedule_exceptions_delete",
+      "tbl_name": "schedule_exceptions",
+      "sql": "CREATE TRIGGER booking_sync_schedule_exceptions_delete AFTER DELETE ON schedule_exceptions BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_schedule_exceptions_insert",
+      "tbl_name": "schedule_exceptions",
+      "sql": "CREATE TRIGGER booking_sync_schedule_exceptions_insert AFTER INSERT ON schedule_exceptions BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_schedule_exceptions_update",
+      "tbl_name": "schedule_exceptions",
+      "sql": "CREATE TRIGGER booking_sync_schedule_exceptions_update AFTER UPDATE ON schedule_exceptions BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_service_resources_delete",
+      "tbl_name": "service_resources",
+      "sql": "CREATE TRIGGER booking_sync_service_resources_delete AFTER DELETE ON service_resources BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_service_resources_insert",
+      "tbl_name": "service_resources",
+      "sql": "CREATE TRIGGER booking_sync_service_resources_insert AFTER INSERT ON service_resources BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_service_resources_update",
+      "tbl_name": "service_resources",
+      "sql": "CREATE TRIGGER booking_sync_service_resources_update AFTER UPDATE ON service_resources BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_working_hours_delete",
+      "tbl_name": "working_hours",
+      "sql": "CREATE TRIGGER booking_sync_working_hours_delete AFTER DELETE ON working_hours BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_working_hours_insert",
+      "tbl_name": "working_hours",
+      "sql": "CREATE TRIGGER booking_sync_working_hours_insert AFTER INSERT ON working_hours BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "booking_sync_working_hours_update",
+      "tbl_name": "working_hours",
+      "sql": "CREATE TRIGGER booking_sync_working_hours_update AFTER UPDATE ON working_hours BEGIN UPDATE booking_sync SET revision=revision+1 WHERE id=1; END"
+    },
+    {
+      "type": "trigger",
+      "name": "clinical_appointment_once",
+      "tbl_name": "patient_sessions",
+      "sql": "CREATE TRIGGER clinical_appointment_once BEFORE INSERT ON patient_sessions WHEN NEW.appointmentId IS NOT NULL\n   BEGIN SELECT RAISE(ABORT,'clinical_record_exists') WHERE EXISTS(SELECT 1 FROM patient_sessions WHERE appointmentId=NEW.appointmentId); END"
+    },
+    {
+      "type": "trigger",
+      "name": "invoice_money_guard_0",
+      "tbl_name": "invoices",
+      "sql": "CREATE TRIGGER invoice_money_guard_0 BEFORE INSERT ON invoices WHEN NEW.moneyReview=0 BEGIN\n SELECT RAISE(ABORT,'invalid_invoice_cents') WHERE NEW.amountCents IS NULL OR typeof(NEW.amountCents)!='integer' OR NEW.amountCents<=0 OR abs(NEW.amount*100-NEW.amountCents)>0.0000001; END"
+    },
+    {
+      "type": "trigger",
+      "name": "invoice_money_guard_1",
+      "tbl_name": "invoices",
+      "sql": "CREATE TRIGGER invoice_money_guard_1 BEFORE UPDATE OF amount,amountCents,moneyReview ON invoices WHEN NEW.moneyReview=0 BEGIN\n SELECT RAISE(ABORT,'invalid_invoice_cents') WHERE NEW.amountCents IS NULL OR typeof(NEW.amountCents)!='integer' OR NEW.amountCents<=0 OR abs(NEW.amount*100-NEW.amountCents)>0.0000001; END"
+    },
+    {
+      "type": "trigger",
+      "name": "scheduling_appointment_guard_0",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER scheduling_appointment_guard_0 BEFORE INSERT ON appointments\n    WHEN NEW.status != 'CANCELLED' \n    BEGIN\n      SELECT RAISE(ABORT,'invalid_practitioner') WHERE NOT EXISTS(SELECT 1 FROM practitioners WHERE id=NEW.practitionerId);\n      SELECT RAISE(ABORT,'slot_taken') WHERE EXISTS(SELECT 1 FROM appointments a WHERE a.id!=NEW.id AND a.date=NEW.date AND a.status!='CANCELLED' AND ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))-a.bufferBefore) < ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))+COALESCE(NEW.durationMinutes, CASE NEW.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+NEW.bufferAfter) AND ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))-NEW.bufferBefore) < ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))+COALESCE(a.durationMinutes, CASE a.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+a.bufferAfter) AND (a.practitionerId=NEW.practitionerId OR (a.patientId IS NOT NULL AND a.patientId=NEW.patientId) OR EXISTS(SELECT 1 FROM json_each(a.resourceIds) r JOIN json_each(NEW.resourceIds) n ON r.value=n.value)));\n      SELECT RAISE(ABORT,'slot_blocked') WHERE EXISTS(SELECT 1 FROM blocked_slots b WHERE b.date=NEW.date AND b.practitionerId IN('*',NEW.practitionerId) AND (CAST(substr(b.time,1,2) AS INTEGER)*60+CAST(substr(b.time,4,2) AS INTEGER)) < ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))+COALESCE(NEW.durationMinutes, CASE NEW.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+NEW.bufferAfter) AND ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))-NEW.bufferBefore) < (CAST(substr(b.time,1,2) AS INTEGER)*60+CAST(substr(b.time,4,2) AS INTEGER))+30);\n    END"
+    },
+    {
+      "type": "trigger",
+      "name": "scheduling_appointment_guard_1",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER scheduling_appointment_guard_1 BEFORE UPDATE OF date,startTime,service,status,practitionerId,durationMinutes,bufferBefore,bufferAfter,resourceIds,patientId ON appointments\n    WHEN NEW.status != 'CANCELLED' AND (OLD.status='CANCELLED' OR NEW.date!=OLD.date OR NEW.startTime!=OLD.startTime OR NEW.practitionerId!=OLD.practitionerId OR NEW.service!=OLD.service OR NEW.durationMinutes IS NOT OLD.durationMinutes OR NEW.bufferBefore!=OLD.bufferBefore OR NEW.bufferAfter!=OLD.bufferAfter OR NEW.resourceIds!=OLD.resourceIds OR NEW.patientId IS NOT OLD.patientId)\n    BEGIN\n      SELECT RAISE(ABORT,'invalid_practitioner') WHERE NOT EXISTS(SELECT 1 FROM practitioners WHERE id=NEW.practitionerId);\n      SELECT RAISE(ABORT,'slot_taken') WHERE EXISTS(SELECT 1 FROM appointments a WHERE a.id!=NEW.id AND a.date=NEW.date AND a.status!='CANCELLED' AND ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))-a.bufferBefore) < ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))+COALESCE(NEW.durationMinutes, CASE NEW.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+NEW.bufferAfter) AND ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))-NEW.bufferBefore) < ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))+COALESCE(a.durationMinutes, CASE a.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+a.bufferAfter) AND (a.practitionerId=NEW.practitionerId OR (a.patientId IS NOT NULL AND a.patientId=NEW.patientId) OR EXISTS(SELECT 1 FROM json_each(a.resourceIds) r JOIN json_each(NEW.resourceIds) n ON r.value=n.value)));\n      SELECT RAISE(ABORT,'slot_blocked') WHERE EXISTS(SELECT 1 FROM blocked_slots b WHERE b.date=NEW.date AND b.practitionerId IN('*',NEW.practitionerId) AND (CAST(substr(b.time,1,2) AS INTEGER)*60+CAST(substr(b.time,4,2) AS INTEGER)) < ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))+COALESCE(NEW.durationMinutes, CASE NEW.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+NEW.bufferAfter) AND ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))-NEW.bufferBefore) < (CAST(substr(b.time,1,2) AS INTEGER)*60+CAST(substr(b.time,4,2) AS INTEGER))+30);\n    END"
+    },
+    {
+      "type": "trigger",
+      "name": "scheduling_block_guard_0",
+      "tbl_name": "blocked_slots",
+      "sql": "CREATE TRIGGER scheduling_block_guard_0 BEFORE INSERT ON blocked_slots BEGIN\n    SELECT RAISE(ABORT,'invalid_practitioner') WHERE NEW.practitionerId!='*' AND NOT EXISTS(SELECT 1 FROM practitioners WHERE id=NEW.practitionerId);\n    SELECT RAISE(ABORT,'slot_taken') WHERE EXISTS(SELECT 1 FROM appointments a WHERE a.date=NEW.date AND a.status!='CANCELLED' AND (NEW.practitionerId='*' OR NEW.practitionerId=a.practitionerId) AND ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))-a.bufferBefore) < (CAST(substr(NEW.time,1,2) AS INTEGER)*60+CAST(substr(NEW.time,4,2) AS INTEGER))+30 AND (CAST(substr(NEW.time,1,2) AS INTEGER)*60+CAST(substr(NEW.time,4,2) AS INTEGER)) < ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))+COALESCE(a.durationMinutes, CASE a.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+a.bufferAfter)); END"
+    },
+    {
+      "type": "trigger",
+      "name": "scheduling_block_guard_1",
+      "tbl_name": "blocked_slots",
+      "sql": "CREATE TRIGGER scheduling_block_guard_1 BEFORE UPDATE ON blocked_slots BEGIN\n    SELECT RAISE(ABORT,'invalid_practitioner') WHERE NEW.practitionerId!='*' AND NOT EXISTS(SELECT 1 FROM practitioners WHERE id=NEW.practitionerId);\n    SELECT RAISE(ABORT,'slot_taken') WHERE EXISTS(SELECT 1 FROM appointments a WHERE a.date=NEW.date AND a.status!='CANCELLED' AND (NEW.practitionerId='*' OR NEW.practitionerId=a.practitionerId) AND ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))-a.bufferBefore) < (CAST(substr(NEW.time,1,2) AS INTEGER)*60+CAST(substr(NEW.time,4,2) AS INTEGER))+30 AND (CAST(substr(NEW.time,1,2) AS INTEGER)*60+CAST(substr(NEW.time,4,2) AS INTEGER)) < ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))+COALESCE(a.durationMinutes, CASE a.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+a.bufferAfter)); END"
+    },
+    {
+      "type": "trigger",
+      "name": "scheduling_patient_phone_guard_0",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER scheduling_patient_phone_guard_0 BEFORE INSERT ON appointments WHEN NEW.status!='CANCELLED' BEGIN\n    SELECT RAISE(ABORT,'slot_taken') WHERE EXISTS(SELECT 1 FROM appointments a WHERE a.id!=NEW.id AND a.phone=NEW.phone AND a.date=NEW.date AND a.status!='CANCELLED' AND ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))-a.bufferBefore) < ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))+COALESCE(NEW.durationMinutes, CASE NEW.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+NEW.bufferAfter) AND ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))-NEW.bufferBefore) < ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))+COALESCE(a.durationMinutes, CASE a.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+a.bufferAfter)); END"
+    },
+    {
+      "type": "trigger",
+      "name": "scheduling_patient_phone_guard_1",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER scheduling_patient_phone_guard_1 BEFORE UPDATE OF phone,date,startTime,status,durationMinutes,bufferBefore,bufferAfter ON appointments WHEN NEW.status!='CANCELLED' BEGIN\n    SELECT RAISE(ABORT,'slot_taken') WHERE EXISTS(SELECT 1 FROM appointments a WHERE a.id!=NEW.id AND a.phone=NEW.phone AND a.date=NEW.date AND a.status!='CANCELLED' AND ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))-a.bufferBefore) < ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))+COALESCE(NEW.durationMinutes, CASE NEW.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+NEW.bufferAfter) AND ((CAST(substr(NEW.startTime,1,2) AS INTEGER)*60+CAST(substr(NEW.startTime,4,2) AS INTEGER))-NEW.bufferBefore) < ((CAST(substr(a.startTime,1,2) AS INTEGER)*60+CAST(substr(a.startTime,4,2) AS INTEGER))+COALESCE(a.durationMinutes, CASE a.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END)+a.bufferAfter)); END"
+    },
+    {
+      "type": "trigger",
+      "name": "scheduling_preserve_practitioner",
+      "tbl_name": "practitioners",
+      "sql": "CREATE TRIGGER scheduling_preserve_practitioner BEFORE DELETE ON practitioners WHEN EXISTS(SELECT 1 FROM appointments WHERE practitionerId=OLD.id) BEGIN SELECT RAISE(ABORT,'archive_practitioner_instead'); END"
+    },
+    {
+      "type": "trigger",
+      "name": "scheduling_snapshot",
+      "tbl_name": "appointments",
+      "sql": "CREATE TRIGGER scheduling_snapshot AFTER INSERT ON appointments WHEN NEW.durationMinutes IS NULL OR NEW.practitionerName='' BEGIN UPDATE appointments SET durationMinutes=COALESCE(NEW.durationMinutes, CASE NEW.service WHEN 'reeducation-posturale' THEN 50 WHEN 'reeducation-post-partum' THEN 45 WHEN 'massage-therapeutique' THEN 45 WHEN 'drainage-lymphatique' THEN 50 WHEN 'electrotherapie' THEN 30 WHEN 'ultrasons' THEN 20 WHEN 'cavitation' THEN 45 WHEN 'radiofrequence' THEN 60 WHEN 'laser-lipo' THEN 30 WHEN 'pressotherapie' THEN 45 WHEN 'cryolipolyse' THEN 60 WHEN 'massage-amincissant' THEN 45 WHEN 'bilan-minceur' THEN 60 ELSE 30 END), practitionerName=CASE WHEN NEW.practitionerName='' THEN (SELECT name FROM practitioners WHERE id=NEW.practitionerId) ELSE NEW.practitionerName END WHERE id=NEW.id; END"
+    }
+  ]
+}

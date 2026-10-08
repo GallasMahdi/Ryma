@@ -1,0 +1,243 @@
+[
+  {
+    "file": "src/app/api/admin/analytics/lock/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/analytics/password/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "owner"
+  },
+  {
+    "file": "src/app/api/admin/analytics/route.ts",
+    "methods": [
+      "GET"
+    ],
+    "guard": "owner"
+  },
+  {
+    "file": "src/app/api/admin/analytics/verify/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/multiple/preview/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/multiple/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/[id]/route.ts",
+    "methods": [
+      "GET",
+      "PATCH",
+      "DELETE"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/events/route.ts",
+    "methods": [
+      "GET"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/export/route.ts",
+    "methods": [
+      "GET"
+    ],
+    "guard": "owner"
+  },
+  {
+    "file": "src/app/api/admin/invoices/export/route.ts",
+    "methods": [
+      "GET"
+    ],
+    "guard": "owner"
+  },
+  {
+    "file": "src/app/api/admin/invoices/route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/invoices/[id]/route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "guard": "owner"
+  },
+  {
+    "file": "src/app/api/admin/login/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "public/custom"
+  },
+  {
+    "file": "src/app/api/admin/logout/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "public/custom"
+  },
+  {
+    "file": "src/app/api/admin/me/route.ts",
+    "methods": [
+      "GET"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/patients/route.ts",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE"
+    ],
+    "guard": "owner"
+  },
+  {
+    "file": "src/app/api/admin/patients/[id]/sessions/route.ts",
+    "methods": [
+      "POST",
+      "PATCH",
+      "DELETE"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/practitioners/route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/prescriptions/route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/prescriptions/[id]/route.ts",
+    "methods": [
+      "DELETE"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/reviews/route.ts",
+    "methods": [
+      "GET",
+      "PATCH",
+      "DELETE"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/slots/bulk/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/slots/route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/admin/whatsapp/route.ts",
+    "methods": [
+      "GET"
+    ],
+    "guard": "admin"
+  },
+  {
+    "file": "src/app/api/appointments/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "public/custom"
+  },
+  {
+    "file": "src/app/api/health/route.ts",
+    "methods": [
+      "GET"
+    ],
+    "guard": "public/custom"
+  },
+  {
+    "file": "src/app/api/practitioners/route.ts",
+    "methods": [
+      "GET"
+    ],
+    "guard": "public/custom"
+  },
+  {
+    "file": "src/app/api/reviews/route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "guard": "public/custom"
+  },
+  {
+    "file": "src/app/api/slots/route.ts",
+    "methods": [
+      "GET"
+    ],
+    "guard": "public/custom"
+  },
+  {
+    "file": "src/app/api/whatsapp/jobs/route.ts",
+    "methods": [
+      "POST"
+    ],
+    "guard": "public/custom"
+  },
+  {
+    "file": "src/app/api/whatsapp/webhook/route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "guard": "public/custom"
+  }
+]

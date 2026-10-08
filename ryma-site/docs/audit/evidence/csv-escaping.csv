@@ -1,0 +1,16 @@
+ID;Data;Hora;Nome Utente;Telefone;Tratamento;Profissional;Duracao Min;Regime Cobertura;Prestador;Numero;Estado;Valor EUR;Notas
+"apt_5be9f7e4-efab-4184-84ab-a94c19a8a210";"2027-02-03";"09:00";"Audit CSV";"'+351969902345";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"PENDING";65;"'=SUM(1;2)
+""Élodie, São"""
+"apt_sess_b40c1981-0ca4-41c6-ba08-1a2d052608ed";"2027-01-04";"14:00";"Audit réservation";"'+351963000026";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"CONFIRMED";65;"Session 2 · Treatment plan"
+"apt_sess_2743ac43-88b8-4833-9ce1-d978a88d281c";"2026-12-28";"14:00";"Audit réservation";"'+351963000026";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"CONFIRMED";65;"Session 1 · Treatment plan"
+"apt_66c212be-e5bf-4ae6-b36e-09c7528b9c10";"2026-11-20";"10:00";"Audit Mobile";"'+351963001234";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"PENDING";65;"Création QA mobile — données fictives."
+"apt_sess_c145932a-e1a7-4b96-90b0-f14c492f90f2";"2026-11-18";"09:00";"Audit Élodie São";"'+351963000001";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"CONFIRMED";65;"Session 3 · Treatment plan"
+"apt_sess_222839b0-df4f-45e5-b5e3-5640a81c595a";"2026-11-11";"09:00";"Audit Élodie São";"'+351963000001";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"CANCELLED";65;"Session 1 · Treatment plan"
+"apt_35030c80-08b6-40a5-be18-4e1fa664eb5c";"2026-11-09";"10:00";"Audit réservation";"'+351963000017";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"PENDING";65;""
+"apt_8098d9c0-91a8-4a27-aa6e-2e25cf46dd32";"2026-11-05";"09:00";"Audit réservation";"'+351963000011";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"PENDING";65;""
+"apt_305f5263-93c2-420f-848b-c97e9eac4868";"2026-11-04";"09:00";"Audit réservation";"'+351963000007";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"PENDING";65;""
+"apt_e2c2ee1c-e484-4402-929f-ed906082292b";"2026-11-03";"09:00";"Audit réservation";"'+351963000005";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"PENDING";65;""
+"apt_ea9182e3-6d0b-412d-a9b0-2c9febdbfd16";"2026-11-02";"10:00";"Audit Élodie São";"'+351963000001";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"NO_SHOW";65;""
+"apt_sess_01ef7fda-ef5d-40ad-8c34-c0d188e30e0f";"2026-11-02";"14:00";"Audit réservation";"'+351963000023";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"CONFIRMED";65;"Session 3 · Treatment plan"
+"apt_sess_1acf2b65-aeab-4970-ae49-207da7c36685";"2026-10-26";"14:00";"Audit réservation";"'+351963000023";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"CONFIRMED";65;"Session 2 · Treatment plan"
+"apt_sess_13130f58-1b3e-4c7f-9698-1c2ab267bd79";"2026-10-19";"14:00";"Audit réservation";"'+351963000023";"reeducation-posturale";"Digital Clínica";50;"PARTICULAR";"";"";"CONFIRMED";65;"Session 1 · Treatment plan"

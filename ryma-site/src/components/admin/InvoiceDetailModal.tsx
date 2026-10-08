@@ -56,6 +56,13 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
 
   if (!invoice) return null;
 
+  if (invoice.moneyReview) return isOpen ? <div role="dialog" aria-modal="true" aria-label={txt('Facture à vérifier','Invoice needs review','Fatura a verificar')} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="bg-white rounded-xl p-6 max-w-lg space-y-3">
+    <h2 className="font-bold">{invoice.invoiceNumber}</h2>
+    <p>{txt('Ce montant historique nécessite un rapprochement. Impression et totaux suspendus.','This historical amount needs reconciliation. Printing and totals are suspended.','Este valor histórico requer reconciliação. Impressão e totais suspensos.')}</p>
+    <p>{invoice.patientName} · {String(invoice.amount)} EUR</p>
+    <button type="button" onClick={onClose} className="border rounded-lg px-3 py-2">{txt('Fermer','Close','Fechar')}</button>
+  </div></div> : null;
+
   const { vatRate, vatAmount, incidence, isExempt } = calculateVatBreakdown(invoice.amount, invoice.vatRate);
 
   const handlePrint = () => {

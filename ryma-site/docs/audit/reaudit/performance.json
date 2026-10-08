@@ -1,0 +1,206 @@
+{
+  "environment": {
+    "node": "v24.18.0",
+    "platform": "win32",
+    "cpu": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
+    "logicalCores": 8,
+    "memoryGiB": 16,
+    "adapter": "better-sqlite3",
+    "journalMode": "wal",
+    "busyTimeout": 5000,
+    "method": "one warm-up then sequential database-function calls; no browser/network; synthetic fixtures; local machine"
+  },
+  "results": [
+    {
+      "patients": 100,
+      "appointments": 500,
+      "seedMs": 26,
+      "measurements": [
+        {
+          "name": "appointments_page_50_summary",
+          "samples": 20,
+          "medianMs": 1.02,
+          "p95Ms": 2.05,
+          "responseBytes": 31832
+        },
+        {
+          "name": "appointments_search",
+          "samples": 20,
+          "medianMs": 0.64,
+          "p95Ms": 0.99,
+          "responseBytes": 3227
+        },
+        {
+          "name": "calendar_week",
+          "samples": 20,
+          "medianMs": 0.21,
+          "p95Ms": 0.33,
+          "responseBytes": 26515
+        },
+        {
+          "name": "patients_directory_10",
+          "samples": 20,
+          "medianMs": 2.03,
+          "p95Ms": 4.21,
+          "responseBytes": 7078
+        },
+        {
+          "name": "patients_legacy_unpaginated",
+          "samples": 5,
+          "medianMs": 0.69,
+          "p95Ms": 0.8,
+          "responseBytes": 69081
+        },
+        {
+          "name": "slots_single_day",
+          "samples": 20,
+          "medianMs": 2.42,
+          "p95Ms": 4.17,
+          "responseBytes": 4875
+        },
+        {
+          "name": "analytics_30d",
+          "samples": 5,
+          "medianMs": 6.08,
+          "p95Ms": 6.46,
+          "responseBytes": 4888
+        },
+        {
+          "name": "analytics_all",
+          "samples": 5,
+          "medianMs": 9.13,
+          "p95Ms": 12.77,
+          "responseBytes": 2631
+        },
+        {
+          "name": "all_appointments_for_export",
+          "samples": 5,
+          "medianMs": 1.43,
+          "p95Ms": 2.3,
+          "responseBytes": 316291
+        },
+        {
+          "name": "create_and_delete_booking",
+          "samples": 10,
+          "medianMs": 2.57,
+          "p95Ms": 3.81,
+          "responseBytes": 16
+        }
+      ]
+    },
+    {
+      "patients": 1000,
+      "appointments": 10000,
+      "seedMs": 1084,
+      "measurements": [
+        {
+          "name": "appointments_page_50_summary",
+          "samples": 20,
+          "medianMs": 9.24,
+          "p95Ms": 14.75,
+          "responseBytes": 31990
+        },
+        {
+          "name": "appointments_search",
+          "samples": 20,
+          "medianMs": 5.05,
+          "p95Ms": 6.47,
+          "responseBytes": 31857
+        },
+        {
+          "name": "calendar_week",
+          "samples": 20,
+          "medianMs": 0.19,
+          "p95Ms": 0.26,
+          "responseBytes": 26515
+        },
+        {
+          "name": "patients_directory_10",
+          "samples": 20,
+          "medianMs": 9.74,
+          "p95Ms": 10.97,
+          "responseBytes": 6808
+        },
+        {
+          "name": "patients_legacy_unpaginated",
+          "samples": 5,
+          "medianMs": 1.51,
+          "p95Ms": 2.18,
+          "responseBytes": 693186
+        },
+        {
+          "name": "slots_single_day",
+          "samples": 20,
+          "medianMs": 1.29,
+          "p95Ms": 6.04,
+          "responseBytes": 4875
+        },
+        {
+          "name": "analytics_30d",
+          "samples": 5,
+          "medianMs": 4.51,
+          "p95Ms": 5.64,
+          "responseBytes": 4888
+        },
+        {
+          "name": "analytics_all",
+          "samples": 5,
+          "medianMs": 443.49,
+          "p95Ms": 476.12,
+          "responseBytes": 7842
+        },
+        {
+          "name": "all_appointments_for_export",
+          "samples": 5,
+          "medianMs": 26.79,
+          "p95Ms": 35.07,
+          "responseBytes": 6355811
+        },
+        {
+          "name": "create_and_delete_booking",
+          "samples": 10,
+          "medianMs": 2.06,
+          "p95Ms": 3.88,
+          "responseBytes": 16
+        }
+      ]
+    }
+  ],
+  "plans": {
+    "agenda": [
+      {
+        "id": 4,
+        "parent": 0,
+        "notused": 163,
+        "detail": "SEARCH appointments USING INDEX idx_appointments_date (date>? AND date<?)"
+      },
+      {
+        "id": 51,
+        "parent": 0,
+        "notused": 0,
+        "detail": "USE TEMP B-TREE FOR LAST 2 TERMS OF ORDER BY"
+      }
+    ],
+    "phone": [
+      {
+        "id": 4,
+        "parent": 0,
+        "notused": 61,
+        "detail": "SEARCH appointments USING INDEX idx_appointments_phone_date (phone=?)"
+      }
+    ],
+    "session": [
+      {
+        "id": 3,
+        "parent": 0,
+        "notused": 61,
+        "detail": "SEARCH patient_sessions USING INDEX idx_patient_sessions_appointment (appointmentId=?)"
+      }
+    ]
+  },
+  "integrity": [
+    {
+      "integrity_check": "ok"
+    }
+  ]
+}

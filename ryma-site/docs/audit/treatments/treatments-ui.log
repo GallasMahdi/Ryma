@@ -1,0 +1,11 @@
+✔ treatment editor preserves drafts, protects close, validates cents and blocks duplicate submits (217.3283ms)
+✔ public catalogue context refreshes, hides archived treatments and avoids unchanged rerenders (6.5812ms)
+✔ Team online badges require a published treatment, not just an assignment (117.2457ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1423.6029

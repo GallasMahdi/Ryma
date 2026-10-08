@@ -1,4 +1,6 @@
 'use client';
+import { useServiceLabels } from '@/components/ServiceCatalogProvider';
+import { RescheduleAppointment } from './RescheduleAppointment';
 
 import React, { useState } from 'react';
 import {
@@ -16,13 +18,7 @@ import {
   IconCopy,
   IconChecklist,
 } from '@tabler/icons-react';
-import {
-  Appointment,
-  AppointmentStatus,
-  STATUS_CONFIG,
-  getServiceName,
-  getServicePrice,
-} from '@/types/admin';
+import { Appointment, AppointmentStatus, STATUS_CONFIG } from '@/types/admin';
 import { Lang } from '@/lib/i18n';
 import { ResponsiveModal } from './ResponsiveModal';
 
@@ -62,6 +58,7 @@ export const AppointmentDetailModal = React.memo(function AppointmentDetailModal
   noShowCounts,
   recentNewIds,
 }: AppointmentDetailModalProps) {
+  const { getServiceName, getServicePrice } = useServiceLabels();
   const [copiedPhone, setCopiedPhone] = useState(false);
 
   const txt = (fr: string, en: string, pt: string) =>
@@ -70,7 +67,7 @@ export const AppointmentDetailModal = React.memo(function AppointmentDetailModal
   if (!appointment) return null;
 
   const st = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.PENDING;
-  const price = getServicePrice(appointment.service);
+  const price = getServicePrice(appointment.service, appointment);
   const initials = getInitials(appointment.patientName);
   const isNew = recentNewIds?.has(appointment.id);
   const noShows = noShowCounts?.[appointment.phone] ?? 0;
@@ -110,6 +107,8 @@ export const AppointmentDetailModal = React.memo(function AppointmentDetailModal
       maxWidth="md"
     >
       <div className="space-y-4 font-sans text-xs">
+        <p className="text-sm font-semibold text-slate-700">{appointment.practitionerName} · {appointment.durationMinutes} min</p>
+        <RescheduleAppointment key={appointment.id + ":" + appointment.version} appointment={appointment} lang={lang} onSaved={onClose} />
         {/* Patient Identity & Status Banner */}
         <div className="flex items-start justify-between gap-3 p-3.5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
           <div className="flex items-center gap-3 min-w-0">
@@ -128,6 +127,11 @@ export const AppointmentDetailModal = React.memo(function AppointmentDetailModal
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                {appointment.source === 'whatsapp' && (
+                  <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-800">
+                    <IconBrandWhatsapp size={12} /> WhatsApp
+                  </span>
+                )}
                 <span className={`font-semibold px-2 py-0.5 rounded-md border ${st.bg} ${st.color} ${st.border}`}>
                   {st[lang] || st.pt || st.fr}
                 </span>
@@ -167,7 +171,7 @@ export const AppointmentDetailModal = React.memo(function AppointmentDetailModal
               <span>{txt('Soin / Traitement', 'Treatment / Service', 'Tratamento / Cuidado')}</span>
             </div>
             <div className="font-semibold text-[#0F172A] text-xs leading-snug">
-              {getServiceName(appointment.service, lang)}
+              {getServiceName(appointment.service, lang, appointment)}
             </div>
           </div>
 

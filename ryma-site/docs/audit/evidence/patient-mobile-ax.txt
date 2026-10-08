@@ -1,0 +1,100 @@
+Browser tab: 1, Title: "Digital Clínica — Fisioterapia & Estética Avançada em Lisboa", URL: "http://127.0.0.1:3117/admin?tab=patients".
+0 AXWebArea Digital Clínica — Fisioterapia & Estética Avançada em Lisboa, URL: 127.0.0.1:3117/admin?tab=patients
+	1 container
+		2 image Digital Clínica Emblem
+		3 text Digital Clínica
+		164 button Search command palette
+			165 image
+		6 button Suporte Técnico & Helpdesk
+			7 image
+		8 button Atualizar
+			9 image
+		10 button Nova Consulta
+			11 image
+		12 button PT, Help: Mudar idioma
+		195 container
+			196 heading Processos Clínicos & Fichas, Value: 2
+				197 text Processos Clínicos & Fichas
+			198 text Histórico clínico, evolução da dor e faturação
+			199 button Novo Utente
+				200 image
+				201 text Novo Utente
+			202 button ← Voltar à lista de utentes
+				203 image
+				204 text ← Voltar à lista de utentes
+			205 text A
+			206 heading Audit Élodie São, Value: 3
+				207 text Audit Élodie São
+			208 text 📞  +351963000029 ✉️  audit@example.invalid
+			209 button Editar
+				210 image
+				211 text Editar
+			212 link Description: WhatsApp, Value: wa.me/351963000029
+			213 link Description: Telefonar, Value: tel:+351963000029
+			214 button Eliminar, Help: Eliminar Ficha
+				215 image
+				216 text Eliminar
+			217 image
+			218 text PRESCRIÇÃO MÉDICA :
+			219 button -, Help: Diminuir sessões
+			220 text 10
+			221 button +, Help: Aumentar sessões
+			222 text sessões 3  /  10  ( 30 %)
+			223 button Plano de Sessões
+				224 image
+				225 text Plano de Sessões
+			226 button Registar Sessão
+				227 image
+				228 text Registar Sessão
+			229 button Visão Geral
+				230 image
+				231 text Visão Geral
+			232 button Histórico 3
+				233 image
+				234 text Histórico
+				235 text 3
+			236 button Escala EVA
+				237 image
+				238 text Escala EVA
+			239 button Faturação 0
+				240 image
+				241 text Faturação
+				242 text 0
+			243 button Recomendações 0
+				244 image
+				245 text Recomendações
+				246 text 0
+			247 button Notas
+				248 image
+				249 text Notas
+			250 image
+			251 text PATOLOGIAS & DIAGNÓSTICO Sem diagnóstico
+			252 image
+			253 text HISTÓRICO MÉDICO Sem observações clínicas. EVOLUÇÃO DA DOR (EVA) Inicial : 10 /10  →  Atual : 5 /10 -5 pts (Melhoria)
+		169 container Navigation mobile
+			170 button 12 Consultas
+				171 container
+					172 image
+					173 text 12
+				174 text Consultas
+			175 button Agenda
+				176 text Agenda
+			177 button 2 Doentes
+				191 container
+					192 image
+					193 text 2
+				178 text Doentes
+			179 button Recibos
+				180 text Recibos
+			181 button Avis
+				182 text Avis
+			183 button Equipa
+				184 text Equipa
+			185 button 🔒 Stats
+				186 container
+					187 image
+					188 text 🔒
+				189 text Stats
+	194 text Digital Clínica — Fisioterapia & Estética Avançada em Lisboa
+
+The focused UI element is 0 AXWebArea Digital Clínica — Fisioterapia & Estética Avançada em Lisboa, URL: 127.0.0.1:3117/admin?tab=patients

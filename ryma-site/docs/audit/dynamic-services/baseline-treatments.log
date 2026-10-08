@@ -1,0 +1,31 @@
+[Public practitioners read]
+▶ Treatments lifecycle on isolated SQLite
+  ✔ migration seeds existing treatments once and keeps catalogue mutations in booking revision (84.2222ms)
+  ✔ drafts stay out of public catalogue and cannot receive website or dashboard bookings (17.772ms)
+  ✔ publishing requires an eligible practitioner and valid working hours (35.1062ms)
+  ✔ custom treatment books with exact price, name and full duration snapshots (8.1431ms)
+  ✔ catalogue updates preserve existing bookings and historical revenue (22.3697ms)
+  ✔ future appointments prevent removing practitioner assignments (3.3952ms)
+  ✔ archive removes public access, keeps existing care editable and allows confirmed-request replay (16.1528ms)
+  ✔ existing archived-treatment appointment can still be invoiced (34.7669ms)
+  ✔ parallel editors reject stale updates instead of overwriting (4.4389ms)
+  ✔ duplicate creation and edits using an old version cannot replace a treatment (6.0536ms)
+  ✔ invalid fields and malicious shapes leave the entire database unchanged (76.4702ms)
+  ✔ transaction failure rolls back treatment, mappings and audit history together (5.1607ms)
+  ✔ Team and resource assignment accept a custom treatment and preserve duration overrides (16.053ms)
+  ✔ recurring custom treatment plans reserve and record the correct service (5.9754ms)
+  ✔ new backup format restores custom catalogue, assignments, snapshots and revisions (15.8664ms)
+  ✔ admin API requires authentication, validates JSON and records hashed actor identity (16.1337ms)
+  ✔ WhatsApp menus include published custom services and recover when selection is archived (53.2573ms)
+  ✔ empty published catalogue returns an empty list and a useful WhatsApp reply (16.3879ms)
+  ✔ migration reruns preserve archives, custom services and intentionally empty catalogues (21.8068ms)
+  ✔ catalogue outages return retryable JSON without internal database details (2.9153ms)
+✔ Treatments lifecycle on isolated SQLite (465.7577ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1588.6012

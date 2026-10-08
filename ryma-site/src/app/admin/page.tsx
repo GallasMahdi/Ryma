@@ -1,28 +1,19 @@
 'use client';
+import { ServiceCatalogProvider } from '@/components/ServiceCatalogProvider';
+import { useServices, useServiceLabels } from '@/components/ServiceCatalogProvider';
+import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
+import { TreatmentsTab } from '@/components/admin/TreatmentsTab';
+import { PractitionersTab } from '@/components/admin/PractitionersTab';
+import { bookingRequestKey } from '@/lib/booking-request';
 
 import React, { useState, useMemo, useEffect, useCallback, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES } from '@/data/services';
+
 import { IconAlertTriangle, IconLock } from '@tabler/icons-react';
 
-import {
-  Appointment,
-  AppointmentStatus,
-  PatientNote,
-  PatientRecord,
-  SlotInfo,
-  Invoice,
-  InvoiceStats,
-  InvoicePaymentStatus,
-  PaymentMethod,
-  Review,
-  getServiceName,
-  getServicePrice,
-  getNext7Days,
-  formatLocalDate,
-} from '@/types/admin';
+import { Appointment, AppointmentStatus, PatientNote, PatientRecord, SlotInfo, Invoice, InvoiceStats, InvoicePaymentStatus, PaymentMethod, Review, getNext7Days, formatLocalDate } from '@/types/admin';
 import { playNotificationChime } from '@/lib/sound';
 import { phonesMatch } from '@/lib/phone';
 
@@ -72,13 +63,15 @@ async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
   return res.json() as T;
 }
 
-const VALID_ADMIN_TABS: AdminTab[] = ['appointments', 'slots', 'patients', 'invoices', 'reviews', 'analytics'];
+const VALID_ADMIN_TABS: AdminTab[] = ['appointments', 'slots', 'patients', 'invoices', 'reviews', 'analytics', 'team', 'treatments'];
 
 // AdminDashboardContent no longer calls useSearchParams() itself — that hook
 // lives in the thin AdminPageShell wrapper below, which is the component that
 // actually sits inside the Suspense boundary. This prevents Suspense from
 // unmounting+remounting the dashboard (and all its effects) during hydration.
 function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) {
+  const SERVICES = useServices();
+  const { getServiceName } = useServiceLabels();
   const { lang, toggleLang } = useLanguage();
   const router = useRouter();
 
@@ -138,6 +131,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   }, [activeTab]);
 
   // ── State ──────────────────────────────────────────────────────────────────
+  const [schedulePractitioner,setSchedulePractitioner] = useState('');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
@@ -196,6 +190,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   // Invoicing & Tax Receipts state
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoiceStats, setInvoiceStats] = useState<InvoiceStats | null>(null);
+  const [financialReviewRequired,setFinancialReviewRequired]=useState(false);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
 
   // Clinic Support & Helpdesk state
@@ -222,7 +217,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
         playNotificationChime();
 
-        const svcName = getServiceName(appt.service, lang);
+        const svcName = getServiceName(appt.service, lang, appt);
         const toastTitle =
           lang === 'fr'
             ? 'Nouveau Rendez-vous !'
@@ -246,7 +241,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         slotCacheRef.current = {};
       }
     },
-    [lang, addToast]
+    [lang, addToast, getServiceName]
   );
 
   // ── Fetch admin metadata ───────────────────────────────────────────────────
@@ -418,6 +413,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isMultipleSessionsModalOpen, setIsMultipleSessionsModalOpen] = useState(false);
   const [newForm, setNewForm] = useState({
+    practitionerId: '',
     patientName: '',
     phone: '',
     email: '',
@@ -428,6 +424,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   });
   const [addingError, setAddingError] = useState<string | null>(null);
   const [addingLoading, setAddingLoading] = useState(false);
+  const newBookingRequestRef=useRef<{payload:string;key:string}|null>(null);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
@@ -463,7 +460,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     setAppointmentsError(null);
     const request = ++appointmentRequest.current;
     try {
-      const data = await apiFetch<{ appointments: Appointment[]; total: number; stats: typeof appointmentStats }>('/api/admin/appointments?summary=1&' + appointmentQuery.current);
+      const data = await apiFetch<{ appointments: Appointment[]; total: number; stats: typeof appointmentStats }>('/api/admin/appointments?summary=1&' + appointmentQuery.current + '&practitionerId=' + encodeURIComponent(schedulePractitioner));
       if (request !== appointmentRequest.current) return;
       setAppointmentTotal(data.total);
       setAppointmentStats(data.stats);
@@ -508,7 +505,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     } finally {
       if (request === appointmentRequest.current) setLoadingAppointments(false);
     }
-  }, [lang, handleNewIncomingAppointment]);
+  }, [lang, handleNewIncomingAppointment, schedulePractitioner]);
 
   const setAppointmentQuery = useCallback((query: string) => {
     appointmentQuery.current = query;
@@ -541,11 +538,12 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     setLoadingInvoices(true);
     try {
       const request = ++invoiceRequest.current;
-      const data = await apiFetch<{ invoices: Invoice[]; stats: InvoiceStats; total: number }>('/api/admin/invoices?' + invoiceQuery.current);
+      const data = await apiFetch<{ invoices: Invoice[]; stats: InvoiceStats | null; total: number;financialReviewRequired?:boolean }>('/api/admin/invoices?' + invoiceQuery.current);
       if (request !== invoiceRequest.current) return;
       setInvoiceTotal(data.total);
       setInvoices(data.invoices ?? []);
       setInvoiceStats(data.stats ?? null);
+      setFinancialReviewRequired(!!data.financialReviewRequired);
       void fetchAdminMetadata();
     } catch (err) {
       console.warn('[Invoices Fetch Error]:', err);
@@ -670,7 +668,10 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
         eventSource.addEventListener('connected', () => {
           if (!isUnmounted) setIsLiveConnected(true);
+          scheduleRefresh();
         });
+
+        eventSource.addEventListener('appointments:changed', () => {scheduleRefresh();window.dispatchEvent(new Event('ryma_schedule_changed'));});
 
         eventSource.addEventListener('appointment:created', (e: MessageEvent) => {
           try {
@@ -774,7 +775,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       if (eventSource) eventSource.close();
       if (reconnectTimer) clearTimeout(reconnectTimer);
     };
-  }, [handleNewIncomingAppointment, fetchAppointments, fetchAdminMetadata]);
+  }, [handleNewIncomingAppointment, fetchAppointments, fetchAdminMetadata, getServiceName]);
 
   // Ref to track live connection status without making it a useEffect dependency
   const isLiveConnectedRef = useRef(isLiveConnected);
@@ -869,9 +870,10 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
   // ── Cached Slot Fetching ───────────────────────────────────────────────────
   const fetchSlots = useCallback(async (date: string, forceRefresh = false) => {
+    const cacheKey = date + ":" + schedulePractitioner;
     slotAbortRef.current?.abort();
-    if (!forceRefresh && slotCacheRef.current[date]) {
-      setSlotList(slotCacheRef.current[date]);
+    if (!forceRefresh && slotCacheRef.current[cacheKey]) {
+      setSlotList(slotCacheRef.current[cacheKey]);
       setLoadingSlots(false);
       return;
     }
@@ -885,7 +887,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     slotAbortRef.current = controller;
 
     try {
-      const res = await fetch(`/api/admin/slots?date=${date}`, {
+      const res = await fetch(`/api/admin/slots?date=${date}&practitionerId=${encodeURIComponent(schedulePractitioner)}`, {
         signal: controller.signal,
         credentials: 'same-origin',
       });
@@ -894,7 +896,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         const data = await res.json();
         const slotsData = data.slots ?? [];
         if (controller.signal.aborted) return;
-        slotCacheRef.current[date] = slotsData;
+        slotCacheRef.current[cacheKey] = slotsData;
         setSlotList(slotsData);
       }
     } catch (err) {
@@ -906,13 +908,15 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         setLoadingSlots(false);
       }
     }
-  }, []);
+  }, [schedulePractitioner]);
 
   useEffect(() => {
     if (activeTab === 'slots') {
       fetchSlots(selectedDateForSlots);
     }
   }, [selectedDateForSlots, activeTab, fetchSlots]);
+
+  useEffect(() => { const refresh = () => { slotCacheRef.current = {}; void fetchAppointments(true); if (activeTab === 'slots') void fetchSlots(selectedDateForSlots,true); }; window.addEventListener('ryma_schedule_changed',refresh); return () => window.removeEventListener('ryma_schedule_changed',refresh); }, [fetchAppointments,fetchSlots,activeTab,selectedDateForSlots]);
 
   const handleLogout = async () => {
     try {
@@ -925,20 +929,17 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
   // ── Action helpers ─────────────────────────────────────────────────────────
   const updateStatus = async (id: string, status: AppointmentStatus) => {
-    if (status === 'CANCELLED') {
-      return softDeleteAppointment(id);
-    }
-
     const prevList = appointments;
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status, updatedAt: new Date().toISOString() } : a));
     setIsGlobalBusy(true);
 
     try {
-      await apiFetch(`/api/admin/appointments/${id}`, {
+      const result = await apiFetch<{appointment:Appointment}>(`/api/admin/appointments/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, expectedVersion: appointments.find(a => a.id === id)?.version }),
       });
+      setAppointments(prev=>prev.map(a=>a.id===id?result.appointment:a));
       slotCacheRef.current = {};
       addToast({
         type: 'success',
@@ -979,9 +980,9 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       const res = await apiFetch<{ blocked: boolean; date: string; time: string }>('/api/admin/slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: selectedDateForSlots, time }),
+        body: JSON.stringify({ date: selectedDateForSlots, time, practitionerId: schedulePractitioner || undefined }),
       });
-      delete slotCacheRef.current[selectedDateForSlots];
+      slotCacheRef.current = {};
 
       // Sync exact server result
       setSlotList(prev => prev.map(s => {
@@ -1015,28 +1016,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   };
 
   const softDeleteAppointment = async (id: string) => {
-    const prevList = appointments;
-    setAppointments(prev => prev.filter(a => a.id !== id));
-    setIsGlobalBusy(true);
-
-    try {
-      await apiFetch(`/api/admin/appointments/${id}`, { method: 'DELETE' });
-      slotCacheRef.current = {};
-      addToast({
-        type: 'success',
-        title: lang === 'pt' ? 'Consulta Cancelada & Removida' : lang === 'en' ? 'Appointment Canceled & Removed' : 'Rendez-vous Annulé & Supprimé',
-        message: lang === 'pt' ? 'O horário foi libertado e o registo removido.' : lang === 'en' ? 'Slot released and record removed.' : 'Créneau libéré et enregistrement supprimé.',
-      });
-    } catch (err) {
-      setAppointments(prevList);
-      addToast({
-        type: 'error',
-        title: lang === 'pt' ? 'Erro ao Eliminar' : lang === 'en' ? 'Delete Error' : 'Erreur de Suppression',
-        message: (err as Error).message,
-      });
-    } finally {
-      setIsGlobalBusy(false);
-    }
+    // Cancellation releases capacity while retaining clinical history and retry identity.
+    await updateStatus(id,'CANCELLED');
   };
 
   const handleCreateAppointment = async (e: React.FormEvent) => {
@@ -1049,7 +1030,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       const data = await apiFetch<{ appointment: Appointment }>('/api/admin/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newForm),
+        body: JSON.stringify({...newForm,clientRequestId:bookingRequestKey(newBookingRequestRef,newForm)}),
       });
 
       // The live event can arrive before the POST response. Merge by ID in either order.
@@ -1057,6 +1038,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       slotCacheRef.current = {};
       setIsAddModalOpen(false);
       setNewForm({
+        practitionerId: '',
         patientName: '',
         phone: '',
         email: '',
@@ -1086,8 +1068,9 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
   const openPatientNote = async (appt: Appointment) => {
     try {
-      const data = await apiFetch<{patient: PatientRecord | null; note: PatientNote | null}>('/api/admin/patients?phone=' + encodeURIComponent(appt.phone));
-      const note = data.note || {phone: appt.phone, patientName: appt.patientName, content: data.patient?.medicalHistory || '', tags: data.patient?.pathologyTags || '', updatedAt: data.patient?.updatedAt || new Date().toISOString()};
+      const query = appt.patientId ? 'id=' + encodeURIComponent(appt.patientId) : 'phone=' + encodeURIComponent(appt.phone);
+      const data = await apiFetch<{patient: PatientRecord | null; note: PatientNote | null}>('/api/admin/patients?' + query);
+      const note = data.note || {patientId:data.patient?.id,phone:data.patient?.phone || appt.phone, patientName:data.patient?.patientName || appt.patientName, content: data.patient?.medicalHistory || '', tags: data.patient?.pathologyTags || '', updatedAt: data.patient?.updatedAt || new Date().toISOString()};
       setSelectedNote(note);
       setNoteForm({content: note.content, tags: note.tags});
       setActiveTab('patients');
@@ -1129,10 +1112,13 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     setSavingNote(true);
     setIsGlobalBusy(true);
     try {
+      const patientId = selectedNote.patientId || (await apiFetch<{patient:PatientRecord | null}>('/api/admin/patients?phone=' + encodeURIComponent(selectedNote.phone))).patient?.id;
       const data = await apiFetch<{ note: PatientNote }>('/api/admin/patients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: patientId,
+          legacyPhone: patientId ? undefined : selectedNote.phone,
           phone: selectedNote.phone,
           patientName: selectedNote.patientName,
           content: noteForm.content,
@@ -1303,6 +1289,9 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
         <main className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 md:p-8 bg-[#F8FAFC] space-y-4 sm:space-y-6 pb-24 md:pb-8 touch-pan-y">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+            {(activeTab === 'appointments' || activeTab === 'slots') && <div className="max-w-md"><PractitionerSelect admin allowAny="all" lang={lang} value={schedulePractitioner} onChange={setSchedulePractitioner} /></div>}
+            {activeTab === 'treatments' && <TreatmentsTab lang={lang} />}
+            {activeTab === 'team' && <PractitionersTab lang={lang} />}
             {/* Appointments Tab (Preserved in memory for 0ms transitions) */}
             {visitedTabs.has('appointments') && (
               <div className={activeTab === 'appointments' ? 'space-y-4 sm:space-y-6' : 'hidden'} aria-hidden={activeTab !== 'appointments'}>
@@ -1314,6 +1303,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                   onUnlockClick={() => setIsOwnerAuthModalOpen(true)}
                 />
                 <AppointmentsTab
+                  practitionerId={schedulePractitioner}
                   lang={lang}
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
@@ -1339,6 +1329,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
             {visitedTabs.has('slots') && (
               <div className={activeTab === 'slots' ? 'block' : 'hidden'} aria-hidden={activeTab !== 'slots'}>
                 <SlotsTab
+                  practitionerId={schedulePractitioner}
                   lang={lang}
                   selectedDateForSlots={selectedDateForSlots}
                   setSelectedDateForSlots={setSelectedDateForSlots}
@@ -1396,6 +1387,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                   onQueryChange={setInvoiceQuery}
                   invoices={invoices}
                   stats={invoiceStats}
+                  financialReviewRequired={financialReviewRequired}
                   loading={loadingInvoices}
                   onRefresh={fetchInvoices}
                   onCreated={handleInvoiceCreated}
@@ -1622,7 +1614,7 @@ function AdminPageShell() {
   const initialTab =
     tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl) ? tabFromUrl : null;
   if (!hydrated) return <div role="status" className="min-h-screen grid place-items-center">A carregar painel...</div>;
-  return <AdminDashboardContent initialTab={initialTab} />;
+  return <ServiceCatalogProvider admin><AdminDashboardContent initialTab={initialTab} /></ServiceCatalogProvider>;
 }
 
 export default function AdminPage() {

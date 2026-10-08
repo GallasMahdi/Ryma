@@ -1,10 +1,14 @@
 import { pt } from '../src/data/translations/pt.ts';
 import { en } from '../src/data/translations/en.ts';
 import { fr } from '../src/data/translations/fr.ts';
-import { SERVICES } from '../src/data/services.ts';
-import { PRICING_PACKAGES } from '../src/data/pricing.ts';
+// Audit the administrator-managed public catalogue, never a built-in service list.
+const catalogueUrl=process.env.SERVICE_AUDIT_URL;
+if(!catalogueUrl)throw new Error('Set SERVICE_AUDIT_URL to the explicit /api/treatments endpoint to audit.');
+const catalogueResponse=await fetch(catalogueUrl);
+if(!catalogueResponse.ok)throw new Error('Catalogue unavailable: '+catalogueResponse.status);
+const {services:SERVICES}=await catalogueResponse.json();
+
 import { BLOG_POSTS } from '../src/data/blog-posts.ts';
-import { TESTIMONIALS } from '../src/data/testimonials.ts';
 
 const issues = {
   missingKeys: [],
@@ -14,7 +18,6 @@ const issues = {
   servicesMissingLocale: [],
   pricingMissingLocale: [],
   blogMissingLocale: [],
-  testimonialsMissingLocale: [],
 };
 
 console.log('========================================================================');
@@ -134,7 +137,7 @@ console.log(`  Empty Translations        : ${issues.emptyTranslations.length}`);
 console.log(`  Suspicious Copied Strings : ${issues.identicalUntranslated.length}\n`);
 
 // ─── 2. CLINICAL SERVICES LOCALIZATION AUDIT ─────────────────────────────────
-console.log('--- [2/5] AUDITING CLINICAL SERVICES DATA (src/data/services.ts) ---');
+console.log('--- [2/5] AUDITING CLINICAL SERVICES DATA (runtime catalogue) ---');
 for (const s of SERVICES) {
   const checkFields = ['name', 'shortDesc', 'longDesc'];
   for (const f of checkFields) {
@@ -170,27 +173,7 @@ for (const s of SERVICES) {
 console.log(`  Services Audited          : ${SERVICES.length} services`);
 console.log(`  Missing Locales in Services: ${issues.servicesMissingLocale.length}\n`);
 
-// ─── 3. PRICING PACKAGES LOCALIZATION AUDIT ──────────────────────────────────
-console.log('--- [3/5] AUDITING PRICING PACKAGES DATA (src/data/pricing.ts) ---');
-for (const p of PRICING_PACKAGES) {
-  for (const l of ['pt', 'en', 'fr']) {
-    if (!p.name || !p.name[l] || !p.name[l].trim()) {
-      issues.pricingMissingLocale.push({ id: p.id, field: 'name', lang: l });
-    }
-    if (!p.description || !p.description[l] || !p.description[l].trim()) {
-      issues.pricingMissingLocale.push({ id: p.id, field: 'description', lang: l });
-    }
-    if (p.badge && (!p.badge[l] || !p.badge[l].trim())) {
-      issues.pricingMissingLocale.push({ id: p.id, field: 'badge', lang: l });
-    }
-    if (!p.features || !Array.isArray(p.features[l]) || p.features[l].length === 0) {
-      issues.pricingMissingLocale.push({ id: p.id, field: 'features[]', lang: l });
-    }
-  }
-}
-console.log(`  Pricing Packages Audited  : ${PRICING_PACKAGES.length} packages`);
-console.log(`  Missing Locales in Pricing: ${issues.pricingMissingLocale.length}\n`);
-
+// Static pricing packages were removed; prices are audited in the runtime catalogue.
 // ─── 4. BLOG POSTS & ARTICLES LOCALIZATION AUDIT ─────────────────────────────
 console.log('--- [4/5] AUDITING BLOG POSTS & HEALTH ARTICLES (src/data/blog-posts.ts) ---');
 for (const b of BLOG_POSTS) {
@@ -209,20 +192,7 @@ for (const b of BLOG_POSTS) {
 console.log(`  Blog Posts Audited        : ${BLOG_POSTS.length} posts`);
 console.log(`  Missing Locales in Blog   : ${issues.blogMissingLocale.length}\n`);
 
-// ─── 5. TESTIMONIALS & PATIENT REVIEWS LOCALIZATION AUDIT ────────────────────
-console.log('--- [5/5] AUDITING PATIENT TESTIMONIALS (src/data/testimonials.ts) ---');
-for (const t of TESTIMONIALS) {
-  for (const l of ['pt', 'en', 'fr']) {
-    if (!t.role || !t.role[l] || !t.role[l].trim()) {
-      issues.testimonialsMissingLocale.push({ id: t.id, field: 'role', lang: l });
-    }
-    if (!t.comment || !t.comment[l] || !t.comment[l].trim()) {
-      issues.testimonialsMissingLocale.push({ id: t.id, field: 'comment', lang: l });
-    }
-  }
-}
-console.log(`  Testimonials Audited      : ${TESTIMONIALS.length} testimonials`);
-console.log(`  Missing Locales in Reviews: ${issues.testimonialsMissingLocale.length}\n`);
+// Patient-authored reviews are database records in their original language, not seeded translations.
 
 // ─── FINAL DIAGNOSTIC REPORT ─────────────────────────────────────────────────
 console.log('========================================================================');

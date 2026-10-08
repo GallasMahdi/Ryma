@@ -393,7 +393,7 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
 
             {/* Filtered Appointments Export */}
             <a
-              href={`/api/admin/export?type=appointments&startDate=${activeRange.startDate}&endDate=${activeRange.endDate}`}
+              href={`/api/admin/export?type=appointments&pole=${selectedPole}&startDate=${activeRange.startDate}&endDate=${activeRange.endDate}`}
               target="_blank"
               download
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0F172A] text-xs font-semibold transition-colors"
@@ -404,7 +404,7 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
 
             {/* Filtered Invoices Export */}
             <a
-              href={`/api/admin/export?type=invoices&startDate=${activeRange.startDate}&endDate=${activeRange.endDate}`}
+              href={`/api/admin/export?type=invoices&dateBasis=payment&pole=${selectedPole}&startDate=${activeRange.startDate}&endDate=${activeRange.endDate}`}
               target="_blank"
               download
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#334155] hover:bg-[#F1F5F9] hover:text-[#0F172A] text-xs font-semibold transition-colors"
@@ -448,11 +448,10 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
                 key={r.id}
                 type="button"
                 onClick={() => handleRangeChange(r.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  selectedRange === r.id
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${selectedRange === r.id
                     ? 'bg-[#0F172A] text-white shadow-xs'
                     : 'bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
-                }`}
+                  }`}
               >
                 {r.label}
               </button>
@@ -462,11 +461,10 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
             <button
               type="button"
               onClick={() => setIsCustomModalOpen(true)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                selectedRange === 'custom'
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${selectedRange === 'custom'
                   ? 'bg-[#C49A3C] text-white shadow-xs'
                   : 'bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
-              }`}
+                }`}
             >
               <span>{txt('Personnalisé', 'Custom', 'Personalizado')}</span>
               {selectedRange === 'custom' && customStart && customEnd && (
@@ -487,11 +485,10 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
                 key={p.id}
                 type="button"
                 onClick={() => handlePoleChange(p.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  selectedPole === p.id
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${selectedPole === p.id
                     ? 'bg-white text-[#0F172A] shadow-xs border border-[#E2E8F0]'
                     : 'text-[#64748B] hover:text-[#0F172A]'
-                }`}
+                  }`}
               >
                 {p.label}
               </button>

@@ -20,13 +20,14 @@ export async function GET(request: NextRequest) {
 
   if (!['today','7d','month','30d','90d','year','all','custom'].includes(range) || !['all','kinesitherapie','minceur','bilan'].includes(pole) || (range === 'custom' && (!isCalendarDate(startDate) || !isCalendarDate(endDate) || startDate > endDate || Date.parse(endDate) - Date.parse(startDate) > 3660 * 86400000))) return NextResponse.json({ error: 'Invalid analytics filters' }, { status: 422 });
   // Multi-dimensional filtered database aggregate calculation
-  const result = await dbGetFilteredAnalyticsStats({
+  let result;
+  try { result = await dbGetFilteredAnalyticsStats({
     lang,
     range,
     startDate,
     endDate,
     pole,
-  });
+  }); } catch(error) { return NextResponse.json({error:error instanceof Error ? error.message : 'Unable to compute analytics'},{status:409}); }
 
   return NextResponse.json(
     {

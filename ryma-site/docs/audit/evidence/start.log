@@ -1,0 +1,22 @@
+▲ Next.js 16.3.4
+- Local:         http://127.0.0.1:3117
+- Network:       http://127.0.0.1:3117
+✓ Ready in 177ms
+✓ Running next.config.ts took 50ms
+[Email Engine] SMTP not configured. Skipped sending email to: audit@example.invalid
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[Email Engine] SMTP not configured. Skipped sending email to: audit@example.invalid
+[Email Engine] SMTP not configured. Skipped sending email to: audit@example.invalid
+[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+[Email Engine] SMTP not configured. Skipped sending email to: audit@example.invalid
+[Email Engine] SMTP not configured. Skipped sending email to: audit@example.invalid
+[Email Engine] SMTP not configured. Skipped sending email to: mobile@example.invalid
+⨯ SqliteError: audit-injected-failure
+    at <unknown> (C:\Users\User\Desktop\Ryma\tmp\dashboard-audit-20261007\project\.next\server\chunks\7829.js:163:3033)
+    at C (C:\Users\User\Desktop\Ryma\tmp\dashboard-audit-20261007\project\.next\server\chunks\7829.js:163:3106)
+    at F (C:\Users\User\Desktop\Ryma\tmp\dashboard-audit-20261007\project\.next\server\chunks\7829.js:384:1634)
+    at as (C:\Users\User\Desktop\Ryma\tmp\dashboard-audit-20261007\project\.next\server\chunks\7829.js:402:3448)
+    at async m (C:\Users\User\Desktop\Ryma\tmp\dashboard-audit-20261007\project\.next\server\app\api\admin\patients\[id]\sessions\route.js:1:12788)
+    at async Y (C:\Users\User\Desktop\Ryma\tmp\dashboard-audit-20261007\project\.next\server\app\api\admin\patients\[id]\sessions\route.js:1:5787) {
+  code: 'SQLITE_CONSTRAINT_TRIGGER'
+}

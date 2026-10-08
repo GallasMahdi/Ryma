@@ -1,7 +1,10 @@
+import { isKnownTreatment, getTreatments } from '@/lib/treatments';
+import { loadScheduleState, evaluateSlot } from '@/lib/scheduling';
+import { dbGetPatientByPhone } from '@/lib/db';
+import { clockMinutes } from '@/lib/booking-schedule';
 import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
-import { dbCheckMultipleDatesAvailability } from '@/lib/db';
 import { VALID_TIME_SLOTS } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -40,7 +43,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const totalSessions = Math.min(50, Math.max(1, Number(body.totalSessions) || 10));
+  if (body.totalSessions !== undefined && (typeof body.totalSessions !== 'number' || !Number.isInteger(body.totalSessions) || body.totalSessions < 1 || body.totalSessions > 50)) {
+    return NextResponse.json({ error: 'Session count must be an integer between 1 and 50' }, { status: 422 });
+  }
+  if(body.practitionerId!==undefined&&(typeof body.practitionerId!=='string'||body.practitionerId.length>160||body.practitionerId!==body.practitionerId.trim()))return NextResponse.json({error:'Invalid practitioner preference'},{status:422});
+  const totalSessions = typeof body.totalSessions === 'number' ? body.totalSessions : 10;
+  const service = typeof body.serviceSlug === 'string' ? body.serviceSlug : (await getTreatments(true))[0]?.slug;
+  if (!service || !(await isKnownTreatment(service))) return NextResponse.json({error: 'Invalid service'}, {status: 422});
   const startDateStr = isCalendarDate(body.startDate)
     ? body.startDate
     : new Date().toISOString().split('T')[0];
@@ -63,6 +72,10 @@ export async function POST(request: NextRequest) {
           typeof s.startTime === 'string' && VALID_TIME_SLOTS.includes(s.startTime as any)
       )
     : [];
+
+  if (body.scheduleSlots !== undefined && (!Array.isArray(body.scheduleSlots) || body.scheduleSlots.length > 50 || scheduleSlots.length !== body.scheduleSlots.length)) {
+    return NextResponse.json({ error: 'Invalid recurrence pattern' }, { status: 422 });
+  }
 
   if ((Array.isArray(body.explicitSessions) && (body.explicitSessions.length > 50 || explicitSessions.length !== body.explicitSessions.length)) || (body.startDate !== undefined && !isCalendarDate(body.startDate))) return NextResponse.json({ error: 'Invalid schedule dates or time slots' }, { status: 422 });
   const candidateSlots: { date: string; startTime: string; dayOfWeek: number }[] = [];
@@ -116,7 +129,19 @@ export async function POST(request: NextRequest) {
 
   // High-performance single-pass batched availability across all candidate dates
   const uniqueCandidateDates = Array.from(new Set(candidateSlots.map(s => s.date)));
-  const dayAvailabilityMap = await dbCheckMultipleDatesAvailability(uniqueCandidateDates);
+  const state=await loadScheduleState(uniqueCandidateDates);
+  const patient=typeof body.patientPhone==='string'?await dbGetPatientByPhone(body.patientPhone):null;
+  const patientPhone=typeof body.patientPhone==='string'?body.patientPhone:undefined;
+  const requested=typeof body.practitionerId==='string'?body.practitionerId:undefined;
+  const eligible=state.practitioners.filter(p=>p.active&&(!requested||p.id===requested)&&state.services.some(s=>s.practitionerId===p.id&&s.service===service));
+  // A treatment plan keeps one practitioner; preview exactly the same allocation policy as commit.
+  const chosen=eligible.find(p=>{
+    const trial=structuredClone(state);
+    return candidateSlots.every((slot,index)=>{const result=evaluateSlot(trial,slot.date,slot.startTime,service,{practitionerId:p.id,patientId:patient?.id,patientPhone});if(!result.available)return false;trial.appointments.push({id:'preview_'+index,...result.candidates[0],date:slot.date,startTime:slot.startTime,service,status:'CONFIRMED',patientId:patient?.id,phone:patientPhone});return true;});
+  })||eligible[0];
+  const dayAvailabilityMap=new Map(uniqueCandidateDates.map(date=>[date,VALID_TIME_SLOTS.map(time=>evaluateSlot(state,date,time,service,{practitionerId:chosen?.id||'missing',patientId:patient?.id,patientPhone}))]));
+  const mapping=state.services.find(s=>s.practitionerId===chosen?.id&&s.service===service);
+  const duration=mapping?.durationMinutes??state.treatments?.find(t=>t.slug===service)?.durationMinutes??30,before=mapping?.bufferBefore??0,after=mapping?.bufferAfter??0;
 
   const previewItems = [];
   let validCount = 0;
@@ -126,8 +151,9 @@ export async function POST(request: NextRequest) {
     const slot = candidateSlots[i];
     const daySlots = dayAvailabilityMap.get(slot.date) || [];
     const targetSlot = daySlots.find(s => s.time === slot.startTime);
-    const isAvailable = targetSlot ? targetSlot.available : false;
-    const reason = targetSlot && !targetSlot.available ? targetSlot.reason : null;
+    const batchOverlap = candidateSlots.some((other, index) => index !== i && other.date === slot.date && clockMinutes(slot.startTime)-before<clockMinutes(other.startTime)+duration+after && clockMinutes(other.startTime)-before<clockMinutes(slot.startTime)+duration+after);
+    const isAvailable = Boolean(targetSlot?.available && !batchOverlap);
+    const reason = batchOverlap ? 'booked' : targetSlot && !targetSlot.available ? targetSlot.reason : null;
 
     if (isAvailable) {
       validCount++;
@@ -153,6 +179,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
+    practitionerId:chosen?.id,
     preview: previewItems,
     summary: {
       totalRequested: previewItems.length,

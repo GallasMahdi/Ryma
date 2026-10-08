@@ -1,5 +1,14 @@
+import { getTreatments, validateTreatment, treatmentFromRow } from '@/lib/treatments';
+import { practitionerIntervals } from '@/lib/schedule-math';
+import { retryDatabaseBusy, isDatabaseBusy } from '@/lib/db-retry';
+import { getSchedulingConfiguration, schedulingAvailability, SchedulingError, type AvailabilityOptions } from '@/lib/scheduling';
+import { createScheduledAppointment, createScheduledSeries, updateScheduledAppointment, type AppointmentChanges } from '@/lib/booking-service';
 import { createHash } from 'node:crypto';
-import { isCalendarDate, lisbonDayStart } from './admin-validation';
+import { ClinicalError, validEva } from '@/lib/clinical';
+import { toCents, sumMoney } from '@/lib/money';
+import { migrateSchedulingDatabase, migrateSchedulingSqlite } from '@/lib/scheduling-schema';
+import { clockMinutes } from '@/lib/booking-schedule';
+import { isCalendarDate, lisbonDayStart, nextLisbonDayStart } from './admin-validation';
 // better-sqlite3 is only imported lazily inside getDb() to avoid crashing on
 // Vercel serverless where the native .node binary cannot be loaded.
 // At module level we only declare the type.
@@ -8,8 +17,6 @@ import path from 'path';
 import fs from 'fs';
 import { getServicePrice, getServicePole, getServiceName, type PatientRecord, type PatientSession, type Invoice, type CreateInvoiceInput, type InvoiceStats, type PatientPrescription, type PrescriptionItem, type Review, type ReviewStatus, type CreateReviewInput } from '@/types/admin';
 import type { Lang } from '@/lib/i18n';
-import { TESTIMONIALS } from '@/data/testimonials';
-import { SERVICES } from '@/data/services';
 import { SITE } from '@/lib/site';
 import { phonesMatch, requireNormalizedPhone, validateAndNormalizePhone } from '@/lib/phone';
 import { broadcastAppointmentCreated, broadcastMultipleAppointmentsCreated } from '@/lib/events';
@@ -19,6 +26,7 @@ import { env } from '@/lib/env';
 // Configured Turso is authoritative; SQLite is used only when explicitly selected.
 let _tursoClient: LibSqlClient | null = null;
 let _tursoInitialized = false;
+let _tursoSchemaPromise: Promise<void> | undefined;
 
 function isTursoEnabled(): boolean {
   return Boolean(process.env.TURSO_DATABASE_URL);
@@ -26,6 +34,15 @@ function isTursoEnabled(): boolean {
 
 async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
   if (_tursoInitialized) return;
+  _tursoSchemaPromise ??= initializeTursoSchema(client).catch(error => {
+    _tursoSchemaPromise = undefined;
+    throw error;
+  });
+  return _tursoSchemaPromise;
+}
+
+async function initializeTursoSchema(client: LibSqlClient): Promise<void> {
+  if (client.protocol === "file") await client.execute("PRAGMA journal_mode=WAL");
 
   try {
     // 1. Ensure tables exist
@@ -87,7 +104,7 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
         patientId    TEXT NOT NULL,
         date         TEXT NOT NULL,
         time         TEXT,
-        serviceSlug  TEXT NOT NULL DEFAULT 'kinesitherapie-generale',
+        serviceSlug  TEXT NOT NULL,
         evaPainScore INTEGER NOT NULL DEFAULT 5,
         sessionType  TEXT NOT NULL DEFAULT 'MANUAL',
         notes        TEXT,
@@ -171,16 +188,6 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
       `CREATE INDEX IF NOT EXISTS idx_revoked_sessions_expiry ON revoked_sessions(expiresAt)`,
       `CREATE INDEX IF NOT EXISTS idx_owner_step_up_expiry ON owner_step_up_grants(expiresAt)`,
       `CREATE INDEX IF NOT EXISTS idx_idempotency_expiry ON idempotency_keys(expiresAt)`,
-      `CREATE TRIGGER IF NOT EXISTS trg_prevent_blocked_booking
-       BEFORE INSERT ON appointments
-       FOR EACH ROW
-       WHEN EXISTS (
-         SELECT 1 FROM blocked_slots WHERE date = NEW.date AND time = NEW.startTime
-       )
-       BEGIN
-         SELECT RAISE(ABORT, 'slot_blocked');
-       END`,
-      `CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED'`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
       `CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime)`,
@@ -244,7 +251,6 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
           `INSERT INTO appointments_migration SELECT id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt FROM appointments`,
           `DROP TABLE appointments`,
           `ALTER TABLE appointments_migration RENAME TO appointments`,
-          `CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED'`,
           `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date)`,
           `CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)`,
           `CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime)`,
@@ -300,47 +306,15 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
       /* non-blocking maintenance */
     }
 
-    await client.execute("CREATE TRIGGER IF NOT EXISTS trg_prevent_blocked_booking_update BEFORE UPDATE OF date, startTime, status ON appointments FOR EACH ROW WHEN NEW.status != 'CANCELLED' AND EXISTS (SELECT 1 FROM blocked_slots WHERE date = NEW.date AND time = NEW.startTime) BEGIN SELECT RAISE(ABORT, 'slot_blocked'); END");
-    await client.execute("CREATE TRIGGER IF NOT EXISTS trg_prevent_booked_block BEFORE INSERT ON blocked_slots FOR EACH ROW WHEN EXISTS (SELECT 1 FROM appointments WHERE date = NEW.date AND startTime = NEW.time AND status != 'CANCELLED') BEGIN SELECT RAISE(ABORT, 'slot_taken'); END");
+    const bookingColumns = await client.execute('PRAGMA table_info(appointments)');
+    const bookingNames = bookingColumns.rows.map(row => String(row.name));
+    if (!bookingNames.includes('source')) await client.execute("ALTER TABLE appointments ADD COLUMN source TEXT NOT NULL DEFAULT 'unknown'");
+    if (!bookingNames.includes('bookingRequestId')) await client.execute('ALTER TABLE appointments ADD COLUMN bookingRequestId TEXT');
+    await client.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_booking_request ON appointments(bookingRequestId) WHERE bookingRequestId IS NOT NULL');
+    await migrateSchedulingDatabase(client);
     _tursoInitialized = true;
   } catch (migErr) {
     throw migErr;
-  }
-}
-
-async function syncTursoToLocalSqlite(client: LibSqlClient): Promise<void> {
-  try {
-    const tursoAppts = await client.execute('SELECT * FROM appointments');
-    const localDb = getDb();
-    const countRes = localDb.prepare('SELECT COUNT(*) as cnt FROM appointments').get() as { cnt: number };
-
-    if (tursoAppts.rows.length > 0 && countRes.cnt < tursoAppts.rows.length) {
-      const insertStmt = localDb.prepare(`
-        INSERT OR REPLACE INTO appointments
-        (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      for (const row of tursoAppts.rows as any[]) {
-        insertStmt.run(
-          String(row.id),
-          String(row.patientName),
-          row.email ? String(row.email) : null,
-          String(row.phone),
-          String(row.service),
-          String(row.date),
-          String(row.startTime),
-          String(row.status),
-          row.notes ? String(row.notes) : null,
-          row.coverageType ? String(row.coverageType) : 'PARTICULAR',
-          row.coverageProvider ? String(row.coverageProvider) : null,
-          row.coverageNumber ? String(row.coverageNumber) : null,
-          String(row.createdAt),
-          String(row.updatedAt)
-        );
-      }
-    }
-  } catch (syncErr) {
-    console.warn('[Turso Initial Sync Warning]:', syncErr);
   }
 }
 
@@ -374,10 +348,10 @@ async function executeTursoDirectly<T = any>(sql: string, args: any[] = []): Pro
     try {
       const client = getTursoClient();
       await ensureTursoSchema(client);
-      const res = await client.execute({ sql, args });
+      const res = await retryDatabaseBusy(() => client.execute({ sql, args }));
       return res.rows as unknown as T[];
     } catch (err) {
-      _tursoClient = null;
+      if (!/SQLITE_CONSTRAINT|SQLITE_BUSY|SQLITE_LOCKED/.test(String(err))) _tursoClient = null;
       if (attempt === maxAttempts) throw err;
       // Exponential jittered backoff: 50ms, 100ms
       await new Promise(r => setTimeout(r, attempt * 50));
@@ -536,7 +510,7 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
       patientId    TEXT NOT NULL,
       date         TEXT NOT NULL,
       time         TEXT,
-      serviceSlug  TEXT NOT NULL DEFAULT 'kinesitherapie-generale',
+      serviceSlug  TEXT NOT NULL,
       evaPainScore INTEGER NOT NULL DEFAULT 5,
       sessionType  TEXT NOT NULL DEFAULT 'MANUAL',
       notes        TEXT,
@@ -630,17 +604,7 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
     CREATE INDEX IF NOT EXISTS idx_owner_step_up_expiry ON owner_step_up_grants(expiresAt);
     CREATE INDEX IF NOT EXISTS idx_idempotency_expiry ON idempotency_keys(expiresAt);
 
-    CREATE TRIGGER IF NOT EXISTS trg_prevent_blocked_booking
-    BEFORE INSERT ON appointments
-    FOR EACH ROW
-    WHEN EXISTS (
-      SELECT 1 FROM blocked_slots WHERE date = NEW.date AND time = NEW.startTime
-    )
-    BEGIN
-      SELECT RAISE(ABORT, 'slot_blocked');
-    END;
 
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED';
     CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
     CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
     CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime);
@@ -705,7 +669,6 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
         INSERT INTO appointments_migration SELECT id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt FROM appointments;
         DROP TABLE appointments;
         ALTER TABLE appointments_migration RENAME TO appointments;
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot ON appointments(date, startTime) WHERE status != 'CANCELLED';
         CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
         CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
         CREATE INDEX IF NOT EXISTS idx_appointments_date_status ON appointments(date, status, startTime);
@@ -752,8 +715,11 @@ function initSchemaSync(db: import('better-sqlite3').Database): void {
   } catch (err) {
     console.warn('[DB Migration Warning]:', err);
   }
-  db.exec("CREATE TRIGGER IF NOT EXISTS trg_prevent_blocked_booking_update BEFORE UPDATE OF date, startTime, status ON appointments FOR EACH ROW WHEN NEW.status != 'CANCELLED' AND EXISTS (SELECT 1 FROM blocked_slots WHERE date = NEW.date AND time = NEW.startTime) BEGIN SELECT RAISE(ABORT, 'slot_blocked'); END");
-  db.exec("CREATE TRIGGER IF NOT EXISTS trg_prevent_booked_block BEFORE INSERT ON blocked_slots FOR EACH ROW WHEN EXISTS (SELECT 1 FROM appointments WHERE date = NEW.date AND startTime = NEW.time AND status != 'CANCELLED') BEGIN SELECT RAISE(ABORT, 'slot_taken'); END");
+  const bookingNames = (db.pragma('table_info(appointments)') as {name: string}[]).map(row => row.name);
+  if (!bookingNames.includes('source')) db.exec("ALTER TABLE appointments ADD COLUMN source TEXT NOT NULL DEFAULT 'unknown'");
+  if (!bookingNames.includes('bookingRequestId')) db.exec('ALTER TABLE appointments ADD COLUMN bookingRequestId TEXT');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_booking_request ON appointments(bookingRequestId) WHERE bookingRequestId IS NOT NULL');
+  migrateSchedulingSqlite(db);
 }
 
 // Queries use the configured authoritative database.
@@ -761,15 +727,40 @@ export async function executeQuery<T = any>(sql: string, args: any[] = []): Prom
   return executeTursoDirectly<T>(sql, args);
 }
 
-async function executeAtomicBatch(statements: { sql: string; args: any[] }[]): Promise<void> {
+export async function executeAtomicBatch(statements: { sql: string; args: any[] }[]): Promise<void> {
   if (isTursoEnabled()) {
     const client = getTursoClient();
     await ensureTursoSchema(client);
     await client.batch(statements, 'write');
   } else {
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SQLITE_FALLBACK !== 'true') throw new Error('Persistent database configuration required');
     const db = getDb();
     db.transaction(() => { for (const q of statements) db.prepare(q.sql).run(...q.args); })();
   }
+}
+
+/** Integration state and replies commit only while the worker still owns its lease. */
+export async function executeConditionalBatch(guard: {sql: string; args: any[]}, statements: {sql: string; args: any[]}[]): Promise<boolean> {
+  if (isTursoEnabled()) {
+    const client = getTursoClient();
+    await ensureTursoSchema(client);
+    return retryDatabaseBusy(async () => {
+    const tx = await client.transaction('write');
+    try {
+      if (!(await tx.execute(guard)).rows.length) { await tx.rollback(); return false; }
+      await tx.batch(statements);
+      await tx.commit();
+      return true;
+    } finally { tx.close(); }
+    });
+  }
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SQLITE_FALLBACK !== 'true') throw new Error('Persistent database configuration required');
+  const db = getDb();
+  return db.transaction(() => {
+    if (!db.prepare(guard.sql).get(...guard.args)) return false;
+    for (const statement of statements) db.prepare(statement.sql).run(...statement.args);
+    return true;
+  })();
 }
 
 function executeSqliteQuery<T = any>(sql: string, args: any[] = []): T[] {
@@ -787,6 +778,20 @@ function executeSqliteQuery<T = any>(sql: string, args: any[] = []): T[] {
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
 
 export interface Appointment {
+  serviceNameJson?: string | null;
+  servicePriceCents?: number | null;
+  servicePole?: string | null;
+  archivedAt?: string | null;
+  archivedStatus?: AppointmentStatus | null;
+  practitionerId: string;
+  practitionerName: string;
+  durationMinutes: number;
+  bufferBefore: number;
+  bufferAfter: number;
+  resourceIds: string;
+  patientId?: string | null;
+  version: number;
+  bookingRequestHash?: string | null;
   id: string;
   patientName: string;
   email: string | null;
@@ -795,6 +800,8 @@ export interface Appointment {
   date: string;
   startTime: string;
   status: AppointmentStatus;
+  source?: 'website' | 'dashboard' | 'whatsapp' | 'unknown';
+  bookingRequestId?: string | null;
   notes: string | null;
   coverageType: string;
   coverageProvider: string | null;
@@ -804,6 +811,7 @@ export interface Appointment {
 }
 
 export interface CreateAppointmentInput {
+  practitionerId?: string;
   patientName: string;
   email?: string;
   phone: string;
@@ -811,6 +819,8 @@ export interface CreateAppointmentInput {
   date: string;
   startTime: string;
   status?: AppointmentStatus;
+  source?: 'website' | 'dashboard' | 'whatsapp';
+  bookingRequestId?: string;
   notes?: string;
   coverageType?: string;
   coverageProvider?: string;
@@ -818,8 +828,8 @@ export interface CreateAppointmentInput {
 }
 
 export type AddAppointmentResult =
-  | { success: true; appointment: Appointment }
-  | { success: false; error: 'slot_taken' | 'invalid_data' | 'slot_blocked' };
+  | { success: true; appointment: Appointment; replayed?: boolean }
+  | { success: false; error: 'slot_taken' | 'invalid_data' | 'slot_blocked' | 'rate_limited' | 'schedule_changed' };
 
 // ─── Slot Availability Checker (Unified Single Source of Truth) ───────────────
 export interface SlotAvailabilityResult {
@@ -831,189 +841,23 @@ export interface SlotAvailabilityResult {
  * Authoritative availability check used by ALL booking flows:
  * Client booking, Admin single booking, and Multiple Sessions scheduler.
  */
-export async function dbCheckSlotAvailability(date: string, startTime: string): Promise<SlotAvailabilityResult> {
-  if (!isCalendarDate(date)) {
-    return { available: false, reason: 'invalid_date' };
-  }
-  if (!VALID_TIME_SLOTS.includes(startTime as typeof VALID_TIME_SLOTS[number])) {
-    return { available: false, reason: 'invalid_time' };
-  }
-
-  // 1. Sunday check
-  const dayOfWeek = new Date(date + 'T12:00:00').getDay();
-  if (dayOfWeek === 0) {
-    return { available: false, reason: 'sunday' };
-  }
-
-  // 2. Past slot check (strictly evaluated in Europe/Lisbon clinic timezone)
-  const { todayStr, currentHHMM } = getLisbonDateTime();
-  if (date < todayStr) {
-    return { available: false, reason: 'past' };
-  }
-  if (date === todayStr) {
-    if (startTime <= currentHHMM) {
-      return { available: false, reason: 'past' };
-    }
-  }
-
-  // 3. Blocked slots check (manual admin blocks)
-  const blockedRows = await executeTursoDirectly(
-    'SELECT 1 FROM blocked_slots WHERE date = ? AND time = ?',
-    [date, startTime]
-  );
-  if (blockedRows.length > 0) {
-    return { available: false, reason: 'blocked' };
-  }
-
-  // 4. Existing active appointments check (status != CANCELLED)
-  const conflictRows = await executeTursoDirectly(
-    "SELECT 1 FROM appointments WHERE date = ? AND startTime = ? AND status != 'CANCELLED'",
-    [date, startTime]
-  );
-  if (conflictRows.length > 0) {
-    return { available: false, reason: 'booked' };
-  }
-
-  return { available: true };
+export async function dbCheckSlotAvailability(date: string, startTime: string, service?: string, options: AvailabilityOptions = {}) {
+  if (!isCalendarDate(date)) return {available: false, reason: 'invalid_date'};
+  if (!VALID_TIME_SLOTS.includes(startTime)) return {available:false,reason:'invalid_time'};
+  return (await schedulingAvailability([date], [startTime], service, options)).get(date)?.[0] ?? {available:false, reason:'invalid_time'};
 }
-
-/**
- * High-performance batched availability checker across multiple dates.
- * Executes in a single parallel query batch instead of hundreds of sequential roundtrips.
- */
-export async function dbCheckMultipleDatesAvailability(
-  dates: string[],
-  timeSlots: readonly string[] | string[] = VALID_TIME_SLOTS
-): Promise<Map<string, { time: string; available: boolean; reason?: 'sunday' | 'past' | 'booked' | 'blocked' }[]>> {
-  const uniqueDates = Array.from(new Set(dates.filter(isCalendarDate)));
-  const resultMap = new Map<string, { time: string; available: boolean; reason?: 'sunday' | 'past' | 'booked' | 'blocked' }[]>();
-
-  if (uniqueDates.length === 0) {
-    return resultMap;
-  }
-
-  const placeholders = uniqueDates.map(() => '?').join(',');
-
-  // Query booked and blocked slots for all dates in parallel
-  const [bookedRows, blockedRows] = await Promise.all([
-    executeTursoDirectly<{ date: string; startTime: string }>(
-      `SELECT date, startTime FROM appointments WHERE date IN (${placeholders}) AND status != 'CANCELLED'`,
-      uniqueDates
-    ),
-    executeTursoDirectly<{ date: string; time: string }>(
-      `SELECT date, time FROM blocked_slots WHERE date IN (${placeholders})`,
-      uniqueDates
-    ),
-  ]);
-
-  const bookedSet = new Set(bookedRows.map(r => `${r.date}_${r.startTime}`));
-  const blockedSet = new Set(blockedRows.map(r => `${r.date}_${r.time}`));
-
-  const { todayStr, currentHHMM } = getLisbonDateTime();
-
-  for (const date of uniqueDates) {
-    const dayOfWeek = new Date(date + 'T12:00:00').getDay();
-    const isSunday = dayOfWeek === 0;
-    const isPastDate = date < todayStr;
-    const isToday = date === todayStr;
-
-    const daySlots: { time: string; available: boolean; reason?: 'sunday' | 'past' | 'booked' | 'blocked' }[] = [];
-
-    for (const time of timeSlots) {
-      if (isSunday) {
-        daySlots.push({ time, available: false, reason: 'sunday' });
-        continue;
-      }
-      if (isPastDate || (isToday && time <= currentHHMM)) {
-        daySlots.push({ time, available: false, reason: 'past' });
-        continue;
-      }
-      if (blockedSet.has(`${date}_${time}`)) {
-        daySlots.push({ time, available: false, reason: 'blocked' });
-        continue;
-      }
-      if (bookedSet.has(`${date}_${time}`)) {
-        daySlots.push({ time, available: false, reason: 'booked' });
-        continue;
-      }
-
-      daySlots.push({ time, available: true });
-    }
-
-    resultMap.set(date, daySlots);
-  }
-
-  return resultMap;
+export async function dbCheckMultipleDatesAvailability(dates: string[], timeSlots: readonly string[] = VALID_TIME_SLOTS, service?: string, options: AvailabilityOptions = {}) {
+  return schedulingAvailability(dates,timeSlots,service,options);
 }
-
-// ─── Appointment Helpers ──────────────────────────────────────────────────────
 export async function dbCreateAppointment(input: CreateAppointmentInput): Promise<AddAppointmentResult> {
-  const id = 'apt_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
-  const now = new Date().toISOString();
-
-  // Normalize phone number
-  const phoneValidation = validateAndNormalizePhone(input.phone);
-  if (!phoneValidation.isValid) return { success: false, error: 'invalid_data' };
-  const normalizedPhone = phoneValidation.normalized;
-
-  // Use authoritative single source of truth availability check
-  const availability = await dbCheckSlotAvailability(input.date, input.startTime);
-  if (!availability.available) {
-    if (availability.reason === 'blocked') return { success: false, error: 'slot_blocked' };
-    return { success: false, error: 'slot_taken' };
-  }
-
-  const initialStatus = input.status ?? 'PENDING';
-
-  try {
-    await executeTursoDirectly(
-      `INSERT INTO appointments
-        (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        input.patientName,
-        input.email ?? null,
-        normalizedPhone,
-        input.service,
-        input.date,
-        input.startTime,
-        initialStatus,
-        input.notes ?? null,
-        input.coverageType ?? 'PARTICULAR',
-        input.coverageProvider ?? null,
-        input.coverageNumber ?? null,
-        now,
-        now,
-      ]
-    );
-
-    const rows = await executeTursoDirectly<Appointment>('SELECT * FROM appointments WHERE id = ?', [id]);
-    const appointment = rows[0];
-
-    await dbEnsureBookingPatient({
-      patientName: input.patientName,
-      phone: normalizedPhone,
-      email: input.email ?? null,
-      coverageType: (input.coverageType as any) ?? 'PARTICULAR',
-      coverageProvider: input.coverageProvider ?? null,
-      coverageNumber: input.coverageNumber ?? null,
-    });
-
-    return { success: true, appointment };
-  } catch (err: any) {
-    if (err?.message?.includes('slot_blocked')) {
-      return { success: false, error: 'slot_blocked' };
-    }
-    if (err?.message?.includes('UNIQUE') || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return { success: false, error: 'slot_taken' };
-    }
-    throw err;
-  }
+  return createScheduledAppointment(input);
 }
 
 // ─── Multiple Sessions Creation (Atomic & Concurrency-Protected) ─────────────
 export interface CreateMultipleAppointmentsInput {
+  bookingRequestId?: string;
+  practitionerId?: string;
+  sessionType?: 'ONLINE' | 'MANUAL' | 'PAPER';
   patientName: string;
   phone: string;
   email?: string;
@@ -1044,279 +888,32 @@ export type CreateMultipleAppointmentsResult =
       appointments: Appointment[];
       patientSessions: PatientSession[];
       patientId: string;
+      replayed?: boolean;
     }
   | {
       success: false;
-      error: 'slot_conflict' | 'empty_sessions' | 'invalid_input' | 'slot_taken';
+      error: 'slot_conflict' | 'empty_sessions' | 'invalid_input' | 'slot_taken' | 'schedule_changed';
       message: string;
       conflicts?: SessionConflictItem[];
     };
 
-export async function dbCreateMultipleAppointments(
-  input: CreateMultipleAppointmentsInput
-): Promise<CreateMultipleAppointmentsResult> {
-  if (!input.sessions || input.sessions.length === 0) {
-    return { success: false, error: 'empty_sessions', message: 'Nenhuma sessão fornecida para marcação.' };
-  }
-
-  const phoneValidation = validateAndNormalizePhone(input.phone);
-  if (!phoneValidation.isValid) return { success: false, error: 'invalid_input', message: phoneValidation.error! };
-  const normalizedPhone = phoneValidation.normalized;
-
-  // 1. Check for duplicates inside the requested batch itself
-  const seenSlots = new Set<string>();
-  const conflicts: SessionConflictItem[] = [];
-
-  for (let i = 0; i < input.sessions.length; i++) {
-    const s = input.sessions[i];
-    const key = `${s.date}_${s.startTime}`;
-    if (seenSlots.has(key)) {
-      conflicts.push({
-        date: s.date,
-        startTime: s.startTime,
-        reason: 'duplicate_in_request',
-        sessionIndex: i + 1,
-      });
-    }
-    seenSlots.add(key);
-  }
-
-  // 2. Validate EVERY session slot using high-performance batched availability engine
-  const uniqueDates = Array.from(new Set(input.sessions.map(s => s.date)));
-  const dayAvailabilityMap = await dbCheckMultipleDatesAvailability(uniqueDates);
-
-  for (let i = 0; i < input.sessions.length; i++) {
-    const s = input.sessions[i];
-    const daySlots = dayAvailabilityMap.get(s.date) || [];
-    const targetSlot = daySlots.find(slot => slot.time === s.startTime);
-    const isAvailable = targetSlot ? targetSlot.available : false;
-    const reason: string = (targetSlot && !targetSlot.available ? targetSlot.reason : 'booked') || 'booked';
-
-    if (!isAvailable) {
-      conflicts.push({
-        date: s.date,
-        startTime: s.startTime,
-        reason,
-        sessionIndex: i + 1,
-      });
-    }
-  }
-
-  // 3. If any conflict exists, abort immediately with full conflict report
-  if (conflicts.length > 0) {
-    return {
-      success: false,
-      error: 'slot_conflict',
-      message: 'Foram detetados conflitos de horários em algumas sessões solicitadas.',
-      conflicts,
-    };
-  }
-
-  if (input.patientId) {
-    const patient = await dbGetPatientById(input.patientId);
-    if (!patient || !phonesMatch(patient.phone, normalizedPhone)) return { success: false, error: 'invalid_input', message: 'Patient does not match the supplied phone number.' };
-  }
-
-  // 4. Ensure patient record exists
-  const upsertRes = await dbEnsureBookingPatient({
-    patientName: input.patientName,
-    phone: normalizedPhone,
-    email: input.email ?? null,
-    coverageType: (input.coverageType as any) ?? 'PARTICULAR',
-    coverageProvider: input.coverageProvider ?? null,
-    coverageNumber: input.coverageNumber ?? null,
-  });
-
-  const patientId = upsertRes.id;
-  const now = new Date().toISOString();
-  const createdAppointments: Appointment[] = [];
-  const createdSessions: PatientSession[] = [];
-
-  const isServerless = Boolean(
-    process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
-  );
-
-  // 5. Build prepared objects for all appointments and sessions
-  const appointmentInserts: { id: string; row: Appointment; args: any[] }[] = [];
-  const sessionInserts: { id: string; row: PatientSession; args: any[] }[] = [];
-
-  for (let i = 0; i < input.sessions.length; i++) {
-    const s = input.sessions[i];
-    const sessId = 'sess_' + crypto.randomUUID();
-    const aptId = 'apt_' + sessId;
-    const evaScore = typeof s.evaPainScore === 'number' ? s.evaPainScore : 5;
-    const sessionNote = s.notes || `Sessão #${i + 1} • Plano de Tratamento`;
-
-    const apptArgs = [
-      aptId,
-      input.patientName,
-      input.email ?? null,
-      normalizedPhone,
-      input.service,
-      s.date,
-      s.startTime,
-      'CONFIRMED',
-      sessionNote,
-      input.coverageType ?? 'PARTICULAR',
-      input.coverageProvider ?? null,
-      input.coverageNumber ?? null,
-      now,
-      now,
-    ];
-
-    const apptRow: Appointment = {
-      id: aptId,
-      patientName: input.patientName,
-      email: input.email ?? null,
-      phone: normalizedPhone,
-      service: input.service,
-      date: s.date,
-      startTime: s.startTime,
-      status: 'CONFIRMED',
-      notes: sessionNote,
-      coverageType: input.coverageType ?? 'PARTICULAR',
-      coverageProvider: input.coverageProvider ?? null,
-      coverageNumber: input.coverageNumber ?? null,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const sessArgs = [
-      sessId,
-      patientId,
-      s.date,
-      s.startTime,
-      input.service,
-      evaScore,
-      'MANUAL',
-      sessionNote,
-      input.practitioner ?? null,
-      now,
-    ];
-
-    const sessRow: PatientSession = {
-      id: sessId,
-      patientId,
-      date: s.date,
-      time: s.startTime,
-      serviceSlug: input.service,
-      evaPainScore: evaScore,
-      sessionType: 'MANUAL',
-      notes: sessionNote,
-      practitioner: input.practitioner ?? undefined,
-      createdAt: now,
-    };
-
-    appointmentInserts.push({ id: aptId, row: apptRow, args: apptArgs });
-    sessionInserts.push({ id: sessId, row: sessRow, args: sessArgs });
-  }
-
-  // 6. Execute atomic transaction batch
-  try {
-    if (isTursoEnabled()) {
-      const client = getTursoClient();
-      await ensureTursoSchema(client);
-
-      const batchStatements: { sql: string; args: any[] }[] = [];
-
-      for (const item of appointmentInserts) {
-        batchStatements.push({
-          sql: `INSERT INTO appointments
-                (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          args: item.args,
-        });
-      }
-
-      for (const item of sessionInserts) {
-        batchStatements.push({
-          sql: `INSERT INTO patient_sessions
-                (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          args: item.args,
-        });
-      }
-
-      batchStatements.push({
-        sql: `UPDATE patients SET totalPrescribedSessions = MAX(totalPrescribedSessions, ?), updatedAt = ? WHERE id = ?`,
-        args: [input.sessions.length, now, patientId],
-      });
-
-      // LibSQL client.batch executes in a single transaction on Turso
-      await client.batch(batchStatements, 'write');
-    } else {
-      // Local SQLite atomic transaction
-      const db = getDb();
-      const insertAppt = db.prepare(`
-        INSERT INTO appointments
-        (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      const insertSess = db.prepare(`
-        INSERT INTO patient_sessions
-        (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      const updatePat = db.prepare(`
-        UPDATE patients SET totalPrescribedSessions = MAX(totalPrescribedSessions, ?), updatedAt = ? WHERE id = ?
-      `);
-
-      const runBatchTx = db.transaction(() => {
-        for (const item of appointmentInserts) {
-          insertAppt.run(...item.args);
-        }
-        for (const item of sessionInserts) {
-          insertSess.run(...item.args);
-        }
-        updatePat.run(input.sessions.length, now, patientId);
-      });
-
-      runBatchTx();
-    }
-
-    createdAppointments.push(...appointmentInserts.map(i => i.row));
-    createdSessions.push(...sessionInserts.map(i => i.row));
-  } catch (err: any) {
-    if (err?.message?.includes('UNIQUE') || err?.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return {
-        success: false,
-        error: 'slot_taken',
-        message: 'Um dos horários foi ocupado em simultâneo por outra marcação.',
-      };
-    }
-    throw err;
-  }
-
-  // Update patient total prescribed sessions to reflect total planned sessions
-  try {
-    await executeTursoDirectly(
-      `UPDATE patients SET totalPrescribedSessions = MAX(totalPrescribedSessions, ?), updatedAt = ? WHERE id = ?`,
-      [input.sessions.length, now, patientId]
-    );
-  } catch { /* silent */ }
-
-  // Broadcast real-time batch event to update all open admin tabs in a single notification
-  try {
-    broadcastMultipleAppointmentsCreated(createdAppointments);
-  } catch { /* silent */ }
-
-  return {
-    success: true,
-    appointments: createdAppointments,
-    patientSessions: createdSessions,
-    patientId,
-  };
+export async function dbCreateMultipleAppointments(input: CreateMultipleAppointmentsInput): Promise<CreateMultipleAppointmentsResult> {
+  const result = await createScheduledSeries(input);
+  if (result.success && !result.replayed) broadcastMultipleAppointmentsCreated(result.appointments);
+  return result;
 }
 
-type AppointmentFilters = {status?: string; date?: string; search?: string; dateFrom?: string; dateTo?: string; phone?: string};
+type AppointmentFilters = {practitionerId?: string;status?: string; date?: string; search?: string; dateFrom?: string; dateTo?: string; phone?: string; patientId?: string; includeArchived?: boolean};
 function appointmentWhere(filters: AppointmentFilters = {}) {
-  const clauses = ['1=1'];
+  const clauses = [filters.includeArchived ? '1=1' : 'archivedAt IS NULL'];
   const params: (string | number)[] = [];
+  if (filters.practitionerId) {clauses.push('practitionerId = ?'); params.push(filters.practitionerId);}
   if (filters.status && filters.status !== 'all') {clauses.push('status = ?'); params.push(filters.status.toUpperCase());}
   if (filters.date) {clauses.push('date = ?'); params.push(filters.date);}
   if (filters.dateFrom) {clauses.push('date >= ?'); params.push(filters.dateFrom);}
   if (filters.dateTo) {clauses.push('date <= ?'); params.push(filters.dateTo);}
-  if (filters.phone) {
+  if (filters.patientId) {clauses.push('(patientId = ? OR (patientId IS NULL AND phone = (SELECT phone FROM patients WHERE id=?)))'); params.push(filters.patientId,filters.patientId);}
+  else if (filters.phone) {
     const validation = validateAndNormalizePhone(filters.phone);
     clauses.push('(phone = ? OR phone = ?)'); params.push(filters.phone, validation.isValid ? validation.normalized : filters.phone);
   }
@@ -1329,14 +926,16 @@ export async function dbGetAppointments(filters: AppointmentFilters & {limit?: n
   if (filters.limit) {sql += ' LIMIT ? OFFSET ?'; params.push(filters.limit, filters.offset || 0);}
   return executeQuery<Appointment>(sql, params);
 }
-export async function dbGetAppointmentSummary() {
-  const rows = await executeQuery<{status: string; service: string; count: number}>('SELECT status, service, COUNT(*) AS count FROM appointments GROUP BY status, service');
+export async function dbGetAppointmentSummary(filters: AppointmentFilters = {}) {
+  const catalogue=await getTreatments();
+  const {where,params}=appointmentWhere(filters);
+  const rows = await executeQuery<{status: string; service: string; servicePriceCents:number|null; count: number}>('SELECT status, service, servicePriceCents, COUNT(*) AS count FROM appointments'+where+' GROUP BY status, service, servicePriceCents',params);
   const stats = {total: 0, confirmed: 0, pending: 0, cancelled: 0, completed: 0, noShow: 0, revenue: 0};
   for (const row of rows) {
     const n = Number(row.count); stats.total += n;
     const key = ({CONFIRMED:'confirmed', PENDING:'pending', CANCELLED:'cancelled', COMPLETED:'completed', NO_SHOW:'noShow'} as const)[row.status as 'CONFIRMED'];
     if (key) stats[key] += n;
-    if (row.status === 'CONFIRMED' || row.status === 'COMPLETED') stats.revenue += n * getServicePrice(row.service);
+    if (row.status === 'CONFIRMED' || row.status === 'COMPLETED') stats.revenue += n * (row.servicePriceCents!=null?row.servicePriceCents/100:getServicePrice(row.service, catalogue));
   }
   return stats;
 }
@@ -1352,59 +951,40 @@ export async function dbGetAppointmentsPaginated(options: AppointmentFilters & {
   return {appointments, total, page: actualPage, limit, totalPages};
 }
 
-export async function dbGetAppointmentById(id: string): Promise<Appointment | null> {
-  const rows = await executeQuery<Appointment>('SELECT * FROM appointments WHERE id = ?', [id]);
+export async function dbGetAppointmentById(id: string, includeArchived = false): Promise<Appointment | null> {
+  const rows = await executeQuery<Appointment>('SELECT * FROM appointments WHERE id = ?' + (includeArchived ? '' : ' AND archivedAt IS NULL'), [id]);
   return rows[0] ?? null;
 }
 
-export async function dbUpdateAppointment(
-  id: string,
-  fields: Partial<Pick<Appointment, 'status' | 'notes' | 'date' | 'startTime' | 'coverageType' | 'coverageProvider' | 'coverageNumber'>>
-): Promise<Appointment | null> {
-  const updates: string[] = [];
-  const params: (string | number)[] = [];
-
-  if (fields.status !== undefined)           { updates.push('status = ?');           params.push(fields.status); }
-  if (fields.notes !== undefined)            { updates.push('notes = ?');            params.push(fields.notes ?? ''); }
-  if (fields.date !== undefined)             { updates.push('date = ?');             params.push(fields.date); }
-  if (fields.startTime !== undefined)        { updates.push('startTime = ?');        params.push(fields.startTime); }
-  if (fields.coverageType !== undefined)     { updates.push('coverageType = ?');     params.push(fields.coverageType); }
-  if (fields.coverageProvider !== undefined) { updates.push('coverageProvider = ?'); params.push(fields.coverageProvider ?? ''); }
-  if (fields.coverageNumber !== undefined)   { updates.push('coverageNumber = ?');   params.push(fields.coverageNumber ?? ''); }
-
-  if (updates.length === 0) return dbGetAppointmentById(id);
-
-  updates.push('updatedAt = ?');
-  params.push(new Date().toISOString());
-  params.push(id);
-
-  await executeQuery(`UPDATE appointments SET ${updates.join(', ')} WHERE id = ?`, params);
-  return dbGetAppointmentById(id);
+export async function dbUpdateAppointment(id: string, fields: AppointmentChanges): Promise<Appointment | null> {
+  return updateScheduledAppointment(id,fields);
 }
 
-export async function dbDeleteAppointment(id: string): Promise<boolean> {
+export async function dbDeleteAppointment(id: string, actorSessionId?: string): Promise<boolean> {
   const existing = await dbGetAppointmentById(id);
   if (!existing) return false;
-
-  await executeQuery('DELETE FROM appointments WHERE id = ?', [id]);
+  const now = new Date().toISOString();
+  const archived = await executeConditionalBatch(
+    {sql:'SELECT id FROM appointments WHERE id=? AND version=? AND archivedAt IS NULL',args:[id,existing.version]},
+    [
+      {sql:"UPDATE appointments SET archivedAt=?,archivedStatus=status,status='CANCELLED',updatedAt=?,version=version+1 WHERE id=?",args:[now,now,id]},
+      {sql:'INSERT INTO security_audit_logs(id,eventType,ip,details,createdAt) VALUES(?,?,?,?,?)',args:['audit_'+crypto.randomUUID(),'appointment_archived','internal',JSON.stringify({appointmentId:id,previousStatus:existing.status,actor:actorSessionId?createHash('sha256').update(actorSessionId).digest('hex'):null}),now]},
+    ],
+  );
+  if (!archived) throw new SchedulingError('APPOINTMENT_CHANGED','This appointment was changed by another user. Refresh before archiving.');
   return true;
 }
 
 // ─── Blocked Slots Helpers ────────────────────────────────────────────────────
-export async function dbGetBlockedSlots(): Promise<{ date: string; time: string }[]> {
-  return executeQuery<{ date: string; time: string }>('SELECT date, time FROM blocked_slots');
+export async function dbGetBlockedSlots(): Promise<{ date: string; time: string; practitionerId: string }[]> {
+  return executeQuery<{ date: string; time: string; practitionerId: string }>('SELECT date, time, practitionerId FROM blocked_slots');
 }
 
-export async function dbToggleBlockSlot(date: string, time: string): Promise<boolean> {
-  const existing = await executeQuery('SELECT id FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
-  if (existing.length > 0) {
-    await executeQuery('DELETE FROM blocked_slots WHERE date = ? AND time = ?', [date, time]);
-    return false;
-  } else {
-    const id = 'blk_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
-    await executeQuery('INSERT INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', [id, date, time]);
-    return true;
-  }
+export async function dbToggleBlockSlot(date: string, time: string, practitionerId = '*'): Promise<boolean> {
+  const rows = await executeQuery('DELETE FROM blocked_slots WHERE date=? AND time=? AND practitionerId=? RETURNING id',[date,time,practitionerId]);
+  if(rows.length)return false;
+  await executeQuery('INSERT INTO blocked_slots(id,date,time,practitionerId) VALUES(?,?,?,?)',['blk_'+crypto.randomUUID(),date,time,practitionerId]);
+  return true;
 }
 
 export async function dbIsSlotAvailable(date: string, time: string): Promise<boolean> {
@@ -1413,6 +993,14 @@ export async function dbIsSlotAvailable(date: string, time: string): Promise<boo
 }
 
 // ─── Rate Limiting Helpers ────────────────────────────────────────────────────
+/** The check and charge hold one write transaction, including across workers. */
+export async function dbConsumeRateLimit(ip:string,action:string,maxAttempts:number,windowSeconds:number):Promise<boolean> {
+  const now=Date.now();
+  return executeConditionalBatch({sql:'SELECT 1 WHERE (SELECT COUNT(*) FROM rate_limit_log WHERE ip=? AND action=? AND timestamp>?)<?',args:[ip,action,now-windowSeconds*1000,maxAttempts]},[
+    {sql:'INSERT INTO rate_limit_log(ip,action,timestamp) VALUES(?,?,?)',args:[ip,action,now]},
+  ]);
+}
+
 export async function dbCheckRateLimit(
   ip: string,
   action: string,
@@ -1727,7 +1315,7 @@ export async function dbGetPatientDirectory(options: {page: number; limit: numbe
   const directory = `WITH directory AS (
     SELECT id, patientName, phone, email, gender, dob, coverageType, coverageProvider, coverageNumber,
       referringDoctor, pathologyTags, medicalHistory, totalPrescribedSessions, createdAt, updatedAt,
-      (SELECT count(*) FROM patient_sessions s WHERE s.patientId = p.id) AS sessionCount
+      (SELECT count(*) FROM patient_sessions s WHERE s.patientId = p.id AND s.clinicalStatus='COMPLETED' AND s.archivedAt IS NULL) AS sessionCount
     FROM patients p
     UNION ALL
     SELECT 'legacy_' || n.phone, n.patientName, n.phone, NULL, NULL, NULL, 'PARTICULAR', NULL, NULL,
@@ -1870,13 +1458,41 @@ export async function dbGetPatientByPhone(phone: string): Promise<PatientRecord 
   return { ...patient, sessions };
 }
 
-async function dbEnsureBookingPatient(input: Parameters<typeof dbUpsertPatient>[0]): Promise<PatientRecord> {
+export async function dbEnsureBookingPatient(input: Parameters<typeof dbUpsertPatient>[0]): Promise<PatientRecord> {
   const existing = await dbGetPatientByPhone(input.phone);
-  return existing ?? dbUpsertPatient(input);
+  if (existing) return existing;
+  try { return await dbUpsertPatient(input); }
+  catch (error) {
+    if (/UNIQUE.*patients.phone/i.test(String(error)) || (error instanceof PatientWriteError && error.code === 'PATIENT_PHONE_CONFLICT')) {
+      const concurrent = await dbGetPatientByPhone(input.phone);
+      if (concurrent) return concurrent;
+    }
+    throw error;
+  }
+}
+
+export class PatientWriteError extends Error {
+  constructor(public code: 'PATIENT_PHONE_CONFLICT' | 'PATIENT_NOT_FOUND' | 'PATIENT_CHANGED' | 'PATIENT_HAS_HISTORY') {
+    super(code === 'PATIENT_HAS_HISTORY' ? 'Esta ficha contém histórico e não pode ser eliminada. Os registos foram preservados.' : code === 'PATIENT_PHONE_CONFLICT'
+      ? 'Este telefone já está associado a uma ficha. Abra a ficha existente para editar; não foi criado nem alterado nenhum utente.'
+      : code === 'PATIENT_CHANGED' ? 'A ficha foi alterada por outro utilizador. Atualize antes de guardar.' : 'A ficha do utente já não existe. Atualize a lista.');
+  }
+}
+
+export async function dbAssertLegacyIdentity(phone:string,patientName:string):Promise<void> {
+  const validation=validateAndNormalizePhone(phone);
+  const normalized=validation.isValid?validation.normalized:phone.trim();
+  const rows=await executeQuery<{patientName:string}>(`SELECT patientName FROM patient_notes WHERE phone IN(?,?)
+    UNION SELECT patientName FROM appointments WHERE patientId IS NULL AND phone IN(?,?)
+    UNION SELECT patientName FROM invoices WHERE patientId IS NULL AND patientPhone IN(?,?)
+    UNION SELECT patientName FROM prescriptions WHERE patientId IS NULL AND patientPhone IN(?,?)`,[phone,normalized,phone,normalized,phone,normalized,phone,normalized]);
+  const normalize=(s:string)=>s.normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleLowerCase();
+  if(rows.some(row=>normalize(row.patientName)!==normalize(patientName))) throw new PatientWriteError('PATIENT_PHONE_CONFLICT');
 }
 
 export async function dbUpsertPatient(input: {
   id?: string;
+  legacyPhone?: string;
   patientName: string;
   phone: string;
   email?: string | null;
@@ -1893,21 +1509,41 @@ export async function dbUpsertPatient(input: {
   const now = new Date().toISOString();
   const normalizedPhone = requireNormalizedPhone(input.phone);
 
-  const existing = input.id ? await dbGetPatientById(input.id) : await dbGetPatientByPhone(normalizedPhone);
+  const existing = input.id ? await dbGetPatientById(input.id) : null;
+  if (input.id && !existing) throw new PatientWriteError('PATIENT_NOT_FOUND');
+  const phoneOwner = await dbGetPatientByPhone(normalizedPhone);
+  if (phoneOwner && phoneOwner.id !== existing?.id) throw new PatientWriteError('PATIENT_PHONE_CONFLICT');
+  const legacyPhone = input.legacyPhone ? requireNormalizedPhone(input.legacyPhone) : undefined;
+  if (existing && legacyPhone) throw new PatientWriteError('PATIENT_PHONE_CONFLICT');
+  const previousPhone = existing?.phone ?? legacyPhone ?? normalizedPhone;
+  const previousValidation = validateAndNormalizePhone(previousPhone);
+  const previousNormalizedPhone = previousValidation.isValid ? previousValidation.normalized : previousPhone.trim();
+  if (previousNormalizedPhone !== normalizedPhone && await dbGetPatientNote(normalizedPhone)) throw new PatientWriteError('PATIENT_PHONE_CONFLICT');
+  const legacyNote = await dbGetPatientNote(previousPhone);
+  if (!existing && legacyNote && !legacyPhone) throw new PatientWriteError('PATIENT_PHONE_CONFLICT');
+  await dbAssertLegacyIdentity(previousPhone,existing?.patientName??input.patientName);
+  if (legacyPhone && (!legacyNote || await dbGetPatientByPhone(legacyPhone))) throw new PatientWriteError('PATIENT_CHANGED');
   const id = existing?.id ?? input.id ?? ('pat_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6));
+  const medicalHistory = input.medicalHistory ?? existing?.medicalHistory ?? legacyNote?.content ?? '';
+  const pathologyTags = input.pathologyTags ?? existing?.pathologyTags ?? legacyNote?.tags ?? '';
+  const statements: {sql: string; args: any[]}[] = [];
+
+  // Bind phone-only legacy rows before a contact changes; document snapshots stay
+  // unchanged, and rows already assigned to another patient are never claimed.
+  for (const [table, column] of [['appointments','phone'], ['invoices','patientPhone'], ['prescriptions','patientPhone']]) {
+    statements.push({sql:`UPDATE ${table} SET patientId=? WHERE patientId IS NULL AND (${column}=? OR ${column}=?)`,args:[id,previousPhone,previousNormalizedPhone]});
+  }
 
   const covType = input.coverageType ?? (existing as any)?.coverageType ?? 'PARTICULAR';
   const covProv = input.coverageProvider !== undefined ? input.coverageProvider : existing?.coverageProvider ?? null;
   const covNum = input.coverageNumber !== undefined ? input.coverageNumber : existing?.coverageNumber ?? null;
 
   if (existing) {
-    await executeQuery(
-      `UPDATE patients SET
+    statements.push({sql: `UPDATE patients SET
         patientName = ?, phone = ?, email = ?, gender = ?, dob = ?,
         coverageType = ?, coverageProvider = ?, coverageNumber = ?, referringDoctor = ?, pathologyTags = ?,
         medicalHistory = ?, totalPrescribedSessions = ?, updatedAt = ?
-       WHERE id = ?`,
-      [
+       WHERE id = ?`, args: [
         input.patientName,
         normalizedPhone,
         input.email !== undefined ? input.email : existing.email ?? null,
@@ -1917,20 +1553,17 @@ export async function dbUpsertPatient(input: {
         covProv,
         covNum,
         input.referringDoctor !== undefined ? input.referringDoctor : existing.referringDoctor ?? null,
-        input.pathologyTags ?? existing.pathologyTags ?? '',
-        input.medicalHistory ?? existing.medicalHistory ?? '',
+        pathologyTags,
+        medicalHistory,
         input.totalPrescribedSessions ?? existing.totalPrescribedSessions ?? 10,
         now,
         id,
-      ]
-    );
+      ]});
   } else {
-    await executeQuery(
-      `INSERT INTO patients (
+    statements.push({sql: `INSERT INTO patients (
         id, patientName, phone, email, gender, dob, coverageType, coverageProvider, coverageNumber,
         referringDoctor, pathologyTags, medicalHistory, totalPrescribedSessions, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [
         id,
         input.patientName,
         normalizedPhone,
@@ -1941,121 +1574,98 @@ export async function dbUpsertPatient(input: {
         covProv,
         covNum,
         input.referringDoctor ?? null,
-        input.pathologyTags ?? '',
-        input.medicalHistory ?? '',
+        pathologyTags,
+        medicalHistory,
         input.totalPrescribedSessions ?? 10,
         now,
         now,
-      ]
-    );
+      ]});
   }
-
-  await dbUpsertPatientNote(normalizedPhone, input.patientName, input.medicalHistory ?? existing?.medicalHistory ?? '', input.pathologyTags ?? existing?.pathologyTags ?? '');
+  if (legacyNote && previousPhone !== normalizedPhone) {
+    statements.push({sql:'DELETE FROM patient_notes WHERE phone=? OR phone=?',args:[previousPhone,previousNormalizedPhone]});
+  }
+  statements.push({sql:`INSERT INTO patient_notes(phone,patientName,content,tags,updatedAt) VALUES(?,?,?,?,?)
+    ON CONFLICT(phone) DO UPDATE SET patientName=excluded.patientName,content=excluded.content,tags=excluded.tags,updatedAt=excluded.updatedAt`,args:[normalizedPhone,input.patientName,medicalHistory,pathologyTags,now]});
+  try {
+    if (existing) {
+      const saved = await executeConditionalBatch({sql:'SELECT id FROM patients WHERE id=? AND phone=? AND updatedAt=?',args:[id,existing.phone,existing.updatedAt]}, statements);
+      if (!saved) throw new PatientWriteError('PATIENT_CHANGED');
+    } else if (legacyPhone && legacyNote) {
+      const saved = await executeConditionalBatch({sql:'SELECT phone FROM patient_notes WHERE phone=? AND updatedAt=? AND NOT EXISTS(SELECT id FROM patients WHERE phone=?)',args:[legacyNote.phone,legacyNote.updatedAt,legacyPhone]}, statements);
+      if (!saved) throw new PatientWriteError('PATIENT_CHANGED');
+    } else await executeAtomicBatch(statements);
+  }
+  catch (error) {
+    if (/UNIQUE.*patients.phone/i.test(String(error))) throw new PatientWriteError('PATIENT_PHONE_CONFLICT');
+    throw error;
+  }
   return (await dbGetPatientById(id))!;
 }
 
 export async function dbDeletePatientRecord(idOrPhone: string): Promise<void> {
   const p = (await dbGetPatientById(idOrPhone)) ?? (await dbGetPatientByPhone(idOrPhone));
-  if (p) {
-    const phoneValidation = validateAndNormalizePhone(p.phone);
-    const normPhone = phoneValidation.isValid ? phoneValidation.normalized : p.phone.trim();
-    
-    // Clinical Governance & Audit Trail: Never delete past consultations.
-    // Only cancel future pending appointments.
-    const today = new Date().toISOString().split('T')[0];
-
-    const queries: { sql: string; args: any[] }[] = [
-      {
-        sql: "UPDATE appointments SET status = 'CANCELLED', notes = COALESCE(notes || ' | ', '') || 'Paciente removido do sistema' WHERE (phone = ? OR phone = ?) AND date >= ? AND status = 'PENDING'",
-        args: [p.phone, normPhone, today],
-      },
-      {
-        sql: 'DELETE FROM patient_sessions WHERE patientId = ?',
-        args: [p.id],
-      },
-      {
-        sql: 'DELETE FROM prescriptions WHERE patientId = ? OR patientPhone = ? OR patientPhone = ?',
-        args: [p.id, p.phone, normPhone],
-      },
-      {
-        sql: 'DELETE FROM patient_notes WHERE phone = ? OR phone = ? OR phone = ?',
-        args: [p.phone, normPhone, idOrPhone],
-      },
-      {
-        // Preserve invoices for tax audit trail, but annotate them clearly
-        sql: "UPDATE invoices SET notes = COALESCE(notes || ' | ', '') || 'Paciente removido do sistema' WHERE patientId = ? OR patientPhone = ? OR patientPhone = ?",
-        args: [p.id, p.phone, normPhone],
-      },
-      {
-        sql: 'DELETE FROM patients WHERE id = ?',
-        args: [p.id],
-      },
-    ];
-
-    if (isTursoEnabled()) {
-      const client = getTursoClient();
-      await ensureTursoSchema(client);
-      await client.batch(queries, 'write');
-    } else {
-      const db = getDb();
-      const runTx = db.transaction(() => {
-        for (const q of queries) {
-          db.prepare(q.sql).run(...q.args);
-        }
-      });
-      runTx();
-    }
-  } else {
-    const phoneValidation = validateAndNormalizePhone(idOrPhone);
-    const normalizedPhone = phoneValidation.isValid ? phoneValidation.normalized : idOrPhone.trim();
-    await executeQuery('DELETE FROM patient_notes WHERE phone = ? OR phone = ?', [idOrPhone, normalizedPhone]);
-    await executeQuery('DELETE FROM prescriptions WHERE patientPhone = ? OR patientPhone = ?', [idOrPhone, normalizedPhone]);
-  }
+  const phone=p?.phone??idOrPhone,validation=validateAndNormalizePhone(phone);
+  const normalized=validation.isValid?validation.normalized:phone.trim(),id=p?.id??'';
+  // Only empty administrative shells can be deleted. Check and delete in the
+  // same write transaction so a newly linked record cannot be lost in a race.
+  const clauses=[
+    ...['appointments','invoices','prescriptions'].map(table=>`NOT EXISTS(SELECT 1 FROM ${table} WHERE patientId=? OR ${table==='appointments'?'phone':'patientPhone'} IN(?,?))`),
+    'NOT EXISTS(SELECT 1 FROM patient_sessions WHERE patientId=?)',
+    'NOT EXISTS(SELECT 1 FROM clinical_session_revisions WHERE patientId=?)',
+    "NOT EXISTS(SELECT 1 FROM patient_notes WHERE phone IN(?,?) AND (TRIM(COALESCE(content,''))!='' OR TRIM(COALESCE(tags,''))!=''))",
+    "NOT EXISTS(SELECT 1 FROM patients WHERE id=? AND (TRIM(COALESCE(medicalHistory,''))!='' OR TRIM(COALESCE(pathologyTags,''))!=''))",
+  ];
+  const args=[id,phone,normalized,id,phone,normalized,id,phone,normalized,id,id,phone,normalized,id];
+  const saved=await executeConditionalBatch({sql:'SELECT 1 WHERE '+clauses.join(' AND '),args},[
+    {sql:'DELETE FROM patient_notes WHERE phone IN(?,?)',args:[phone,normalized]},
+    {sql:'DELETE FROM patients WHERE id=?',args:[id]},
+  ]);
+  if(!saved)throw new PatientWriteError('PATIENT_HAS_HISTORY');
 }
 
 export async function dbAddPatientSession(input: {
-  patientId: string;
-  date: string;
-  time?: string | null;
-  serviceSlug?: string;
-  evaPainScore?: number;
-  sessionType?: 'ONLINE' | 'MANUAL' | 'PAPER';
-  notes?: string | null;
-  practitioner?: string | null;
+  patientId: string; date: string; time?: string | null; serviceSlug?: string; evaPainScore?: number | null;
+  appointmentId?: string; clinicalStatus?: 'PLANNED' | 'COMPLETED'; actorSessionId?: string;
+  sessionType?: 'ONLINE' | 'MANUAL' | 'PAPER'; notes?: string | null; practitioner?: string | null; practitionerId?: string;
 }): Promise<PatientSession> {
-  const id = 'sess_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-  const now = new Date().toISOString();
-
-  const statements: { sql: string; args: any[] }[] = [{ sql:
-    `INSERT INTO patient_sessions
-      (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [
-      id,
-      input.patientId,
-      input.date,
-      input.time ?? null,
-      input.serviceSlug ?? 'kinesitherapie-generale',
-      typeof input.evaPainScore === 'number' ? input.evaPainScore : 5,
-      input.sessionType ?? 'MANUAL',
-      input.notes ?? null,
-      input.practitioner ?? null,
-      now,
-    ]
-  }];
-  if (input.time) {
-    const patient = await dbGetPatientById(input.patientId);
-    if (!patient) throw new Error('Patient not found');
-    statements.push({
-      sql: `INSERT INTO appointments (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'CONFIRMED', ?, ?, ?, ?, ?, ?)`,
-      args: ['apt_' + id, patient.patientName, patient.email ?? null, patient.phone, input.serviceSlug ?? 'kinesitherapie-generale', input.date, input.time, input.notes ?? null, patient.coverageType ?? 'PARTICULAR', patient.coverageProvider ?? null, patient.coverageNumber ?? null, now, now],
-    });
+  const {todayStr,currentHHMM}=getLisbonDateTime();
+  const future = input.date>todayStr || (input.date===todayStr && !!input.time && input.time>currentHHMM);
+  const clinicalStatus = input.clinicalStatus ?? (future ? 'PLANNED' : 'COMPLETED');
+  if (!validEva(input.evaPainScore ?? null)) throw new ClinicalError('INVALID_EVA','EVA must be null or an integer from 0 to 10.');
+  if (future && clinicalStatus==='COMPLETED') throw new ClinicalError('FUTURE_SESSION','A future visit cannot be completed.');
+  if (clinicalStatus!=='COMPLETED' && input.evaPainScore!=null) throw new ClinicalError('UNMEASURED_SESSION','Only a completed session can have a measured EVA.');
+  if (!await dbGetPatientById(input.patientId)) throw new ClinicalError('PATIENT_NOT_FOUND','Patient not found.',404);
+  let appointmentVersion:number|undefined;
+  if (input.appointmentId) {
+    const appointment = await dbGetAppointmentById(input.appointmentId);
+    if (!appointment || appointment.patientId!==input.patientId) throw new ClinicalError('APPOINTMENT_MISMATCH','Appointment does not belong to this patient.',422);
+    if (['CANCELLED','NO_SHOW'].includes(appointment.status)) throw new ClinicalError('INACTIVE_APPOINTMENT','This appointment cannot be documented as completed.');
+    if (clinicalStatus==='COMPLETED' && (appointment.date>todayStr || (appointment.date===todayStr && appointment.startTime>currentHHMM))) throw new ClinicalError('FUTURE_SESSION','A future visit cannot be completed.');
+    if (appointment.date!==input.date || (input.time && appointment.startTime!==input.time) || (input.serviceSlug && appointment.service!==input.serviceSlug) || (input.practitionerId && appointment.practitionerId!==input.practitionerId)) throw new ClinicalError('APPOINTMENT_MISMATCH','Use the appointment date, service and practitioner.');
+    const linked = (await executeQuery<PatientSession>('SELECT * FROM patient_sessions WHERE appointmentId=?',[appointment.id]))[0];
+    if (linked) throw new ClinicalError('CLINICAL_RECORD_EXISTS','This appointment already has a clinical record. Open it to complete or edit it.',409);
+    appointmentVersion=appointment.version;
+    input={...input,time:appointment.startTime,practitionerId:appointment.practitionerId,serviceSlug:appointment.service};
+  } else if(input.time && future) {
+    const patient=await dbGetPatientById(input.patientId);if(!patient)throw Error('Patient not found');
+    const result=await dbCreateMultipleAppointments({patientId:patient.id,patientName:patient.patientName,phone:patient.phone,email:patient.email??undefined,service:input.serviceSlug??'',practitionerId:input.practitionerId,sessionType:input.sessionType,sessions:[{date:input.date,startTime:input.time,notes:input.notes??undefined}]});
+    if(!result.success)throw Error('slot_taken: '+result.message);
+    return result.patientSessions[0];
   }
-  statements.push({ sql: 'UPDATE patients SET updatedAt = ? WHERE id = ?', args: [now, input.patientId] });
-  await executeAtomicBatch(statements);
-  const rows = await executeQuery<PatientSession>('SELECT * FROM patient_sessions WHERE id = ?', [id]);
-  return rows[0];
+  if(!input.serviceSlug || (!input.appointmentId && !(await getTreatments()).some(t=>t.slug===input.serviceSlug))) throw new ClinicalError('INVALID_SERVICE','Choose an existing treatment.');
+  const id='sess_'+crypto.randomUUID(),now=new Date().toISOString();
+  const practitioner=input.practitionerId?(await executeQuery<{name:string}>('SELECT name FROM practitioners WHERE id=?',[input.practitionerId]))[0]:null;
+  if(input.practitionerId&&!practitioner)throw Error('invalid_practitioner');
+  const statements = [
+    {sql:'INSERT INTO patient_sessions(id,patientId,date,time,serviceSlug,evaPainScore,sessionType,notes,practitioner,practitionerId,appointmentId,clinicalStatus,completedAt,createdAt) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',args:[id,input.patientId,input.date,input.time??null,input.serviceSlug??'',input.evaPainScore??null,input.sessionType??'MANUAL',input.notes??null,practitioner?.name??input.practitioner??null,input.practitionerId??null,input.appointmentId??null,clinicalStatus,clinicalStatus==='COMPLETED'?now:null,now]},
+    {sql:'UPDATE patients SET updatedAt=? WHERE id=?',args:[now,input.patientId]},
+  ];
+  if (input.appointmentId && clinicalStatus==='COMPLETED') statements.push({sql:"UPDATE appointments SET status='COMPLETED',version=version+1,updatedAt=? WHERE id=?",args:[now,input.appointmentId]});
+  if (input.appointmentId) {
+    const saved = await executeConditionalBatch({sql:"SELECT id FROM appointments WHERE id=? AND patientId=? AND version=? AND archivedAt IS NULL AND status NOT IN('CANCELLED','NO_SHOW') AND NOT EXISTS(SELECT 1 FROM patient_sessions WHERE appointmentId=?)",args:[input.appointmentId,input.patientId,appointmentVersion,input.appointmentId]},statements);
+    if (!saved) throw new ClinicalError('CLINICAL_RECORD_EXISTS','The appointment changed. Refresh the record.',409);
+  } else await executeAtomicBatch(statements);
+  return (await dbGetPatientSessionById(id))!;
 }
 
 export async function dbGetPatientSessionById(sessionId: string): Promise<PatientSession | null> {
@@ -2063,54 +1673,57 @@ export async function dbGetPatientSessionById(sessionId: string): Promise<Patien
   return rows[0] || null;
 }
 
-export async function dbDeletePatientSession(sessionId: string, patientId?: string): Promise<boolean> {
-  if (patientId) {
-    const existing = await dbGetPatientSessionById(sessionId);
-    if (!existing || existing.patientId !== patientId) {
-      return false;
-    }
-  }
-  await executeAtomicBatch([
-    { sql: 'DELETE FROM appointments WHERE id = ?', args: ['apt_' + sessionId] },
-    { sql: 'DELETE FROM patient_sessions WHERE id = ?', args: [sessionId] },
-  ]);
+export async function dbDeletePatientSession(sessionId: string, patientId?: string, actorSessionId?:string): Promise<boolean> {
+  const existing = await dbGetPatientSessionById(sessionId);
+  if (!existing || existing.archivedAt || (patientId && existing.patientId!==patientId)) return false;
+  const now=new Date().toISOString();
+  const statements=[
+    {sql:'UPDATE patient_sessions SET archivedAt=?,version=version+1 WHERE id=?',args:[now,sessionId]},
+    {sql:'INSERT INTO clinical_session_revisions(id,sessionId,patientId,beforeJson,createdAt,actor) VALUES(?,?,?,?,?,?)',args:[crypto.randomUUID(),sessionId,existing.patientId,JSON.stringify(existing),now,actorSessionId?createHash('sha256').update(actorSessionId).digest('hex'):null]},
+  ];
+  if(existing.appointmentId) statements.push({sql:"UPDATE appointments SET archivedAt=?,archivedStatus=status,status='CANCELLED',updatedAt=?,version=version+1 WHERE id=? AND archivedAt IS NULL",args:[now,now,existing.appointmentId]});
+  if(!await executeConditionalBatch({sql:'SELECT id FROM patient_sessions WHERE id=? AND version=? AND archivedAt IS NULL',args:[sessionId,existing.version]},statements)) throw new ClinicalError('SESSION_CHANGED','The session changed. Refresh before archiving.',409);
   return true;
 }
 
 export async function dbUpdatePatientSession(
   sessionId: string,
   updates: {
-    evaPainScore?: number;
+    evaPainScore?: number | null;
     notes?: string | null;
+    expectedVersion?: number;
+    clinicalStatus?: 'PLANNED' | 'COMPLETED';
+    actorSessionId?: string;
   },
   patientId?: string
 ): Promise<PatientSession | null> {
-  if (patientId) {
-    const existing = await dbGetPatientSessionById(sessionId);
-    if (!existing || existing.patientId !== patientId) {
-      return null;
-    }
-  }
-  if (typeof updates.evaPainScore === 'number') {
-    await executeQuery('UPDATE patient_sessions SET evaPainScore = ? WHERE id = ?', [
-      Math.min(10, Math.max(0, updates.evaPainScore)),
-      sessionId,
-    ]);
-  }
-  if (updates.notes !== undefined) {
-    await executeQuery('UPDATE patient_sessions SET notes = ? WHERE id = ?', [
-      updates.notes ? String(updates.notes).trim() : null,
-      sessionId,
-    ]);
-  }
-  const rows = await executeQuery<PatientSession>('SELECT * FROM patient_sessions WHERE id = ?', [sessionId]);
-  return rows[0] || null;
+  const existing = await dbGetPatientSessionById(sessionId);
+  if (!existing || existing.archivedAt || (patientId && existing.patientId!==patientId)) return null;
+  if (!Number.isInteger(updates.expectedVersion)) throw new ClinicalError('VERSION_REQUIRED','Reload the session before saving.',428);
+  if (updates.expectedVersion!==existing.version) throw new ClinicalError('SESSION_CHANGED','Another user changed this session. Reload and compare your changes.',409);
+  if (updates.evaPainScore!==undefined && !validEva(updates.evaPainScore)) throw new ClinicalError('INVALID_EVA','EVA must be null or an integer from 0 to 10.');
+  const clinicalStatus=updates.clinicalStatus??existing.clinicalStatus;
+  const eva=updates.evaPainScore===undefined?existing.evaPainScore:updates.evaPainScore;
+  const {todayStr,currentHHMM}=getLisbonDateTime();
+  if (clinicalStatus==='COMPLETED' && (existing.date>todayStr || (existing.date===todayStr && !!existing.time && existing.time>currentHHMM))) throw new ClinicalError('FUTURE_SESSION','A future visit cannot be completed.');
+  if (clinicalStatus!=='COMPLETED' && eva!==null) throw new ClinicalError('UNMEASURED_SESSION','Complete the session before recording an EVA measurement.');
+  const appointment=existing.appointmentId?await dbGetAppointmentById(existing.appointmentId):null;
+  if (existing.appointmentId && clinicalStatus==='COMPLETED' && (!appointment || ['CANCELLED','NO_SHOW'].includes(appointment.status))) throw new ClinicalError('INACTIVE_APPOINTMENT','The appointment is cancelled, archived or not attended.');
+  const now=new Date().toISOString();
+  const statements = [
+    {sql:'UPDATE patient_sessions SET evaPainScore=?,notes=?,clinicalStatus=?,completedAt=?,version=version+1 WHERE id=?',args:[eva,updates.notes===undefined?existing.notes:updates.notes,clinicalStatus,clinicalStatus==='COMPLETED'?(existing.completedAt??now):null,sessionId]},
+    {sql:'INSERT INTO clinical_session_revisions(id,sessionId,patientId,beforeJson,createdAt,actor) VALUES(?,?,?,?,?,?)',args:[crypto.randomUUID(),sessionId,existing.patientId,JSON.stringify(existing),now,updates.actorSessionId?createHash('sha256').update(updates.actorSessionId).digest('hex'):null]},
+  ];
+  if (appointment && clinicalStatus==='COMPLETED') statements.push({sql:"UPDATE appointments SET status='COMPLETED',version=version+1,updatedAt=? WHERE id=?",args:[now,appointment.id]});
+  const guard=appointment?{sql:"SELECT s.id FROM patient_sessions s JOIN appointments a ON a.id=s.appointmentId WHERE s.id=? AND s.version=? AND a.version=? AND s.archivedAt IS NULL",args:[sessionId,existing.version,appointment.version]}:{sql:'SELECT id FROM patient_sessions WHERE id=? AND version=? AND archivedAt IS NULL',args:[sessionId,existing.version]};
+  if (!await executeConditionalBatch(guard,statements)) throw new ClinicalError('SESSION_CHANGED','The session or appointment changed. Reload before saving.',409);
+  return dbGetPatientSessionById(sessionId);
 }
 
-export async function dbBulkBlockSlots(date: string, times: string[], action: 'block' | 'unblock'): Promise<void> {
+export async function dbBulkBlockSlots(date: string, times: string[], action: 'block' | 'unblock', practitionerId = '*'): Promise<void> {
   await executeAtomicBatch(times.map(time => action === 'block'
-    ? { sql: 'INSERT OR IGNORE INTO blocked_slots (id, date, time) VALUES (?, ?, ?)', args: ['blk_' + crypto.randomUUID(), date, time] }
-    : { sql: 'DELETE FROM blocked_slots WHERE date = ? AND time = ?', args: [date, time] }));
+    ? { sql: 'INSERT OR IGNORE INTO blocked_slots (id, date, time, practitionerId) VALUES (?, ?, ?, ?)', args: ['blk_' + crypto.randomUUID(), date, time, practitionerId] }
+    : { sql: 'DELETE FROM blocked_slots WHERE date = ? AND time = ? AND practitionerId = ?', args: [date, time, practitionerId] }));
 }
 
 export async function dbGetBackupStatus(): Promise<{ lastBackupDate: string | null; backupCount: number; dbSizeBytes: number }> {
@@ -2159,7 +1772,7 @@ export async function dbGetNoShowCounts(): Promise<Record<string, number>> {
   const rows = await executeQuery<{ phone: string; cnt: number }>(`
     SELECT phone, COUNT(*) as cnt
     FROM appointments
-    WHERE status IN ('CANCELLED', 'NO_SHOW')
+    WHERE archivedAt IS NULL AND status IN ('CANCELLED', 'NO_SHOW')
       AND date >= ?
     GROUP BY phone
     HAVING cnt >= 2
@@ -2239,8 +1852,32 @@ export async function dbGenerateInvoiceNumber(): Promise<string> {
   return `${prefix}${padded}`;
 }
 
+async function documentPractitioner(practitionerId?: string, appointmentId?: string): Promise<{id:string;name:string}> {
+  if(appointmentId){const appointment=await dbGetAppointmentById(appointmentId); if(!appointment || (practitionerId && practitionerId!==appointment.practitionerId))throw new DocumentError('The appointment and practitioner do not match.'); return {id:appointment.practitionerId,name:appointment.practitionerName};}
+  const candidates=await executeQuery<{id:string;name:string}>('SELECT id,name FROM practitioners WHERE active=1'+(practitionerId?' AND id=?':''),practitionerId?[practitionerId]:[]);
+  if(candidates.length!==1)throw new DocumentError('Choose an active practitioner');
+  return candidates[0];
+}
+
+export class DocumentError extends Error {}
+async function documentPatient(input:{patientId?:string;patientPhone:string;patientName:string;appointmentId?:string;serviceSlug?:string}) {
+  const appointment=input.appointmentId?await dbGetAppointmentById(input.appointmentId):null;
+  if (input.appointmentId && !appointment) throw new DocumentError('Appointment not found.');
+  const id=input.patientId || appointment?.patientId;
+  const patient=id?await dbGetPatientById(id):await dbGetPatientByPhone(input.patientPhone);
+  if (id && !patient) throw new DocumentError('Patient not found.');
+  if (appointment && (appointment.patientId!==patient?.id || input.serviceSlug!==appointment.service)) throw new DocumentError('The patient or treatment does not match this appointment.');
+  const name=(s:string)=>s.normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleLowerCase();
+  if (patient && (!phonesMatch(patient.phone,input.patientPhone) || name(patient.patientName)!==name(input.patientName))) throw new DocumentError('The patient name and phone do not match the selected record. Refresh the patient details.');
+  if (!patient) {try {await dbAssertLegacyIdentity(input.patientPhone,input.patientName);}catch(error){if(!(error instanceof PatientWriteError))throw error;throw new DocumentError('This contact has legacy records with a different identity. Review the patient record first.');}}
+  return patient;
+}
+
 export async function dbCreateInvoice(input: CreateInvoiceInput, idempotencyKey?: string): Promise<Invoice> {
   const normalizedPhone = requireNormalizedPhone(input.patientPhone);
+  let amountCents:number;
+  try { amountCents=toCents(input.amount); } catch { throw new DocumentError('Amount must use at most two decimal places.'); }
+  if (amountCents<=0 || amountCents>5000000) throw new DocumentError('Invalid invoice amount.');
   const requestHash = createHash('sha256').update(JSON.stringify(input)).digest('hex');
   const dedupeKey = idempotencyKey ? 'invoice:' + idempotencyKey : undefined;
   const findExisting = async (): Promise<Invoice | null> => {
@@ -2256,10 +1893,14 @@ export async function dbCreateInvoice(input: CreateInvoiceInput, idempotencyKey?
   const existing = await findExisting();
   if (existing) return existing;
 
-  const isKineService = !input.serviceSlug.includes('minceur') &&
-                        !input.serviceSlug.includes('cryolipolyse') &&
-                        !input.serviceSlug.includes('cavitation') &&
-                        !input.serviceSlug.includes('radiofrequence');
+  const patient=await documentPatient(input);
+  input={...input,patientId:patient?.id??input.patientId,patientName:patient?.patientName??input.patientName};
+  const author=await documentPractitioner(input.practitionerId,input.appointmentId);
+  const treatment=(await getTreatments()).find(t=>t.slug===input.serviceSlug);
+  const appointment=input.appointmentId?await dbGetAppointmentById(input.appointmentId):null;
+  if(!treatment&&!appointment)throw new DocumentError('Choose an existing treatment or a historical appointment.');
+  const servicePole=appointment?.servicePole??treatment?.pole??'kinesitherapie';
+  const isKineService=servicePole!=='minceur';
 
   const defaultVatRate = input.vatRate !== undefined ? input.vatRate : (isKineService ? 0 : 23);
   const defaultExemption = defaultVatRate === 0
@@ -2279,9 +1920,9 @@ export async function dbCreateInvoice(input: CreateInvoiceInput, idempotencyKey?
       const statements = [{ sql: `INSERT INTO invoices (
           id, invoiceNumber, appointmentId, patientId, patientName, patientNif,
           patientEmail, patientPhone, patientAddress, coverageType, coverageProvider, coverageNumber,
-          serviceSlug, serviceName, practitioner, amount, vatRate, vatExemptionReason,
-          paymentMethod, paymentStatus, paidAt, notes, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          serviceSlug, serviceName, servicePole, practitioner, practitionerId, amount, vatRate, vatExemptionReason,
+          paymentMethod, paymentStatus, paidAt, notes, createdAt, updatedAt, amountCents
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id,
           invoiceNumber,
@@ -2297,8 +1938,10 @@ export async function dbCreateInvoice(input: CreateInvoiceInput, idempotencyKey?
           input.coverageNumber?.trim() || null,
           input.serviceSlug,
           input.serviceName || input.serviceSlug,
-          input.practitioner || 'Equipa Digital Clínica (Licenciada)',
-          Number(input.amount),
+          servicePole,
+          author.name,
+          author.id,
+          amountCents / 100,
           defaultVatRate,
           defaultExemption,
           input.paymentMethod || 'MULTIBANCO',
@@ -2307,9 +1950,12 @@ export async function dbCreateInvoice(input: CreateInvoiceInput, idempotencyKey?
           input.notes || null,
           now,
           now,
+          amountCents,
         ] }];
       if (dedupeKey) statements.push({sql: `INSERT INTO idempotency_keys (key, scope, statusCode, responseBody, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?)`, args: [dedupeKey, 'admin_invoice', 201, JSON.stringify({invoiceId: id, requestHash}), Date.now(), Date.now() + 86400000]});
-      await executeAtomicBatch(statements);
+      if (patient) {
+        if (!await executeConditionalBatch({sql:'SELECT id FROM patients WHERE id=? AND updatedAt=? AND phone=?',args:[patient.id,patient.updatedAt,patient.phone]},statements)) throw new DocumentError('The patient record changed. Refresh before issuing this document.');
+      } else await executeAtomicBatch(statements);
 
       const created = await dbGetInvoiceById(id);
       if (created) return created;
@@ -2334,10 +1980,16 @@ export async function dbGetInvoices(filters?: {
   dateFrom?: string;
   dateTo?: string;
   patientPhone?: string;
+  patientId?: string;
   paymentMethod?: string;
+  dateBasis?: string;
+  pole?: string;
   limit?: number;
   offset?: number;
 }): Promise<Invoice[]> {
+  const catalogue=await getTreatments();
+  const SERVICES=catalogue;
+  const dateColumn=filters?.dateBasis==='payment'?'COALESCE(paidAt,createdAt)':'createdAt';
   let sql = 'SELECT * FROM invoices WHERE 1=1';
   const params: (string | number)[] = [];
 
@@ -2349,19 +2001,22 @@ export async function dbGetInvoices(filters?: {
     sql += ' AND paymentMethod = ?';
     params.push(filters.paymentMethod.toUpperCase());
   }
-  if (filters?.patientPhone) {
+  if (filters?.patientId) {
+    sql += ' AND (patientId = ? OR (patientId IS NULL AND patientPhone = (SELECT phone FROM patients WHERE id=?)))';
+    params.push(filters.patientId, filters.patientId);
+  } else if (filters?.patientPhone) {
     const phoneValidation = validateAndNormalizePhone(filters.patientPhone);
     const norm = phoneValidation.isValid ? phoneValidation.normalized : filters.patientPhone.trim();
     sql += ' AND (patientPhone = ? OR patientPhone = ?)';
     params.push(filters.patientPhone, norm);
   }
   if (filters?.dateFrom) {
-    sql += ' AND createdAt >= ?';
-    params.push(filters.dateFrom);
+    sql += ` AND ${dateColumn} >= ?`;
+    params.push(lisbonDayStart(filters.dateFrom));
   }
   if (filters?.dateTo) {
-    sql += ' AND createdAt <= ?';
-    params.push(filters.dateTo + 'T23:59:59.999Z');
+    sql += ` AND ${dateColumn} < ?`;
+    params.push(nextLisbonDayStart(filters.dateTo));
   }
   if (filters?.search) {
     sql += ' AND (patientName LIKE ? OR patientNif LIKE ? OR invoiceNumber LIKE ? OR serviceName LIKE ? OR patientPhone LIKE ?)';
@@ -2369,6 +2024,7 @@ export async function dbGetInvoices(filters?: {
     params.push(q, q, q, q, q);
   }
 
+  if (filters?.pole && filters.pole!=='all') { sql+=" AND COALESCE(servicePole,(SELECT json_extract(content,'$.pole') FROM treatment_catalog t WHERE t.slug=invoices.serviceSlug),'kinesitherapie')=?";params.push(filters.pole); }
   sql += ' ORDER BY createdAt DESC';
 
   if (typeof filters?.limit === 'number' && filters.limit > 0) {
@@ -2391,7 +2047,10 @@ export async function dbGetInvoicesPaginated(options: {
   dateFrom?: string;
   dateTo?: string;
   patientPhone?: string;
+  patientId?: string;
   paymentMethod?: string;
+  dateBasis?: string;
+  pole?: string;
 }): Promise<{
   invoices: Invoice[];
   total: number;
@@ -2399,10 +2058,13 @@ export async function dbGetInvoicesPaginated(options: {
   limit: number;
   totalPages: number;
 }> {
+  const catalogue=await getTreatments();
+  const SERVICES=catalogue;
   const page = Math.max(1, options.page ?? 1);
   const limit = Math.min(100, Math.max(1, options.limit ?? 50));
   const offset = (page - 1) * limit;
 
+  const dateColumn=options.dateBasis==='payment'?'COALESCE(paidAt,createdAt)':'createdAt';
   let countSql = 'SELECT COUNT(*) as cnt FROM invoices WHERE 1=1';
   const countParams: (string | number)[] = [];
 
@@ -2414,19 +2076,22 @@ export async function dbGetInvoicesPaginated(options: {
     countSql += ' AND paymentMethod = ?';
     countParams.push(options.paymentMethod.toUpperCase());
   }
-  if (options.patientPhone) {
+  if (options.patientId) {
+    countSql += ' AND (patientId = ? OR (patientId IS NULL AND patientPhone = (SELECT phone FROM patients WHERE id=?)))';
+    countParams.push(options.patientId, options.patientId);
+  } else if (options.patientPhone) {
     const phoneValidation = validateAndNormalizePhone(options.patientPhone);
     const norm = phoneValidation.isValid ? phoneValidation.normalized : options.patientPhone.trim();
     countSql += ' AND (patientPhone = ? OR patientPhone = ?)';
     countParams.push(options.patientPhone, norm);
   }
   if (options.dateFrom) {
-    countSql += ' AND createdAt >= ?';
-    countParams.push(options.dateFrom);
+    countSql += ` AND ${dateColumn} >= ?`;
+    countParams.push(lisbonDayStart(options.dateFrom));
   }
   if (options.dateTo) {
-    countSql += ' AND createdAt <= ?';
-    countParams.push(options.dateTo + 'T23:59:59.999Z');
+    countSql += ` AND ${dateColumn} < ?`;
+    countParams.push(nextLisbonDayStart(options.dateTo));
   }
   if (options.search) {
     countSql += ' AND (patientName LIKE ? OR patientNif LIKE ? OR invoiceNumber LIKE ? OR serviceName LIKE ? OR patientPhone LIKE ?)';
@@ -2434,6 +2099,7 @@ export async function dbGetInvoicesPaginated(options: {
     countParams.push(q, q, q, q, q);
   }
 
+  if (options.pole && options.pole!=='all') { countSql+=" AND COALESCE(servicePole,(SELECT json_extract(content,'$.pole') FROM treatment_catalog t WHERE t.slug=invoices.serviceSlug),'kinesitherapie')=?";countParams.push(options.pole); }
   const [countRes, invoices] = await Promise.all([
     executeQuery<{ cnt: number }>(countSql, countParams),
     dbGetInvoices({ ...options, limit, offset }),
@@ -2502,12 +2168,18 @@ export async function dbDeleteInvoice(id: string): Promise<void> {
   );
 }
 
+export async function dbAssertInvoiceAmountsReviewed(): Promise<void> {
+  const rows=await executeQuery("SELECT id FROM invoices WHERE moneyReview=1 OR amountCents IS NULL LIMIT 1");
+  if (rows.length) throw new DocumentError('Older invoices contain amounts that require reconciliation. Financial totals and exports are unavailable until those records are reviewed.');
+}
+
 export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
+  await dbAssertInvoiceAmountsReviewed();
   // Portuguese Accounting Rule: Cancelled/annulled invoices must not count toward clinic revenue.
   // Aggregate entirely in SQL — avoids loading all invoice rows into Node.js memory.
   const [statusRows, coverageRows] = await Promise.all([
     executeQuery<{ paymentStatus: string; cnt: number; total: number }>(
-      `SELECT paymentStatus, COUNT(*) as cnt, COALESCE(SUM(amount), 0) as total
+      `SELECT paymentStatus, COUNT(*) as cnt, COALESCE(SUM(amountCents), 0) / 100.0 as total
        FROM invoices
        WHERE paymentStatus != 'CANCELLED'
        GROUP BY paymentStatus`
@@ -2532,7 +2204,7 @@ export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
     const total = Number(row.total || 0);
     const status = (row.paymentStatus || '').toUpperCase();
     countTotal += cnt;
-    totalRevenue += total;
+    totalRevenue = sumMoney([totalRevenue,total]);
     if (status === 'PAID') {
       totalPaid = total;
       countPaid = cnt;
@@ -2550,7 +2222,7 @@ export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
     }
   }
 
-  const avgTicket = countTotal > 0 ? Math.round(totalRevenue / countTotal) : 0;
+  const avgTicket = countTotal > 0 ? Math.round(toCents(totalRevenue) / countTotal) / 100 : 0;
   const insuranceShare = countTotal > 0 ? Math.round((insuranceCount / countTotal) * 100) : 0;
 
   return {
@@ -2568,6 +2240,7 @@ export async function dbGetInvoiceStats(): Promise<InvoiceStats> {
 // ─── Prescriptions & Recommendations Database Operations ─────────────────────
 
 export async function dbCreatePrescription(input: {
+  practitionerId?: string;
   patientId?: string;
   patientPhone: string;
   patientName: string;
@@ -2582,6 +2255,8 @@ export async function dbCreatePrescription(input: {
   generalNotes?: string;
 }): Promise<PatientPrescription> {
   const normalizedPhone = requireNormalizedPhone(input.patientPhone);
+  const patient=await documentPatient(input);
+  input={...input,patientId:patient?.id??input.patientId,patientName:patient?.patientName??input.patientName};
   const id = `rx_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const now = new Date().toISOString();
   const dateStr = now.split('T')[0];
@@ -2595,32 +2270,35 @@ export async function dbCreatePrescription(input: {
   }));
 
   const itemsJson = JSON.stringify(itemsWithIds);
+  const author=await documentPractitioner(input.practitionerId);
 
-  await executeQuery(
-    `INSERT INTO prescriptions (
-      id, patientId, patientPhone, patientName, practitioner, date,
+  const statement={sql:`INSERT INTO prescriptions (
+      id, patientId, patientPhone, patientName, practitioner, practitionerId, date,
       diagnosisOrGoal, itemsJson, generalNotes, createdAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,args:[
       id,
       input.patientId ?? null,
       normalizedPhone,
       input.patientName.trim(),
-      input.practitioner?.trim() || SITE.professionalName,
+      author.name,
+      author.id,
       dateStr,
       input.diagnosisOrGoal?.trim() || null,
       itemsJson,
       input.generalNotes?.trim() || null,
       now,
-    ]
-  );
+    ]};
+  if (patient) {
+    if (!await executeConditionalBatch({sql:'SELECT id FROM patients WHERE id=? AND updatedAt=? AND phone=?',args:[patient.id,patient.updatedAt,patient.phone]},[statement])) throw new DocumentError('The patient record changed. Refresh before issuing this document.');
+  } else await executeAtomicBatch([statement]);
 
   return {
     id,
     patientId: input.patientId,
     patientPhone: normalizedPhone,
     patientName: input.patientName.trim(),
-    practitioner: input.practitioner?.trim() || SITE.professionalName,
+    practitioner: author.name,
+    practitionerId: author.id,
     date: dateStr,
     diagnosisOrGoal: input.diagnosisOrGoal?.trim(),
     items: itemsWithIds,
@@ -2629,21 +2307,30 @@ export async function dbCreatePrescription(input: {
   };
 }
 
+export async function dbGetPrescriptionsByPatientId(patientId: string): Promise<PatientPrescription[]> {
+  return readPatientPrescriptions(undefined, patientId);
+}
+
 export async function dbGetPrescriptionsByPatientPhone(patientPhone: string): Promise<PatientPrescription[]> {
+  return readPatientPrescriptions(patientPhone);
+}
+
+async function readPatientPrescriptions(patientPhone?: string, patientId?: string): Promise<PatientPrescription[]> {
   const allRows = await executeQuery<{
     id: string;
     patientId?: string;
     patientPhone: string;
     patientName: string;
     practitioner: string;
+    practitionerId?: string;
     date: string;
     diagnosisOrGoal?: string;
     itemsJson: string;
     generalNotes?: string;
     createdAt: string;
-  }>('SELECT * FROM prescriptions ORDER BY createdAt DESC');
+  }>('SELECT * FROM prescriptions' + (patientId ? ' WHERE patientId=? OR (patientId IS NULL AND patientPhone=(SELECT phone FROM patients WHERE id=?))' : '') + ' ORDER BY createdAt DESC', patientId ? [patientId, patientId] : []);
 
-  const filtered = allRows.filter(r => phonesMatch(r.patientPhone, patientPhone));
+  const filtered = patientId ? allRows : allRows.filter(r => phonesMatch(r.patientPhone, patientPhone || ''));
 
   return filtered.map(r => {
     let items: PrescriptionItem[] = [];
@@ -2658,6 +2345,7 @@ export async function dbGetPrescriptionsByPatientPhone(patientPhone: string): Pr
       patientPhone: r.patientPhone,
       patientName: r.patientName,
       practitioner: r.practitioner,
+      practitionerId: r.practitionerId,
       date: r.date,
       diagnosisOrGoal: r.diagnosisOrGoal,
       items: items.map((it, idx) => ({
@@ -2671,286 +2359,83 @@ export async function dbGetPrescriptionsByPatientPhone(patientPhone: string): Pr
 }
 
 // ─── Full Database Snapshot Export & Restore ─────────────────────────────────
-export async function dbExportFullDatabaseBackup(): Promise<{
-  version: string;
-  exportedAt: string;
-  tables: {
-    appointments: Appointment[];
-    patients: any[];
-    patient_sessions: any[];
-    invoices: Invoice[];
-    prescriptions: any[];
-    blocked_slots: any[];
-    patient_notes: any[];
-    security_settings: any[];
-    security_audit_logs: any[];
-    reviews: any[];
-  };
-}> {
-  const [
-    appointments,
-    patients,
-    sessions,
-    invoices,
-    prescriptions,
-    blockedSlots,
-    notes,
-    securitySettings,
-    securityLogs,
-    reviews,
-  ] = await Promise.all([
-    dbGetAppointments(),
-    dbGetAllPatients(),
-    executeQuery('SELECT * FROM patient_sessions ORDER BY createdAt DESC'),
-    dbGetInvoices(),
-    executeQuery('SELECT * FROM prescriptions ORDER BY createdAt DESC'),
-    executeQuery('SELECT * FROM blocked_slots ORDER BY date, time'),
-    executeQuery('SELECT * FROM patient_notes ORDER BY updatedAt DESC'),
-    executeQuery('SELECT * FROM security_settings'),
-    executeQuery('SELECT * FROM security_audit_logs ORDER BY createdAt DESC LIMIT 1000'),
-    executeQuery('SELECT * FROM reviews ORDER BY createdAt DESC'),
-  ]);
-
-  return {
-    version: '1.0.0',
-    exportedAt: new Date().toISOString(),
-    tables: {
-      appointments,
-      patients,
-      patient_sessions: sessions,
-      invoices,
-      prescriptions,
-      blocked_slots: blockedSlots,
-      patient_notes: notes,
-      security_settings: securitySettings,
-      security_audit_logs: securityLogs,
-      reviews,
-    },
-  };
-}
-
-export async function dbRestoreFullDatabaseBackup(backupData: any): Promise<{
-  success: boolean;
-  restoredCounts: Record<string, number>;
-}> {
-  if (!backupData || !backupData.tables || typeof backupData.tables !== 'object') {
-    throw new Error('Invalid backup data structure: missing tables object');
-  }
-
-  const {
-    patients = [],
-    patient_sessions = [],
-    appointments = [],
-    invoices = [],
-    prescriptions = [],
-    blocked_slots = [],
-    patient_notes = [],
-    security_settings = [],
-    security_audit_logs = [],
-    reviews = [],
-  } = backupData.tables;
-
-  const queries: { sql: string; args: any[] }[] = [];
-
-  // Clear existing data in reverse dependency order
-  queries.push({ sql: 'DELETE FROM patient_sessions', args: [] });
-  queries.push({ sql: 'DELETE FROM prescriptions', args: [] });
-  queries.push({ sql: 'DELETE FROM patient_notes', args: [] });
-  queries.push({ sql: 'DELETE FROM appointments', args: [] });
-  queries.push({ sql: 'DELETE FROM invoices', args: [] });
-  queries.push({ sql: 'DELETE FROM blocked_slots', args: [] });
-  queries.push({ sql: 'DELETE FROM patients', args: [] });
-  if (reviews.length > 0) queries.push({ sql: 'DELETE FROM reviews', args: [] });
-
-  // Insert patients
-  for (const p of patients) {
-    queries.push({
-      sql: `INSERT INTO patients (id, patientName, phone, email, gender, dob, coverageType, coverageProvider, coverageNumber, referringDoctor, pathologyTags, medicalHistory, totalPrescribedSessions, createdAt, updatedAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        p.id,
-        p.patientName,
-        p.phone,
-        p.email ?? null,
-        p.gender ?? null,
-        p.dob ?? null,
-        p.coverageType ?? 'PARTICULAR',
-        p.coverageProvider ?? null,
-        p.coverageNumber ?? null,
-        p.referringDoctor ?? null,
-        p.pathologyTags ?? '',
-        p.medicalHistory ?? '',
-        p.totalPrescribedSessions ?? 10,
-        p.createdAt,
-        p.updatedAt,
-      ],
-    });
-  }
-
-  // Insert appointments
-  for (const a of appointments) {
-    queries.push({
-      sql: `INSERT INTO appointments (id, patientName, email, phone, service, date, startTime, status, notes, coverageType, coverageProvider, coverageNumber, createdAt, updatedAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        a.id,
-        a.patientName,
-        a.email ?? null,
-        a.phone,
-        a.service,
-        a.date,
-        a.startTime,
-        a.status,
-        a.notes ?? null,
-        a.coverageType ?? 'PARTICULAR',
-        a.coverageProvider ?? null,
-        a.coverageNumber ?? null,
-        a.createdAt,
-        a.updatedAt,
-      ],
-    });
-  }
-
-  // Insert patient_sessions
-  for (const s of patient_sessions) {
-    queries.push({
-      sql: `INSERT INTO patient_sessions (id, patientId, date, time, serviceSlug, evaPainScore, sessionType, notes, practitioner, createdAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        s.id,
-        s.patientId,
-        s.date,
-        s.time ?? null,
-        s.serviceSlug,
-        s.evaPainScore ?? 5,
-        s.sessionType ?? 'MANUAL',
-        s.notes ?? null,
-        s.practitioner ?? null,
-        s.createdAt,
-      ],
-    });
-  }
-
-  // Insert invoices
-  for (const inv of invoices) {
-    queries.push({
-      sql: `INSERT INTO invoices (id, invoiceNumber, appointmentId, patientId, patientName, patientNif, patientEmail, patientPhone, patientAddress, coverageType, coverageProvider, coverageNumber, serviceSlug, serviceName, practitioner, amount, vatRate, vatExemptionReason, paymentMethod, paymentStatus, paidAt, notes, createdAt, updatedAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        inv.id,
-        inv.invoiceNumber,
-        inv.appointmentId ?? null,
-        inv.patientId ?? null,
-        inv.patientName,
-        inv.patientNif ?? '999999990',
-        inv.patientEmail ?? null,
-        inv.patientPhone,
-        inv.patientAddress ?? 'Lisboa, Portugal',
-        inv.coverageType ?? 'PARTICULAR',
-        inv.coverageProvider ?? null,
-        inv.coverageNumber ?? null,
-        inv.serviceSlug,
-        inv.serviceName,
-        inv.practitioner ?? '',
-        inv.amount,
-        inv.vatRate ?? 0,
-        inv.vatExemptionReason ?? null,
-        inv.paymentMethod ?? 'MULTIBANCO',
-        inv.paymentStatus ?? 'PAID',
-        inv.paidAt ?? null,
-        inv.notes ?? null,
-        inv.createdAt,
-        inv.updatedAt,
-      ],
-    });
-  }
-
-  // Insert prescriptions
-  for (const pr of prescriptions) {
-    queries.push({
-      sql: `INSERT INTO prescriptions (id, patientId, patientPhone, patientName, practitioner, date, diagnosisOrGoal, itemsJson, generalNotes, createdAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        pr.id,
-        pr.patientId ?? null,
-        pr.patientPhone,
-        pr.patientName,
-        pr.practitioner,
-        pr.date,
-        pr.diagnosisOrGoal ?? null,
-        typeof pr.itemsJson === 'string' ? pr.itemsJson : JSON.stringify(pr.itemsJson || []),
-        pr.generalNotes ?? null,
-        pr.createdAt,
-      ],
-    });
-  }
-
-  // Insert blocked_slots
-  for (const b of blocked_slots) {
-    queries.push({
-      sql: `INSERT OR IGNORE INTO blocked_slots (id, date, time) VALUES (?, ?, ?)`,
-      args: [b.id || ('blk_' + Math.random().toString(36).slice(2)), b.date, b.time],
-    });
-  }
-
-  // Insert patient_notes
-  for (const n of patient_notes) {
-    queries.push({
-      sql: `INSERT OR REPLACE INTO patient_notes (phone, patientName, content, tags, updatedAt) VALUES (?, ?, ?, ?, ?)`,
-      args: [n.phone, n.patientName, n.content ?? '', n.tags ?? '', n.updatedAt],
-    });
-  }
-
-  // Insert reviews if any
-  for (const r of reviews) {
-    queries.push({
-      sql: `INSERT OR REPLACE INTO reviews (id, patientName, patientEmail, rating, serviceSlug, comment, location, status, verified, isFeatured, createdAt, updatedAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        r.id,
-        r.patientName,
-        r.patientEmail ?? null,
-        r.rating,
-        r.serviceSlug,
-        r.comment,
-        r.location ?? 'Lisboa',
-        r.status ?? 'APPROVED',
-        r.verified ?? 1,
-        r.isFeatured ?? 0,
-        r.createdAt,
-        r.updatedAt,
-      ],
-    });
-  }
-
-  // Execute in single transaction
+// The allowlist also defines dependency order. Scheduling revisions are deliberately not
+// restored: a restore must invalidate every outstanding availability/configuration snapshot.
+const BACKUP_TABLES = ['practitioners','practitioner_services','working_hours','schedule_exceptions','resources','service_resources','patients','appointments','patient_sessions','clinical_session_revisions','invoices','prescriptions','blocked_slots','patient_notes','security_settings','security_audit_logs','reviews','idempotency_keys','treatment_catalog','treatment_revisions'] as const;
+const SCHEDULE_BACKUP_TABLES = new Set<string>(BACKUP_TABLES.slice(0,6));
+export async function dbExportFullDatabaseBackup() {
+  const tables: Record<string, any[]> = {};
   if (isTursoEnabled()) {
-    const client = getTursoClient();
-    await ensureTursoSchema(client);
-    await client.batch(queries, 'write');
+    const client=getTursoClient(); await ensureTursoSchema(client);
+    const tx=await client.transaction('read');
+    try { for(const table of BACKUP_TABLES) tables[table]=(await tx.execute('SELECT * FROM '+table)).rows; await tx.commit(); }
+    finally {tx.close();}
   } else {
-    const db = getDb();
-    const runTx = db.transaction(() => {
-      for (const q of queries) {
-        db.prepare(q.sql).run(...q.args);
-      }
-    });
-    runTx();
+    const db=getDb(); db.transaction(()=>{for(const table of BACKUP_TABLES) tables[table]=db.prepare('SELECT * FROM '+table).all();})();
   }
-
-  return {
-    success: true,
-    restoredCounts: {
-      patients: patients.length,
-      appointments: appointments.length,
-      patient_sessions: patient_sessions.length,
-      invoices: invoices.length,
-      prescriptions: prescriptions.length,
-      blocked_slots: blocked_slots.length,
-      patient_notes: patient_notes.length,
-      reviews: reviews.length,
-    },
-  };
+  return {version:'3.0.0',exportedAt:new Date().toISOString(),tables};
+}
+export async function dbRestoreFullDatabaseBackup(backupData: any): Promise<{success:boolean;restoredCounts:Record<string,number>}> {
+  if(!backupData || !backupData.tables || Array.isArray(backupData.tables) || typeof backupData.tables!=='object') throw new Error('Invalid backup tables');
+  if(!['1.0.0','2.0.0','3.0.0'].includes(backupData.version)) throw new Error('Unsupported backup version');
+  const currentCatalogue=await getTreatments();
+  const legacy=backupData.version==='1.0.0';
+  const selected=BACKUP_TABLES.filter(t=>backupData.version==='3.0.0'||!['treatment_catalog','treatment_revisions'].includes(t)).filter(t=>t!=='clinical_session_revisions' || Array.isArray(backupData.tables[t])).filter(t=>!legacy || (!SCHEDULE_BACKUP_TABLES.has(t)&&t!=='idempotency_keys'));
+  for(const table of selected) if(!Array.isArray(backupData.tables[table])) throw new Error('Missing or invalid backup table: '+table);
+  if(!legacy) {
+    for(const table of selected) {
+      if(backupData.tables[table].length>500000)throw new Error('Backup table too large: '+table);
+      if(backupData.tables[table].some((row:any)=>!row||typeof row!=='object'||Array.isArray(row)))throw new Error('Invalid row in '+table);
+    }
+    const resources=new Set(backupData.tables.resources.map((r:any)=>r?.id));
+    const practitioners=new Set(backupData.tables.practitioners.map((p:any)=>p?.id));
+    const validId=(id:unknown):id is string=>typeof id==='string'&&id.length>0&&id.length<=160&&id===id.trim();
+    if([...resources,...practitioners].some(id=>!validId(id))||resources.size!==backupData.tables.resources.length||practitioners.size!==backupData.tables.practitioners.length)throw new Error('Invalid scheduling identities');
+    const scope=(id:unknown)=>id==='*'||practitioners.has(id);
+    // Older backups may retain mappings for historical services outside the catalogue.
+    // They remain unavailable for new bookings until an administrator creates and publishes them.
+    const validService=(slug:unknown)=>typeof slug==='string'&&slug.length<=100&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+    if(backupData.version==='3.0.0')for(const row of backupData.tables.treatment_catalog){ const content=JSON.parse(row.content); validateTreatment({...content,...row},treatmentFromRow(row)); }
+    for(const row of backupData.tables.practitioner_services)if(!practitioners.has(row.practitionerId)||!validService(row.service))throw new Error('Invalid practitioner service');
+    for(const row of backupData.tables.service_resources)if(!resources.has(row.resourceId)||!validService(row.service))throw new Error('Invalid service resource');
+    for(const row of backupData.tables.working_hours)if(!scope(row.practitionerId))throw new Error('Invalid working hours practitioner');
+    for(const row of backupData.tables.schedule_exceptions)if(!scope(row.practitionerId)||!isCalendarDate(row.date))throw new Error('Invalid schedule exception');
+    for(const row of backupData.tables.blocked_slots)if(!scope(row.practitionerId)||!isCalendarDate(row.date)||!VALID_TIME_SLOTS.includes(row.time))throw new Error('Invalid blocked slot');
+    for(const row of backupData.tables.appointments) {
+      if(!isCalendarDate(row.date)||!VALID_TIME_SLOTS.includes(row.startTime)||!['PENDING','CONFIRMED','CANCELLED','COMPLETED','NO_SHOW'].includes(row.status))throw new Error('Invalid appointment schedule');
+      let ids:unknown;
+      try { ids=JSON.parse(row?.resourceIds); } catch { throw new Error('Invalid appointment resource allocation'); }
+      if(!Array.isArray(ids)||ids.some(id=>typeof id!=='string'||!resources.has(id))||new Set(ids).size!==ids.length) throw new Error('Invalid appointment resource allocation');
+      if(typeof row?.practitionerId!=='string'||!practitioners.has(row.practitionerId)) throw new Error('Invalid appointment practitioner');
+    }
+  }
+  // Validate the complete document before deleting anything. Column names come from our schema.
+  const schemas=await Promise.all(selected.map(table=>executeQuery<{name:string}>(`PRAGMA table_info(${table})`)));
+  const queries:{sql:string;args:any[]}[]=selected.slice().reverse().map(table=>({sql:'DELETE FROM '+table,args:[]}));
+  if(legacy) queries.unshift({sql:'DELETE FROM idempotency_keys',args:[]});
+  if(!selected.includes('clinical_session_revisions'))queries.unshift({sql:'DELETE FROM clinical_session_revisions',args:[]});
+  const restoredCounts:Record<string,number>={};
+  for(let i=0;i<selected.length;i++){
+    const table=selected[i]; const rows=backupData.tables[table];
+    if(!Array.isArray(rows)) throw new Error('Missing or invalid backup table: '+table);
+    if(rows.length>500000) throw new Error('Backup table too large: '+table);
+    const columns=new Set(schemas[i].map(c=>c.name)); restoredCounts[table]=rows.length;
+    for(const original of rows){
+      if(!original||typeof original!=='object'||Array.isArray(original))throw new Error('Invalid row in '+table);
+      const row={...original};
+      if (table==='patient_sessions' && row.clinicalStatus===undefined) Object.assign(row,{legacyEvaPainScore:row.evaPainScore??null,evaPainScore:null,clinicalStatus:'LEGACY_REVIEW',completedAt:null});
+      if (table==='invoices' && row.amountCents===undefined) { try {row.amountCents=toCents(row.amount);row.moneyReview=0;}catch{row.amountCents=null;row.moneyReview=1;} }
+      if(legacy && table==='appointments') { row.practitionerId='legacy'; row.practitionerName=SITE.professionalName; row.durationMinutes=row.durationMinutes??currentCatalogue.find(t=>t.slug===row.service)?.durationMinutes??30; }
+      if(legacy && table==='blocked_slots')row.practitionerId='*';
+      const keys=Object.keys(row).filter(k=>columns.has(k));
+      if(!keys.length)throw new Error('Empty row in '+table);
+      const values=keys.map(k=>{const v=row[k]; if(v!==null&&typeof v!=='string'&&typeof v!=='number')throw new Error('Invalid value in '+table+'.'+k);return v;});
+      queries.push({sql:`INSERT INTO ${table} (${keys.map(k=>'"'+k+'"').join(',')}) VALUES (${keys.map(()=>'?').join(',')})`,args:values});
+    }
+  }
+  queries.push({sql:'UPDATE booking_sync SET revision=revision+1 WHERE id=1',args:[]});
+  await executeAtomicBatch(queries);
+  return {success:true,restoredCounts};
 }
 
 export async function dbDeletePrescription(id: string): Promise<void> {
@@ -2959,47 +2444,10 @@ export async function dbDeletePrescription(id: string): Promise<void> {
 
 // ─── Patient Reviews Engine ───────────────────────────────────────────────────
 
-let _reviewsSeeded = false;
-
-export async function dbEnsureReviewsSeeded(): Promise<void> {
-  if (_reviewsSeeded) return;
-  try {
-    const existing = await executeQuery<{ cnt: number }>('SELECT COUNT(*) as cnt FROM reviews');
-    const count = Number(existing[0]?.cnt ?? 0);
-    if (count === 0) {
-      // Seed default reviews from TESTIMONIALS
-      for (const t of TESTIMONIALS) {
-        const commentText = t.comment.pt || t.comment.fr || t.comment.en || '';
-        await executeQuery(
-          `INSERT OR IGNORE INTO reviews (id, patientName, patientEmail, rating, serviceSlug, comment, location, status, verified, isFeatured, createdAt, updatedAt)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'APPROVED', ?, ?, ?, ?)`,
-          [
-            t.id,
-            t.name,
-            null,
-            t.rating,
-            t.serviceSlug,
-            commentText,
-            t.location || 'Lisboa',
-            t.verified ? 1 : 0,
-            1,
-            t.date ? `${t.date}T10:00:00.000Z` : new Date().toISOString(),
-            new Date().toISOString(),
-          ]
-        );
-      }
-    }
-    _reviewsSeeded = true;
-  } catch (err) {
-    console.warn('[Reviews Seed Warning]:', err);
-  }
-}
-
 export async function dbGetApprovedReviews(options?: {
   serviceSlug?: string;
   limit?: number;
 }): Promise<Review[]> {
-  await dbEnsureReviewsSeeded();
   let sql = `SELECT * FROM reviews WHERE status = 'APPROVED'`;
   const args: any[] = [];
 
@@ -3036,7 +2484,6 @@ export async function dbGetAllReviewsAdmin(options?: {
   status?: ReviewStatus | 'ALL';
   search?: string;
 }): Promise<Review[]> {
-  await dbEnsureReviewsSeeded();
   let sql = `SELECT * FROM reviews`;
   const args: any[] = [];
   const where: string[] = [];
@@ -3076,7 +2523,6 @@ export async function dbGetAllReviewsAdmin(options?: {
 }
 
 export async function dbCreateReview(input: CreateReviewInput): Promise<Review> {
-  await dbEnsureReviewsSeeded();
   const id = 'rev_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
   const now = new Date().toISOString();
   // As requested: user accepted first (status = 'APPROVED')
@@ -3184,6 +2630,7 @@ export async function dbGetAnalyticsStats(lang: string = 'fr'): Promise<{
     completionRate: number;
   };
 }> {
+  const catalogue=await getTreatments();
   const [
     statusCounts,
     invoiceAgg,
@@ -3193,7 +2640,7 @@ export async function dbGetAnalyticsStats(lang: string = 'fr'): Promise<{
     completedServiceCounts,
   ] = await Promise.all([
     executeQuery<{ status: string; cnt: number }>(
-      'SELECT status, COUNT(*) as cnt FROM appointments GROUP BY status'
+      'SELECT status, COUNT(*) as cnt FROM appointments WHERE archivedAt IS NULL GROUP BY status'
     ),
     executeQuery<{ totalInvoices: number; paidRevenue: number }>(
       `SELECT
@@ -3201,23 +2648,23 @@ export async function dbGetAnalyticsStats(lang: string = 'fr'): Promise<{
          COALESCE(SUM(CASE WHEN paymentStatus = 'PAID' THEN amount ELSE 0 END), 0) as paidRevenue
        FROM invoices`
     ),
-    executeQuery<{ service: string; cnt: number }>(
-      'SELECT service, COUNT(*) as cnt FROM appointments GROUP BY service ORDER BY cnt DESC LIMIT 6'
+    executeQuery<{ service: string; servicePriceCents:number|null; cnt: number }>(
+      'SELECT service, COUNT(*) as cnt FROM appointments WHERE archivedAt IS NULL GROUP BY service ORDER BY cnt DESC LIMIT 6'
     ),
     executeQuery<{ startTime: string; cnt: number }>(
-      'SELECT startTime, COUNT(*) as cnt FROM appointments GROUP BY startTime ORDER BY cnt DESC LIMIT 8'
+      'SELECT startTime, COUNT(*) as cnt FROM appointments WHERE archivedAt IS NULL GROUP BY startTime ORDER BY cnt DESC LIMIT 8'
     ),
     executeQuery<{ dow: number; cnt: number }>(
       `SELECT CAST(strftime('%w', date) AS INTEGER) as dow, COUNT(*) as cnt
        FROM appointments
-       WHERE date IS NOT NULL AND date != ''
+       WHERE archivedAt IS NULL AND date IS NOT NULL AND date != ''
        GROUP BY dow`
     ),
-    executeQuery<{ service: string; cnt: number }>(
-      `SELECT service, COUNT(*) as cnt
+    executeQuery<{ service: string; servicePriceCents:number|null; cnt: number }>(
+      `SELECT service, servicePriceCents, COUNT(*) as cnt
        FROM appointments
-       WHERE status IN ('CONFIRMED', 'COMPLETED')
-       GROUP BY service`
+       WHERE archivedAt IS NULL AND status IN ('CONFIRMED', 'COMPLETED')
+       GROUP BY service, servicePriceCents`
     ),
   ]);
 
@@ -3244,7 +2691,7 @@ export async function dbGetAnalyticsStats(lang: string = 'fr'): Promise<{
 
   let appointmentsRevenue = 0;
   for (const row of completedServiceCounts) {
-    const price = getServicePrice(row.service);
+    const price = (row.servicePriceCents!=null?row.servicePriceCents/100:getServicePrice(row.service, catalogue));
     appointmentsRevenue += price * Number(row.cnt);
   }
 
@@ -3407,6 +2854,8 @@ export interface FilteredAnalyticsResult {
 export async function dbGetFilteredAnalyticsStats(
   options: FilteredAnalyticsOptions = {}
 ): Promise<FilteredAnalyticsResult> {
+  const catalogue=await getTreatments();
+  await dbAssertInvoiceAmountsReviewed();
   const lang: Lang = options.lang === 'pt' ? 'pt' : options.lang === 'en' ? 'en' : 'fr';
   const rangeType = options.range || '30d';
   const targetPole = options.pole && options.pole !== 'all' ? options.pole : 'all';
@@ -3538,42 +2987,58 @@ export async function dbGetFilteredAnalyticsStats(
       ? executeQuery<{
           id: string;
           patientName: string;
+          patientId: string | null;
           phone: string;
           service: string;
+          servicePriceCents: number|null;
+          servicePole: string|null;
           date: string;
           startTime: string;
+          practitionerId: string;
+          durationMinutes: number;
+          bufferBefore: number;
+          bufferAfter: number;
           status: string;
           coverageType: string | null;
           createdAt: string;
         }>(
-          `SELECT id, patientName, phone, service, date, startTime, status, coverageType, createdAt
-           FROM appointments`
+          `SELECT id, patientId, patientName, phone, service, servicePriceCents, servicePole, date, startTime, practitionerId, durationMinutes, bufferBefore, bufferAfter, status, coverageType, createdAt
+           FROM appointments WHERE archivedAt IS NULL`
         )
       : executeQuery<{
           id: string;
           patientName: string;
+          patientId: string | null;
           phone: string;
           service: string;
+          servicePriceCents: number|null;
+          servicePole: string|null;
           date: string;
           startTime: string;
+          practitionerId: string;
+          durationMinutes: number;
+          bufferBefore: number;
+          bufferAfter: number;
           status: string;
           coverageType: string | null;
           createdAt: string;
         }>(
-          `SELECT id, patientName, phone, service, date, startTime, status, coverageType, createdAt
+          `SELECT id, patientId, patientName, phone, service, servicePriceCents, servicePole, date, startTime, practitionerId, durationMinutes, bufferBefore, bufferAfter, status, coverageType, createdAt
            FROM appointments
-           WHERE date >= ? AND date <= ?`,
+           WHERE archivedAt IS NULL AND date >= ? AND date <= ?`,
           [start, end]
         ),
     isAllTime
       ? Promise.resolve([])
       : executeQuery<{
           service: string;
+          servicePriceCents: number|null;
+          servicePole: string|null;
           status: string;
         }>(
-          `SELECT service, status
+          `SELECT service, status, servicePriceCents, servicePole
            FROM appointments
-           WHERE date >= ? AND date <= ?`,
+           WHERE archivedAt IS NULL AND date >= ? AND date <= ?`,
           [priorStart, priorEnd]
         ),
     isAllTime
@@ -3585,10 +3050,11 @@ export async function dbGetFilteredAnalyticsStats(
           paymentMethod: string;
           coverageType: string | null;
           serviceSlug: string;
+          servicePole: string|null;
           createdAt: string;
           paidAt: string | null;
         }>(
-          `SELECT id, invoiceNumber, amount, paymentStatus, paymentMethod, coverageType, serviceSlug, createdAt, paidAt
+          `SELECT id, invoiceNumber, amountCents / 100.0 AS amount, paymentStatus, paymentMethod, coverageType, serviceSlug, servicePole, createdAt, paidAt
            FROM invoices`
         )
       : executeQuery<{
@@ -3599,10 +3065,11 @@ export async function dbGetFilteredAnalyticsStats(
           paymentMethod: string;
           coverageType: string | null;
           serviceSlug: string;
+          servicePole: string|null;
           createdAt: string;
           paidAt: string | null;
         }>(
-          `SELECT id, invoiceNumber, amount, paymentStatus, paymentMethod, coverageType, serviceSlug, createdAt, paidAt
+          `SELECT id, invoiceNumber, amountCents / 100.0 AS amount, paymentStatus, paymentMethod, coverageType, serviceSlug, servicePole, createdAt, paidAt
            FROM invoices
            WHERE COALESCE(paidAt, createdAt) >= ? AND COALESCE(paidAt, createdAt) <= ?`,
           [startIso, endIso]
@@ -3613,8 +3080,9 @@ export async function dbGetFilteredAnalyticsStats(
           amount: number;
           paymentStatus: string;
           serviceSlug: string;
+          servicePole: string|null;
         }>(
-          `SELECT amount, paymentStatus, serviceSlug
+          `SELECT amountCents / 100.0 AS amount, paymentStatus, serviceSlug, servicePole
            FROM invoices
            WHERE COALESCE(paidAt, createdAt) >= ? AND COALESCE(paidAt, createdAt) <= ?`,
           [priorStartIso, priorEndIso]
@@ -3638,19 +3106,19 @@ export async function dbGetFilteredAnalyticsStats(
   // Apply Pole Filter
   const appts = targetPole === 'all'
     ? currentAppts
-    : currentAppts.filter(a => getServicePole(a.service) === targetPole);
+    : currentAppts.filter(a => (a.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(a.service, catalogue)) === targetPole);
 
   const filteredPriorAppts = targetPole === 'all'
     ? priorAppts
-    : priorAppts.filter(a => getServicePole(a.service) === targetPole);
+    : priorAppts.filter(a => (a.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(a.service, catalogue)) === targetPole);
 
   const invoices = targetPole === 'all'
     ? currentInvoices
-    : currentInvoices.filter(i => getServicePole(i.serviceSlug) === targetPole);
+    : currentInvoices.filter(i => (i.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(i.serviceSlug, catalogue)) === targetPole);
 
   const filteredPriorInvoices = targetPole === 'all'
     ? priorInvoices
-    : priorInvoices.filter(i => getServicePole(i.serviceSlug) === targetPole);
+    : priorInvoices.filter(i => (i.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(i.serviceSlug, catalogue)) === targetPole);
 
   // Compute status metrics & revenue
   let total = 0;
@@ -3667,8 +3135,8 @@ export async function dbGetFilteredAnalyticsStats(
   for (const a of appts) {
     total++;
     const s = (a.status || '').toUpperCase();
-    const price = getServicePrice(a.service);
-    const pKey = a.phone || a.patientName;
+    const price = (a.servicePriceCents!=null?a.servicePriceCents/100:getServicePrice(a.service, catalogue));
+    const pKey = a.patientId || a.phone || a.patientName;
     if (pKey) {
       uniquePatientsSet.add(pKey);
       patientSessionCounts.set(pKey, (patientSessionCounts.get(pKey) || 0) + 1);
@@ -3704,16 +3172,16 @@ export async function dbGetFilteredAnalyticsStats(
     const amt = Number(inv.amount) || 0;
     const isPaid = status === 'PAID';
     if (isPaid) {
-      paidInvoicesRevenue += amt;
+      paidInvoicesRevenue = sumMoney([paidInvoicesRevenue,amt]);
       paidCount++;
       const m = (inv.paymentMethod || 'MULTIBANCO').toUpperCase();
       const cur = methodMap.get(m) || { count: 0, amount: 0 };
       cur.count++;
-      cur.amount += amt;
+      cur.amount = sumMoney([cur.amount,amt]);
       methodMap.set(m, cur);
     } else {
       unpaidCount++;
-      unpaidAmount += amt;
+      unpaidAmount = sumMoney([unpaidAmount,amt]);
     }
 
     const c = (inv.coverageType || 'PARTICULAR').toUpperCase();
@@ -3721,7 +3189,7 @@ export async function dbGetFilteredAnalyticsStats(
   }
 
   const revenue = paidInvoicesRevenue;
-  const totalBilled = paidInvoicesRevenue + unpaidAmount;
+  const totalBilled = sumMoney([paidInvoicesRevenue,unpaidAmount]);
   const avgTicket = paidCount > 0 ? Math.round(revenue / paidCount * 100) / 100 : 0;
 
   // Prior Period Deltas
@@ -3729,12 +3197,12 @@ export async function dbGetFilteredAnalyticsStats(
   let priorPaidInvoicesRevenue = 0;
   for (const a of filteredPriorAppts) {
     if ((a.status || '').toUpperCase() === 'COMPLETED') {
-      priorCompletedRevenue += getServicePrice(a.service);
+      priorCompletedRevenue += (a.servicePriceCents!=null?a.servicePriceCents/100:getServicePrice(a.service, catalogue));
     }
   }
   for (const inv of filteredPriorInvoices) {
     if ((inv.paymentStatus || '').toUpperCase() === 'PAID') {
-      priorPaidInvoicesRevenue += Number(inv.amount) || 0;
+      priorPaidInvoicesRevenue = sumMoney([priorPaidInvoicesRevenue,Number(inv.amount) || 0]);
     }
   }
   const priorRevenue = priorPaidInvoicesRevenue;
@@ -3909,7 +3377,7 @@ export async function dbGetFilteredAnalyticsStats(
       key = String(Math.max(8, Math.min(20, Math.ceil(hour / 2) * 2))).padStart(2, '0') + ':00';
     }
     const point = pointsMap.get(key);
-    if (point) point.revenue += Number(inv.amount) || 0;
+    if (point) point.revenue = sumMoney([point.revenue,Number(inv.amount) || 0]);
   }
 
   const timelinePoints = Array.from(pointsMap.values()).map(pt => ({
@@ -3926,8 +3394,8 @@ export async function dbGetFilteredAnalyticsStats(
   const serviceStats = new Map<string, { count: number; revenue: number }>();
 
   for (const a of appts) {
-    const p = getServicePole(a.service);
-    const pr = getServicePrice(a.service);
+    const p = (a.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(a.service, catalogue));
+    const pr = (a.servicePriceCents!=null?a.servicePriceCents/100:getServicePrice(a.service, catalogue));
     if (poleTotals[p]) {
       poleTotals[p].count++;
 
@@ -3942,9 +3410,9 @@ export async function dbGetFilteredAnalyticsStats(
   for (const inv of invoices) {
     if (inv.paymentStatus !== 'PAID') continue;
     const amount = Number(inv.amount) || 0;
-    poleTotals[getServicePole(inv.serviceSlug)].revenue += amount;
+    poleTotals[(inv.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(inv.serviceSlug, catalogue))].revenue = sumMoney([poleTotals[(inv.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(inv.serviceSlug, catalogue))].revenue,amount]);
     const service = serviceStats.get(inv.serviceSlug) || { count: 0, revenue: 0 };
-    service.revenue += amount;
+    service.revenue = sumMoney([service.revenue,amount]);
     serviceStats.set(inv.serviceSlug, service);
   }
 
@@ -4012,8 +3480,8 @@ export async function dbGetFilteredAnalyticsStats(
   const topServices = Array.from(serviceStats.entries())
     .map(([slug, data]) => ({
       slug,
-      name: getServiceName(slug, lang),
-      pole: getServicePole(slug),
+      name: getServiceName(slug, lang, catalogue),
+      pole: getServicePole(slug, catalogue),
       count: data.count,
       revenue: data.revenue,
       share: total > 0 ? Math.round((data.count / total) * 100) : 0,
@@ -4120,24 +3588,31 @@ export async function dbGetFilteredAnalyticsStats(
     1,
     Math.round((dEnd.getTime() - dStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
   );
-  let workingDays = 0;
-  for (let i = 0; i < daySpan; i++) {
-    const day = new Date(start + 'T12:00:00Z');
-    day.setUTCDate(day.getUTCDate() + i);
-    if (day.getUTCDay() !== 0) workingDays++;
+  const configuration=await getSchedulingConfiguration();
+  const blocked=await executeQuery<{date:string;time:string;practitionerId:string}>('SELECT date,time,practitionerId FROM blocked_slots WHERE date>=? AND date<=?',[start,end]);
+  const providers=configuration.practitioners.filter(p=>(p.active || appts.some(a=>a.practitionerId===p.id)) && (targetPole==='all'||configuration.services.some(s=>s.practitionerId===p.id&&getServicePole(s.service, catalogue)===targetPole)));
+  let capacityMinutes=0,occupiedMinutes=0;
+  for(let i=0;i<daySpan;i++){
+    const day=new Date(start+'T12:00:00Z');day.setUTCDate(day.getUTCDate()+i);const date=day.toISOString().slice(0,10);
+    for(const p of providers){
+      const free=new Uint8Array(1440);
+      for(const [s,e] of practitionerIntervals(configuration,p.id,date))free.fill(1,s,e);
+      for(const block of blocked.filter(b=>b.date===date&&(b.practitionerId==='*'||b.practitionerId===p.id)))free.fill(0,clockMinutes(block.time),Math.min(1440,clockMinutes(block.time)+30));
+      capacityMinutes+=free.reduce((a,b)=>a+b,0);
+      const used=new Uint8Array(1440);
+      for(const a of appts.filter(a=>a.date===date&&a.practitionerId===p.id&&a.status!=='CANCELLED'))used.fill(1,Math.max(0,clockMinutes(a.startTime)-a.bufferBefore),Math.min(1440,clockMinutes(a.startTime)+a.durationMinutes+a.bufferAfter));
+      occupiedMinutes+=used.reduce((sum,value,minute)=>sum+value*free[minute],0);
+    }
   }
-  const blocked = await executeQuery<{date: string; time: string}>('SELECT date, time FROM blocked_slots WHERE date >= ? AND date <= ?', [start, end]);
-  const blockedCapacity = blocked.filter(slot => VALID_TIME_SLOTS.includes(slot.time as typeof VALID_TIME_SLOTS[number]) && new Date(slot.date + 'T12:00:00Z').getUTCDay() !== 0).length;
-  const capacitySlots = Math.max(0, workingDays * VALID_TIME_SLOTS.length - blockedCapacity);
-  const occupancyRate =
-    capacitySlots > 0 ? Math.min(100, Math.round(((pending + confirmed + completed + noShow) / capacitySlots) * 100)) : 0;
+  // Historical schedules are not versioned; historical occupancy uses current configured hours.
+  const occupancyRate=capacityMinutes?Math.round(occupiedMinutes/capacityMinutes*100):0;
 
   // Payments & Coverage
   const totalPaidCount = Array.from(methodMap.values()).reduce((sum, v) => sum + v.count, 0);
   const paymentsByMethod = Array.from(methodMap.entries()).map(([method, data]) => ({
     method,
     count: data.count,
-    amount: Math.round(data.amount),
+    amount: toCents(data.amount)/100,
     percentage: totalPaidCount > 0 ? Math.round((data.count / totalPaidCount) * 100) : 0,
   }));
 

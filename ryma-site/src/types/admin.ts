@@ -1,10 +1,24 @@
-import { SERVICES, getLocalizedText } from '@/data/services';
+import { toCents } from '@/lib/money';
+import { getLocalizedText, type Service } from '@/data/services';
 import { Lang } from '@/lib/i18n';
 
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
 export type CoverageType = 'PARTICULAR' | 'INSURANCE' | 'ADSE' | 'OTHER';
 
 export interface Appointment {
+  serviceNameJson?: string | null;
+  servicePriceCents?: number | null;
+  servicePole?: string | null;
+  patientId?: string | null;
+  archivedAt?: string | null;
+  archivedStatus?: AppointmentStatus | null;
+  practitionerId: string;
+  practitionerName: string;
+  durationMinutes: number;
+  bufferBefore: number;
+  bufferAfter: number;
+  resourceIds: string;
+  version: number;
   id: string;
   patientName: string;
   phone: string;
@@ -13,6 +27,7 @@ export interface Appointment {
   date: string;
   startTime: string;
   status: AppointmentStatus;
+  source?: 'website' | 'dashboard' | 'whatsapp' | 'unknown';
   notes?: string | null;
   coverageType?: CoverageType;
   coverageProvider?: string | null;
@@ -22,6 +37,7 @@ export interface Appointment {
 }
 
 export interface PatientNote {
+  patientId?: string;
   phone: string;
   patientName: string;
   content: string;
@@ -30,12 +46,19 @@ export interface PatientNote {
 }
 
 export interface PatientSession {
+  practitionerId?: string | null;
+  appointmentId?: string | null;
   id: string;
   patientId: string;
   date: string;
   time?: string | null;
   serviceSlug: string;
-  evaPainScore: number; // 0 to 10
+  evaPainScore: number | null; // Explicit measurement, integer 0 to 10
+  legacyEvaPainScore?: number | null;
+  clinicalStatus: 'PLANNED' | 'COMPLETED' | 'LEGACY_REVIEW';
+  completedAt: string | null;
+  version: number;
+  archivedAt?: string | null;
   sessionType: 'ONLINE' | 'MANUAL' | 'PAPER';
   notes?: string | null;
   practitioner?: string | null;
@@ -63,9 +86,10 @@ export interface PatientRecord {
 }
 
 export interface SlotInfo {
+  inheritedBlock?: boolean;
   time: string;
   available: boolean;
-  reason: 'booked' | 'blocked' | 'sunday' | null;
+  reason: 'booked' | 'blocked' | 'sunday' | 'closed' | 'past' | 'ineligible' | null;
   appointmentId: string | null;
 }
 
@@ -73,6 +97,8 @@ export type PaymentMethod = 'MULTIBANCO' | 'MBWAY' | 'CASH' | 'CARD' | 'TRANSFER
 export type InvoicePaymentStatus = 'PAID' | 'PENDING' | 'CANCELLED' | 'REFUNDED';
 
 export interface Invoice {
+  servicePole?: string | null;
+  practitionerId?: string | null;
   id: string;
   invoiceNumber: string; // e.g. "FR 2026/0001"
   appointmentId?: string | null;
@@ -89,6 +115,8 @@ export interface Invoice {
   serviceName: string;
   practitioner?: string | null;
   amount: number;
+  amountCents?: number | null;
+  moneyReview?: number;
   vatRate: number; // 0 for health/physio (Art 9 CIVA), 23 for aesthetic
   vatExemptionReason?: string | null; // e.g. "Isento de IVA - Artigo 9.º do CIVA"
   paymentMethod: PaymentMethod;
@@ -100,6 +128,7 @@ export interface Invoice {
 }
 
 export interface CreateInvoiceInput {
+  practitionerId?: string;
   appointmentId?: string;
   patientId?: string;
   patientName: string;
@@ -145,6 +174,7 @@ export interface PrescriptionItem {
 }
 
 export interface PatientPrescription {
+  practitionerId?: string | null;
   id: string;
   patientId?: string;
   patientPhone: string;
@@ -158,6 +188,7 @@ export interface PatientPrescription {
 }
 
 export interface CreatePrescriptionInput {
+  practitionerId?: string;
   patientId?: string;
   patientPhone: string;
   patientName: string;
@@ -172,17 +203,17 @@ export interface CreatePrescriptionInput {
   generalNotes?: string;
 }
 
-export function getServiceName(slug: string, lang: Lang): string {
-  const service = SERVICES.find(s => s.slug === slug);
+export function getServiceName(slug: string, lang: Lang, catalogue: readonly Service[]): string {
+  const service = catalogue.find(s => s.slug === slug);
   return service ? getLocalizedText(service.name, lang) : slug;
 }
 
-export function getServicePrice(slug: string): number {
-  return SERVICES.find(s => s.slug === slug)?.price ?? 0;
+export function getServicePrice(slug: string, catalogue: readonly Service[]): number {
+  return catalogue.find(s => s.slug === slug)?.price ?? 0;
 }
 
-export function getServicePole(slug: string): 'kinesitherapie' | 'minceur' | 'bilan' {
-  const service = SERVICES.find(s => s.slug === slug);
+export function getServicePole(slug: string, catalogue: readonly Service[]): 'kinesitherapie' | 'minceur' | 'bilan' {
+  const service = catalogue.find(s => s.slug === slug);
   return service?.pole ?? 'kinesitherapie';
 }
 
@@ -283,7 +314,8 @@ export interface VatBreakdown {
  * Rounds to 2 decimal places to ensure incidence + vatAmount === total exactly.
  */
 export function calculateVatBreakdown(totalAmount: number, vatRate: number = 0): VatBreakdown {
-  const safeTotal = Math.round((Number(totalAmount) || 0) * 100) / 100;
+  const totalCents = toCents(totalAmount);
+  const safeTotal = totalCents / 100;
   const safeRate = Number(vatRate) || 0;
 
   if (safeRate <= 0) {
@@ -296,8 +328,9 @@ export function calculateVatBreakdown(totalAmount: number, vatRate: number = 0):
     };
   }
 
-  const incidence = Math.round((safeTotal / (1 + safeRate / 100)) * 100) / 100;
-  const vatAmount = Math.round((safeTotal - incidence) * 100) / 100;
+  const baseCents = Math.round(totalCents * 100 / (100 + safeRate));
+  const incidence = baseCents / 100;
+  const vatAmount = (totalCents - baseCents) / 100;
 
   return {
     total: safeTotal,

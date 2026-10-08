@@ -1,0 +1,110 @@
+▲ Next.js 16.3.4 (webpack)
+- Local:         http://127.0.0.1:3118
+- Network:       http://127.0.0.1:3118
+✓ Ready in 1117ms
+✓ Running next.config.ts took 70ms
+- Experiments (use with caution):
+  · optimizePackageImports
+
+✓ Generated AGENTS.md and CLAUDE.md for AI agents. Set `agentRules: false` in next.config to disable.
+○ Compiling /api/admin/login ...
+ POST /api/admin/login 200 in 4.1s (next.js: 3.8s, application-code: 301ms)
+ POST /api/admin/patients 200 in 1678ms (next.js: 1595ms, application-code: 83ms)
+ POST /api/admin/appointments/multiple 201 in 273ms (next.js: 211ms, application-code: 62ms)
+ POST /api/admin/invoices 201 in 274ms (next.js: 213ms, application-code: 61ms)
+ POST /api/admin/prescriptions 201 in 294ms (next.js: 239ms, application-code: 56ms)
+ POST /api/admin/patients 409 in 35ms (next.js: 9ms, application-code: 26ms)
+ POST /api/admin/patients 200 in 15ms (next.js: 2.0ms, application-code: 13ms)
+ GET /api/admin/appointments?patientId=pat_muyb5m20qif7 200 in 792ms (next.js: 694ms, application-code: 98ms)
+ GET /api/admin/invoices?patientId=pat_muyb5m20qif7 200 in 33ms (next.js: 8ms, application-code: 25ms)
+ GET /api/admin/prescriptions?patientId=pat_muyb5m20qif7 200 in 17ms (next.js: 7ms, application-code: 10ms)
+ DELETE /api/admin/appointments/apt_sess_213b05fa-b6d3-457d-8324-f94901c7cf4c 200 in 1063ms (next.js: 995ms, application-code: 68ms)
+ GET /api/admin/appointments?patientId=pat_muyb5m20qif7 200 in 66ms (next.js: 7ms, application-code: 59ms)
+ GET /api/admin/appointments?patientId=pat_muyb5m20qif7&includeArchived=1 200 in 12ms (next.js: 3ms, application-code: 10ms)
+ GET /api/admin/patients?id=pat_muyb5m20qif7 200 in 28ms (next.js: 6ms, application-code: 22ms)
+connect EACCES 108.177.15.95:443
+
+Retrying 1/3...
+connect EACCES 108.177.15.95:443
+
+Retrying 1/3...
+connect EACCES 108.177.15.95:443
+
+Retrying 1/3...
+connect EACCES 108.177.15.95:443
+
+Retrying 2/3...
+connect EACCES 108.177.15.95:443
+
+Retrying 2/3...
+connect EACCES 108.177.15.95:443
+
+Retrying 2/3...
+connect EACCES 108.177.15.95:443
+
+Retrying 3/3...
+connect EACCES 108.177.15.95:443
+
+Retrying 3/3...
+connect EACCES 108.177.15.95:443
+
+Retrying 3/3...
+Error: connect EACCES 108.177.15.95:443
+    at <unknown> (Error: connect EACCES 108.177.15.95:443) {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'connect',
+  address: '108.177.15.95',
+  port: 443
+}
+⨯ Failed to download `Cormorant Garamond` from Google Fonts. Using fallback font instead.
+
+Failed to fetch `Cormorant Garamond` from Google Fonts.}
+Error: connect EACCES 108.177.15.95:443
+    at <unknown> (Error: connect EACCES 108.177.15.95:443) {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'connect',
+  address: '108.177.15.95',
+  port: 443
+}
+⨯ Failed to download `Plus Jakarta Sans` from Google Fonts. Using fallback font instead.
+
+Failed to fetch `Plus Jakarta Sans` from Google Fonts.}
+Error: connect EACCES 108.177.15.95:443
+    at <unknown> (Error: connect EACCES 108.177.15.95:443) {
+  errno: -4092,
+  code: 'EACCES',
+  syscall: 'connect',
+  address: '108.177.15.95',
+  port: 443
+}
+⨯ Failed to download `Fraunces` from Google Fonts. Using fallback font instead.
+
+Failed to fetch `Fraunces` from Google Fonts.}
+○ Compiling /admin/login ...
+ GET /admin/login 200 in 7.7s (next.js: 7.2s, proxy.ts: 140ms, application-code: 410ms)
+ POST /api/admin/login 200 in 148ms (next.js: 27ms, application-code: 121ms)
+○ Compiling /admin ...
+ GET /admin 200 in 5.5s (next.js: 5.4s, proxy.ts: 14ms, application-code: 89ms)
+ GET /admin 200 in 79ms (next.js: 5ms, proxy.ts: 14ms, application-code: 61ms)
+ GET /api/admin/appointments?summary=1&page=1&limit=10&practitionerId= 200 in 3.6s (next.js: 2.9s, application-code: 705ms)
+ GET /api/admin/appointments?summary=1&page=1&limit=10&practitionerId= 200 in 3.7s (next.js: 3.0s, application-code: 704ms)
+ GET /api/admin/practitioners 200 in 3.7s (next.js: 3.0s, application-code: 724ms)
+ GET /api/admin/practitioners 200 in 3.7s (next.js: 2.9s, application-code: 729ms)
+ GET /api/admin/slots?date=2026-10-07 200 in 3.7s (next.js: 2.9s, application-code: 755ms)
+ GET /api/admin/me 200 in 3.7s (next.js: 3.0s, application-code: 761ms)
+ GET /api/admin/me 200 in 138ms (next.js: 6ms, application-code: 132ms)
+ GET /api/admin/appointments?summary=1&page=1&limit=10&search=&status=all&calendar=1&dateFrom=2026-10-07&dateTo=2026-10-07&practitionerId= 200 in 118ms (next.js: 17ms, application-code: 101ms)
+○ Compiling /api/admin/events ...
+ GET /api/admin/appointments?summary=1&page=1&limit=10&search=&status=all&calendar=1&dateFrom=2026-10-07&dateTo=2026-10-07&practitionerId= 200 in 3.9s (next.js: 3.6s, application-code: 305ms)
+ GET /api/admin/appointments?summary=1&page=1&limit=10&search=&status=all&calendar=1&dateFrom=2026-10-07&dateTo=2026-10-07&practitionerId= 200 in 12.3s (next.js: 12.0s, application-code: 306ms)
+ GET /api/admin/practitioners 200 in 16.2s (next.js: 15.9s, application-code: 313ms)
+ GET /api/admin/slots?date=2026-10-07 200 in 16.2s (next.js: 15.9s, application-code: 321ms)
+ GET /api/admin/slots?date=2026-10-07 200 in 44ms (next.js: 3ms, application-code: 40ms)
+ GET /api/admin/practitioners 200 in 38ms (next.js: 3ms, application-code: 35ms)
+ GET /api/admin/appointments?summary=1&page=1&limit=10&search=&status=all&calendar=1&dateFrom=2026-10-07&dateTo=2026-10-07&practitionerId= 200 in 66ms (next.js: 5ms, application-code: 60ms)
+ GET /api/admin/me 200 in 57ms (next.js: 28ms, application-code: 30ms)
+ GET /api/admin/slots?date=2026-10-07 200 in 50ms (next.js: 3ms, application-code: 47ms)
+ GET /api/admin/practitioners 200 in 37ms (next.js: 10ms, application-code: 26ms)
+ GET /api/admin/events 200 in 43s (next.js: 16.5s, application-code: 26.5s)

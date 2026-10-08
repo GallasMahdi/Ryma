@@ -52,6 +52,7 @@ interface InvoicesTabProps {
   onQueryChange: (query: string) => void;
   invoices: Invoice[];
   stats: InvoiceStats | null;
+  financialReviewRequired?:boolean;
   loading: boolean;
   onRefresh: () => void;
   onCreated: (invoice: Invoice) => void;
@@ -76,6 +77,7 @@ export const InvoicesTab = React.memo(function InvoicesTab({
   total,
   onQueryChange,
   stats,
+  financialReviewRequired=false,
   loading,
   onRefresh,
   onCreated,
@@ -173,55 +175,14 @@ export const InvoicesTab = React.memo(function InvoicesTab({
   };
 
   const handleExportCsv = () => {
-    window.location.href = '/api/admin/export?type=invoices';
+    window.location.href = '/api/admin/invoices/export?' + new URLSearchParams({search,status:statusFilter,paymentMethod:methodFilter}).toString();
   };
 
-  // Compute accurate financial metrics from both server stats and loaded invoices
-  const effectiveStats = useMemo(() => {
-    if (stats) return stats;
-    if (!invoices || invoices.length === 0) return stats;
-
-    let totalRevenue = 0;
-    let totalPaid = 0;
-    let totalPending = 0;
-    let countPaid = 0;
-    let countPending = 0;
-    let insuranceCount = 0;
-
-    for (const inv of invoices) {
-      if (inv.paymentStatus === 'CANCELLED') continue;
-      const amt = Number(inv.amount || 0);
-      totalRevenue += amt;
-      if (inv.paymentStatus === 'PAID') {
-        totalPaid += amt;
-        countPaid++;
-      } else if (inv.paymentStatus === 'PENDING') {
-        totalPending += amt;
-        countPending++;
-      }
-      if (inv.coverageType === 'ADSE' || inv.coverageType === 'INSURANCE') {
-        insuranceCount++;
-      }
-    }
-
-    const countTotal = invoices.filter(i => i.paymentStatus !== 'CANCELLED').length;
-    const avgTicket = countTotal > 0 ? Math.round(totalRevenue / countTotal) : 0;
-    const insuranceShare = countTotal > 0 ? Math.round((insuranceCount / countTotal) * 100) : 0;
-
-    return {
-      totalRevenue,
-      totalPaid,
-      totalPending,
-      countPaid,
-      countPending,
-      countTotal,
-      avgTicket,
-      insuranceShare,
-    };
-  }, [stats, invoices]);
+  const effectiveStats = isAnalyticsUnlocked ? stats : null;
 
   return (
     <div className="space-y-6 font-sans select-none pb-12">
+      {financialReviewRequired && <p role="alert" className="p-4 border border-amber-300 rounded-xl bg-amber-50">{txt('Des montants historiques nécessitent un rapprochement. Les totaux et exports sont suspendus.','Historical amounts need reconciliation. Totals and exports are suspended.','Valores históricos requerem reconciliação. Totais e exportações suspensos.')}</p>}
       {/* ── Top Financial KPI Cards ───────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
         {/* Total Revenue */}

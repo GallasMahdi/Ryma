@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (err) {
-    console.error('[LOGIN RATE LIMIT CHECK FAILED]:', err);
+    console.error('[LOGIN RATE LIMIT CHECK FAILED]:');
     return NextResponse.json({ error: 'Authentication temporarily unavailable' }, { status: 503 });
   }
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
   try {
     valid = await bcrypt.compare(password, storedHash);
   } catch (bcryptErr) {
-    console.error('[BCRYPT ERROR]:', bcryptErr);
+    console.error('[BCRYPT ERROR]:');
     return NextResponse.json(GENERIC_ERROR, { status: 401 });
   }
 

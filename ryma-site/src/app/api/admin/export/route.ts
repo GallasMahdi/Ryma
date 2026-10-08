@@ -1,7 +1,10 @@
+import { getTreatments, validateTreatment, treatmentFromRow } from '@/lib/treatments';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOwnerAnalytics } from '@/lib/requireAdmin';
-import { dbGetAppointments, dbGetAllPatients, dbGetInvoices, dbExportFullDatabaseBackup } from '@/lib/db';
-import { getServicePrice } from '@/types/admin';
+import { dbGetAppointments, dbGetAllPatients, dbGetInvoices, dbExportFullDatabaseBackup, dbAssertInvoiceAmountsReviewed, DocumentError } from '@/lib/db';
+import { getServicePrice, getServicePole } from '@/types/admin';
+import { invoiceFilters, isCalendarDate } from '@/lib/admin-validation';
+import { completedSessions } from '@/lib/clinical';
 
 function sanitizeCsvField(val: unknown): string {
   if (val === null || val === undefined) return '""';
@@ -16,6 +19,7 @@ function sanitizeCsvField(val: unknown): string {
 }
 
 export async function GET(request: NextRequest) {
+  const catalogue=await getTreatments();
   // Block top-level cross-site GET link hijacking for database/CSV downloads
   const secFetchSite = request.headers.get('sec-fetch-site');
   if (secFetchSite === 'cross-site') {
@@ -29,6 +33,7 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type') ?? 'appointments';
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
+  if ((startDate && !isCalendarDate(startDate)) || (endDate && !isCalendarDate(endDate)) || (startDate && endDate && startDate>endDate)) return NextResponse.json({error:'Invalid export dates'},{status:422});
 
   if (type === 'backup' || type === 'json') {
     const backupData = await dbExportFullDatabaseBackup();
@@ -48,7 +53,7 @@ export async function GET(request: NextRequest) {
     let csv = 'ID;Nome Utente;Telefone;Email;Regime Cobertura;Prestador Seguro;Numero Beneficiario;Medico Assistente;Sessoes Prescritas;Sessoes Concluidas;Patologias;Data Criacao\n';
     
     patients.forEach(p => {
-      const completed = p.sessions?.length ?? 0;
+      const completed = completedSessions(p.sessions).length;
       const row = [
         sanitizeCsvField(p.id),
         sanitizeCsvField(p.patientName),
@@ -76,8 +81,11 @@ export async function GET(request: NextRequest) {
   }
 
   if (type === 'invoices') {
-    const invoices = await dbGetInvoices();
-    let csv = 'Numero Fatura;Data;Nome Utente;NIF;Telefone;Servico;Valor EUR;Metodo Pagamento;Estado;Data Pagamento\n';
+    let filters;
+    try {filters=invoiceFilters(searchParams);}catch{return NextResponse.json({error:'Invalid invoice filters'},{status:422});}
+    try {await dbAssertInvoiceAmountsReviewed();}catch(error){if(error instanceof DocumentError)return NextResponse.json({error:error.message},{status:409});throw error;}
+    const invoices = await dbGetInvoices(filters);
+    let csv = 'Numero Fatura;Data;Nome Utente;NIF;Telefone;Servico;Profissional;Valor EUR;Metodo Pagamento;Estado;Data Pagamento\n';
     invoices.forEach(inv => {
       const row = [
         sanitizeCsvField(inv.invoiceNumber),
@@ -86,7 +94,8 @@ export async function GET(request: NextRequest) {
         sanitizeCsvField(inv.patientNif),
         sanitizeCsvField(inv.patientPhone),
         sanitizeCsvField(inv.serviceName),
-        sanitizeCsvField(inv.amount),
+        sanitizeCsvField(inv.practitioner),
+        sanitizeCsvField(inv.amount.toFixed(2)),
         sanitizeCsvField(inv.paymentMethod),
         sanitizeCsvField(inv.paymentStatus),
         sanitizeCsvField(inv.paidAt ?? ''),
@@ -104,7 +113,9 @@ export async function GET(request: NextRequest) {
   }
 
   // Default: Appointments & Financial Export
-  let appointments = await dbGetAppointments();
+  let appointments = await dbGetAppointments({practitionerId:searchParams.get('practitionerId')||undefined});
+  const pole=searchParams.get('pole');
+  if (pole && pole!=='all') appointments=appointments.filter(a=>(a.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(a.service, catalogue))===pole);
 
   if (startDate) {
     appointments = appointments.filter(a => a.date >= startDate);
@@ -113,10 +124,10 @@ export async function GET(request: NextRequest) {
     appointments = appointments.filter(a => a.date <= endDate);
   }
 
-  let csv = 'ID;Data;Hora;Nome Utente;Telefone;Tratamento;Regime Cobertura;Prestador;Numero;Estado;Valor EUR;Notas\n';
+  let csv = 'ID;Data;Hora;Nome Utente;Telefone;Tratamento;Profissional;Duracao Min;Regime Cobertura;Prestador;Numero;Estado;Valor EUR;Notas\n';
 
   appointments.forEach(a => {
-    const price = getServicePrice(a.service);
+    const price = (a.servicePriceCents!=null?a.servicePriceCents/100:getServicePrice(a.service, catalogue));
     const row = [
       sanitizeCsvField(a.id),
       sanitizeCsvField(a.date),
@@ -124,6 +135,8 @@ export async function GET(request: NextRequest) {
       sanitizeCsvField(a.patientName),
       sanitizeCsvField(a.phone),
       sanitizeCsvField(a.service),
+      sanitizeCsvField(a.practitionerName),
+      sanitizeCsvField(a.durationMinutes),
       sanitizeCsvField(a.coverageType ?? 'PARTICULAR'),
       sanitizeCsvField(a.coverageProvider ?? ''),
       sanitizeCsvField(a.coverageNumber ?? ''),

@@ -1,0 +1,43 @@
+▶ Audit remediation on isolated SQLite
+  ✔ QA-03 booking never silently assigns a different person to a known contact (82.5767ms)
+  ✔ QA-04 planned sessions and cancellation do not create measured pain or completed care (26.0556ms)
+  ✔ QA-07/09/10 clinical updates validate, roll back, retain revisions and reject stale writers (17.399ms)
+  ✖ QA-01/15 existing appointments get one linked clinical record and archives retain it (8.7129ms)
+  ✔ QA-05 API requires stable intent keys and deduplicates parallel retries (31.0313ms)
+  ✔ QA-06 document identities and appointment service/practitioner are checked (8.1298ms)
+  ✔ QA-08 exact cents, VAT, payment groups and averages agree (25.3752ms)
+  ✔ QA-11 financial aggregates are absent until step-up and disappear after locking (23.6129ms)
+  ✔ QA-12 invalid patient profile fields reject before any mutation; clearing and omission remain explicit (23.876ms)
+  ✔ QA-13 export filters match lists, empty periods and Lisbon date boundaries (24.8641ms)
+  ✔ QA-17 known development passwords fail production even with a different bcrypt salt (15.3855ms)
+  ✔ QA-18 email logs omit recipients and transport exception details (31.4312ms)
+✖ Audit remediation on isolated SQLite (320.8722ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 11
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1676.2057
+
+✖ failing tests:
+
+test at scripts\test-audit-remediation.cjs:68:11
+✖ QA-01/15 existing appointments get one linked clinical record and archives retain it (8.7129ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert(booking.success)
+  
+      at TestContext.<anonymous> (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\test-audit-remediation.cjs:70:159)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async TestContext.<anonymous> (C:\Users\User\Desktop\Ryma\tmp\dashboard-fixes-20261007\project\scripts\test-audit-remediation.cjs:68:3)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

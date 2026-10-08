@@ -1,18 +1,14 @@
 import { isCalendarDate, isJsonObject } from './admin-validation';
-import { SERVICES } from '@/data/services';
+import { TIME_GRID } from '@/types/scheduling';
 import { validateAndNormalizePhone } from '@/lib/phone';
 import type { Lang } from '@/lib/i18n';
 
 // Shared server-side validation utilities.
 // These are the ONLY valid values — they are enforced here, not in frontend code.
 
-export const VALID_TIME_SLOTS = [
-  '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00',
-  '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00',
-] as const;
+export const VALID_TIME_SLOTS = TIME_GRID;
 
-// Dynamically derived from the authoritative SERVICES dataset
-export const VALID_SERVICES = SERVICES.map(s => s.slug);
+// Built-in identifiers for legacy validation consumers; booking uses the database catalogue.
 
 export type ValidService = string;
 
@@ -36,6 +32,14 @@ export function validateAppointmentInput(
   if (!isJsonObject(body)) return { ok: false, error: 'JSON object required' };
   const lang: Lang = (body.lang as Lang) || preferredLang || 'pt';
   const { patientName, phone, service, date, startTime } = body;
+
+  if (body.clientRequestId !== undefined && (typeof body.clientRequestId !== 'string' || !body.clientRequestId.trim() || body.clientRequestId.length > 160)) {
+    return { ok: false, error: 'Invalid booking request key', errorCode: 'INVALID_REQUEST_KEY' };
+  }
+
+  if (body.practitionerId !== undefined && (typeof body.practitionerId !== 'string' || body.practitionerId.length > 160 || body.practitionerId !== body.practitionerId.trim())) {
+    return { ok: false, error: 'Invalid practitioner preference', errorCode: 'INVALID_PRACTITIONER' };
+  }
 
   // Required string fields
   if (!patientName || typeof patientName !== 'string' || patientName.trim().length < 2) {
@@ -105,8 +109,8 @@ export function validateAppointmentInput(
     };
   }
 
-  // Service must be in the allowed list
-  if (!service || typeof service !== 'string' || !VALID_SERVICES.includes(service.trim())) {
+  // Validate the identifier shape. The booking transaction checks publication and eligibility.
+  if (!service || typeof service !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(service.trim()) || service.length>100) {
     return {
       ok: false,
       errorCode: 'INVALID_SERVICE',

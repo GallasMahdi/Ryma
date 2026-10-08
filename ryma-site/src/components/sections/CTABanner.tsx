@@ -47,10 +47,10 @@ export function CTABanner() {
           </h2>
           <p className="text-[#6B5A3A] text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
             {lang === 'pt'
-              ? 'Agende a sua consulta online ou envie-nos uma mensagem no WhatsApp. Primeira avaliação oferecida no plano de 10 sessões.'
+              ? 'Agende a sua consulta online ou envie-nos uma mensagem no WhatsApp. Consulte os tratamentos disponíveis.'
               : lang === 'en'
-              ? 'Book your appointment online or contact us directly via WhatsApp. Complimentary initial assessment with 10-session packages.'
-              : 'Prenez rendez-vous en ligne ou contactez-nous sur WhatsApp. Premier bilan offert pour tout nouveau programme de 10 séances.'}
+              ? 'Book your appointment online or contact us directly via WhatsApp. Explore the available treatments.'
+              : 'Prenez rendez-vous en ligne ou contactez-nous sur WhatsApp. Découvrez les soins disponibles.'}
           </p>
         </ScrollReveal>
 

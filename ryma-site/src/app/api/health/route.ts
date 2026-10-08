@@ -37,7 +37,7 @@ export async function GET() {
     );
   } catch (error) {
     const latencyMs = Date.now() - startTime;
-    console.error('[Healthcheck Failure]:', error);
+    console.error('[Healthcheck Failure]:');
 
     return NextResponse.json(
       {

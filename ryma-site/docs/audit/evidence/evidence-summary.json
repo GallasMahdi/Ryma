@@ -1,0 +1,123 @@
+{
+  "sourceUnchanged": true,
+  "dependencies": [
+    {
+      "name": "nanoid",
+      "version": "3.3.17",
+      "severity": "high",
+      "advisories": [
+        {
+          "title": "nanoid: custom generators can loop indefinitely when size is zero",
+          "url": "https://github.com/advisories/GHSA-2v37-7h3g-55p8",
+          "range": "<3.3.18"
+        }
+      ]
+    },
+    {
+      "name": "next",
+      "version": "16.3.4",
+      "severity": "critical",
+      "advisories": [
+        {
+          "title": "Next.js: Remote Code Execution in next/og ImageResponse",
+          "url": "https://github.com/advisories/GHSA-vcvr-r3jv-pc5j",
+          "range": ">=16.2.0 <16.3.6"
+        }
+      ]
+    },
+    {
+      "name": "nodemailer",
+      "version": "9.0.5",
+      "severity": "high",
+      "advisories": [
+        {
+          "title": "Nodemailer: resolveContent() on a MailMessage bypasses disableFileAccess/disableUrlAccess when called with the legacy signature",
+          "url": "https://github.com/advisories/GHSA-8m3c-c648-2xjj",
+          "range": "<=9.1.0"
+        },
+        {
+          "title": "Nodemailer: IDN/Punycode domain allow-list bypass leads to email delivery to an attacker-controlled domain",
+          "url": "https://github.com/advisories/GHSA-wmmp-3585-3rmp",
+          "range": "<9.1.0"
+        },
+        {
+          "title": "Nodemailer: Quadratic (O(n²)) time complexity in addressparser allows remote denial of service via a crafted address list",
+          "url": "https://github.com/advisories/GHSA-2x7j-588g-ccc2",
+          "range": "<9.1.0"
+        },
+        {
+          "title": "Nodemailer: Recipient-domain validation bypass via RFC 5322 comment mis-parsing leads to email delivery to an attacker-controlled domain",
+          "url": "https://github.com/advisories/GHSA-cc9r-2j5m-2m83",
+          "range": ">=6.9.16 <9.1.0"
+        },
+        {
+          "title": "Nodemailer: Process-global DNS cache reuses TLS `servername` across transports, enabling cross-tenant SMTP credential disclosure",
+          "url": "https://github.com/advisories/GHSA-6vj9-mwq6-2f5v",
+          "range": ">=5.0.0 <10.0.2"
+        },
+        {
+          "title": "Nodemailer: Nested structured recipient arrays bypass the parser depth limit and cause stack exhaustion DoS",
+          "url": "https://github.com/advisories/GHSA-8vvx-rff5-p5rq",
+          "range": "<10.0.2"
+        },
+        {
+          "title": "Nodemailer: Quadratic backtracking in the addressparser free-text fallback allows remote denial of service",
+          "url": "https://github.com/advisories/GHSA-v53p-9fqp-m79j",
+          "range": "<=10.0.5"
+        }
+      ]
+    },
+    {
+      "name": "sharp",
+      "version": "0.35.4",
+      "severity": "high",
+      "advisories": [
+        {
+          "title": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+          "url": "https://github.com/advisories/GHSA-wq5f-xc86-pv6w",
+          "range": "<0.35.5"
+        }
+      ]
+    },
+    {
+      "name": "source-map-js",
+      "version": "1.2.1",
+      "severity": "high",
+      "advisories": [
+        {
+          "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+          "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q",
+          "range": ">=1.0.0 <1.2.2"
+        }
+      ]
+    }
+  ],
+  "tables": [
+    "appointments",
+    "blocked_slots",
+    "booking_sync",
+    "idempotency_keys",
+    "invoice_sequences",
+    "invoices",
+    "owner_step_up_grants",
+    "patient_notes",
+    "patient_sessions",
+    "patients",
+    "practitioner_services",
+    "practitioners",
+    "prescriptions",
+    "rate_limit_log",
+    "resources",
+    "reviews",
+    "revoked_sessions",
+    "schedule_exceptions",
+    "schema_migrations",
+    "security_audit_logs",
+    "security_settings",
+    "service_resources",
+    "working_hours"
+  ],
+  "indexes": 52,
+  "triggers": 35,
+  "http": 34
+}

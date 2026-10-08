@@ -1,4 +1,5 @@
 'use client';
+import { useServiceLabels } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,7 +28,7 @@ import {
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { AdminTab } from './AdminMobileNav';
-import { Appointment, PatientRecord, Invoice, PatientNote, getServiceName } from '@/types/admin';
+import { Appointment, PatientRecord, Invoice, PatientNote } from '@/types/admin';
 
 export interface AdminCommandPaletteProps {
   isOpen: boolean;
@@ -84,6 +85,7 @@ export function AdminCommandPalette({
   onLogout,
   onOpenHelpdesk,
 }: AdminCommandPaletteProps) {
+  const { getServiceName } = useServiceLabels();
   const [query, setQuery] = useState('');
   const [appointments, setAppointments] = useState(initialAppointments);
   const [patientsList, setPatientsList] = useState(initialPatients);
@@ -410,7 +412,7 @@ export function AdminCommandPalette({
         .filter((a) => {
           if (a.status === 'CANCELLED') return false;
           if (!q) return selectedCategory === 'appointments';
-          const svcName = getServiceName(a.service, lang).toLowerCase();
+          const svcName = getServiceName(a.service, lang, a).toLowerCase();
           return (
             a.patientName.toLowerCase().includes(q) ||
             a.phone.toLowerCase().includes(q) ||
@@ -433,7 +435,7 @@ export function AdminCommandPalette({
             id: `appt-${a.id}`,
             category: 'appointment',
             title: `${a.patientName} — ${a.date} ${a.startTime}`,
-            subtitle: `${getServiceName(a.service, lang)} • 📞 ${a.phone}`,
+            subtitle: `${getServiceName(a.service, lang, a)} • 📞 ${a.phone}`,
             badge: a.status,
             badgeColor: statusColors[a.status] || 'bg-slate-100 text-slate-700',
             icon: IconCalendarEvent,
@@ -500,7 +502,7 @@ export function AdminCommandPalette({
     setActiveTab,
     onSelectPatient,
     onSelectAppointment,
-  ]);
+  , getServiceName]);
 
   // Keep selected index within bounds
   useEffect(() => {

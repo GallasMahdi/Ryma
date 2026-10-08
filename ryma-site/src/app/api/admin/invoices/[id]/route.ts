@@ -52,6 +52,7 @@ export async function PUT(
 
   const validationError = invoiceUpdateError(body);
   if (validationError) return NextResponse.json({ error: validationError }, { status: 422 });
+  if (typeof body.patientName==='string' && body.patientName.trim()!==existing.patientName) return NextResponse.json({error:'The patient identity on an issued invoice cannot be changed.'},{status:422});
   if (existing.paymentStatus === 'CANCELLED') return NextResponse.json({ error: 'Cancelled invoices cannot be edited' }, { status: 409 });
 
   const updated = await dbUpdateInvoice(id, {

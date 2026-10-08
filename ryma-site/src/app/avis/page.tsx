@@ -1,4 +1,6 @@
 'use client';
+import { getLocalizedText } from '@/data/services';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import { EditorialPageHeader } from '@/components/layout/EditorialPageHeader';
 import headerStyles from '@/components/layout/EditorialPageHeader.module.css';
@@ -8,7 +10,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { usePublicReviews } from '@/lib/usePublicReviews';
-import { SERVICES } from '@/data/services';
+
 import { ScrollReveal } from '@/components/animation/ScrollReveal';
 import { playSoftClick, playNotificationChime } from '@/lib/sound';
 import {
@@ -25,6 +27,7 @@ import {
 } from '@tabler/icons-react';
 
 export default function AvisPage() {
+  const SERVICES = useServices();
   const { lang, t } = useLanguage();
   const [activePole, setActivePole] = useState<'all' | 'kine' | 'minceur' | 'postpartum'>('all');
   const [helpfulCounts, setHelpfulCounts] = useState<Record<string, number>>({});
@@ -52,7 +55,7 @@ export default function AvisPage() {
   // Modal form states
   const [formName, setFormName] = useState('');
   const [formRating, setFormRating] = useState(5);
-  const [formService, setFormService] = useState('reeducation-posturale');
+  const [formService, setFormService] = useState('');
   const [formComment, setFormComment] = useState('');
   const [formLocation, setFormLocation] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -63,13 +66,13 @@ export default function AvisPage() {
   const filteredReviews = reviewsList.filter((rev) => {
     if (activePole === 'all') return true;
     if (activePole === 'kine') {
-      return ['reeducation-posturale', 'massage-therapeutique'].includes(rev.serviceSlug);
+      return SERVICES.find(s=>s.slug===rev.serviceSlug)?.pole==='kinesitherapie';
     }
     if (activePole === 'minceur') {
-      return ['cavitation', 'cryolipolyse', 'laser-lipo'].includes(rev.serviceSlug);
+      return SERVICES.find(s=>s.slug===rev.serviceSlug)?.pole==='minceur';
     }
     if (activePole === 'postpartum') {
-      return ['reeducation-post-partum', 'drainage-lymphatique', 'pressotherapie'].includes(rev.serviceSlug);
+      return SERVICES.find(s=>s.slug===rev.serviceSlug)?.careGoals?.some(g=>g==='postpartum'||g==='drainage');
     }
     return true;
   });
@@ -282,7 +285,7 @@ export default function AvisPage() {
 
                         {service && (
                           <span className="font-mono text-[10px] font-bold text-[#8A6A24] bg-[#FAF5EA] border border-[#C49A3C]/25 px-2.5 py-0.5 rounded-full truncate max-w-[170px]">
-                            {service.name[lang] || service.name.pt}
+                            {getLocalizedText(service.name,lang)}
                           </span>
                         )}
                       </div>
@@ -428,13 +431,14 @@ export default function AvisPage() {
                       {lang === 'pt' ? 'Tratamento Realizado' : lang === 'en' ? 'Treatment Received' : 'Soin Réalisé'}
                     </label>
                     <select
+                      required
                       value={formService}
                       onChange={(e) => setFormService(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl border border-[#E8E2D8] text-xs text-[#1A1412] bg-white focus:border-[#C49A3C] outline-none"
                     >
-                      {SERVICES.map((s) => (
+                      <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
                         <option key={s.slug} value={s.slug}>
-                          {s.name[lang] || s.name.pt}
+                          {getLocalizedText(s.name,lang)}
                         </option>
                       ))}
                     </select>

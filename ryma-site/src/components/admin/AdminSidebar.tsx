@@ -11,6 +11,7 @@ import {
   IconLayoutSidebarLeftExpand,
   IconLifebuoy,
   IconMessageHeart,
+  IconStethoscope,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { AdminTab } from './AdminMobileNav';
@@ -84,6 +85,20 @@ export const AdminSidebar = React.memo(function AdminSidebar({
       badge: totalReviews && totalReviews > 0 ? totalReviews : null,
     },
     {
+      id: 'treatments' as const,
+      label: lang==='pt'?'Tratamentos':lang==='fr'?'Soins':'Treatments',
+      sublabel: 'Catalogue',
+      icon: IconStethoscope,
+      badge: null,
+    },
+    {
+      id: 'team' as const,
+      label: lang === 'pt' ? 'Equipa' : lang === 'fr' ? 'Équipe' : 'Team',
+      sublabel: lang === 'pt' ? 'Profissionais e horários' : lang === 'fr' ? 'Praticiens et horaires' : 'Practitioners and hours',
+      icon: IconCalendarEvent,
+      badge: null,
+    },
+    {
       id: 'analytics' as const,
       label: txt('Statistiques', 'Analytics & Reports', 'Estatísticas'),
       sublabel: txt('Rapports & Revenus', 'Reports & Revenue', 'Relatórios & Receita'),
@@ -93,7 +108,8 @@ export const AdminSidebar = React.memo(function AdminSidebar({
   ];
 
   const handlePrefetch = (tabId: AdminTab) => {
-    if (tabId === 'slots') import('@/components/admin/SlotsTab');
+    if (tabId === 'treatments') import('@/components/admin/TreatmentsTab');
+    else if (tabId === 'slots') import('@/components/admin/SlotsTab');
     else if (tabId === 'patients') import('@/components/admin/PatientNotesTab');
     else if (tabId === 'invoices') import('@/components/admin/InvoicesTab');
     else if (tabId === 'reviews') import('@/components/admin/ReviewsTab');

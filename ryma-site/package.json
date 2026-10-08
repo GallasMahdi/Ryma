@@ -8,9 +8,17 @@
     "start": "next start",
     "db:backup": "node scripts/backup-db.mjs",
     "db:reset": "node scripts/reset-db.mjs",
+    "test:reset": "node --test scripts/test-reset-db.mjs",
     "test:dashboard": "node scripts/audit-dashboard.cjs",
     "test:phone": "node --test scripts/test-phone-validation.cjs",
-    "test:reviews": "node --test scripts/test-review-submission.cjs"
+    "test:reviews": "node --test scripts/test-review-submission.cjs",
+    "test:whatsapp": "node --test scripts/test-whatsapp-booking.cjs",
+    "test:scheduling": "node --test scripts/test-scheduling.cjs",
+    "test:patient-integrity": "node --test scripts/test-patient-integrity.cjs",
+    "test:regression": "node --test scripts/test-phone-validation.cjs scripts/test-review-submission.cjs scripts/test-whatsapp-booking.cjs scripts/test-scheduling.cjs scripts/test-patient-integrity.cjs scripts/test-audit-remediation.cjs scripts/test-modal.cjs scripts/test-treatments.cjs scripts/test-treatments-ui.cjs",
+    "test:audit-remediation": "node --test scripts/test-audit-remediation.cjs",
+    "test:modal": "node --test scripts/test-modal.cjs",
+    "test:treatments": "node --test scripts/test-treatments.cjs scripts/test-treatments-ui.cjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -25,8 +33,8 @@
     "framer-motion": "^12.43.0",
     "iron-session": "^8.0.4",
     "libphonenumber-js": "^1.13.14",
-    "next": "^16.3.4",
-    "nodemailer": "^9.0.5",
+    "next": "16.3.6",
+    "nodemailer": "10.0.16",
     "postcss": "^8.5.25",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -39,6 +47,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.185.4",
+    "jsdom": "26.1.0",
     "typescript": "^5"
   }
 }

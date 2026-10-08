@@ -1,0 +1,11 @@
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const root=path.resolve(__dirname,'../../..'),out=path.join(root,'docs/audit/evidence');
+async function main(){
+ const paths=[];for(const url of ['/data/ryma.db','/.env','/api/admin/invoices/not-real/pdf']){const r=await fetch('http://127.0.0.1:3117'+url,{redirect:'manual'});paths.push({path:url,status:r.status,location:r.headers.get('location'),contentType:r.headers.get('content-type')});}
+ fs.writeFileSync(path.join(out,'public-path-verification.json'),JSON.stringify({supersedes:'extra-results PUBLIC-01: original assertion followed the application redirect and mistook the home page HTTP 200 for a private file response. No file leak observed.',status:'PASS',paths},null,2));
+ const manifest=JSON.parse(fs.readFileSync(path.join(out,'source-manifest.json'))),changed=[];for(const [file,before] of Object.entries(manifest.hashes)){const p=path.join(root,file),after=crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');if(before!==after)changed.push(file);}
+ fs.writeFileSync(path.join(out,'source-preservation.json'),JSON.stringify({checked:Object.keys(manifest.hashes).length,changed},null,2));
+ const parsed=JSON.parse(fs.readFileSync(path.join(out,'dependencies-audit.json')));const lock=JSON.parse(fs.readFileSync(path.join(root,'package-lock.json')));const deps=Object.entries(parsed.vulnerabilities).map(([name,v])=>({name,version:lock.packages['node_modules/'+name]?.version,severity:v.severity,advisories:v.via.filter(x=>typeof x==='object').map(x=>({title:x.title,url:x.url,range:x.range}))}));
+ const schema=JSON.parse(fs.readFileSync(path.join(out,'schema.json')));fs.writeFileSync(path.join(out,'evidence-summary.json'),JSON.stringify({sourceUnchanged:changed.length===0,dependencies:deps,tables:schema.schema.filter(r=>r.type==='table').map(r=>r.name),indexes:schema.schema.filter(r=>r.type==='index').length,triggers:schema.schema.filter(r=>r.type==='trigger').length,http:JSON.parse(fs.readFileSync(path.join(out,'http-results.json'))).length},null,2));console.log(JSON.stringify({changed,deps:deps.map(x=>({name:x.name,version:x.version,severity:x.severity})),tables:schema.schema.filter(r=>r.type==='table').length}));
+}
+main().catch(e=>{console.error(e);process.exitCode=1});

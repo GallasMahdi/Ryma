@@ -1,10 +1,11 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
-import { SERVICES, getLocalizedText } from '@/data/services';
+import { getLocalizedText } from '@/data/services';
 import { LogoIcon } from '@/components/ui/Logo';
 import { playSoftClick } from '@/lib/sound';
 import {
@@ -29,6 +30,7 @@ const APPLE_MAPS_URL = `https://maps.apple.com/?daddr=${ADDRESS_QUERY}`;
 const MAP_EMBED_URL = `https://maps.google.com/maps?q=${ADDRESS_QUERY}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
 export function Footer() {
+  const SERVICES = useServices();
   const pathname = usePathname();
   const { lang, t } = useLanguage();
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -55,7 +57,7 @@ export function Footer() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-12 pt-14 sm:pt-16 pb-12 relative z-10">
-        
+
         {/* ── Main 4-Column Navigation Row ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12 sm:mb-16">
 
@@ -76,21 +78,21 @@ export function Footer() {
                 </div>
               </div>
             </Link>
-            
+
             <p className="text-xs sm:text-sm text-[#9A9080] leading-relaxed mb-5 font-normal">
               {lang === 'pt'
                 ? 'Clínica de excelência em fisioterapia, reeducação postural e tratamentos corporais avançados no centro nobre de Lisboa.'
                 : lang === 'en'
-                ? 'Premier clinic for physiotherapy, postural reeducation, and advanced body sculpting in the heart of Lisbon.'
-                : 'Clinique de référence en kinésithérapie, rééducation posturale et soins minceur de pointe au cœur de Lisbonne.'}
+                  ? 'Premier clinic for physiotherapy, postural reeducation, and advanced body sculpting in the heart of Lisbon.'
+                  : 'Clinique de référence en kinésithérapie, rééducation posturale et soins minceur de pointe au cœur de Lisbonne.'}
             </p>
 
             {/* Social Links */}
             <div className="flex items-center gap-2">
               {[
                 { Icon: IconBrandInstagram, href: 'https://instagram.com/digitalclinica', label: 'Instagram' },
-                { Icon: IconBrandFacebook,  href: 'https://facebook.com/digitalclinica', label: 'Facebook' },
-                { Icon: IconBrandWhatsapp,  href: `https://wa.me/${t.common.whatsapp.replace(/[^0-9]/g, '')}`, label: 'WhatsApp' },
+                { Icon: IconBrandFacebook, href: 'https://facebook.com/digitalclinica', label: 'Facebook' },
+                { Icon: IconBrandWhatsapp, href: `https://wa.me/${t.common.whatsapp.replace(/[^0-9]/g, '')}`, label: 'WhatsApp' },
               ].map(({ Icon, href, label }) => (
                 <a
                   key={label}
@@ -115,13 +117,13 @@ export function Footer() {
             </h3>
             <ul className="space-y-2 text-xs sm:text-sm">
               {[
-                { href: '/',         label: t.nav.home },
+                { href: '/', label: t.nav.home },
                 { href: '/a-propos', label: t.nav.about },
                 { href: '/services', label: t.nav.services },
-                { href: '/tarifs',   label: t.nav.pricing },
-                { href: '/avis',     label: t.nav.reviews },
-                { href: '/blog',     label: t.nav.blog },
-                { href: '/contact',  label: t.nav.contact },
+                { href: '/tarifs', label: t.nav.pricing },
+                { href: '/avis', label: t.nav.reviews },
+                { href: '/blog', label: t.nav.blog },
+                { href: '/contact', label: t.nav.contact },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link
@@ -164,7 +166,7 @@ export function Footer() {
                   onClick={playSoftClick}
                   className="inline-flex items-center gap-1 text-xs font-bold text-[#C49A3C] hover:text-[#E8C97A] transition-colors"
                 >
-                  <span>{lang === 'pt' ? 'Ver todos os 13 tratamentos' : lang === 'en' ? 'View all 13 treatments' : 'Voir les 13 soins'}</span>
+                  <span>{lang === 'pt' ? `Ver catálogo completo (${SERVICES.length})` : lang === 'en' ? `View full catalogue (${SERVICES.length})` : `Voir le catalogue complet (${SERVICES.length})`}</span>
                   <IconArrowUpRight size={13} />
                 </Link>
               </li>
@@ -213,7 +215,7 @@ export function Footer() {
         {/* ── Ultra-Luxury Integrated Location & Map Showcase ── */}
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-[#C49A3C]/30 bg-[#1A1412]/90 backdrop-blur-xl p-4 sm:p-6 lg:p-8 shadow-2xl mb-12 sm:mb-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
-            
+
             {/* Left Column: Prestigious Address & Access Guidance */}
             <div className="lg:col-span-5 flex flex-col justify-between space-y-4 sm:space-y-5">
               <div>
@@ -225,7 +227,7 @@ export function Footer() {
                 <h4 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-1.5">
                   Avenida da Liberdade 120
                 </h4>
-                
+
                 <p className="text-xs sm:text-sm text-[#A49C90] font-normal">
                   1250-146 Lisboa, Portugal • {lang === 'pt' ? 'Centro Histórico & Financeiro' : lang === 'en' ? 'Prime Boulevard Area' : 'Avenue de Prestige'}
                 </p>
@@ -292,7 +294,7 @@ export function Footer() {
 
             {/* Right Column: Custom Stylized Map Frame */}
             <div className="lg:col-span-7 relative h-56 sm:h-72 lg:h-80 w-full rounded-2xl overflow-hidden border border-[#C49A3C]/30 shadow-inner bg-[#1A1412]">
-              
+
               {/* Skeleton loading overlay */}
               {!mapLoaded && !mapError && (
                 <div className="absolute inset-0 bg-[#1A1412] flex flex-col items-center justify-center gap-2 text-xs text-[#8A8078] z-0">
@@ -371,7 +373,7 @@ export function Footer() {
               </span>
             )}
           </div>
-          
+
           <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] sm:text-xs">
             <Link href="/mentions-legales" onClick={playSoftClick} className="hover:text-[#C49A3C] transition-colors">
               {lang === 'pt' ? 'Aviso Legal' : lang === 'en' ? 'Legal Notice' : 'Mentions légales'}

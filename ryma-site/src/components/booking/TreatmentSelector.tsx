@@ -1,4 +1,5 @@
 'use client';
+import { useServices } from '@/components/ServiceCatalogProvider';
 
 import { useRef, useState } from 'react';
 import {
@@ -6,7 +7,7 @@ import {
   IconClock, IconDroplet, IconFlame, IconHeartbeat, IconRipple, IconSearch,
   IconShieldCheck, IconSnowflake, IconSparkles, IconStethoscope, IconX,
 } from '@tabler/icons-react';
-import { SERVICES, getLocalizedList, getLocalizedText, type Service, type ServicePole } from '@/data/services';
+import { getLocalizedList, getLocalizedText, type Service, type ServicePole } from '@/data/services';
 import { useLanguage } from '@/lib/i18n';
 import { playSoftClick } from '@/lib/sound';
 import styles from './TreatmentSelector.module.css';
@@ -86,20 +87,21 @@ interface TreatmentSelectorProps {
 }
 
 export function TreatmentSelector({ selectedService, onBook }: TreatmentSelectorProps) {
+  const SERVICES = useServices();
   const { lang, t } = useLanguage();
   const copy = COPY[lang];
-  const [category, setCategory] = useState<ServicePole | 'all'>(selectedService?.pole ?? 'kinesitherapie');
+  const [category, setCategory] = useState<ServicePole | 'all'>(selectedService?.pole ?? 'all');
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const query = normalizeSearch(search);
   const specialty = SPECIALTIES.find(item => item.pole === category);
   const services = SERVICES.filter(service => query
-    ? normalizeSearch(`${getLocalizedText(service.name, lang)} ${getLocalizedText(service.shortDesc, lang)} ${copy[service.pole]}`).includes(query)
+    ? normalizeSearch(`${getLocalizedText(service.name, lang)} ${getLocalizedText(service.shortDesc, lang)} ${copy[service.pole]} ${service.keywords.join(' ')}`).includes(query)
     : category === 'all' || service.pole === category);
   const countLabel = (count: number) => `${count} ${count === 1 ? copy.treatment : copy.treatments}`;
   const formatter = new Intl.NumberFormat(lang === 'en' ? 'en-IE' : lang === 'pt' ? 'pt-PT' : 'fr-FR', {
-    style: 'currency', currency: 'EUR', maximumFractionDigits: 0,
+    style: 'currency', currency: 'EUR', maximumFractionDigits: 2,
   });
   const changeCategory = (pole: ServicePole | 'all') => {
     setCategory(pole);
@@ -188,7 +190,7 @@ export function TreatmentSelector({ selectedService, onBook }: TreatmentSelector
             </div>
           )}
 
-          {category !== 'bilan' && !query && (
+          {category !== 'bilan' && !query && SERVICES.some(service => service.pole === 'bilan') && (
             <button type="button" className={styles.assessment} onClick={() => changeCategory('bilan')} aria-label={copy.helpAction}>
               <IconClipboardHeart size={24} strokeWidth={1.3} aria-hidden="true" />
               <span><strong>{copy.help}</strong><span>{copy.helpNote}</span></span>

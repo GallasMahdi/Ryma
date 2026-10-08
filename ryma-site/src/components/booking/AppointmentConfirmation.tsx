@@ -88,14 +88,19 @@ export interface ConfirmationPatient {
   coverageProvider: string;
 }
 
-export function AppointmentConfirmation({ service, date, time, patient }: {
+export function AppointmentConfirmation({ service, date, time, patient, practitionerName, durationMinutes, appointmentId, status }: {
+  practitionerName?: string;
+  durationMinutes?: number;
+  appointmentId?: string;
+  status?: string;
   service: Service;
   date: string;
   time: string;
   patient: ConfirmationPatient;
 }) {
   const { lang } = useLanguage();
-  const copy = COPY[lang];
+  const pending = status === 'PENDING';
+  const copy = {...COPY[lang], ...(pending ? {status: lang==='pt'?'Marcação recebida':lang==='fr'?'Demande reçue':'Booking received', titleAccent: lang==='pt'?'recebida.':lang==='fr'?'reçu.':'received.', intro: lang==='pt'?'Aguarde a confirmação da clínica.':lang==='fr'?'Veuillez attendre la confirmation du cabinet.':'Please wait for the clinic to confirm.'} : {})};
   const locale = lang === 'pt' ? 'pt-PT' : lang === 'fr' ? 'fr-FR' : 'en-GB';
   const serviceName = getLocalizedText(service.name, lang);
   const address = SITE.address[lang] || SITE.address.pt || '';
@@ -106,11 +111,12 @@ export function AppointmentConfirmation({ service, date, time, patient }: {
     : patient.coverageType === 'INSURANCE' ? copy.insurance
     : patient.coverageType === 'OTHER' ? copy.other : copy.private;
   const coverageText = patient.coverageProvider ? `${coverage} · ${patient.coverageProvider}` : coverage;
-  const summary = `${SITE.name}\n${copy.status}\n\n${serviceName}\n${fullDate} · ${time} (${copy.localTime})\n${patient.name.trim()}\n${address}\n${SITE.phone}`;
+  const summary = `${SITE.name}\n${copy.status}\n\n${serviceName}\n${practitionerName || SITE.name}\n${fullDate} · ${time} (${copy.localTime})\n${patient.name.trim()}\n${address}\n${SITE.phone}`;
   const calendarEvent: AppointmentCalendarEvent = {
-    service: serviceName, date, time, duration: parseInt(service.duration, 10) || 50,
+    service: serviceName, date, time, duration: durationMinutes ?? (parseInt(service.duration, 10) || 50),
     location: address, description: summary, lang,
-    uid: `${date}-${time.replace(':', '')}-${service.slug}@digitalclinica.pt`,
+    status: pending ? 'TENTATIVE' : 'CONFIRMED',
+    uid: appointmentId || `${date}-${time.replace(':', '')}-${service.slug}@digitalclinica.pt`,
   };
   const whatsappUrl = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`${copy.message}\n${serviceName}\n${fullDate} · ${time}\n${patient.name.trim()}`)}`;
   const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
@@ -186,9 +192,10 @@ export function AppointmentConfirmation({ service, date, time, patient }: {
               <span className={styles.cardEyebrow}>{copy.reserved}</span>
             </div>
             <div className={styles.treatment}>
-              <span className={styles.eyebrow}>{service.pole === 'kinesitherapie' ? copy.physiotherapy : copy.aesthetics}</span>
+              <span className={styles.eyebrow}>{service.pole === 'bilan' ? (lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : service.pole === 'kinesitherapie' ? copy.physiotherapy : copy.aesthetics}</span>
               <h2>{serviceName}</h2>
-              <div className={styles.treatmentMeta}><span><IconClock size={15} aria-hidden="true" />{service.duration}</span><i aria-hidden="true" /><span><strong>{new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(service.price)}</strong> {copy.session}</span></div>
+              {practitionerName && <p className="mt-2 text-sm font-semibold text-slate-700">{practitionerName}</p>}
+              <div className={styles.treatmentMeta}><span><IconClock size={15} aria-hidden="true" />{durationMinutes ? `${durationMinutes} min` : service.duration}</span><i aria-hidden="true" /><span><strong>{new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(service.price)}</strong> {copy.session}</span></div>
             </div>
             <dl className={styles.patient}>
               <div><dt>{copy.patient}</dt><dd>{patient.name.trim()}</dd></div>

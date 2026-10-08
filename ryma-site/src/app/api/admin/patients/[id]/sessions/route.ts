@@ -1,4 +1,5 @@
-import { VALID_TIME_SLOTS, VALID_SERVICES, getLisbonDateTime } from '@/lib/validation';
+import { isKnownTreatment, getTreatments } from '@/lib/treatments';
+import { VALID_TIME_SLOTS, getLisbonDateTime } from '@/lib/validation';
 import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
@@ -12,6 +13,7 @@ import {
   executeQuery,
 } from '@/lib/db';
 import { broadcastAppointmentCreated, broadcastAppointmentDeleted } from '@/lib/events';
+import { ClinicalError, validEva } from '@/lib/clinical';
 
 // POST /api/admin/patients/[id]/sessions — log a new clinical session with EVA score
 export async function POST(
@@ -38,18 +40,21 @@ export async function POST(
 
   const date = body.date ? String(body.date).trim() : getLisbonDateTime().todayStr;
   const time = body.time ? String(body.time).trim() : null;
-  const serviceSlug = body.serviceSlug ? String(body.serviceSlug).trim() : 'kinesitherapie-generale';
-  const evaPainScore = typeof body.evaPainScore === 'number' ? Math.min(10, Math.max(0, body.evaPainScore)) : 5;
+  const linkedAppointment=typeof body.appointmentId==='string'?await dbGetAppointmentById(body.appointmentId):null;
+  const serviceSlug = typeof body.serviceSlug==='string' ? body.serviceSlug.trim() : linkedAppointment?.service ?? '';
+  const historicalService=linkedAppointment?.patientId===patientId && linkedAppointment?.service===serviceSlug;
+  const evaPainScore = body.evaPainScore === undefined ? null : body.evaPainScore;
   const sessionType = (body.sessionType as 'ONLINE' | 'MANUAL' | 'PAPER') ?? 'MANUAL';
   const notes = body.notes ? String(body.notes).trim().slice(0, 2000) : null;
   const practitioner = body.practitioner ? String(body.practitioner).trim() : null;
 
-  if (!isCalendarDate(date) || (time && !VALID_TIME_SLOTS.includes(time as typeof VALID_TIME_SLOTS[number])) || !['ONLINE', 'MANUAL', 'PAPER'].includes(sessionType) || ![...VALID_SERVICES, 'kinesitherapie-generale'].includes(serviceSlug)) return NextResponse.json({ error: 'Invalid session date, time, type or service' }, { status: 422 });
-  if (body.evaPainScore !== undefined && (typeof body.evaPainScore !== 'number' || !Number.isInteger(body.evaPainScore) || body.evaPainScore < 0 || body.evaPainScore > 10)) return NextResponse.json({ error: 'EVA must be an integer from 0 to 10' }, { status: 422 });
+  if (!isCalendarDate(date) || (time && !VALID_TIME_SLOTS.includes(time as typeof VALID_TIME_SLOTS[number])) || !['ONLINE', 'MANUAL', 'PAPER'].includes(sessionType) || (!historicalService && !(await isKnownTreatment(serviceSlug)))) return NextResponse.json({ error: 'Invalid session date, time, type or service' }, { status: 422 });
+  if (!validEva(evaPainScore)) return NextResponse.json({error:'EVA must be null or an integer from 0 to 10'},{status:422});
+  if (body.clinicalStatus!==undefined && !['PLANNED','COMPLETED'].includes(String(body.clinicalStatus))) return NextResponse.json({error:'Invalid clinical status'},{status:422});
 
   // If time is specified, validate slot availability against authoritative booking engine
-  if (time) {
-    const check = await dbCheckSlotAvailability(date, time);
+  if (!body.appointmentId && time && (date > getLisbonDateTime().todayStr || (date === getLisbonDateTime().todayStr && time > getLisbonDateTime().currentHHMM))) {
+    const check = await dbCheckSlotAvailability(date, time, serviceSlug, {practitionerId: typeof body.practitionerId === "string" ? body.practitionerId : undefined});
     if (!check.available) {
       return NextResponse.json(
         {
@@ -68,7 +73,11 @@ export async function POST(
   let session;
   try {
     session = await dbAddPatientSession({
+    practitionerId: typeof body.practitionerId === "string" ? body.practitionerId : undefined,
     patientId,
+    appointmentId: typeof body.appointmentId==='string' ? body.appointmentId : undefined,
+    clinicalStatus: body.clinicalStatus as 'PLANNED' | 'COMPLETED' | undefined,
+    actorSessionId: auth.session.sessionId,
     date,
     time,
     serviceSlug,
@@ -78,6 +87,7 @@ export async function POST(
     practitioner,
     });
   } catch (err) {
+    if (err instanceof ClinicalError) return NextResponse.json({error:err.message,code:err.code},{status:err.status});
     if (/UNIQUE|slot_taken|slot_blocked/i.test(String(err))) return NextResponse.json({ error: 'Slot no longer available' }, { status: 409 });
     throw err;
   }
@@ -112,17 +122,27 @@ export async function PATCH(
     return NextResponse.json({ error: 'sessionId requis' }, { status: 422 });
   }
 
-  const evaPainScore = typeof body.evaPainScore === 'number' ? Math.min(10, Math.max(0, body.evaPainScore)) : undefined;
+  if (body.evaPainScore!==undefined && !validEva(body.evaPainScore)) return NextResponse.json({error:'EVA must be null or an integer from 0 to 10'},{status:422});
+  if (body.clinicalStatus!==undefined && !['PLANNED','COMPLETED'].includes(String(body.clinicalStatus))) return NextResponse.json({error:'Invalid clinical status'},{status:422});
+  if (body.notes!==undefined && body.notes!==null && (typeof body.notes!=='string' || body.notes.length>2000)) return NextResponse.json({error:'Invalid clinical notes'},{status:422});
+  const evaPainScore = body.evaPainScore as number | null | undefined;
   const notes = body.notes !== undefined ? (body.notes ? String(body.notes).trim() : null) : undefined;
 
-  const updatedSession = await dbUpdatePatientSession(
+  let updatedSession;
+  try { updatedSession = await dbUpdatePatientSession(
     sessionId,
     {
       evaPainScore,
       notes,
+      expectedVersion: body.expectedVersion as number | undefined,
+      clinicalStatus: body.clinicalStatus as 'PLANNED' | 'COMPLETED' | undefined,
+      actorSessionId: auth.session.sessionId,
     },
     patientId
-  );
+  ); } catch (err) {
+    if (err instanceof ClinicalError) return NextResponse.json({error:err.message,code:err.code},{status:err.status});
+    throw err;
+  }
 
   if (!updatedSession) {
     return NextResponse.json({ error: 'Session introuvable pour ce patient' }, { status: 404 });
@@ -145,7 +165,13 @@ export async function DELETE(
     return NextResponse.json({ error: 'sessionId requis' }, { status: 422 });
   }
 
-  const deleted = await dbDeletePatientSession(sessionId, patientId);
+  let deleted;
+  try {
+    deleted = await dbDeletePatientSession(sessionId, patientId, auth.session.sessionId);
+  } catch (error) {
+    if (error instanceof ClinicalError) return NextResponse.json({error:error.message,code:error.code},{status:error.status});
+    throw error;
+  }
   if (!deleted) {
     return NextResponse.json({ error: 'Session introuvable pour ce patient' }, { status: 404 });
   }

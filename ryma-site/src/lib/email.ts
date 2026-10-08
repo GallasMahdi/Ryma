@@ -1,9 +1,16 @@
+import { googleCalendarUrl } from '@/lib/appointment-calendar';
 import nodemailer from 'nodemailer';
-import { SERVICES, getLocalizedText } from '@/data/services';
+import { getTreatments } from '@/lib/treatments';
+import { getLocalizedText } from '@/data/services';
 import { SITE } from '@/lib/site';
 
 interface AppointmentData {
+  serviceNameJson?: string | null;
+  servicePriceCents?: number | null;
   id?: string;
+  practitionerName?: string;
+  durationMinutes?: number;
+  status?: string;
   patientName: string;
   email?: string | null;
   phone: string;
@@ -73,27 +80,7 @@ function formatHumanDate(dateStr: string, lang = 'en'): string {
  * Generate 1-Click Google Calendar URL
  */
 function getGoogleCalendarUrl(appointment: AppointmentData, serviceName: string): string {
-  try {
-    const [year, month, day] = appointment.date.split('-');
-    const [hour, min] = appointment.startTime.split(':');
-    const startIso = `${year}${month}${day}T${hour}${min}00`;
-
-    // Default 50 min duration
-    const endMinutes = Number(min) + 50;
-    const endH = Number(hour) + Math.floor(endMinutes / 60);
-    const endM = endMinutes % 60;
-    const endIso = `${year}${month}${day}T${String(endH).padStart(2, '0')}${String(endM).padStart(2, '0')}00`;
-
-    const title = encodeURIComponent(`Appointment: ${serviceName} — Digital Clínica`);
-    const details = encodeURIComponent(
-      `Confirmed appointment at Digital Clínica.\n\nTreatment: ${serviceName}\nPractitioner: Digital Clínica\nPhone: ${SITE.phone}\nWhatsApp: ${SITE.whatsappDisplay}\nAddress: ${SITE.address.en || SITE.address.fr}`
-    );
-    const location = encodeURIComponent(SITE.address.en || SITE.address.fr);
-
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${details}&location=${location}`;
-  } catch {
-    return 'https://calendar.google.com';
-  }
+  return googleCalendarUrl({service:serviceName,date:appointment.date,time:appointment.startTime,duration:appointment.durationMinutes??30,location:SITE.address.en||SITE.address.pt||'Lisboa, Portugal',description:[appointment.status==='PENDING'?'Booking request pending confirmation':'Clinic appointment',appointment.practitionerName||'',SITE.phone].join(' · '),lang:'en',uid:appointment.id||'booking'});
 }
 
 const EMAIL_TRANSLATIONS = {
@@ -174,15 +161,21 @@ const EMAIL_TRANSLATIONS = {
 /**
  * Build Luxury Responsive HTML Email Template
  */
-function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'pt') {
+async function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'pt') {
   const normLang = (lang === 'fr' || lang === 'en' || lang === 'pt') ? lang : 'pt';
-  const t = EMAIL_TRANSLATIONS[normLang];
-  const serviceObj = SERVICES.find(s => s.slug === appointment.service);
+  const pending=appointment.status==='PENDING';
+  const t = {...EMAIL_TRANSLATIONS[normLang],...(pending?{
+    badge: normLang==='pt'?'Pedido recebido':normLang==='fr'?'Demande reçue':'Booking received',
+    intro: normLang==='pt'?'Recebemos o seu pedido de consulta. Aguarde a confirmação da clínica.':normLang==='fr'?'Votre demande a été reçue. Veuillez attendre la confirmation du cabinet.':'We received your booking request. Please wait for the clinic to confirm.',
+  }:{})};
+  const current = (await getTreatments()).find(s => s.slug === appointment.service);
+  const serviceObj = appointment.serviceNameJson ? {name:JSON.parse(appointment.serviceNameJson),price:(appointment.servicePriceCents??0)/100} : current;
   const serviceName = serviceObj ? getLocalizedText(serviceObj.name, normLang) : appointment.service;
-  const servicePrice = serviceObj?.price ? `${serviceObj.price} €` : (normLang === 'pt' ? 'Sob Consulta' : normLang === 'fr' ? 'Sur Devis' : 'Custom Quote');
-  const duration = serviceObj?.duration || '50 min';
+  const servicePrice = serviceObj?.price != null ? `${serviceObj.price} €` : (normLang === 'pt' ? 'Sob Consulta' : normLang === 'fr' ? 'Sur Devis' : 'Custom Quote');
+  const durationMinutes=appointment.durationMinutes??current?.durationMinutes??30;
+  const duration = String(durationMinutes)+' min';
   const formattedDate = formatHumanDate(appointment.date, normLang);
-  const googleCalendarUrl = getGoogleCalendarUrl(appointment, serviceName);
+  const googleCalendarUrl = getGoogleCalendarUrl({...appointment,durationMinutes}, serviceName);
   const clinicAddress = SITE.address[normLang] || SITE.address.pt || 'Avenida da Liberdade 120, 1250-146 Lisboa, Portugal';
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinicAddress)}`;
   const whatsappUrl = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(
@@ -413,7 +406,7 @@ function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'pt')
               </td>
               <td style="padding-bottom: 12px;" width="50%">
                 <div class="detail-label">${t.durationPrice}</div>
-                <div class="detail-val">${escapeHtml(duration)} · ${escapeHtml(servicePrice)}</div>
+                <div class="detail-val">${escapeHtml(duration)} · ${escapeHtml(servicePrice)}<br>${escapeHtml(appointment.practitionerName)}</div>
               </td>
             </tr>
             <tr>
@@ -492,19 +485,21 @@ export async function sendAppointmentConfirmationEmail(
 
   const transporter = getTransporter();
   if (!transporter) {
-    console.log('[Email Engine] SMTP not configured. Skipped sending email to:', appointment.email);
+    console.log('[Email Engine] SMTP not configured; confirmation skipped.');
     return { success: true, skipped: true };
   }
 
   const normLang = (lang === 'fr' || lang === 'en' || lang === 'pt') ? lang : 'pt';
-  const t = EMAIL_TRANSLATIONS[normLang];
-  const serviceObj = SERVICES.find(s => s.slug === appointment.service);
+  const pending=appointment.status==='PENDING';
+  const t = {...EMAIL_TRANSLATIONS[normLang],...(pending?{badge:normLang==='pt'?'Pedido recebido':normLang==='fr'?'Demande reçue':'Booking received'}:{})};
+  const current = (await getTreatments()).find(s => s.slug === appointment.service);
+  const serviceObj = appointment.serviceNameJson ? {name:JSON.parse(appointment.serviceNameJson),price:(appointment.servicePriceCents??0)/100} : current;
   const serviceName = serviceObj ? getLocalizedText(serviceObj.name, normLang) : appointment.service;
   const fromName = process.env.SMTP_FROM_NAME || t.fromName;
   const fromAddress = process.env.SMTP_USER;
 
-  const subject = t.subject(serviceName, appointment.date, appointment.startTime);
-  const html = buildPatientConfirmationHtml(appointment, normLang);
+  const subject = pending ? `${t.badge} · ${serviceName} · ${appointment.date} ${appointment.startTime}` : t.subject(serviceName, appointment.date, appointment.startTime);
+  const html = await buildPatientConfirmationHtml(appointment, normLang);
 
   try {
     const info = await transporter.sendMail({
@@ -514,11 +509,11 @@ export async function sendAppointmentConfirmationEmail(
       html,
     });
 
-    console.log(`[Email Engine] ✅ Patient confirmation email sent successfully (${normLang.toUpperCase()}) to ${appointment.email} (MessageID: ${info.messageId})`);
+    console.log('[Email Engine] Confirmation sent.');
     return { success: true };
   } catch (err) {
-    console.error('[Email Engine] ❌ Failed to send confirmation email:', err);
-    return { success: false, error: (err as Error).message };
+    console.error('[Email Engine] Confirmation delivery failed.');
+    return { success: false, error: 'Email delivery failed' };
   }
 }
 
@@ -534,7 +529,8 @@ export async function sendAdminNewBookingNotification(
   const transporter = getTransporter();
   if (!transporter) return { success: true, skipped: true };
 
-  const serviceObj = SERVICES.find(s => s.slug === appointment.service);
+  const current = (await getTreatments()).find(s => s.slug === appointment.service);
+  const serviceObj = appointment.serviceNameJson ? {name:JSON.parse(appointment.serviceNameJson),price:(appointment.servicePriceCents??0)/100} : current;
   const serviceName = serviceObj?.name?.en || serviceObj?.name?.fr || appointment.service;
   const fromName = process.env.SMTP_FROM_NAME || 'Digital Clínica System';
   const fromAddress = process.env.SMTP_USER;
@@ -592,7 +588,7 @@ export async function sendAdminNewBookingNotification(
     });
     return { success: true };
   } catch (err) {
-    console.error('[Email Engine] Failed to send admin alert email:', err);
-    return { success: false, error: (err as Error).message };
+    console.error('[Email Engine] Admin alert delivery failed.');
+    return { success: false, error: 'Email delivery failed' };
   }
 }

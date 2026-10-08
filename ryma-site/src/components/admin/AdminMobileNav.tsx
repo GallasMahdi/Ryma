@@ -9,10 +9,11 @@ import {
   IconChartBar,
   IconReceiptTax,
   IconMessageHeart,
+  IconStethoscope,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 
-export type AdminTab = 'appointments' | 'slots' | 'patients' | 'invoices' | 'reviews' | 'analytics';
+export type AdminTab = 'appointments' | 'slots' | 'patients' | 'invoices' | 'reviews' | 'analytics' | 'team' | 'treatments';
 
 interface AdminMobileNavProps {
   activeTab: AdminTab;
@@ -69,6 +70,20 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
       badge: totalReviews && totalReviews > 0 ? totalReviews : null,
     },
     {
+      id: 'treatments' as const,
+      label: lang==='pt'?'Tratamentos':lang==='fr'?'Soins':'Treatments',
+      sublabel: 'Catalogue',
+      icon: IconStethoscope,
+      badge: null,
+    },
+    {
+      id: 'team' as const,
+      label: lang === 'pt' ? 'Equipa' : lang === 'fr' ? 'Équipe' : 'Team',
+      sublabel: lang === 'pt' ? 'Profissionais e horários' : lang === 'fr' ? 'Praticiens et horaires' : 'Practitioners and hours',
+      icon: IconCalendarEvent,
+      badge: null,
+    },
+    {
       id: 'analytics' as const,
       label: lang === 'pt' ? 'Stats' : lang === 'en' ? 'Stats' : 'Stats',
       icon: IconChartBar,
@@ -77,7 +92,8 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
   ];
 
   const handlePrefetch = (tabId: AdminTab) => {
-    if (tabId === 'slots') import('@/components/admin/SlotsTab');
+    if (tabId === 'treatments') import('@/components/admin/TreatmentsTab');
+    else if (tabId === 'slots') import('@/components/admin/SlotsTab');
     else if (tabId === 'patients') import('@/components/admin/PatientNotesTab');
     else if (tabId === 'invoices') import('@/components/admin/InvoicesTab');
     else if (tabId === 'reviews') import('@/components/admin/ReviewsTab');
@@ -88,7 +104,7 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
       aria-label="Navigation mobile"
       className="md:hidden fixed bottom-0 left-0 right-0 z-[9990] bg-[#FAF6EE]/95 backdrop-blur-xl border-t border-[#C49A3C]/25 shadow-[0_-4px_25px_rgba(196,154,60,0.1)] px-2 pt-1.5 pb-safe font-sans"
     >
-      <div className="flex items-center justify-around max-w-lg mx-auto gap-1">
+      <div className="flex items-center justify-start mx-auto gap-1 overflow-x-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -99,7 +115,7 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
               onClick={() => setActiveTab(tab.id)}
               onTouchStart={() => handlePrefetch(tab.id)}
               onMouseEnter={() => handlePrefetch(tab.id)}
-              className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all relative min-h-[50px] touch-target select-none ${
+              className={`min-w-[64px] flex-1 shrink-0 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all relative min-h-[50px] touch-target select-none ${
                 isActive
                   ? 'text-[#8A6A24] font-bold'
                   : 'text-[#8A8078] hover:text-[#1A1412] font-medium'

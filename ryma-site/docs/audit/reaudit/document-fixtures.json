@@ -1,0 +1,50 @@
+{
+  "invoice": {
+    "id": "inv_muycpe1bynh4u",
+    "invoiceNumber": "FT 2026/0001",
+    "appointmentId": "apt_8c06bde1-ad96-4e38-b963-147947fddeaf",
+    "patientId": "pat_muycpdwxmf5y",
+    "patientName": "Audit Élodie São",
+    "patientNif": "999999990",
+    "patientEmail": null,
+    "patientPhone": "+351963000001",
+    "patientAddress": "Lisboa, Portugal",
+    "coverageType": "PARTICULAR",
+    "coverageProvider": null,
+    "coverageNumber": null,
+    "serviceSlug": "reeducation-posturale",
+    "serviceName": "Reeducação Postural Global (RPG)",
+    "practitioner": "Digital Clínica",
+    "amount": 60.25,
+    "vatRate": 0,
+    "vatExemptionReason": "Isento de IVA - Artigo 9.º do CIVA",
+    "paymentMethod": "MULTIBANCO",
+    "paymentStatus": "PAID",
+    "paidAt": "2026-10-07T16:57:50.159Z",
+    "notes": null,
+    "createdAt": "2026-10-07T16:57:50.159Z",
+    "updatedAt": "2026-10-07T16:57:50.159Z",
+    "practitionerId": "legacy",
+    "amountCents": 6025,
+    "moneyReview": 0
+  },
+  "prescription": {
+    "id": "rx_1791392270153_zqf9p",
+    "patientId": "pat_muycpdwxmf5y",
+    "patientPhone": "+351963000001",
+    "patientName": "Audit Élodie São",
+    "practitioner": "Digital Clínica",
+    "practitionerId": "legacy",
+    "date": "2026-10-07",
+    "diagnosisOrGoal": "Audit – épaule",
+    "items": [
+      {
+        "id": "item_1791392270153_0",
+        "category": "lifestyle_habit",
+        "title": "Exercice São João",
+        "instructions": "Dix répétitions, repos ; accents français et portugais."
+      }
+    ],
+    "createdAt": "2026-10-07T16:57:50.153Z"
+  }
+}

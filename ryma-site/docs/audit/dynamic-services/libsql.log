@@ -1,0 +1,762 @@
+TAP version 13
+# Subtest: Audit remediation on isolated libSQL
+    # Subtest: QA-03 booking never silently assigns a different person to a known contact
+    ok 1 - QA-03 booking never silently assigns a different person to a known contact
+      ---
+      duration_ms: 31.7722
+      type: 'test'
+      ...
+    # Subtest: QA-03 ambiguous unassigned legacy documents cannot be claimed by another identity
+    ok 2 - QA-03 ambiguous unassigned legacy documents cannot be claimed by another identity
+      ---
+      duration_ms: 46.864
+      type: 'test'
+      ...
+    # Subtest: QA-20 patient deletion preserves histories and only removes empty records
+    ok 3 - QA-20 patient deletion preserves histories and only removes empty records
+      ---
+      duration_ms: 120.4735
+      type: 'test'
+      ...
+    # Subtest: QA-04 planned sessions and cancellation do not create measured pain or completed care
+    ok 4 - QA-04 planned sessions and cancellation do not create measured pain or completed care
+      ---
+      duration_ms: 125.7268
+      type: 'test'
+      ...
+    # Subtest: QA-07/09/10 clinical updates validate, roll back, retain revisions and reject stale writers
+    ok 5 - QA-07/09/10 clinical updates validate, roll back, retain revisions and reject stale writers
+      ---
+      duration_ms: 132.9346
+      type: 'test'
+      ...
+    # Subtest: QA-01/15 existing appointments get one linked clinical record and archives retain it
+    ok 6 - QA-01/15 existing appointments get one linked clinical record and archives retain it
+      ---
+      duration_ms: 218.3088
+      type: 'test'
+      ...
+    # Subtest: QA-04 a missing time cannot complete a same-day future appointment
+    ok 7 - QA-04 a missing time cannot complete a same-day future appointment
+      ---
+      duration_ms: 49.5388
+      type: 'test'
+      ...
+    # Subtest: QA-05 API requires stable intent keys and deduplicates parallel retries
+    ok 8 - QA-05 API requires stable intent keys and deduplicates parallel retries
+      ---
+      duration_ms: 154.0044
+      type: 'test'
+      ...
+    # Subtest: QA-06 document identities and appointment service/practitioner are checked
+    ok 9 - QA-06 document identities and appointment service/practitioner are checked
+      ---
+      duration_ms: 89.9545
+      type: 'test'
+      ...
+    # Subtest: QA-08 exact cents, VAT, payment groups and averages agree
+    ok 10 - QA-08 exact cents, VAT, payment groups and averages agree
+      ---
+      duration_ms: 155.4308
+      type: 'test'
+      ...
+    # Subtest: QA-11 financial aggregates are absent until step-up and disappear after locking
+    ok 11 - QA-11 financial aggregates are absent until step-up and disappear after locking
+      ---
+      duration_ms: 58.6833
+      type: 'test'
+      ...
+    # Subtest: QA-12 invalid patient profile fields reject before any mutation; clearing and omission remain explicit
+    ok 12 - QA-12 invalid patient profile fields reject before any mutation; clearing and omission remain explicit
+      ---
+      duration_ms: 34.074
+      type: 'test'
+      ...
+    # Subtest: QA-13 export filters match lists, empty periods and Lisbon date boundaries
+    ok 13 - QA-13 export filters match lists, empty periods and Lisbon date boundaries
+      ---
+      duration_ms: 115.609
+      type: 'test'
+      ...
+    # Subtest: QA-17 known development passwords fail production even with a different bcrypt salt
+    ok 14 - QA-17 known development passwords fail production even with a different bcrypt salt
+      ---
+      duration_ms: 29.6326
+      type: 'test'
+      ...
+    # Subtest: QA-18 email logs omit recipients and transport exception details
+    ok 15 - QA-18 email logs omit recipients and transport exception details
+      ---
+      duration_ms: 49.2669
+      type: 'test'
+      ...
+    1..15
+ok 1 - Audit remediation on isolated libSQL
+  ---
+  duration_ms: 1632.1861
+  type: 'test'
+  ...
+# Subtest: Patient integrity on isolated libSQL
+    # Subtest: duplicate creation and changing to another patient phone are explicit conflicts
+    ok 1 - duplicate creation and changing to another patient phone are explicit conflicts
+      ---
+      duration_ms: 66.2419
+      type: 'test'
+      ...
+    # Subtest: concurrent creation never overwrites an existing patient
+    ok 2 - concurrent creation never overwrites an existing patient
+      ---
+      duration_ms: 18.3571
+      type: 'test'
+      ...
+    # Subtest: legacy-only records require an explicit promotion and keep their historical contact links
+    ok 3 - legacy-only records require an explicit promotion and keep their historical contact links
+      ---
+      duration_ms: 38.6022
+      type: 'test'
+      ...
+    # Subtest: contact changes retain ID-based histories and immutable document snapshots
+    ok 4 - contact changes retain ID-based histories and immutable document snapshots
+      ---
+      duration_ms: 185.2627
+      type: 'test'
+      ...
+    # Subtest: failure saving the new contact mirror rolls back profile and legacy links
+    ok 5 - failure saving the new contact mirror rolls back profile and legacy links
+      ---
+      duration_ms: 28.9395
+      type: 'test'
+      ...
+    # Subtest: archive retains clinical data and document links while releasing active capacity
+    ok 6 - archive retains clinical data and document links while releasing active capacity
+      ---
+      duration_ms: 174.1437
+      type: 'test'
+      ...
+    # Subtest: failure to write archive audit rolls back the archive and keeps capacity occupied
+    ok 7 - failure to write archive audit rolls back the archive and keeps capacity occupied
+      ---
+      duration_ms: 54.3477
+      type: 'test'
+      ...
+    # Subtest: patient ID reads and archive mutations remain authenticated
+    ok 8 - patient ID reads and archive mutations remain authenticated
+      ---
+      duration_ms: 6.5726
+      type: 'test'
+      ...
+    1..8
+ok 2 - Patient integrity on isolated libSQL
+  ---
+  duration_ms: 773.0921
+  type: 'test'
+  ...
+# Subtest: Team scheduling on isolated libSQL
+    # Subtest: intentional review reset stays empty on admin and public reads
+    ok 1 - intentional review reset stays empty on admin and public reads
+      ---
+      duration_ms: 10.6756
+      type: 'test'
+      ...
+    # Subtest: migration seeds one practitioner and is recorded once
+    ok 2 - migration seeds one practitioner and is recorded once
+      ---
+      duration_ms: 2.6482
+      type: 'test'
+      ...
+    # Subtest: admin can create practitioners with services and split shifts
+    ok 3 - admin can create practitioners with services and split shifts
+      ---
+      duration_ms: 49.576
+      type: 'test'
+      ...
+    # Subtest: two practitioners can book the same time; partial overlap on one is rejected
+    ok 4 - two practitioners can book the same time; partial overlap on one is rejected
+      ---
+      duration_ms: 74.1049
+      type: 'test'
+      ...
+    # Subtest: duration is persisted, and one patient cannot book two practitioners simultaneously
+    ok 5 - duration is persisted, and one patient cannot book two practitioners simultaneously
+      ---
+      duration_ms: 24.4857
+      type: 'test'
+      ...
+    # Subtest: parallel earliest requests fill capacity without duplicates
+    ok 6 - parallel earliest requests fill capacity without duplicates
+      ---
+      duration_ms: 178.6507
+      type: 'test'
+      ...
+    # Subtest: parallel retry has exactly one assignment and rejects a changed payload
+    ok 7 - parallel retry has exactly one assignment and rejects a changed payload
+      ---
+      duration_ms: 116.6033
+      type: 'test'
+      ...
+    # Subtest: full treatment must fit inside working hours and lunch breaks
+    ok 8 - full treatment must fit inside working hours and lunch breaks
+      ---
+      duration_ms: 15.7211
+      type: 'test'
+      ...
+    # Subtest: practitioner blocks preserve other practitioners and cover partial intervals
+    ok 9 - practitioner blocks preserve other practitioners and cover partial intervals
+      ---
+      duration_ms: 31.3558
+      type: 'test'
+      ...
+    # Subtest: leave closes only one practitioner and clinic closure closes everyone
+    ok 10 - leave closes only one practitioner and clinic closure closes everyone
+      ---
+      duration_ms: 51.628
+      type: 'test'
+      ...
+    # Subtest: schedule changes cannot strand future appointments
+    ok 11 - schedule changes cannot strand future appointments
+      ---
+      duration_ms: 6.7252
+      type: 'test'
+      ...
+    # Subtest: stale configuration revision is rejected
+    ok 12 - stale configuration revision is rejected
+      ---
+      duration_ms: 13.933
+      type: 'test'
+      ...
+    # Subtest: shared equipment prevents simultaneous reservations across practitioners
+    ok 13 - shared equipment prevents simultaneous reservations across practitioners
+      ---
+      duration_ms: 50.7905
+      type: 'test'
+      ...
+    # Subtest: raw database writers cannot bypass interval and resource collision guards
+    ok 14 - raw database writers cannot bypass interval and resource collision guards
+      ---
+      duration_ms: 2.9193
+      type: 'test'
+      ...
+    # Subtest: recurring sessions maintain one practitioner and commit atomically
+    ok 15 - recurring sessions maintain one practitioner and commit atomically
+      ---
+      duration_ms: 34.5282
+      type: 'test'
+      ...
+    # Subtest: reassignment checks conflicts and edit version
+    ok 16 - reassignment checks conflicts and edit version
+      ---
+      duration_ms: 27.3983
+      type: 'test'
+      ...
+    # Subtest: admin slot API marks all occupied intervals
+    ok 17 - admin slot API marks all occupied intervals
+      ---
+      duration_ms: 32.7027
+      type: 'test'
+      ...
+    # Subtest: public availability and profile APIs never return patient details
+    ok 18 - public availability and profile APIs never return patient details
+      ---
+      duration_ms: 49.5764
+      type: 'test'
+      ...
+    # Subtest: management endpoints require authentication
+    ok 19 - management endpoints require authentication
+      ---
+      duration_ms: 11.738
+      type: 'test'
+      ...
+    # Subtest: manual future entries reserve practitioner; past entries only record history
+    ok 20 - manual future entries reserve practitioner; past entries only record history
+      ---
+      duration_ms: 46.8337
+      type: 'test'
+      ...
+    # Subtest: documents preserve practitioner identity and reject ambiguous authors
+    ok 21 - documents preserve practitioner identity and reject ambiguous authors
+      ---
+      duration_ms: 46.1798
+      type: 'test'
+      ...
+    # Subtest: bulk blocks are scoped, preserve booked intervals and commit the complete range
+    ok 22 - bulk blocks are scoped, preserve booked intervals and commit the complete range
+      ---
+      duration_ms: 41.1306
+      type: 'test'
+      ...
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+    # Subtest: concurrent edits reject a stale appointment version
+    ok 23 - concurrent edits reject a stale appointment version
+      ---
+      duration_ms: 132.8846
+      type: 'test'
+      ...
+    # Subtest: backup restores team configuration and every assignment atomically
+    ok 24 - backup restores team configuration and every assignment atomically
+      ---
+      duration_ms: 169.6727
+      type: 'test'
+      ...
+    # Subtest: duration overrides, buffers, cancellation and dated Sunday opening agree
+    ok 25 - duration overrides, buffers, cancellation and dated Sunday opening agree
+      ---
+      duration_ms: 132.2795
+      type: 'test'
+      ...
+    # Subtest: populated single-practitioner migration preserves historical data
+    ok 26 - populated single-practitioner migration preserves historical data
+      ---
+      duration_ms: 280.2058
+      type: 'test'
+      ...
+    # Subtest: clinic blocks are distinguished from practitioner blocks in the admin UI data
+    ok 27 - clinic blocks are distinguished from practitioner blocks in the admin UI data
+      ---
+      duration_ms: 16.3981
+      type: 'test'
+      ...
+    # Subtest: CSV headers align with practitioner and duration fields
+    ok 28 - CSV headers align with practitioner and duration fields
+      ---
+      duration_ms: 27.4044
+      type: 'test'
+      ...
+    # Subtest: invalid configuration is rejected without partial changes
+    ok 29 - invalid configuration is rejected without partial changes
+      ---
+      duration_ms: 158.3309
+      type: 'test'
+      ...
+    # Subtest: private and archived practitioners never become public fallback assignments
+    ok 30 - private and archived practitioners never become public fallback assignments
+      ---
+      duration_ms: 174.41
+      type: 'test'
+      ...
+    # Subtest: an explicitly ineligible practitioner is never silently substituted
+    ok 31 - an explicitly ineligible practitioner is never silently substituted
+      ---
+      duration_ms: 81.2148
+      type: 'test'
+      ...
+    # Subtest: cancelled reassignment updates the saved name and linked session
+    ok 32 - cancelled reassignment updates the saved name and linked session
+      ---
+      duration_ms: 72.0454
+      type: 'test'
+      ...
+    # Subtest: reopening a cancelled appointment checks its old reservation again
+    ok 33 - reopening a cancelled appointment checks its old reservation again
+      ---
+      duration_ms: 114.344
+      type: 'test'
+      ...
+    # Subtest: retry keys reject changes to notes, coverage and status
+    ok 34 - retry keys reject changes to notes, coverage and status
+      ---
+      duration_ms: 39.2801
+      type: 'test'
+      ...
+    # Subtest: public retries do not exhaust the three-booking patient allowance
+    ok 35 - public retries do not exhaust the three-booking patient allowance
+      ---
+      duration_ms: 319.7655
+      type: 'test'
+      ...
+    # Subtest: booking APIs reject malformed practitioner preferences instead of choosing someone else
+    ok 36 - booking APIs reject malformed practitioner preferences instead of choosing someone else
+      ---
+      duration_ms: 92.364
+      type: 'test'
+      ...
+    # Subtest: patch rejects null/empty date, time and invalid versions without changing a booking
+    ok 37 - patch rejects null/empty date, time and invalid versions without changing a booking
+      ---
+      duration_ms: 60.1625
+      type: 'test'
+      ...
+    # Subtest: recurrence preview rejects fractional counts and partially malformed patterns
+    ok 38 - recurrence preview rejects fractional counts and partially malformed patterns
+      ---
+      duration_ms: 45.6287
+      type: 'test'
+      ...
+    # Subtest: overlapping recurring sessions fail atomically in preview and commit
+    ok 39 - overlapping recurring sessions fail atomically in preview and commit
+      ---
+      duration_ms: 16.3218
+      type: 'test'
+      ...
+    # Subtest: existing appointments retain duration snapshots after service settings change
+    ok 40 - existing appointments retain duration snapshots after service settings change
+      ---
+      duration_ms: 171.8737
+      type: 'test'
+      ...
+    # Subtest: resource deactivation cannot invalidate reserved equipment
+    ok 41 - resource deactivation cannot invalidate reserved equipment
+      ---
+      duration_ms: 29.1964
+      type: 'test'
+      ...
+    # Subtest: deleting a special Sunday opening cannot strand a reservation
+    ok 42 - deleting a special Sunday opening cannot strand a reservation
+      ---
+      duration_ms: 54.9043
+      type: 'test'
+      ...
+    # Subtest: restore rejects malformed resource allocations without corrupting the live snapshot
+    ok 43 - restore rejects malformed resource allocations without corrupting the live snapshot
+      ---
+      duration_ms: 164.8708
+      type: 'test'
+      ...
+    # Subtest: invalid bulk actions and ranges do not write any blocks
+    ok 44 - invalid bulk actions and ranges do not write any blocks
+      ---
+      duration_ms: 12.3085
+      type: 'test'
+      ...
+    # Subtest: interval boundaries match an independent minute-by-minute oracle
+    ok 45 - interval boundaries match an independent minute-by-minute oracle
+      ---
+      duration_ms: 658.8697
+      type: 'test'
+      ...
+    # Subtest: calendar exports preserve Lisbon summer/winter time, pending status and UTF-8 lines
+    ok 46 - calendar exports preserve Lisbon summer/winter time, pending status and UTF-8 lines
+      ---
+      duration_ms: 16.0198
+      type: 'test'
+      ...
+    # Subtest: database integrity and foreign keys survive all failure scenarios
+    ok 47 - database integrity and foreign keys survive all failure scenarios
+      ---
+      duration_ms: 4.473
+      type: 'test'
+      ...
+    # Subtest: failed single and recurring bookings never leave empty patient profiles
+    ok 48 - failed single and recurring bookings never leave empty patient profiles
+      ---
+      duration_ms: 52.7975
+      type: 'test'
+      ...
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+    # Subtest: simultaneous public requests cannot exceed the per-phone booking allowance
+    ok 49 - simultaneous public requests cannot exceed the per-phone booking allowance
+      ---
+      duration_ms: 361.6164
+      type: 'test'
+      ...
+    # Subtest: deleting a patient does not allow their retained confirmed appointment to overlap
+    ok 50 - deleting a patient does not allow their retained confirmed appointment to overlap
+      ---
+      duration_ms: 67.9289
+      type: 'test'
+      ...
+    # Subtest: appointment archival preserves its linked clinical session
+    ok 51 - appointment archival preserves its linked clinical session
+      ---
+      duration_ms: 55.1468
+      type: 'test'
+      ...
+    # Subtest: a database failure midway through recurring creation rolls back every write
+    ok 52 - a database failure midway through recurring creation rolls back every write
+      ---
+      duration_ms: 42.3054
+      type: 'test'
+      ...
+    # Subtest: a lost commit acknowledgement recovers the booking with one rate-limit charge
+    ok 53 - a lost commit acknowledgement recovers the booking with one rate-limit charge
+      ---
+      duration_ms: 84.899
+      type: 'test'
+      ...
+    # Subtest: an obsolete response-cache failure cannot turn a committed booking into an error
+    ok 54 - an obsolete response-cache failure cannot turn a committed booking into an error
+      ---
+      duration_ms: 52.8482
+      type: 'test'
+      ...
+    # Subtest: recurring APIs reject malformed practitioner preferences and patient names
+    ok 55 - recurring APIs reject malformed practitioner preferences and patient names
+      ---
+      duration_ms: 40.554
+      type: 'test'
+      ...
+    # Subtest: retrying a recurring plan after a lost acknowledgement returns exactly the committed plan
+    ok 56 - retrying a recurring plan after a lost acknowledgement returns exactly the committed plan
+      ---
+      duration_ms: 53.0207
+      type: 'test'
+      ...
+    # Subtest: patient deletion during booking cannot create a dangling patient reference
+    ok 57 - patient deletion during booking cannot create a dangling patient reference
+      ---
+      duration_ms: 102.1833
+      type: 'test'
+      ...
+    # Subtest: racing reschedules of different appointments have exactly one winner
+    ok 58 - racing reschedules of different appointments have exactly one winner
+      ---
+      duration_ms: 184.1614
+      type: 'test'
+      ...
+    # Subtest: restore failure after deletes rolls back data and the schedule revision
+    ok 59 - restore failure after deletes rolls back data and the schedule revision
+      ---
+      duration_ms: 227.0731
+      type: 'test'
+      ...
+    # Subtest: deletion failure preserves both the appointment and its linked clinical session
+    ok 60 - deletion failure preserves both the appointment and its linked clinical session
+      ---
+      duration_ms: 51.7424
+      type: 'test'
+      ...
+    # Subtest: simultaneous IP requests cannot overrun an atomic rate-limit window
+    ok 61 - simultaneous IP requests cannot overrun an atomic rate-limit window
+      ---
+      duration_ms: 266.9824
+      type: 'test'
+      ...
+    # Subtest: SQL guards prevent a patient-phone collision after their profile is removed
+    ok 62 - SQL guards prevent a patient-phone collision after their profile is removed
+      ---
+      duration_ms: 48.1721
+      type: 'test'
+      ...
+    # Subtest: recurring request keys survive restore and refuse recreation of a removed session
+    ok 63 - recurring request keys survive restore and refuse recreation of a removed session
+      ---
+      duration_ms: 537.4116
+      type: 'test'
+      ...
+    # Subtest: malformed scheduling references in backups fail without writes
+    ok 64 - malformed scheduling references in backups fail without writes
+      ---
+      duration_ms: 143.6468
+      type: 'test'
+      ...
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+    # Subtest: twenty concurrent bookings on independent days do not report false capacity conflicts
+    ok 65 - twenty concurrent bookings on independent days do not report false capacity conflicts
+      ---
+      duration_ms: 1123.6659
+      type: 'test'
+      ...
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).
+# [Booking Email Dispatch Warning]:
+# [Schedule configuration read]
+# [Public practitioners read]
+    # Subtest: exhausted contention returns retryable 503 and the same request can recover
+    ok 66 - exhausted contention returns retryable 503 and the same request can recover
+      ---
+      duration_ms: 1110.8866
+      type: 'test'
+      ...
+    # Subtest: notification transport failure cannot roll back a successful reservation
+    ok 67 - notification transport failure cannot roll back a successful reservation
+      ---
+      duration_ms: 57.0579
+      type: 'test'
+      ...
+    # Subtest: linked clinical sessions use the appointment index for lookup and reassignment
+    ok 68 - linked clinical sessions use the appointment index for lookup and reassignment
+      ---
+      duration_ms: 1.3191
+      type: 'test'
+      ...
+    # Subtest: malformed team identifiers cannot accidentally create new records
+    ok 69 - malformed team identifiers cannot accidentally create new records
+      ---
+      duration_ms: 339.5111
+      type: 'test'
+      ...
+    # Subtest: coercible color arrays return validation errors instead of database errors
+    ok 70 - coercible color arrays return validation errors instead of database errors
+      ---
+      duration_ms: 21.2528
+      type: 'test'
+      ...
+    # Subtest: configuration read outages produce retryable JSON without database details
+    ok 71 - configuration read outages produce retryable JSON without database details
+      ---
+      duration_ms: 3.3105
+      type: 'test'
+      ...
+    # Subtest: a failure inside a team write rolls back the profile, services, hours and revision
+    ok 72 - a failure inside a team write rolls back the profile, services, hours and revision
+      ---
+      duration_ms: 47.9618
+      type: 'test'
+      ...
+    # Subtest: two simultaneous team edits have one winner and no partial losing profile
+    ok 73 - two simultaneous team edits have one winner and no partial losing profile
+      ---
+      duration_ms: 84.4127
+      type: 'test'
+      ...
+    # Subtest: a booking arriving during team editing prevents a stale archive atomically
+    ok 74 - a booking arriving during team editing prevents a stale archive atomically
+      ---
+      duration_ms: 156.5582
+      type: 'test'
+      ...
+    # Subtest: rescheduling availability still protects patients after their profile is recreated
+    ok 75 - rescheduling availability still protects patients after their profile is recreated
+      ---
+      duration_ms: 116.7094
+      type: 'test'
+      ...
+    # Subtest: rescheduling a deleted appointment fails explicitly instead of offering slots
+    ok 76 - rescheduling a deleted appointment fails explicitly instead of offering slots
+      ---
+      duration_ms: 12.0298
+      type: 'test'
+      ...
+    # Subtest: public availability rejects impossible calendar dates
+    ok 77 - public availability rejects impossible calendar dates
+      ---
+      duration_ms: 6.1595
+      type: 'test'
+      ...
+    # Subtest: a reassignment transaction failure preserves both agenda and clinical session
+    ok 78 - a reassignment transaction failure preserves both agenda and clinical session
+      ---
+      duration_ms: 64.4691
+      type: 'test'
+      ...
+    # Subtest: migration is idempotent after parallel bookings exist
+    ok 79 - migration is idempotent after parallel bookings exist
+      ---
+      duration_ms: 27.144
+      type: 'test'
+      ...
+    1..79
+ok 3 - Team scheduling on isolated libSQL
+  ---
+  duration_ms: 9747.9444
+  type: 'test'
+  ...
+# Subtest: WhatsApp booking integration against isolated libSQL
+    # Subtest: webhook verifies exact raw signatures and challenge tokens
+    ok 1 - webhook verifies exact raw signatures and challenge tokens
+      ---
+      duration_ms: 15.1975
+      type: 'test'
+      ...
+    # Subtest: other phone IDs, delivery notifications and non-allowlisted senders do not book
+    ok 2 - other phone IDs, delivery notifications and non-allowlisted senders do not book
+      ---
+      duration_ms: 0.4898
+      type: 'test'
+      ...
+    # Subtest: complete conversation saves one pending appointment visible to dashboard queries
+    ok 3 - complete conversation saves one pending appointment visible to dashboard queries
+      ---
+      duration_ms: 366.0452
+      type: 'test'
+      ...
+    # Subtest: duplicate webhook deliveries do not create duplicate replies
+    ok 4 - duplicate webhook deliveries do not create duplicate replies
+      ---
+      duration_ms: 52.2975
+      type: 'test'
+      ...
+    # Subtest: stale confirmation buttons cannot reserve a different selection
+    ok 5 - stale confirmation buttons cannot reserve a different selection
+      ---
+      duration_ms: 329.9482
+      type: 'test'
+      ...
+    # Subtest: a crash after booking but before conversation commit recovers the same appointment
+    ok 6 - a crash after booking but before conversation commit recovers the same appointment
+      ---
+      duration_ms: 351.4546
+      type: 'test'
+      ...
+    # Subtest: delivery failure retains the booking and retries the saved reply
+    ok 7 - delivery failure retains the booking and retries the saved reply
+      ---
+      duration_ms: 266.8341
+      type: 'test'
+      ...
+    # Subtest: treatment overlaps and blocked intervals are enforced for every database writer
+    ok 8 - treatment overlaps and blocked intervals are enforced for every database writer
+      ---
+      duration_ms: 43.7671
+      type: 'test'
+      ...
+    # Subtest: per-conversation leases prevent concurrent processing and stale commits
+    ok 9 - per-conversation leases prevent concurrent processing and stale commits
+      ---
+      duration_ms: 21.8813
+      type: 'test'
+      ...
+    # Subtest: Portuguese and French conversations understand service, tomorrow and afternoon
+    ok 10 - Portuguese and French conversations understand service, tomorrow and afternoon
+      ---
+      duration_ms: 23.3481
+      type: 'test'
+      ...
+    # Subtest: automatic confirmation is explicit and expiry cannot make a new booking
+    ok 11 - automatic confirmation is explicit and expiry cannot make a new booking
+      ---
+      duration_ms: 573.3586
+      type: 'test'
+      ...
+    # Subtest: jobs and configuration status require separate authorization
+    ok 12 - jobs and configuration status require separate authorization
+      ---
+      duration_ms: 1.3154
+      type: 'test'
+      ...
+    # Subtest: dashboard stream detects a database change without a process-local event
+    ok 13 - dashboard stream detects a database change without a process-local event
+      ---
+      duration_ms: 3014.8672
+      type: 'test'
+      ...
+    # Subtest: disabled integration does not accept incoming messages
+    ok 14 - disabled integration does not accept incoming messages
+      ---
+      duration_ms: 1.2498
+      type: 'test'
+      ...
+    1..14
+ok 4 - WhatsApp booking integration against isolated libSQL
+  ---
+  duration_ms: 5256.9147
+  type: 'test'
+  ...
+1..4
+# tests 120
+# suites 0
+# pass 120
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 37781.3522

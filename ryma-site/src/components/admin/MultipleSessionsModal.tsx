@@ -1,8 +1,12 @@
 'use client';
+import { getLocalizedText } from '@/data/services';
+import { useServices } from '@/components/ServiceCatalogProvider';
+import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
 
 import { PhoneInput } from '@/components/ui/PhoneInput';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { bookingRequestKey } from '@/lib/booking-request';
 import {
   IconCalendarEvent,
   IconClock,
@@ -22,7 +26,7 @@ import {
   IconLock,
 } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SERVICES } from '@/data/services';
+
 import { VALID_TIME_SLOTS } from '@/lib/validation';
 import { Lang } from '@/lib/i18n';
 import { PatientRecord, Appointment, CoverageType } from '@/types/admin';
@@ -76,6 +80,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
   onSuccess,
   onActionToast,
 }: MultipleSessionsModalProps) {
+  const SERVICES = useServices();
   const txt = (frStr: string, enStr: string, ptStr: string) => {
     if (lang === 'fr') return frStr;
     if (lang === 'en') return enStr;
@@ -90,7 +95,8 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
   const [coverageType, setCoverageType] = useState<CoverageType>('PARTICULAR');
   const [coverageProvider, setCoverageProvider] = useState('');
   const [coverageNumber, setCoverageNumber] = useState('');
-  const [serviceSlug, setServiceSlug] = useState(SERVICES[0]?.slug || 'kinesitherapie-generale');
+  const [practitionerId,setPractitionerId] = useState('');
+  const [serviceSlug, setServiceSlug] = useState(SERVICES[0]?.slug || '');
 
   // Recurrence settings
   const [totalSessions, setTotalSessions] = useState(10);
@@ -106,6 +112,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const requestRef=useRef<{payload:string;key:string}|null>(null);
   const [hasCalculated, setHasCalculated] = useState(false);
 
   // Sync initial patient when opened
@@ -201,6 +208,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
       (document.getElementById('sessions-phone') as HTMLInputElement | null)?.reportValidity();
       return;
     }
+    if (!practitionerId) { setPreviewError(txt('Choisissez un praticien.', 'Choose a practitioner.', 'Escolha um profissional.')); return; }
     if (schedulePatterns.length === 0) {
       setPreviewError(txt('Veuillez sélectionner au moins un jour.', 'Please select at least one day.', 'Por favor, selecione pelo menos um dia da semana.'));
       return;
@@ -218,6 +226,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
           totalSessions,
           scheduleSlots: schedulePatterns,
           serviceSlug,
+          practitionerId,
           patientPhone: phone,
         }),
       });
@@ -267,6 +276,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
         body: JSON.stringify({
           explicitSessions,
           serviceSlug,
+          practitionerId,
           patientPhone: phone,
         }),
       });
@@ -315,14 +325,12 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
     setPreviewError(null);
 
     try {
-      const res = await fetch('/api/admin/appointments/multiple', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const payload = {
           patientName: patientName.trim(),
           phone: phoneValidation.normalized,
           email: email.trim() || undefined,
           service: serviceSlug,
+          practitionerId,
           patientId,
           coverageType,
           coverageProvider: coverageProvider || undefined,
@@ -332,7 +340,11 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
             startTime: s.startTime,
             notes: `Sessão #${s.sessionIndex} • Plano de Tratamento (${totalSessions} sessões)`,
           })),
-        }),
+      };
+      const res = await fetch('/api/admin/appointments/multiple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({...payload,clientRequestId:bookingRequestKey(requestRef,payload)}),
       });
 
       const data = await res.json();
@@ -447,6 +459,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
             <span>{txt('Informations Patient & Soin', 'Patient & Service Details', 'Dados do Utente & Tratamento')}</span>
           </div>
 
+          <PractitionerSelect admin allowAny={false} lang={lang} value={practitionerId} service={serviceSlug} onChange={value => {setPractitionerId(value);setHasCalculated(false);}} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -535,9 +548,9 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                 }}
                 className="w-full bg-white border border-[#CBD5E1] text-[#0F172A] rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#0F172A]"
               >
-                {SERVICES.map(s => (
+                <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map(s => (
                   <option key={s.slug} value={s.slug}>
-                    {s.name[lang] || s.name.pt || s.name.fr} ({s.price} €)
+                    {getLocalizedText(s.name,lang)} ({s.price} €)
                   </option>
                 ))}
               </select>

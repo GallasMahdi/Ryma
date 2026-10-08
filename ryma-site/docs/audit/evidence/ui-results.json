@@ -1,0 +1,57 @@
+[
+  {
+    "page": "agenda",
+    "height": 900,
+    "scrollWidth": 1440,
+    "width": 1440
+  },
+  {
+    "page": "agenda",
+    "height": 900,
+    "scrollWidth": 768,
+    "width": 768
+  },
+  {
+    "page": "agenda",
+    "height": 900,
+    "scrollWidth": 390,
+    "width": 390
+  },
+  {
+    "page": "agenda",
+    "height": 900,
+    "scrollWidth": 360,
+    "width": 360
+  },
+  {
+    "id": "UI-F",
+    "status": "PASS",
+    "details": "360px: recherche Élodie; création Audit Mobile 20/11/2026 09:00 puis déplacement à 10:00 confirmé dans la carte."
+  },
+  {
+    "id": "UI-MODAL",
+    "status": "FAIL",
+    "focusBefore": {
+      "dialogs": 0,
+      "label": "Nova Consulta",
+      "tag": "BUTTON",
+      "text": "Nova Consulta"
+    },
+    "focusAfter": {
+      "label": null,
+      "tag": "BODY",
+      "text": "Digital Clínica/Gestão ClínicaDiretoPesquisar utente, ação...⌘KCSVAjudaMúltiplas"
+    },
+    "details": "Fermeture Escape après saisie sans confirmation"
+  },
+  {
+    "id": "UI-VIEWS",
+    "status": "PASS",
+    "details": "Semaine 28/12/2026–03/01/2027 puis 04–10/01/2027; occurrence 14:00 visible. Vue tableau ouverte, filtre date conservé. Captures bureau/tablette."
+  },
+  {
+    "id": "UI-TEAM",
+    "status": "PASS",
+    "details": "Écran équipe et horaires lu sur bureau; capture 390px. Les modifications sont testées par la suite scheduling, pas par clic pour chaque champ."
+  }
+]

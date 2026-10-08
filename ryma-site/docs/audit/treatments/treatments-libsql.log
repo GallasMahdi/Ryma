@@ -1,0 +1,31 @@
+▶ Treatments lifecycle on isolated libSQL
+  ✔ migration seeds existing treatments once and keeps catalogue mutations in booking revision (191.4167ms)
+  ✔ drafts stay out of public catalogue and cannot receive website or dashboard bookings (18.3175ms)
+  ✔ publishing requires an eligible practitioner and valid working hours (70.8785ms)
+  ✔ custom treatment books with exact price, name and full duration snapshots (29.5155ms)
+  ✔ catalogue updates preserve existing bookings and historical revenue (69.6504ms)
+  ✔ future appointments prevent removing practitioner assignments (8.9654ms)
+  ✔ archive removes public access, keeps existing care editable and allows confirmed-request replay (44.7678ms)
+  ✔ existing archived-treatment appointment can still be invoiced (97.1693ms)
+[Public practitioners read]
+  ✔ parallel editors reject stale updates instead of overwriting (47.7117ms)
+  ✔ duplicate creation and edits using an old version cannot replace a treatment (29.4406ms)
+  ✔ invalid fields and malicious shapes leave the entire database unchanged (325.0827ms)
+  ✔ transaction failure rolls back treatment, mappings and audit history together (39.2282ms)
+  ✔ Team and resource assignment accept a custom treatment and preserve duration overrides (66.1284ms)
+  ✔ recurring custom treatment plans reserve and record the correct service (30.4654ms)
+  ✔ new backup format restores custom catalogue, assignments, snapshots and revisions (78.8972ms)
+  ✔ admin API requires authentication, validates JSON and records hashed actor identity (92.4054ms)
+  ✔ WhatsApp menus include published custom services and recover when selection is archived (99.808ms)
+  ✔ empty published catalogue returns an empty list and a useful WhatsApp reply (44.7603ms)
+  ✔ migration reruns preserve archives, custom services and intentionally empty catalogues (69.2593ms)
+  ✔ catalogue outages return retryable JSON without internal database details (1.5905ms)
+✔ Treatments lifecycle on isolated libSQL (1459.6491ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2831.0382

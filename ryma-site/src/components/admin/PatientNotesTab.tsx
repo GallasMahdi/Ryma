@@ -1,4 +1,9 @@
 'use client';
+import { getLocalizedText } from '@/data/services';
+import { useAllServices, useServiceLabels } from '@/components/ServiceCatalogProvider';
+import { completedSessions, measuredSessions } from '@/lib/clinical';
+import { getLisbonDateTime } from '@/lib/validation';
+import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
 
 import { PhoneInput } from '@/components/ui/PhoneInput';
 
@@ -32,17 +37,8 @@ import {
   IconFilter,
   IconUsers,
 } from '@tabler/icons-react';
-import {
-  PatientNote,
-  PatientRecord,
-  Appointment,
-  Invoice,
-  PatientPrescription,
-  CreateInvoiceInput,
-  getServiceName,
-  getServicePrice,
-} from '@/types/admin';
-import { SERVICES } from '@/data/services';
+import { PatientNote, PatientRecord, Appointment, Invoice, PatientPrescription, CreateInvoiceInput } from '@/types/admin';
+
 import { Lang } from '@/lib/i18n';
 import { phonesMatch } from '@/lib/phone';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -114,6 +110,8 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
   createDirectPatientNote,
   onActionToast,
 }: PatientNotesTabProps) {
+  const SERVICES = useAllServices();
+  const { getServiceName } = useServiceLabels();
   const txt = (frStr: string, enStr: string, ptStr: string) => {
     if (lang === 'fr') return frStr;
     if (lang === 'en') return enStr;
@@ -149,36 +147,42 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
   const invoicesRequestRef = useRef(0);
   const prescriptionsRequestRef = useRef(0);
 
-  const fetchActivePatientInvoices = async (phone: string, force = false) => {
+  const fetchActivePatientInvoices = async (patient: PatientRecord, force = false) => {
+    const phone = patient.phone;
+    const key = patient.id;
+    const query = patient.id.startsWith('legacy_') ? `patientPhone=${encodeURIComponent(phone)}` : `patientId=${encodeURIComponent(patient.id)}`;
     const requestId = ++invoicesRequestRef.current;
-    const cached = force ? undefined : invoicesCacheRef.current[phone];
+    const cached = force ? undefined : invoicesCacheRef.current[key];
     setPatientInvoices(cached ?? []);
     setLoadingInvoices(!cached && Boolean(phone));
     if (!phone) return;
     try {
-      const res = await fetch(`/api/admin/invoices?patientPhone=${encodeURIComponent(phone)}`, { cache: 'no-store' });
+      const res = await fetch(`/api/admin/invoices?${query}`, { cache: 'no-store' });
       if (!res.ok) return;
       const data = await res.json();
       if (!Array.isArray(data.invoices)) return;
-      invoicesCacheRef.current[phone] = data.invoices;
+      invoicesCacheRef.current[key] = data.invoices;
       if (requestId === invoicesRequestRef.current) setPatientInvoices(data.invoices);
     } catch { /* Keep this patient’s cached data on a failed refresh. */ } finally {
       if (requestId === invoicesRequestRef.current) setLoadingInvoices(false);
     }
   };
 
-  const fetchActivePatientPrescriptions = async (phone: string, force = false) => {
+  const fetchActivePatientPrescriptions = async (patient: PatientRecord, force = false) => {
+    const phone = patient.phone;
+    const key = patient.id;
+    const query = patient.id.startsWith('legacy_') ? `patientPhone=${encodeURIComponent(phone)}` : `patientId=${encodeURIComponent(patient.id)}`;
     const requestId = ++prescriptionsRequestRef.current;
-    const cached = force ? undefined : prescriptionsCacheRef.current[phone];
+    const cached = force ? undefined : prescriptionsCacheRef.current[key];
     setPatientPrescriptions(cached ?? []);
     setLoadingPrescriptions(!cached && Boolean(phone));
     if (!phone) return;
     try {
-      const res = await fetch(`/api/admin/prescriptions?patientPhone=${encodeURIComponent(phone)}`, { cache: 'no-store' });
+      const res = await fetch(`/api/admin/prescriptions?${query}`, { cache: 'no-store' });
       if (!res.ok) return;
       const data = await res.json();
       if (!Array.isArray(data.prescriptions)) return;
-      prescriptionsCacheRef.current[phone] = data.prescriptions;
+      prescriptionsCacheRef.current[key] = data.prescriptions;
       if (requestId === prescriptionsRequestRef.current) setPatientPrescriptions(data.prescriptions);
     } catch { /* Keep this patient’s cached data on a failed refresh. */ } finally {
       if (requestId === prescriptionsRequestRef.current) setLoadingPrescriptions(false);
@@ -191,22 +195,29 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
     const controller = new AbortController();
     const phone = selectedNote.phone;
     const fallback: PatientRecord = {id: 'legacy_' + phone, phone, patientName: selectedNote.patientName, pathologyTags: selectedNote.tags, medicalHistory: selectedNote.content, totalPrescribedSessions: 10, createdAt: selectedNote.updatedAt, updatedAt: selectedNote.updatedAt};
-    const match = patientsList.find(p => phonesMatch(p.phone, phone));
+    const match = patientsList.find(p => selectedNote.patientId ? p.id === selectedNote.patientId : phonesMatch(p.phone, phone));
     setRetainedPatient(match || fallback);
     setSelectedPatientId((match || fallback).id);
-    fetchActivePatientInvoices(phone);
-    fetchActivePatientPrescriptions(phone);
-    Promise.all([
-      fetch('/api/admin/patients?phone=' + encodeURIComponent(phone), {signal: controller.signal}).then(r => {if (!r.ok) throw Error('Patient load failed'); return r.json();}),
-      fetch('/api/admin/appointments?phone=' + encodeURIComponent(phone), {signal: controller.signal}).then(r => {if (!r.ok) throw Error('History load failed'); return r.json();}),
-    ]).then(([detail, history]) => {
+    setPatientAppointments([]);
+    const id = selectedNote.patientId || (match && !match.id.startsWith('legacy_') ? match.id : undefined);
+    fetch('/api/admin/patients?' + (id ? 'id=' + encodeURIComponent(id) : 'phone=' + encodeURIComponent(phone)), {signal:controller.signal})
+      .then(r => {if (!r.ok) throw Error('Patient load failed'); return r.json();})
+      .then(async detail => {
       if (controller.signal.aborted) return;
-      setRetainedPatient(detail.patient || fallback);
-      setSelectedPatientId((detail.patient || fallback).id);
+      const patient = detail.patient || fallback;
+      setRetainedPatient(patient);
+      setSelectedPatientId(patient.id);
+      fetchActivePatientInvoices(patient);
+      fetchActivePatientPrescriptions(patient);
+      const query = detail.patient ? 'patientId=' + encodeURIComponent(patient.id) + '&includeArchived=1' : 'phone=' + encodeURIComponent(phone);
+      const response = await fetch('/api/admin/appointments?' + query, {signal:controller.signal});
+      if (!response.ok) throw Error('History load failed');
+      const history = await response.json();
+      if (controller.signal.aborted) return;
       setPatientAppointments(history.appointments);
     }).catch(() => {if (!controller.signal.aborted) onActionToast?.({type: 'error', title: 'Unable to load patient history'});});
     return () => controller.abort();
-  }, [selectedNote?.phone, patientsList]);
+  }, [selectedNote?.patientId, selectedNote?.phone, patientsList]);
 
   const [newPatientForm, setNewPatientForm] = useState({
     patientName: '',
@@ -225,6 +236,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
   const [editPatientForm, setEditPatientForm] = useState({
     id: '',
+    legacyPhone: '',
     patientName: '',
     phone: '',
     email: '',
@@ -240,10 +252,13 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
   });
 
   const [sessionForm, setSessionForm] = useState({
+    practitionerId: "",
     date: new Date().toISOString().split('T')[0],
     time: '10:00',
-    serviceSlug: SERVICES[0]?.slug || 'reeducation-posturale',
-    evaPainScore: 5,
+    serviceSlug: SERVICES[0]?.slug || '',
+    evaPainScore: null as number | null,
+    appointmentId: '',
+    clinicalStatus: 'COMPLETED' as 'PLANNED' | 'COMPLETED',
     notes: '',
   });
 
@@ -342,8 +357,8 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
     setRetainedPatient(patient);
     setSelectedPatientId(patient.id);
     setIsMobileDetailOpen(true);
-    fetchActivePatientInvoices(patient.phone);
-    fetchActivePatientPrescriptions(patient.phone);
+    fetchActivePatientInvoices(patient);
+    fetchActivePatientPrescriptions(patient);
 
     // Sync noteForm for quick notes tab
     setNoteForm({
@@ -354,9 +369,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
     // Sync legacy selectedNote
     const legacyMatch = patientNotes.find(n => phonesMatch(n.phone, patient.phone));
     if (legacyMatch) {
-      setSelectedNote(legacyMatch);
+      setSelectedNote({...legacyMatch, patientId:patient.id.startsWith('legacy_') ? undefined : patient.id});
     } else {
       setSelectedNote({
+        patientId: patient.id.startsWith('legacy_') ? undefined : patient.id,
         phone: patient.phone,
         patientName: patient.patientName,
         tags: patient.pathologyTags || '',
@@ -376,8 +392,9 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       time?: string;
       title: string;
       source: 'online' | 'manual' | 'paper';
-      evaPainScore?: number;
+      evaPainScore?: number | null;
       notes?: string;
+      archivedAt?: string | null;
     }> = [];
 
     // Add structured clinical sessions
@@ -391,13 +408,14 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           source: s.sessionType === 'ONLINE' ? 'online' : s.sessionType === 'PAPER' ? 'paper' : 'manual',
           evaPainScore: s.evaPainScore,
           notes: s.notes || undefined,
+          archivedAt: patientAppointments.find(a => a.id === s.appointmentId)?.archivedAt,
         });
       });
     }
 
     // Add completed online appointments
     patientAppointments
-      .filter(a => phonesMatch(a.phone, activePatient.phone) && a.status === 'COMPLETED')
+      .filter(a => (a.patientId ? a.patientId === activePatient.id : phonesMatch(a.phone, activePatient.phone)) && (a.status === 'COMPLETED' || a.archivedAt))
       .forEach(a => {
         const alreadyInSessions = items.some(it => it.date === a.date && it.time === a.startTime);
         if (!alreadyInSessions) {
@@ -405,9 +423,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
             id: a.id,
             date: a.date,
             time: a.startTime,
-            title: getServiceName(a.service, lang),
+            title: getServiceName(a.service, lang, a),
             source: 'online',
             notes: a.notes || undefined,
+            archivedAt: a.archivedAt,
           });
         }
       });
@@ -415,12 +434,13 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
     // Sort descending by date
     items.sort((a, b) => new Date(`${b.date}T${b.time || '00:00'}`).getTime() - new Date(`${a.date}T${a.time || '00:00'}`).getTime());
     return items;
-  }, [activePatient, patientAppointments, lang]);
+  }, [activePatient, patientAppointments, lang, getServiceName]);
 
   // EVA Progression computation
   const evaAnalytics = useMemo(() => {
     if (!activePatient?.sessions || activePatient.sessions.length === 0) return null;
-    const sorted = [...activePatient.sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sorted = measuredSessions(activePatient.sessions).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    if (!sorted.length) return null;
     const initial = sorted[0].evaPainScore;
     const current = sorted[sorted.length - 1].evaPainScore;
     const diff = initial - current; // Positive means pain decreased (improved)
@@ -492,6 +512,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
   const openEditPatientModal = (patient: PatientRecord) => {
     setEditPatientForm({
       id: patient.id.startsWith('legacy_') ? '' : patient.id,
+      legacyPhone: patient.id.startsWith('legacy_') ? patient.phone : '',
       patientName: patient.patientName,
       phone: patient.phone,
       email: patient.email || '',
@@ -570,6 +591,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             patientName: activePatient.patientName,
+            legacyPhone: activePatient.phone,
             phone: activePatient.phone,
             totalPrescribedSessions: activePatient.totalPrescribedSessions || 10,
           }),
@@ -593,10 +615,13 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
       setIsAddSessionModalOpen(false);
       setSessionForm({
+        practitionerId: "",
         date: new Date().toISOString().split('T')[0],
         time: '10:00',
-        serviceSlug: SERVICES[0]?.slug || 'reeducation-posturale',
-        evaPainScore: 5,
+        serviceSlug: SERVICES[0]?.slug || '',
+        evaPainScore: null as number | null,
+    appointmentId: '',
+    clinicalStatus: 'COMPLETED' as 'PLANNED' | 'COMPLETED',
         notes: '',
       });
 
@@ -605,7 +630,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
         onActionToast({
           type: 'success',
           title: txt('Séance Enregistrée', 'Session Logged', 'Sessão Registada'),
-          message: `EVA: ${sessionForm.evaPainScore}/10`,
+          message: sessionForm.evaPainScore===null ? txt('Sans mesure EVA', 'No EVA measurement', 'Sem medição EVA') : `EVA: ${sessionForm.evaPainScore}/10`,
         });
       }
     } catch (err: any) {
@@ -623,6 +648,18 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
   const [editingEvaSessionId, setEditingEvaSessionId] = useState<string | null>(null);
 
+  const completeSession = async (sessionId: string, expectedVersion: number) => {
+    if (!activePatient) return;
+    try {
+      const res=await fetch(`/api/admin/patients/${activePatient.id}/sessions`, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId,expectedVersion,clinicalStatus:'COMPLETED'})});
+      const data=await res.json();
+      if (!res.ok) throw new Error(data.error);
+      onRefreshPatients?.();
+    } catch(error) {
+      onActionToast?.({type:'error',title:txt('Enregistrement refusé','Save rejected','Gravação recusada'),message:error instanceof Error?error.message:String(error)});
+    }
+  };
+
   // Update EVA score for an existing session with immediate optimistic feedback
   const handleUpdateSessionEva = async (sessionId: string, newScore: number) => {
     if (!activePatient) return;
@@ -635,10 +672,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       const res = await fetch(`/api/admin/patients/${cleanId}/sessions`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, evaPainScore: newScore }),
+        body: JSON.stringify({ sessionId, evaPainScore: newScore, expectedVersion: activePatient.sessions?.find(s => s.id===sessionId)?.version }),
       });
 
-      if (!res.ok) throw new Error('Falha ao atualizar score EVA');
+      if (!res.ok) { const data=await res.json(); throw new Error(data.error || 'Falha ao atualizar score EVA'); }
 
       if (onRefreshPatients) onRefreshPatients();
       if (onActionToast) {
@@ -648,12 +685,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           message: `Sessão ajustada para EVA ${newScore}/10`,
         });
       }
-    } catch {
+    } catch (error) {
       if (onActionToast) {
         onActionToast({
           type: 'error',
           title: txt('Erreur', 'Error', 'Erro'),
-          message: 'Falha ao atualizar score EVA',
+          message: error instanceof Error ? error.message : 'Falha ao atualizar score EVA',
         });
       }
     }
@@ -672,6 +709,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: cleanId,
+          legacyPhone: cleanId ? undefined : activePatient.phone,
           patientName: activePatient.patientName,
           phone: activePatient.phone,
           email: activePatient.email,
@@ -698,21 +736,19 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
   const handleDeletePatient = (patient: PatientRecord) => {
     setConfirmDialog({
       title: txt(
-        `Supprimer définitivement le dossier de ${patient.patientName} (${patient.phone}) ?`,
-        `Permanently delete clinical record for ${patient.patientName} (${patient.phone})?`,
-        `Eliminar definitivamente a ficha de ${patient.patientName} (${patient.phone})?`
+        `Supprimer la fiche vide de ${patient.patientName} ? Toute fiche avec historique sera conservée.`,
+        `Delete the empty record for ${patient.patientName}? Records with history will be retained.`,
+        `Eliminar a ficha vazia de ${patient.patientName}? As fichas com histórico serão preservadas.`
       ),
       onConfirm: async () => {
-        // Optimistic UI state reset
-        setSelectedPatientId(null);
-        setIsMobileDetailOpen(false);
-        deleteNote(patient.phone);
-
         try {
           const cleanId = patient.id.startsWith('legacy_') ? '' : patient.id;
-          await fetch(`/api/admin/patients?id=${encodeURIComponent(cleanId)}&phone=${encodeURIComponent(patient.phone)}`, {
+          const response=await fetch(`/api/admin/patients?id=${encodeURIComponent(cleanId)}&phone=${encodeURIComponent(patient.phone)}`, {
             method: 'DELETE',
           });
+          if(!response.ok){const body=await response.json();throw new Error(body.error||'Delete failed');}
+          setSelectedPatientId(null);
+          setIsMobileDetailOpen(false);
           if (onRefreshPatients) onRefreshPatients();
           if (onActionToast) {
             onActionToast({
@@ -721,14 +757,14 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               message: patient.patientName,
             });
           }
-        } catch {
-          /* silent */
+        } catch (error) {
+          onActionToast?.({type:'error',title:txt('Suppression refusée','Record retained','Ficha preservada'),message:error instanceof Error?error.message:txt('Réessayez.','Please retry.','Tente novamente.')});
         }
       },
     });
   };
 
-  const completedSessionsCount = activePatient?.sessions?.length ?? 0;
+  const completedSessionsCount = completedSessions(activePatient?.sessions).length;
   const targetSessions = activePatient?.totalPrescribedSessions || 10;
   const prescriptionPercent = Math.min(100, Math.round((completedSessionsCount / targetSessions) * 100));
 
@@ -886,9 +922,9 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                               {p.coverageType === 'ADSE' ? 'ADSE' : (p.coverageProvider || 'Mutuelle')}
                             </span>
                           )}
-                          {(p.sessionCount || p.sessions?.length || 0) > 0 && (
+                          {(p.sessionCount || completedSessions(p.sessions).length || 0) > 0 && (
                             <span className="bg-[#EFF6FF] text-[#1E40AF] border border-[#DBEAFE] px-1.5 py-0.2 rounded text-[10px] font-semibold">
-                              {p.sessionCount || p.sessions?.length || 0} sessões
+                              {p.sessionCount || completedSessions(p.sessions).length || 0} sessões
                             </span>
                           )}
                         </div>
@@ -1176,10 +1212,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                           playSoftClick();
                           setActiveDossierTab(t.id as typeof activeDossierTab);
                           if (t.id === 'invoices' && activePatient) {
-                            fetchActivePatientInvoices(activePatient.phone);
+                            fetchActivePatientInvoices(activePatient);
                           }
                           if (t.id === 'prescriptions' && activePatient) {
-                            fetchActivePatientPrescriptions(activePatient.phone);
+                            fetchActivePatientPrescriptions(activePatient);
                           }
                         }}
                         className={`relative shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 whitespace-nowrap select-none touch-target z-10 ${isActive
@@ -1323,7 +1359,8 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                               </span>
                             </div>
 
-                            {item.evaPainScore !== undefined && (
+                            {item.archivedAt && <span className="text-xs text-slate-600">{txt('Rendez-vous archivé', 'Appointment archived', 'Consulta arquivada')}</span>}
+                            {item.evaPainScore != null && (
                               <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-white text-[#0F172A] border border-[#CBD5E1] shadow-2xs">
                                 EVA: <span className={item.evaPainScore >= 7 ? 'text-rose-600' : item.evaPainScore >= 4 ? 'text-amber-600' : 'text-emerald-600'}>{item.evaPainScore}/10</span>
                               </span>
@@ -1394,6 +1431,17 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                         )}
                       </div>
 
+                      {activePatient.sessions?.filter(s=>s.clinicalStatus!=='COMPLETED' && !s.archivedAt).map(s=>{
+                        const appointment=patientAppointments.find(a=>a.id===s.appointmentId);
+                        const {todayStr,currentHHMM}=getLisbonDateTime();
+                        const unavailable=s.date>todayStr || (s.date===todayStr && !!s.time && s.time>currentHHMM) || !!appointment?.archivedAt || ['CANCELLED','NO_SHOW'].includes(appointment?.status??'');
+                        return <div key={s.id} className="p-3 border rounded-xl text-xs space-y-2">
+                          <p className="font-semibold">{s.date} {s.time} · {s.clinicalStatus==='LEGACY_REVIEW' ? txt('Ancienne séance à vérifier','Previous session to review','Sessão antiga a verificar') : txt('Séance prévue','Planned session','Sessão planeada')}</p>
+                          {s.legacyEvaPainScore!=null && <p>{txt('Ancienne valeur non validée','Unverified previous value','Valor anterior não validado')}: {s.legacyEvaPainScore}</p>}
+                          <p className="whitespace-pre-wrap">{s.notes}</p>
+                          <button type="button" disabled={unavailable} onClick={()=>completeSession(s.id,s.version)} className="px-3 py-2 border rounded-lg disabled:opacity-40">{txt('Confirmer la séance réalisée','Confirm session completed','Confirmar sessão realizada')}</button>
+                        </div>;
+                      })}
                       {/* Visual scale reference guide */}
                       <div className="grid grid-cols-3 gap-2 p-2.5 bg-white rounded-xl border border-[#E2E8F0] text-center text-[10px] font-bold">
                         <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
@@ -1407,11 +1455,11 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                         </div>
                       </div>
 
-                      {activePatient.sessions && activePatient.sessions.length > 0 ? (
+                      {completedSessions(activePatient.sessions).length > 0 ? (
                         <div className="space-y-2.5 pt-2">
-                          {activePatient.sessions.map((s, sIdx) => {
+                          {completedSessions(activePatient.sessions).map((s, sIdx) => {
                             const isEditing = editingEvaSessionId === s.id;
-                            const colorConf = getEvaColor(s.evaPainScore);
+                            const colorConf = getEvaColor(s.evaPainScore ?? 0);
 
                             return (
                               <div
@@ -1428,7 +1476,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                         <span className="font-bold text-[#0F172A] text-xs font-mono">{s.date}</span>
                                         {s.time && <span className="text-[11px] text-[#64748B] font-mono">• {s.time}</span>}
                                       </div>
-                                      <span className="text-[11px] text-[#64748B]">{getServiceName(s.serviceSlug, lang)}</span>
+                                      <span className="text-[11px] text-[#64748B]">{getServiceName(s.serviceSlug, lang)} · {s.practitioner}</span>
                                     </div>
                                   </div>
 
@@ -1437,7 +1485,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                     <div className="flex-1 sm:w-32 h-2.5 bg-[#E2E8F0] rounded-full overflow-hidden">
                                       <div
                                         className={`h-full rounded-full transition-all duration-300 ${colorConf.bg}`}
-                                        style={{ width: `${Math.max(5, s.evaPainScore * 10)}%` }}
+                                        style={{ width: `${s.evaPainScore===null ? 0 : Math.max(5, s.evaPainScore * 10)}%` }}
                                       />
                                     </div>
 
@@ -1448,7 +1496,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                       title={txt('Cliquer pour modifier le score', 'Click to modify score', 'Clique para alterar')}
                                     >
                                       <IconPencil size={12} className="opacity-70" />
-                                      <span>EVA {s.evaPainScore}/10</span>
+                                      <span>{s.evaPainScore===null ? txt('EVA non mesurée','EVA not measured','EVA não medida') : `EVA ${s.evaPainScore}/10`}</span>
                                     </button>
                                   </div>
                                 </div>
@@ -1764,6 +1812,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
       {/* New Patient Modal */}
       <ResponsiveModal
+        lang={lang}
         isOpen={isNewPatientModalOpen}
         onClose={() => setIsNewPatientModalOpen(false)}
         title={txt('Nouveau Patient', 'New Patient Record', 'Nova Ficha de Utente')}
@@ -1881,7 +1930,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 border-t border-[#E2E8F0]">
             <button
               type="button"
-              onClick={() => setIsNewPatientModalOpen(false)}
+              data-modal-dismiss
               className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] font-bold text-xs"
             >
               {txt('Annuler', 'Cancel', 'Cancelar')}
@@ -1899,6 +1948,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
       {/* Edit Patient Modal */}
       <ResponsiveModal
+        lang={lang}
         isOpen={isEditPatientModalOpen}
         onClose={() => setIsEditPatientModalOpen(false)}
         title={txt('Modifier le Patient', 'Edit Patient', 'Editar Utente')}
@@ -2011,7 +2061,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 border-t border-[#E2E8F0]">
             <button
               type="button"
-              onClick={() => setIsEditPatientModalOpen(false)}
+              data-modal-dismiss
               className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] font-bold text-xs"
             >
               {txt('Annuler', 'Cancel', 'Cancelar')}
@@ -2029,6 +2079,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
       {/* Add Session Modal */}
       <ResponsiveModal
+        lang={lang}
         isOpen={isAddSessionModalOpen}
         onClose={() => setIsAddSessionModalOpen(false)}
         title={txt('Enregistrer une Séance de Soin', 'Log Clinical Session', 'Registar Sessão de Tratamento')}
@@ -2036,6 +2087,21 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
         maxWidth="md"
       >
         <form onSubmit={handleAddSessionSubmit} className="space-y-3.5 font-sans text-xs">
+          <label className="block font-bold">{txt('Consultation existante','Existing appointment','Consulta existente')}
+            <select value={sessionForm.appointmentId} onChange={e=>{
+              const a=patientAppointments.find(a=>a.id===e.target.value);
+              setSessionForm(p=>({...p,appointmentId:e.target.value,...(a?{date:a.date,time:a.startTime,serviceSlug:a.service,practitionerId:a.practitionerId}:{})}));
+            }} className="w-full border rounded-lg p-3 mt-1">
+              <option value="">{txt('Sans rendez-vous lié','No linked appointment','Sem consulta associada')}</option>
+              {patientAppointments.filter(a=>!a.archivedAt && !['CANCELLED','NO_SHOW'].includes(a.status) && !activePatient?.sessions?.some(s=>s.appointmentId===a.id)).map(a=><option key={a.id} value={a.id}>{a.date} {a.startTime} · {getServiceName(a.service,lang, a)}</option>)}
+            </select>
+          </label>
+          <label className="block font-bold">{txt('État de la séance','Session state','Estado da sessão')}
+            <select value={sessionForm.clinicalStatus} onChange={e=>setSessionForm(p=>({...p,clinicalStatus:e.target.value as 'PLANNED'|'COMPLETED',evaPainScore:null}))} className="w-full border rounded-lg p-3 mt-1">
+              <option value="COMPLETED">{txt('Réalisée','Completed','Realizada')}</option>
+              <option value="PLANNED">{txt('Prévue','Planned','Planeada')}</option>
+            </select>
+          </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="font-bold text-[#475569] block mb-1">
@@ -2061,6 +2127,8 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               />
             </div>
           </div>
+          <PractitionerSelect admin lang={lang} service={sessionForm.serviceSlug} value={sessionForm.practitionerId} onChange={value=>setSessionForm(p=>({...p,practitionerId:value}))} allowAny={false} />
+
 
           <div>
             <label className="font-bold text-[#475569] block mb-1">
@@ -2071,9 +2139,9 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               onChange={e => setSessionForm(p => ({ ...p, serviceSlug: e.target.value }))}
               className="w-full bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] rounded-xl p-3 text-sm sm:text-xs focus:outline-none focus:border-[#0F172A]"
             >
-              {SERVICES.map(s => (
+              <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map(s => (
                 <option key={s.slug} value={s.slug}>
-                  {s.name[lang] || s.name.pt || s.name.fr}
+                  {getLocalizedText(s.name,lang)}
                 </option>
               ))}
             </select>
@@ -2081,11 +2149,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
           {/* EVA Score Picker */}
           <div className="bg-[#F8FAFC] border border-[#CBD5E1] p-4 rounded-2xl">
-            <EvaScorePicker
-              value={sessionForm.evaPainScore}
-              onChange={score => setSessionForm(p => ({ ...p, evaPainScore: score }))}
-              lang={lang}
-            />
+            <label className="block font-bold">EVA
+              <select disabled={sessionForm.clinicalStatus!=='COMPLETED'} value={sessionForm.evaPainScore??''} onChange={e=>setSessionForm(p=>({...p,evaPainScore:e.target.value===''?null:Number(e.target.value)}))} className="w-full border rounded-lg p-3 mt-1">
+                <option value="">{txt('Non mesurée','Not measured','Não medida')}</option>
+                {Array.from({length:11},(_,n)=><option key={n} value={n}>{n}/10</option>)}
+              </select>
+            </label>
           </div>
 
           <div>
@@ -2104,7 +2173,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 border-t border-[#E2E8F0]">
             <button
               type="button"
-              onClick={() => setIsAddSessionModalOpen(false)}
+              data-modal-dismiss
               className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] font-bold text-xs"
             >
               {txt('Annuler', 'Cancel', 'Cancelar')}
@@ -2126,7 +2195,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           isOpen={isCreateInvoiceOpen}
           onClose={() => setIsCreateInvoiceOpen(false)}
           onCreated={(newInv) => {
-            fetchActivePatientInvoices(activePatient.phone);
+            fetchActivePatientInvoices(activePatient);
             if (onRefreshPatients) onRefreshPatients();
             if (onActionToast) {
               onActionToast({
@@ -2170,7 +2239,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               }),
             });
             if (activePatient) {
-              fetchActivePatientInvoices(activePatient.phone, true);
+              fetchActivePatientInvoices(activePatient, true);
             }
             if (selectedInvoiceForModal && selectedInvoiceForModal.id === id) {
               setSelectedInvoiceForModal(prev => (prev ? {
@@ -2200,7 +2269,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           isOpen={isCreatePrescriptionOpen}
           onClose={() => setIsCreatePrescriptionOpen(false)}
           onCreated={(newRx) => {
-            fetchActivePatientPrescriptions(activePatient.phone);
+            fetchActivePatientPrescriptions(activePatient);
             if (onActionToast) {
               onActionToast({
                 type: 'success',
@@ -2239,7 +2308,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
         }}
         onDelete={async (id) => {
           await fetch(`/api/admin/prescriptions/${id}`, { method: 'DELETE' });
-          if (activePatient) fetchActivePatientPrescriptions(activePatient.phone);
+          if (activePatient) fetchActivePatientPrescriptions(activePatient);
         }}
         lang={lang}
         setConfirmDialog={setConfirmDialog}

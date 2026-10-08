@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-08T08:21:18.334Z",
+  "localLinksChecked": 578,
+  "missing": [],
+  "originalFindings": true,
+  "http": {
+    "pass": 38,
+    "total": 38
+  },
+  "extra": {
+    "pass": 9,
+    "total": 9
+  },
+  "metrics": {
+    "pass": 20,
+    "total": 20
+  },
+  "statusTransitions": {
+    "total": 25,
+    "accepted": 25
+  },
+  "dataUnchanged": true
+}

@@ -1,9 +1,10 @@
 'use client';
+import { useServiceLabels } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lang } from '@/lib/i18n';
-import { Appointment, getServiceName } from '@/types/admin';
+import { Appointment } from '@/types/admin';
 import { validateAndNormalizePhone } from '@/lib/phone';
 import {
   IconBrandWhatsapp,
@@ -43,12 +44,13 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
   timeStr: customTime,
   lang,
 }: WhatsAppModalProps) {
+  const { getServiceName } = useServiceLabels();
   const [copied, setCopied] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<string>('reminder');
 
   const name = customName || appointment?.patientName || 'Estimado(a) Utente';
   const rawPhone = customPhone || appointment?.phone || '';
-  const service = customService || (appointment ? getServiceName(appointment.service, lang) : 'Consulta Clínica');
+  const service = customService || (appointment ? getServiceName(appointment.service, lang, appointment) : 'Consulta Clínica');
   const date = customDate || appointment?.date || '';
   const time = customTime || appointment?.startTime || '';
 

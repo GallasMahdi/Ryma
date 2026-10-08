@@ -1,0 +1,96 @@
+Browser tab: 1, Title: "Digital Clínica — Fisioterapia & Estética Avançada em Lisboa", URL: "http://127.0.0.1:3117/admin?tab=appointments".
+0 AXWebArea Digital Clínica — Fisioterapia & Estética Avançada em Lisboa, URL: 127.0.0.1:3117/admin?tab=appointments
+	1 container
+		2 image Digital Clínica Emblem
+		3 text Digital Clínica
+		164 button Search command palette
+			165 image
+		6 button Suporte Técnico & Helpdesk
+			7 image
+		8 button Atualizar
+			9 image
+		10 button Nova Consulta
+			11 image
+		12 button PT, Help: Mudar idioma
+		195 container
+			196 text Profissional
+			197 pop up button (collapsed, settable) Description: Profissional, Value: Todos os profissionais, Secondary Actions: Expand
+				198 menu
+					199 (selected) Todos os profissionais
+					200 Digital Clínica
+		201 container
+			202 image
+			203 text TOTAL CONSULTAS 13
+			204 image
+			205 text CONFIRMADOS 46% 6
+			206 image
+			207 text PENDENTES Rever 5
+			208 image
+			209 text CONCLUÍDOS 0
+			210 button RECEITA (PROPRIETÁRIO) Bloqueado •••• € Desbloquear →, Help: Clique para desbloquear o acesso de proprietário
+				211 image
+				212 text RECEITA (PROPRIETÁRIO)
+				213 image
+				214 text Bloqueado
+				215 text •••• €
+				216 text Desbloquear
+				217 text →
+			218 button Filtros
+				219 image
+				220 text Filtros
+			261 button ✕, Help: Repor
+			221 button Semana, Help: Vista Semanal
+				222 image
+				223 text Semana
+			224 button Agenda, Help: Vista Agenda
+				225 image
+				226 text Agenda
+			227 button Vista Cartões
+				228 image
+			265 text AM Audit Mobile Digital Clínica Pendente 65  € Reeducação Postural Global (RPG) • 2026-11-20 10:00 •
+			266 link Description: +351963001234, Value: tel:+351963001234
+			267 text Création QA mobile — données fictives.
+			268 button WhatsApp Hub (Lembretes & Pós-Tratamento)
+				269 image
+			270 button Ficha do doente
+				271 image
+			272 button Emitir Fatura-Recibo
+				273 image
+			274 button Confirmar
+				275 image
+				276 text Confirmar
+			277 button Cancelar
+				278 image
+			279 text A mostrar 1 – 1 de 1
+			280 pop up button (collapsed, settable) Value: 10, Secondary Actions: Expand
+				281 menu
+					282 (selected) 10
+					283 25
+					284 50
+		169 container Navigation mobile
+			170 button 13 Consultas
+				171 container
+					172 image
+					173 text 13
+				174 text Consultas
+			175 button Agenda
+				176 text Agenda
+			177 button 2 Doentes
+				191 container
+					192 image
+					193 text 2
+				178 text Doentes
+			179 button Recibos
+				180 text Recibos
+			181 button Avis
+				182 text Avis
+			183 button Equipa
+				184 text Equipa
+			185 button 🔒 Stats
+				186 container
+					187 image
+					188 text 🔒
+				189 text Stats
+	194 text Digital Clínica — Fisioterapia & Estética Avançada em Lisboa
+
+The focused UI element is 0 AXWebArea Digital Clínica — Fisioterapia & Estética Avançada em Lisboa, URL: 127.0.0.1:3117/admin?tab=appointments

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOwnerAnalytics } from '@/lib/requireAdmin';
-import { dbGetInvoices } from '@/lib/db';
+import { dbGetInvoices, dbAssertInvoiceAmountsReviewed, DocumentError } from '@/lib/db';
+import { invoiceFilters } from '@/lib/admin-validation';
 import { calculateVatBreakdown } from '@/types/admin';
 
 function sanitizeCsvField(val: unknown): string {
@@ -30,9 +31,12 @@ export async function GET(request: NextRequest) {
   const dateFrom = searchParams.get('dateFrom') ?? undefined;
   const dateTo = searchParams.get('dateTo') ?? undefined;
 
-  const invoices = await dbGetInvoices({ status, search, dateFrom, dateTo });
+  let filters;
+  try { filters=invoiceFilters(searchParams); } catch { return NextResponse.json({error:'Invalid invoice filters'},{status:422}); }
+  try { await dbAssertInvoiceAmountsReviewed(); } catch(error) { if(error instanceof DocumentError)return NextResponse.json({error:error.message},{status:409});throw error; }
+  const invoices = await dbGetInvoices(filters);
 
-  let csv = 'Numero Fatura-Recibo;Data Emissao;Nome Utente;NIF;Telefone;Email;Servico;Incidencia Base EUR;Taxa IVA;Valor IVA EUR;Valor Total EUR;Motivo Isencao;Metodo Pagamento;Estado Pagamento;Data Pagamento;Seguro / Mutuelle;Numero Beneficiario;Notas\n';
+  let csv = 'Numero Fatura-Recibo;Data Emissao;Nome Utente;NIF;Telefone;Email;Servico;Profissional;Incidencia Base EUR;Taxa IVA;Valor IVA EUR;Valor Total EUR;Motivo Isencao;Metodo Pagamento;Estado Pagamento;Data Pagamento;Seguro / Mutuelle;Numero Beneficiario;Notas\n';
 
   invoices.forEach(inv => {
     const { incidence, vatAmount, vatRate } = calculateVatBreakdown(inv.amount, inv.vatRate);
@@ -44,6 +48,7 @@ export async function GET(request: NextRequest) {
       sanitizeCsvField(inv.patientPhone),
       sanitizeCsvField(inv.patientEmail ?? ''),
       sanitizeCsvField(inv.serviceName),
+      sanitizeCsvField(inv.practitioner),
       sanitizeCsvField(incidence.toFixed(2)),
       sanitizeCsvField(`${vatRate}%`),
       sanitizeCsvField(vatAmount.toFixed(2)),

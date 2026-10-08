@@ -6,8 +6,9 @@ import {
   dbGetAppointmentSummary,
   dbGetAppointmentsPaginated,
   dbCreateAppointment,
+  dbIsOwnerStepUpActive,
 } from '@/lib/db';
-import { VALID_SERVICES, VALID_TIME_SLOTS, validateAppointmentInput } from '@/lib/validation';
+import { VALID_TIME_SLOTS, validateAppointmentInput } from '@/lib/validation';
 import { broadcastAppointmentCreated } from '@/lib/events';
 import { sendAppointmentConfirmationEmail } from '@/lib/email';
 import { validateAndNormalizePhone } from '@/lib/phone';
@@ -22,16 +23,21 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
   const status = searchParams.get('status') ?? undefined;
+  const practitionerId = searchParams.get('practitionerId') || undefined;
   const date   = searchParams.get('date')   ?? undefined;
   const search = searchParams.get('search') ?? undefined;
   const dateFrom = searchParams.get('dateFrom') || undefined;
   const dateTo = searchParams.get('dateTo') || undefined;
   const phone = searchParams.get('phone') || undefined;
-  const stats = searchParams.get('summary') === '1' ? await dbGetAppointmentSummary() : undefined;
+  const patientId = searchParams.get('patientId') || undefined;
+  // Archives are available only in the explicitly selected patient's history.
+  const includeArchived = Boolean(patientId) && searchParams.get('includeArchived') === '1';
+  const stats = searchParams.get('summary') === '1' ? await dbGetAppointmentSummary({practitionerId}) : undefined;
+  if (stats && !(auth.session.analyticsUnlockedUntil && Date.now()<auth.session.analyticsUnlockedUntil && await dbIsOwnerStepUpActive(auth.session.sessionId))) delete (stats as Partial<typeof stats>).revenue;
   if (searchParams.get('calendar') === '1') {
     const days = (Date.parse(dateTo || '') - Date.parse(dateFrom || '')) / 86400000;
     if (!isCalendarDate(dateFrom) || !isCalendarDate(dateTo) || !Number.isFinite(days) || days < 0 || days > 31) return NextResponse.json({error: 'Invalid calendar range'}, {status: 400});
-    const appointments = await dbGetAppointments({status, search, date, dateFrom, dateTo});
+    const appointments = await dbGetAppointments({status, search, date, dateFrom, dateTo, practitionerId, patientId});
     return NextResponse.json({appointments, total: appointments.length, stats}, {headers: {'Cache-Control': 'no-store'}});
   }
   const pageParam = searchParams.get('page');
@@ -40,7 +46,7 @@ export async function GET(request: NextRequest) {
   if (pageParam !== null || limitParam !== null) {
     const page = pageNumber(pageParam, 1);
     const limit = pageNumber(limitParam, 50, 100);
-    const res = await dbGetAppointmentsPaginated({ status, date, search, dateFrom, dateTo, phone, page, limit });
+    const res = await dbGetAppointmentsPaginated({ practitionerId, status, date, search, dateFrom, dateTo, phone, patientId, includeArchived, page, limit });
     return NextResponse.json(
       {...res, stats},
       {
@@ -50,7 +56,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const appointments = await dbGetAppointments({ status, date, search, dateFrom, dateTo, phone });
+  const appointments = await dbGetAppointments({ practitionerId, status, date, search, dateFrom, dateTo, phone, patientId, includeArchived });
   return NextResponse.json(
     { appointments, stats },
     {
@@ -79,6 +85,8 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await dbCreateAppointment({
+    practitionerId: typeof body.practitionerId === "string" ? body.practitionerId : undefined,
+    bookingRequestId: typeof body.clientRequestId === "string" ? "admin:" + body.clientRequestId : undefined,
     patientName: String(body.patientName).trim().slice(0, 100),
     email:       body.email ? String(body.email).trim().slice(0, 254) : undefined,
     phone:       validateAndNormalizePhone(body.phone).normalized,
@@ -89,6 +97,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (!result.success) {
+    if (result.error === 'schedule_changed') return NextResponse.json({error:'Schedule temporarily busy. Please retry.',errorCode:'SCHEDULE_BUSY'}, {status:503,headers:{'Retry-After':'1'}});
     if (result.error === 'slot_taken' || result.error === 'slot_blocked') {
       return NextResponse.json({ error: 'Ce créneau n\'est plus disponible' }, { status: 409 });
     }
@@ -96,11 +105,11 @@ export async function POST(request: NextRequest) {
   }
 
   // Broadcast to all active admin tabs
-  broadcastAppointmentCreated(result.appointment);
+  if (!result.replayed) broadcastAppointmentCreated(result.appointment);
 
   // Dispatch confirmation email to patient if email is provided
   if (result.appointment.email) {
-    sendAppointmentConfirmationEmail(result.appointment).catch(() => {});
+    if (!result.replayed) sendAppointmentConfirmationEmail(result.appointment).catch(() => {});
   }
 
   return NextResponse.json({ appointment: result.appointment }, { status: 201 });

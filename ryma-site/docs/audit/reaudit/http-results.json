@@ -1,0 +1,842 @@
+[
+  {
+    "id": "AUTH-01",
+    "title": "Toutes les méthodes administratives protégées sans session",
+    "status": "PASS",
+    "details": [
+      {
+        "method": "POST",
+        "url": "/api/admin/analytics/lock",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/analytics/password",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/analytics",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/analytics/verify",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/appointments/multiple/preview",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/appointments/multiple",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/appointments",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/appointments",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/appointments/audit-absent",
+        "status": 401
+      },
+      {
+        "method": "PATCH",
+        "url": "/api/admin/appointments/audit-absent",
+        "status": 401
+      },
+      {
+        "method": "DELETE",
+        "url": "/api/admin/appointments/audit-absent",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/events",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/export",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/invoices/export",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/invoices",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/invoices",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/invoices/audit-absent",
+        "status": 401
+      },
+      {
+        "method": "PUT",
+        "url": "/api/admin/invoices/audit-absent",
+        "status": 401
+      },
+      {
+        "method": "DELETE",
+        "url": "/api/admin/invoices/audit-absent",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/me",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/patients",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/patients",
+        "status": 401
+      },
+      {
+        "method": "DELETE",
+        "url": "/api/admin/patients",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/patients/audit-absent/sessions",
+        "status": 401
+      },
+      {
+        "method": "PATCH",
+        "url": "/api/admin/patients/audit-absent/sessions",
+        "status": 401
+      },
+      {
+        "method": "DELETE",
+        "url": "/api/admin/patients/audit-absent/sessions",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/practitioners",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/practitioners",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/prescriptions",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/prescriptions",
+        "status": 401
+      },
+      {
+        "method": "DELETE",
+        "url": "/api/admin/prescriptions/audit-absent",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/reviews",
+        "status": 401
+      },
+      {
+        "method": "PATCH",
+        "url": "/api/admin/reviews",
+        "status": 401
+      },
+      {
+        "method": "DELETE",
+        "url": "/api/admin/reviews",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/slots/bulk",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/slots",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "url": "/api/admin/slots",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "url": "/api/admin/whatsapp",
+        "status": 401
+      }
+    ]
+  },
+  {
+    "id": "AUTH-02",
+    "title": "Page protégée et cookie forgé",
+    "status": "PASS",
+    "details": {
+      "anonymous": 307,
+      "forged": 307
+    }
+  },
+  {
+    "id": "AUTH-03",
+    "title": "Connexion réelle et attributs cookie de production",
+    "status": "PASS",
+    "details": {
+      "bad": 401,
+      "good": 200,
+      "cookieFlags": [
+        " Path=/",
+        " Expires=Thu, 08 Oct 2026 00:57:49 GMT",
+        " Max-Age=28800",
+        " Secure",
+        " HttpOnly",
+        " SameSite=lax"
+      ]
+    }
+  },
+  {
+    "id": "DATA-01",
+    "title": "Parcours A : patient puis rendez-vous",
+    "status": "PASS",
+    "details": {
+      "patientId": "pat_muycpdwxmf5y",
+      "appointmentId": "apt_8c06bde1-ad96-4e38-b963-147947fddeaf",
+      "patientLink": true
+    }
+  },
+  {
+    "id": "DATA-02",
+    "title": "Associer une séance au rendez-vous existant",
+    "status": "PASS",
+    "details": {
+      "session": {
+        "id": "sess_b7f38cf2-c398-42d9-8c0c-473398d7ae93",
+        "patientId": "pat_muycpdwxmf5y",
+        "date": "2026-10-01",
+        "time": "09:00",
+        "serviceSlug": "reeducation-posturale",
+        "evaPainScore": 4,
+        "legacyEvaPainScore": null,
+        "clinicalStatus": "COMPLETED",
+        "completedAt": "2026-10-07T16:57:50.050Z",
+        "version": 1,
+        "archivedAt": null,
+        "sessionType": "MANUAL",
+        "notes": "Séance liée au rendez-vous existant",
+        "practitioner": "Digital Clínica",
+        "practitionerId": "legacy",
+        "appointmentId": "apt_8c06bde1-ad96-4e38-b963-147947fddeaf",
+        "createdAt": "2026-10-07T16:57:50.050Z"
+      }
+    }
+  },
+  {
+    "id": "DATA-03",
+    "title": "Séance historique avec accents, EVA 0 et 10",
+    "status": "PASS",
+    "details": {
+      "created": {
+        "id": "sess_ee9626c8-fb3d-4ec0-803f-4efb1f375501",
+        "patientId": "pat_muycpdwxmf5y",
+        "date": "2026-10-01",
+        "time": null,
+        "serviceSlug": "reeducation-posturale",
+        "evaPainScore": 10,
+        "legacyEvaPainScore": null,
+        "clinicalStatus": "COMPLETED",
+        "completedAt": "2026-10-07T16:57:50.062Z",
+        "version": 2,
+        "archivedAt": null,
+        "sessionType": "MANUAL",
+        "notes": "São João – Élodie, douleur à l’épaule",
+        "practitioner": null,
+        "practitionerId": null,
+        "appointmentId": null,
+        "createdAt": "2026-10-07T16:57:50.062Z"
+      },
+      "updated": {
+        "id": "sess_ee9626c8-fb3d-4ec0-803f-4efb1f375501",
+        "patientId": "pat_muycpdwxmf5y",
+        "date": "2026-10-01",
+        "time": null,
+        "serviceSlug": "reeducation-posturale",
+        "evaPainScore": 10,
+        "legacyEvaPainScore": null,
+        "clinicalStatus": "COMPLETED",
+        "completedAt": "2026-10-07T16:57:50.062Z",
+        "version": 2,
+        "archivedAt": null,
+        "sessionType": "MANUAL",
+        "notes": "São João – Élodie, douleur à l’épaule",
+        "practitioner": null,
+        "practitionerId": null,
+        "appointmentId": null,
+        "createdAt": "2026-10-07T16:57:50.062Z"
+      }
+    }
+  },
+  {
+    "id": "DATA-04",
+    "title": "Rejeter EVA fractionnaire en modification",
+    "status": "PASS"
+  },
+  {
+    "id": "DATA-05",
+    "title": "Rejeter EVA hors limites en modification",
+    "status": "PASS"
+  },
+  {
+    "id": "DATA-06",
+    "title": "Empêcher la modification de la séance via un autre patient",
+    "status": "PASS",
+    "details": {
+      "status": 404
+    }
+  },
+  {
+    "id": "DATA-07",
+    "title": "Détecter une note clinique modifiée depuis la lecture",
+    "status": "PASS"
+  },
+  {
+    "id": "DOC-01",
+    "title": "Parcours A : prescription et facture",
+    "status": "PASS",
+    "details": {
+      "prescription": {
+        "id": "rx_1791392270153_zqf9p",
+        "patientId": "pat_muycpdwxmf5y",
+        "patientPhone": "+351963000001",
+        "patientName": "Audit Élodie São",
+        "practitioner": "Digital Clínica",
+        "practitionerId": "legacy",
+        "date": "2026-10-07",
+        "diagnosisOrGoal": "Audit – épaule",
+        "items": [
+          {
+            "id": "item_1791392270153_0",
+            "category": "lifestyle_habit",
+            "title": "Exercice São João",
+            "instructions": "Dix répétitions, repos ; accents français et portugais."
+          }
+        ],
+        "createdAt": "2026-10-07T16:57:50.153Z"
+      },
+      "invoice": {
+        "id": "inv_muycpe1bynh4u",
+        "invoiceNumber": "FT 2026/0001",
+        "appointmentId": "apt_8c06bde1-ad96-4e38-b963-147947fddeaf",
+        "patientId": "pat_muycpdwxmf5y",
+        "patientName": "Audit Élodie São",
+        "patientNif": "999999990",
+        "patientEmail": null,
+        "patientPhone": "+351963000001",
+        "patientAddress": "Lisboa, Portugal",
+        "coverageType": "PARTICULAR",
+        "coverageProvider": null,
+        "coverageNumber": null,
+        "serviceSlug": "reeducation-posturale",
+        "serviceName": "Reeducação Postural Global (RPG)",
+        "practitioner": "Digital Clínica",
+        "amount": 60.25,
+        "vatRate": 0,
+        "vatExemptionReason": "Isento de IVA - Artigo 9.º do CIVA",
+        "paymentMethod": "MULTIBANCO",
+        "paymentStatus": "PAID",
+        "paidAt": "2026-10-07T16:57:50.159Z",
+        "notes": null,
+        "createdAt": "2026-10-07T16:57:50.159Z",
+        "updatedAt": "2026-10-07T16:57:50.159Z",
+        "practitionerId": "legacy",
+        "amountCents": 6025,
+        "moneyReview": 0
+      }
+    }
+  },
+  {
+    "id": "DOC-02",
+    "title": "Refuser une prescription mélangeant identités de patients",
+    "status": "PASS"
+  },
+  {
+    "id": "DOC-03",
+    "title": "Refuser une facture au patient B pour le rendez-vous du patient A",
+    "status": "PASS"
+  },
+  {
+    "id": "DOC-04",
+    "title": "Idempotence facture et conflit de contenu",
+    "status": "PASS",
+    "details": {
+      "statuses": [
+        201,
+        201
+      ],
+      "sameId": true,
+      "changed": 409
+    }
+  },
+  {
+    "id": "DOC-05",
+    "title": "Montants limités à deux décimales",
+    "status": "PASS"
+  },
+  {
+    "id": "AUTH-04",
+    "title": "Analytics et export refusés à un admin sans déverrouillage",
+    "status": "PASS",
+    "details": [
+      403,
+      403,
+      403
+    ]
+  },
+  {
+    "id": "AUTH-05",
+    "title": "Les agrégats financiers masqués ne sont pas transmis avant déverrouillage",
+    "status": "PASS"
+  },
+  {
+    "id": "SCHED-01",
+    "title": "Déplacement sur soi-même puis créneau libre, disponibilité synchronisée",
+    "status": "PASS",
+    "details": {
+      "same": 200,
+      "moved": 200,
+      "slots": [
+        {
+          "time": "09:00",
+          "available": true,
+          "reason": null,
+          "appointmentId": null
+        },
+        {
+          "time": "10:00",
+          "available": false,
+          "reason": "booked",
+          "appointmentId": null
+        },
+        {
+          "time": "10:30",
+          "available": false,
+          "reason": "booked",
+          "appointmentId": null
+        }
+      ]
+    }
+  },
+  {
+    "id": "SCHED-02",
+    "title": "Toutes les transitions de statut réellement autorisées",
+    "status": "PASS",
+    "details": [
+      {
+        "from": "PENDING",
+        "to": "PENDING",
+        "status": 200
+      },
+      {
+        "from": "PENDING",
+        "to": "CONFIRMED",
+        "status": 200
+      },
+      {
+        "from": "PENDING",
+        "to": "CANCELLED",
+        "status": 200
+      },
+      {
+        "from": "PENDING",
+        "to": "COMPLETED",
+        "status": 200
+      },
+      {
+        "from": "PENDING",
+        "to": "NO_SHOW",
+        "status": 200
+      },
+      {
+        "from": "CONFIRMED",
+        "to": "PENDING",
+        "status": 200
+      },
+      {
+        "from": "CONFIRMED",
+        "to": "CONFIRMED",
+        "status": 200
+      },
+      {
+        "from": "CONFIRMED",
+        "to": "CANCELLED",
+        "status": 200
+      },
+      {
+        "from": "CONFIRMED",
+        "to": "COMPLETED",
+        "status": 200
+      },
+      {
+        "from": "CONFIRMED",
+        "to": "NO_SHOW",
+        "status": 200
+      },
+      {
+        "from": "CANCELLED",
+        "to": "PENDING",
+        "status": 200
+      },
+      {
+        "from": "CANCELLED",
+        "to": "CONFIRMED",
+        "status": 200
+      },
+      {
+        "from": "CANCELLED",
+        "to": "CANCELLED",
+        "status": 200
+      },
+      {
+        "from": "CANCELLED",
+        "to": "COMPLETED",
+        "status": 200
+      },
+      {
+        "from": "CANCELLED",
+        "to": "NO_SHOW",
+        "status": 200
+      },
+      {
+        "from": "COMPLETED",
+        "to": "PENDING",
+        "status": 200
+      },
+      {
+        "from": "COMPLETED",
+        "to": "CONFIRMED",
+        "status": 200
+      },
+      {
+        "from": "COMPLETED",
+        "to": "CANCELLED",
+        "status": 200
+      },
+      {
+        "from": "COMPLETED",
+        "to": "COMPLETED",
+        "status": 200
+      },
+      {
+        "from": "COMPLETED",
+        "to": "NO_SHOW",
+        "status": 200
+      },
+      {
+        "from": "NO_SHOW",
+        "to": "PENDING",
+        "status": 200
+      },
+      {
+        "from": "NO_SHOW",
+        "to": "CONFIRMED",
+        "status": 200
+      },
+      {
+        "from": "NO_SHOW",
+        "to": "CANCELLED",
+        "status": 200
+      },
+      {
+        "from": "NO_SHOW",
+        "to": "COMPLETED",
+        "status": 200
+      },
+      {
+        "from": "NO_SHOW",
+        "to": "NO_SHOW",
+        "status": 200
+      }
+    ]
+  },
+  {
+    "id": "SCHED-03",
+    "title": "Réservation publique visible dans le dashboard",
+    "status": "PASS",
+    "details": {
+      "created": 201,
+      "visible": true,
+      "responseFields": [
+        "date",
+        "startTime",
+        "service",
+        "id",
+        "practitionerId",
+        "practitionerName",
+        "durationMinutes",
+        "status"
+      ]
+    }
+  },
+  {
+    "id": "RACE-01",
+    "title": "Deux créations admin simultanées même créneau",
+    "status": "PASS",
+    "details": [
+      {
+        "status": 201
+      },
+      {
+        "status": 409,
+        "error": "Ce créneau n'est plus disponible"
+      }
+    ]
+  },
+  {
+    "id": "RACE-02",
+    "title": "Public et admin simultanés même créneau",
+    "status": "PASS",
+    "details": [
+      {
+        "status": 201
+      },
+      {
+        "status": 409,
+        "error": "Ce créneau n'est plus disponible"
+      }
+    ]
+  },
+  {
+    "id": "RACE-03",
+    "title": "Blocage et réservation concurrents",
+    "status": "PASS",
+    "details": [
+      {
+        "status": 200,
+        "data": true
+      },
+      {
+        "status": 409,
+        "data": "Ce créneau n'est plus disponible"
+      }
+    ]
+  },
+  {
+    "id": "RACE-04",
+    "title": "Déplacement et création concurrents",
+    "status": "PASS",
+    "details": [
+      {
+        "status": 200
+      },
+      {
+        "status": 409,
+        "error": "Ce créneau n'est plus disponible"
+      }
+    ]
+  },
+  {
+    "id": "SERIES-01",
+    "title": "Conflit intermédiaire atomique puis résolution",
+    "status": "PASS",
+    "details": {
+      "conflict": 409,
+      "rollback": true,
+      "resolution": 201,
+      "count": 3,
+      "replay": true
+    }
+  },
+  {
+    "id": "SERIES-02",
+    "title": "Séries traversant changement heure et année",
+    "status": "PASS",
+    "details": [
+      [
+        {
+          "date": "2026-10-19",
+          "time": "14:00"
+        },
+        {
+          "date": "2026-10-26",
+          "time": "14:00"
+        },
+        {
+          "date": "2026-11-02",
+          "time": "14:00"
+        }
+      ],
+      [
+        {
+          "date": "2026-12-28",
+          "time": "14:00"
+        },
+        {
+          "date": "2027-01-04",
+          "time": "14:00"
+        }
+      ]
+    ]
+  },
+  {
+    "id": "DATA-08",
+    "title": "Annulation occurrence ne doit pas être une séance réalisée",
+    "status": "PASS"
+  },
+  {
+    "id": "DATA-09",
+    "title": "Suppression logique conserve la séance clinique",
+    "status": "PASS"
+  },
+  {
+    "id": "DATA-10",
+    "title": "Conservation historique après changement de téléphone",
+    "status": "PASS"
+  },
+  {
+    "id": "DATA-11",
+    "title": "Deux personnes partageant un téléphone ne fusionnent pas silencieusement",
+    "status": "PASS"
+  },
+  {
+    "id": "AUTH-06",
+    "title": "Déverrouillage propriétaire et exports CSV",
+    "status": "PASS",
+    "details": {
+      "unlock": 200,
+      "exports": [
+        200,
+        200
+      ],
+      "bom": false
+    }
+  },
+  {
+    "id": "KPI-01",
+    "title": "Compteurs rendez-vous et factures recalculés depuis SQL",
+    "status": "PASS",
+    "details": {
+      "counts": [
+        {
+          "status": "CANCELLED",
+          "n": 1
+        },
+        {
+          "status": "COMPLETED",
+          "n": 1
+        },
+        {
+          "status": "CONFIRMED",
+          "n": 6
+        },
+        {
+          "status": "NO_SHOW",
+          "n": 1
+        },
+        {
+          "status": "PENDING",
+          "n": 5
+        }
+      ],
+      "summary": {
+        "total": 14,
+        "confirmed": 6,
+        "pending": 5,
+        "cancelled": 1,
+        "completed": 1,
+        "noShow": 1,
+        "revenue": 455
+      },
+      "invoiceSums": [
+        {
+          "paymentStatus": "PAID",
+          "n": 72.59
+        }
+      ],
+      "invoiceStats": {
+        "totalRevenue": 72.59,
+        "totalPaid": 72.59,
+        "totalPending": 0,
+        "countPaid": 2,
+        "countPending": 0,
+        "countTotal": 2,
+        "avgTicket": 36.3,
+        "insuranceShare": 0
+      }
+    }
+  },
+  {
+    "id": "PROFILE-01",
+    "title": "Les champs de profil incohérents sont rejetés",
+    "status": "PASS"
+  },
+  {
+    "id": "RETAIN-01",
+    "title": "La suppression du patient ne détruit pas son historique",
+    "status": "PASS"
+  },
+  {
+    "id": "EXPORT-01",
+    "title": "Exports et liste paginée respectent une période vide",
+    "status": "PASS"
+  },
+  {
+    "id": "AUTH-09",
+    "title": "Verrouillage révoque les agrégats financiers",
+    "status": "PASS"
+  },
+  {
+    "id": "AUTH-07",
+    "title": "Déconnexion et rejeu du cookie",
+    "status": "PASS",
+    "details": {
+      "api": 401,
+      "page": 200,
+      "note": "La page ne vérifie pas la révocation; les API la vérifient."
+    }
+  },
+  {
+    "id": "AUTH-08",
+    "title": "Limitation après dix mauvais mots de passe",
+    "status": "PASS",
+    "details": [
+      401,
+      401,
+      401,
+      401,
+      401,
+      401,
+      401,
+      401,
+      401,
+      401,
+      429
+    ]
+  }
+]

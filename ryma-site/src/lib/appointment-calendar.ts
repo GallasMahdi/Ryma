@@ -1,6 +1,7 @@
 import type { Lang } from '@/lib/i18n';
 
 export interface AppointmentCalendarEvent {
+  status?: 'CONFIRMED' | 'TENTATIVE';
   service: string;
   date: string;
   time: string;
@@ -73,6 +74,6 @@ export function appointmentIcs(event: AppointmentCalendarEvent): string {
     'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
     `UID:${escapeIcs(event.uid)}`, `DTSTAMP:${stamp}`, `DTSTART:${start}`, `DTEND:${end}`,
     `SUMMARY:${escapeIcs(eventTitle(event))}`, `DESCRIPTION:${escapeIcs(event.description)}`,
-    `LOCATION:${escapeIcs(event.location)}`, 'STATUS:CONFIRMED', 'END:VEVENT', 'END:VCALENDAR',
+    `LOCATION:${escapeIcs(event.location)}`, `STATUS:${event.status || 'CONFIRMED'}`, 'END:VEVENT', 'END:VCALENDAR',
   ].map(foldLine).join('\r\n') + '\r\n';
 }

@@ -1,0 +1,345 @@
+[
+  {
+    "file": "src/app/api/admin/analytics/lock/route.ts",
+    "url": "/api/admin/analytics/lock",
+    "method": "POST",
+    "line": 12,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/analytics/password/route.ts",
+    "url": "/api/admin/analytics/password",
+    "method": "POST",
+    "line": 17,
+    "guard": "requireOwnerAnalytics"
+  },
+  {
+    "file": "src/app/api/admin/analytics/route.ts",
+    "url": "/api/admin/analytics",
+    "method": "GET",
+    "line": 10,
+    "guard": "requireOwnerAnalytics"
+  },
+  {
+    "file": "src/app/api/admin/analytics/verify/route.ts",
+    "url": "/api/admin/analytics/verify",
+    "method": "POST",
+    "line": 23,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/multiple/preview/route.ts",
+    "url": "/api/admin/appointments/multiple/preview",
+    "method": "POST",
+    "line": 34,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/multiple/route.ts",
+    "url": "/api/admin/appointments/multiple",
+    "method": "POST",
+    "line": 17,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/route.ts",
+    "url": "/api/admin/appointments",
+    "method": "GET",
+    "line": 19,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/route.ts",
+    "url": "/api/admin/appointments",
+    "method": "POST",
+    "line": 65,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/[id]/route.ts",
+    "url": "/api/admin/appointments/[id]",
+    "method": "GET",
+    "line": 24,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/[id]/route.ts",
+    "url": "/api/admin/appointments/[id]",
+    "method": "PATCH",
+    "line": 41,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/appointments/[id]/route.ts",
+    "url": "/api/admin/appointments/[id]",
+    "method": "DELETE",
+    "line": 128,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/events/route.ts",
+    "url": "/api/admin/events",
+    "method": "GET",
+    "line": 11,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/export/route.ts",
+    "url": "/api/admin/export",
+    "method": "GET",
+    "line": 18,
+    "guard": "requireOwnerAnalytics"
+  },
+  {
+    "file": "src/app/api/admin/invoices/export/route.ts",
+    "url": "/api/admin/invoices/export",
+    "method": "GET",
+    "line": 17,
+    "guard": "requireOwnerAnalytics"
+  },
+  {
+    "file": "src/app/api/admin/invoices/route.ts",
+    "url": "/api/admin/invoices",
+    "method": "GET",
+    "line": 18,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/invoices/route.ts",
+    "url": "/api/admin/invoices",
+    "method": "POST",
+    "line": 76,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/invoices/[id]/route.ts",
+    "url": "/api/admin/invoices/[id]",
+    "method": "GET",
+    "line": 15,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/invoices/[id]/route.ts",
+    "url": "/api/admin/invoices/[id]",
+    "method": "PUT",
+    "line": 32,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/invoices/[id]/route.ts",
+    "url": "/api/admin/invoices/[id]",
+    "method": "DELETE",
+    "line": 74,
+    "guard": "requireOwnerAnalytics"
+  },
+  {
+    "file": "src/app/api/admin/login/route.ts",
+    "url": "/api/admin/login",
+    "method": "POST",
+    "line": 17,
+    "guard": "public / spécifique"
+  },
+  {
+    "file": "src/app/api/admin/logout/route.ts",
+    "url": "/api/admin/logout",
+    "method": "POST",
+    "line": 10,
+    "guard": "session + révocation interne"
+  },
+  {
+    "file": "src/app/api/admin/me/route.ts",
+    "url": "/api/admin/me",
+    "method": "GET",
+    "line": 15,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/patients/route.ts",
+    "url": "/api/admin/patients",
+    "method": "GET",
+    "line": 21,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/patients/route.ts",
+    "url": "/api/admin/patients",
+    "method": "POST",
+    "line": 89,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/patients/route.ts",
+    "url": "/api/admin/patients",
+    "method": "DELETE",
+    "line": 157,
+    "guard": "requireOwnerAnalytics"
+  },
+  {
+    "file": "src/app/api/admin/patients/[id]/sessions/route.ts",
+    "url": "/api/admin/patients/[id]/sessions",
+    "method": "POST",
+    "line": 17,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/patients/[id]/sessions/route.ts",
+    "url": "/api/admin/patients/[id]/sessions",
+    "method": "PATCH",
+    "line": 95,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/patients/[id]/sessions/route.ts",
+    "url": "/api/admin/patients/[id]/sessions",
+    "method": "DELETE",
+    "line": 136,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/practitioners/route.ts",
+    "url": "/api/admin/practitioners",
+    "method": "GET",
+    "line": 8,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/practitioners/route.ts",
+    "url": "/api/admin/practitioners",
+    "method": "POST",
+    "line": 17,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/prescriptions/route.ts",
+    "url": "/api/admin/prescriptions",
+    "method": "GET",
+    "line": 11,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/prescriptions/route.ts",
+    "url": "/api/admin/prescriptions",
+    "method": "POST",
+    "line": 27,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/prescriptions/[id]/route.ts",
+    "url": "/api/admin/prescriptions/[id]",
+    "method": "DELETE",
+    "line": 9,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/reviews/route.ts",
+    "url": "/api/admin/reviews",
+    "method": "GET",
+    "line": 11,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/reviews/route.ts",
+    "url": "/api/admin/reviews",
+    "method": "PATCH",
+    "line": 42,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/reviews/route.ts",
+    "url": "/api/admin/reviews",
+    "method": "DELETE",
+    "line": 78,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/slots/bulk/route.ts",
+    "url": "/api/admin/slots/bulk",
+    "method": "POST",
+    "line": 8,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/slots/route.ts",
+    "url": "/api/admin/slots",
+    "method": "GET",
+    "line": 10,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/slots/route.ts",
+    "url": "/api/admin/slots",
+    "method": "POST",
+    "line": 30,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/admin/whatsapp/route.ts",
+    "url": "/api/admin/whatsapp",
+    "method": "GET",
+    "line": 8,
+    "guard": "requireAdmin"
+  },
+  {
+    "file": "src/app/api/appointments/route.ts",
+    "url": "/api/appointments",
+    "method": "POST",
+    "line": 29,
+    "guard": "public / spécifique"
+  },
+  {
+    "file": "src/app/api/health/route.ts",
+    "url": "/api/health",
+    "method": "GET",
+    "line": 12,
+    "guard": "public / spécifique"
+  },
+  {
+    "file": "src/app/api/practitioners/route.ts",
+    "url": "/api/practitioners",
+    "method": "GET",
+    "line": 5,
+    "guard": "public / spécifique"
+  },
+  {
+    "file": "src/app/api/reviews/route.ts",
+    "url": "/api/reviews",
+    "method": "GET",
+    "line": 9,
+    "guard": "public / spécifique"
+  },
+  {
+    "file": "src/app/api/reviews/route.ts",
+    "url": "/api/reviews",
+    "method": "POST",
+    "line": 37,
+    "guard": "public / spécifique"
+  },
+  {
+    "file": "src/app/api/slots/route.ts",
+    "url": "/api/slots",
+    "method": "GET",
+    "line": 17,
+    "guard": "public / spécifique"
+  },
+  {
+    "file": "src/app/api/whatsapp/jobs/route.ts",
+    "url": "/api/whatsapp/jobs",
+    "method": "POST",
+    "line": 9,
+    "guard": "public / spécifique"
+  },
+  {
+    "file": "src/app/api/whatsapp/webhook/route.ts",
+    "url": "/api/whatsapp/webhook",
+    "method": "GET",
+    "line": 11,
+    "guard": "public / spécifique"
+  },
+  {
+    "file": "src/app/api/whatsapp/webhook/route.ts",
+    "url": "/api/whatsapp/webhook",
+    "method": "POST",
+    "line": 18,
+    "guard": "public / spécifique"
+  }
+]

@@ -86,6 +86,7 @@ test('every write API rejects invalid phones and passes only E.164 to persistenc
   let authorized = true;
   const db = new Proxy({
     dbCheckRateLimit: async () => true,
+    dbConsumeRateLimit: async () => true,
     dbRecordRateLimitAttempt: async () => {},
     dbGetIdempotencyKey: async () => null,
     dbSaveIdempotencyKey: async () => {},
@@ -97,16 +98,18 @@ test('every write API rejects invalid phones and passes only E.164 to persistenc
   }, { get(target, key) { if (!(key in target)) throw new Error(`Unexpected database access: ${String(key)}`); return target[key]; } });
   const loadRoute = createLoader({
     '@/lib/db': db,
+    '@/lib/treatments': {getTreatments:async()=>require('./fixtures/services.cjs').SERVICES,isKnownTreatment:async slug=>require('./fixtures/services.cjs').SERVICES.some(s=>s.slug===slug)},
+    '@/lib/booking-service': { findBookingReplay: async () => null },
     '@/lib/requireAdmin': { requireAdmin: async () => authorized ? { ok: true } : NextResponse.json({}, { status: 401 }) },
     '@/lib/events': { broadcastAppointmentCreated() {} },
     '@/lib/email': { sendAppointmentConfirmationEmail: async () => {}, sendAdminNewBookingNotification: async () => {} },
     '@/lib/recaptcha': { verifyRecaptchaToken: async () => ({ valid: true }) },
   });
-  const { SERVICES } = load('@/data/services');
+  const { SERVICES } = require('./fixtures/services.cjs');
   const date = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
   const body = { patientName: 'Validation Test', phone: '', patientPhone: '', service: SERVICES[0].slug,
     serviceSlug: SERVICES[0].slug, date, startTime: '14:30', sessions: [{ date, startTime: '14:30' }],
-    amount: 50, items: [{ title: 'Test', instructions: 'Test' }], recaptchaToken: 'isolated-test' };
+    clientRequestId:'phone-validation-intent', amount: 50, items: [{ title: 'Test', instructions: 'Test' }], recaptchaToken: 'isolated-test' };
   for (const route of ['appointments', 'admin/appointments', 'admin/appointments/multiple', 'admin/patients', 'admin/invoices', 'admin/prescriptions']) {
     const { POST } = loadRoute(`@/app/api/${route}/route`);
     const request = phone => new NextRequest(`http://localhost/api/${route}`, {
