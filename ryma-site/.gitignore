@@ -16,6 +16,9 @@
 # Database reset snapshots can contain private patient records.
 /data/backups/
 
+# Local synthetic demos, scenario reports and process locks
+/.demo/
+
 # next.js
 /.next/
 /out/

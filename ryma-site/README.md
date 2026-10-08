@@ -1,5 +1,11 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Populated platform demo
+
+Run `npm run demo:seed`, then `npm run demo:dev` to explore the full website and dashboard with 100 fictional patients and linked appointments, clinical histories, invoices, team schedules and treatment data. Open http://127.0.0.1:3007/admin.
+
+See [the demo guide](docs/DEMO-DATA.md) for credentials, test scenarios, reset instructions and production-mode checks. Local demo files are isolated under `.demo/`. The optional `demo:publish` command previews an explicit import into an empty hosted demo; deployment alone never seeds Vercel.
+
 ## Getting Started
 
 First, run the development server:
