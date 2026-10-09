@@ -1,5 +1,6 @@
 **/.demo
-**/data
+# Runtime database storage only; src/data contains required application modules.
+/ryma-site/data/
 **/docs
 **/load-tests
 **/scripts

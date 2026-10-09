@@ -2,6 +2,38 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),vm=require('node:vm');
 const {pathToFileURL}=require('node:url'),ts=require('typescript');
 const root=path.resolve(__dirname,'..');
+
+// Vercel filters deployment input using gitignore-style patterns before Next.js builds.
+// A normal local build alone cannot detect source files removed by .vercelignore.
+for (const [label,directory,prefix] of [['repository',path.dirname(root),'ryma-site/'],['app',root,'']]) {
+  test(`${label} deployment retains all source files while excluding runtime data`,()=>{
+    const {spawnSync}=require('node:child_process');
+    const temporary=fs.mkdtempSync(path.join(os.tmpdir(),'ryma-deployment-filter-'));
+    const run=(args,input)=>{
+      const result=spawnSync('git',args,{cwd:temporary,input,encoding:'utf8',windowsHide:true});
+      assert.ifError(result.error);return result;
+    };
+    try {
+      const initialized=run(['init','--quiet']);assert.equal(initialized.status,0,initialized.stderr);
+      fs.copyFileSync(path.join(directory,'.vercelignore'),path.join(temporary,'.gitignore'));
+      const files=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?files(path.join(dir,e.name)):[path.join(dir,e.name)]);
+      const source=files(path.join(root,'src')).map(file=>prefix+path.relative(root,file).split(path.sep).join('/'));
+      assert(source.includes(prefix+'src/data/translations/legacy-es.ts'));
+      const excluded=['data/catalogue-backup.json','.demo/sample/report.json','data/backups/patient-snapshot.json','data/ryma.db','data/ryma.db-wal','data/ryma.db-shm','data/ryma.sqlite3'].map(file=>prefix+file);
+      const result=run(['-c','core.excludesFile=','check-ignore','--no-index','-z','--stdin'],[...source,...excluded].join('\0')+'\0');
+      assert.equal(result.status,0,result.stderr);
+      const ignored=result.stdout.split('\0').filter(Boolean);
+      assert.deepEqual(ignored.filter(file=>source.includes(file)),[],`${label} .vercelignore removes application source`);
+      assert.deepEqual(ignored.filter(file=>excluded.includes(file)).sort(),excluded.sort());
+    } finally {
+      const resolved=fs.realpathSync(temporary);
+      assert.equal(path.dirname(resolved),fs.realpathSync(os.tmpdir()));
+      assert(path.basename(resolved).startsWith('ryma-deployment-filter-'));
+      fs.rmSync(resolved,{recursive:true,force:true});
+    }
+  });
+}
+
 function loader(mocks={}) {
   const cache=new Map();
   function load(id,parent=root){

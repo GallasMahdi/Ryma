@@ -1,5 +1,6 @@
 .demo
-data
+# Anchor to the app root so src/data/translations is included in deployments.
+/data/
 docs
 load-tests
 scripts
