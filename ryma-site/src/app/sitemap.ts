@@ -5,7 +5,7 @@ import { BLOG_POSTS } from '@/data/blog-posts';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const SERVICES=await getPublicServices();
-  const baseUrl = 'https://digitalclinica.pt';
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://digitalclinica.pt').replace(/\/$/, '');
   const lastModified = new Date();
 
   const staticPages = [

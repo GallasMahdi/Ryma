@@ -129,6 +129,7 @@ function fixture(options = {}) {
     '@/lib/validation': { getClientIp: () => 'fixture-ip' },
     '@/lib/requireAdmin': { requireAdmin: async () => ({ ok: true }) },
     '@/lib/db': {
+      dbConsumeRateLimit: async () => { if(options.rateLimited)return false;attempts++;return true; },
       dbCheckRateLimit: async () => !options.rateLimited,
       dbRecordRateLimitAttempt: async () => { attempts++; },
       dbCreateReview: async input => {
@@ -138,6 +139,7 @@ function fixture(options = {}) {
         return review;
       },
       dbGetApprovedReviews: async ({ limit } = {}) => [...storedReviews.values()].filter(review => review.status === 'APPROVED').slice(0, limit),
+      dbGetApprovedReviewStats: async () => {const rows=[...storedReviews.values()].filter(r=>r.status==='APPROVED');return {total:rows.length,average:rows.length?rows.reduce((n,r)=>n+r.rating,0)/rows.length:0};},
       dbUpdateReviewStatus: async (id, updates) => {
         const review = storedReviews.get(id);
         if (!review) return null;
@@ -303,7 +305,7 @@ test('approval refreshes an already-open public page without exposing pending or
   assert(nodes(f.render()).some(node => node.props?.children === 'New Approved Visitor'));
 
   await f.moderate(review.id, 'REJECTED');
-  f.timers.advance(15_000);
+  f.timers.advance(60_000);
   await f.settle();
   assert.equal(nodes(f.render()).some(node => node.props?.children === 'New Approved Visitor'), false);
   assert(nodes(f.render()).some(node => typeof node.props?.children === 'string' && node.props.children.startsWith('No reviews have been published')));
@@ -324,7 +326,7 @@ test('homepage refreshes approved reviews and clears its carousel when none rema
   const rendered = nodes(f.render()).flatMap(node => node.props?.testimonials ?? []);
   assert(rendered.some(item => item.id === review.id));
   await f.moderate(review.id, 'REJECTED');
-  f.timers.advance(15_000);
+  f.timers.advance(60_000);
   await f.settle();
   assert.equal(f.render(), null);
   f.unmount();
@@ -360,7 +362,7 @@ test('a failed refresh preserves the last approved data and recovers on focus', 
   f.render();
   await f.flushEffects();
   options.readFailure = true;
-  f.timers.advance(15_000);
+  f.timers.advance(60_000);
   await f.settle();
   assert(nodes(f.render()).some(node => node.props?.children === 'Existing Visitor'));
   await f.moderate(review.id, 'REJECTED');

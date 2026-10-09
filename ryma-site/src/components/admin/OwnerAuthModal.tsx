@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,8 +34,8 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   useEffect(() => {
     if (isOpen) {
@@ -67,7 +69,7 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
             txt(
               'Mot de passe propriétaire incorrect.',
               'Incorrect owner password.',
-              'Palavra-passe de proprietário incorreta.'
+              'Palavra-passe de proprietário incorreta.', "Contraseña del propietario incorrecta."
             )
         );
       }
@@ -111,7 +113,7 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
                 type="button"
                 onClick={onCancel}
                 className="absolute top-4 right-4 text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-                aria-label="Fermer"
+                aria-label={legacyText("Fermer", lang)}
               >
                 <IconX size={18} />
               </button>
@@ -122,21 +124,21 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
 
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#7C3AED]/30 border border-[#A78BFA]/40 text-[#C4B5FD] text-[11px] font-semibold tracking-wider uppercase mb-1.5">
                 <IconShieldCheck size={13} />
-                <span>{txt('Accès Restreint', 'Restricted Access', 'Acesso Restrito')}</span>
+                <span>{txt('Accès Restreint', 'Restricted Access', 'Acesso Restrito', "Acceso restringido")}</span>
               </div>
 
               <h3 id="owner-auth-title" className="text-xl font-bold tracking-tight">
                 {txt(
                   'Autorisation Propriétaire Requise',
                   'Owner Authorization Required',
-                  'Autorização do Proprietário'
+                  'Autorização do Proprietário', "Se requiere autorización del propietario"
                 )}
               </h3>
               <p className="text-xs text-[#94A3B8] mt-1.5 max-w-xs mx-auto leading-relaxed">
                 {txt(
                   'Les statistiques contiennent des informations financières et d’activité hautement confidentielles.',
                   'Analytics contains restricted financial and business performance data.',
-                  'As estatísticas contêm dados financeiros e de faturação confidenciais.'
+                  'As estatísticas contêm dados financeiros e de faturação confidenciais.', "Las estadísticas contienen datos restringidos sobre finanzas y rendimiento de la actividad."
                 )}
               </p>
             </div>
@@ -162,7 +164,7 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
                   {txt(
                     'Mot de passe Propriétaire Analytics',
                     'Owner Analytics Password',
-                    'Palavra-passe do Proprietário'
+                    'Palavra-passe do Proprietário', "Contraseña de estadísticas del propietario"
                   )}
                 </label>
                 <div className="relative">
@@ -182,7 +184,7 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pe-3 flex items-center text-[#64748B] hover:text-[#0F172A] transition-colors"
                     tabIndex={-1}
-                    aria-label={showPassword ? 'Masquer' : 'Afficher'}
+                    aria-label={lang === 'es' ? (showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña') : (showPassword ? 'Masquer' : 'Afficher')}
                   >
                     {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
                   </button>
@@ -191,7 +193,7 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
                   {txt(
                     'Une fois vérifié, l’accès sera déverrouillé pendant 15 minutes.',
                     'Once authorized, access remains unlocked for 15 minutes.',
-                    'Após verificação, o acesso ficará disponível durante 15 minutos.'
+                    'Após verificação, o acesso ficará disponível durante 15 minutos.', "Una vez autorizado, el acceso permanece desbloqueado durante 15 minutos."
                   )}
                 </p>
               </div>
@@ -204,7 +206,7 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
                   disabled={loading}
                   className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] bg-white text-[#475569] text-xs font-semibold hover:bg-[#F1F5F9] transition-colors"
                 >
-                  {txt('Annuler', 'Cancel', 'Cancelar')}
+                  {txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
                 </button>
 
                 <button
@@ -215,7 +217,7 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
                   {loading ? (
                     <>
                       <IconLoader2 size={16} className="animate-spin" />
-                      <span>{txt('Vérification...', 'Verifying...', 'A verificar...')}</span>
+                      <span>{txt('Vérification...', 'Verifying...', 'A verificar...', "Verificando...")}</span>
                     </>
                   ) : (
                     <>
@@ -224,7 +226,7 @@ export const OwnerAuthModal = React.memo(function OwnerAuthModal({
                         {txt(
                           'Déverrouiller les Statistiques',
                           'Unlock Analytics',
-                          'Desbloquear Estatísticas'
+                          'Desbloquear Estatísticas', "Desbloquear estadísticas"
                         )}
                       </span>
                     </>

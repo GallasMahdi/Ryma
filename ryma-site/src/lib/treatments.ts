@@ -27,12 +27,12 @@ function localized(value: unknown, label: string, max: number, required = true):
   if (!value || typeof value!=='object' || Array.isArray(value)) return fail(`${label}: invalid translations.`);
   const source=value as Record<string,unknown>;
   const result: Record<string,string>={};
-  for (const lang of ['pt','fr','en','ar']) {
+  for (const lang of ['pt','fr','en','es','ar']) {
     if (source[lang]===undefined) continue;
     if(typeof source[lang]!=='string' || (source[lang] as string).length>max) return fail(`${label}: maximum ${max} characters.`);
     result[lang]=(source[lang] as string).trim();
   }
-  if(required && !result.pt && !result.fr && !result.en) return fail(`${label} is required in at least one language.`);
+  if(required && !result.pt && !result.fr && !result.en && !result.es) return fail(`${label} is required in at least one language.`);
   return {...result,fr:result.fr || ''};
 }
 function stringList(value: unknown, label: string, count = 30, length = 500): string[] {
@@ -42,7 +42,7 @@ function stringList(value: unknown, label: string, count = 30, length = 500): st
 function translatedList(value: unknown, label: string): LocalizedList {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return fail(`${label}: invalid translations.`);
   const source=value as Record<string,unknown>, result: Record<string,string[]>={fr:[]};
-  for(const lang of ['pt','fr','en','ar']) if(source[lang]!==undefined)result[lang]=stringList(source[lang],label);
+  for(const lang of ['pt','fr','en','es','ar']) if(source[lang]!==undefined)result[lang]=stringList(source[lang],label);
   return result as LocalizedList;
 }
 function options<T extends string>(value: unknown, allowed: readonly T[], label: string): T[] {

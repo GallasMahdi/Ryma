@@ -27,6 +27,9 @@ import { env } from '@/lib/env';
 let _tursoClient: LibSqlClient | null = null;
 let _tursoInitialized = false;
 let _tursoSchemaPromise: Promise<void> | undefined;
+// Bump whenever the base tables or scheduling/catalogue migrations change.
+// A durable marker avoids replaying dozens of remote DDL calls on every cold start.
+const SCHEMA_REVISION = '2026-10-09.3';
 
 function isTursoEnabled(): boolean {
   return Boolean(process.env.TURSO_DATABASE_URL);
@@ -43,6 +46,18 @@ async function ensureTursoSchema(client: LibSqlClient): Promise<void> {
 
 async function initializeTursoSchema(client: LibSqlClient): Promise<void> {
   if (client.protocol === "file") await client.execute("PRAGMA journal_mode=WAL");
+
+  try {
+    const version = await client.execute({sql:'SELECT version FROM app_schema_revision WHERE id=1',args:[]});
+    if (version.rows[0]?.version === SCHEMA_REVISION) {
+      _tursoInitialized = true;
+      return;
+    }
+  } catch (error) {
+    // Only a missing marker means an older installation. Network/auth failures
+    // must not trigger migrations or switch databases.
+    if (!/no such table: (?:main\.)?app_schema_revision/i.test(String(error))) throw error;
+  }
 
   try {
     // 1. Ensure tables exist
@@ -258,9 +273,7 @@ async function initializeTursoSchema(client: LibSqlClient): Promise<void> {
         ]);
         console.log('[Turso Migration] Successfully migrated appointments on Turso Cloud!');
       }
-    } catch (migErr) {
-      console.warn('[Turso Table Migration Warning]:', migErr);
-    }
+    } catch (migErr) { throw migErr; }
 
     // 2. Safe non-destructive column migrations on Turso
     const patientColsRes = await client.execute("PRAGMA table_info(patients)");
@@ -312,6 +325,10 @@ async function initializeTursoSchema(client: LibSqlClient): Promise<void> {
     if (!bookingNames.includes('bookingRequestId')) await client.execute('ALTER TABLE appointments ADD COLUMN bookingRequestId TEXT');
     await client.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_booking_request ON appointments(bookingRequestId) WHERE bookingRequestId IS NOT NULL');
     await migrateSchedulingDatabase(client);
+    await client.batch([
+      'CREATE TABLE IF NOT EXISTS app_schema_revision (id INTEGER PRIMARY KEY CHECK(id=1), version TEXT NOT NULL)',
+      {sql:'INSERT INTO app_schema_revision(id,version) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET version=excluded.version',args:[SCHEMA_REVISION]},
+    ], 'write');
     _tursoInitialized = true;
   } catch (migErr) {
     throw migErr;
@@ -375,8 +392,11 @@ function resolveDbPath(): string {
   }
 
   if (process.env.DATABASE_PATH) {
+    if (isProd && !path.isAbsolute(process.env.DATABASE_PATH)) throw new Error('Production DATABASE_PATH must be an absolute persistent path');
     return path.resolve(process.env.DATABASE_PATH);
   }
+
+  if (isProd) throw new Error('Production SQLite requires an explicit persistent DATABASE_PATH');
 
   const defaultLocalPath = path.join(process.cwd(), 'data', 'ryma.db');
 
@@ -2024,7 +2044,7 @@ export async function dbGetInvoices(filters?: {
     params.push(q, q, q, q, q);
   }
 
-  if (filters?.pole && filters.pole!=='all') { sql+=" AND COALESCE(servicePole,(SELECT json_extract(content,'$.pole') FROM treatment_catalog t WHERE t.slug=invoices.serviceSlug),'kinesitherapie')=?";params.push(filters.pole); }
+  if (filters?.pole && filters.pole!=='all') { sql+=" AND (COALESCE(servicePole,(SELECT json_extract(content,'$.pole') FROM treatment_catalog t WHERE t.slug=invoices.serviceSlug),'kinesitherapie')=? OR EXISTS(SELECT 1 FROM invoice_items x WHERE x.invoiceId=invoices.id AND x.servicePole=?))";params.push(filters.pole,filters.pole); }
   sql += ' ORDER BY createdAt DESC';
 
   if (typeof filters?.limit === 'number' && filters.limit > 0) {
@@ -2036,7 +2056,7 @@ export async function dbGetInvoices(filters?: {
     }
   }
 
-  return executeQuery<Invoice>(sql, params);
+  return attachInvoiceItems(await executeQuery<Invoice>(sql, params));
 }
 
 export async function dbGetInvoicesPaginated(options: {
@@ -2099,7 +2119,7 @@ export async function dbGetInvoicesPaginated(options: {
     countParams.push(q, q, q, q, q);
   }
 
-  if (options.pole && options.pole!=='all') { countSql+=" AND COALESCE(servicePole,(SELECT json_extract(content,'$.pole') FROM treatment_catalog t WHERE t.slug=invoices.serviceSlug),'kinesitherapie')=?";countParams.push(options.pole); }
+  if (options.pole && options.pole!=='all') { countSql+=" AND (COALESCE(servicePole,(SELECT json_extract(content,'$.pole') FROM treatment_catalog t WHERE t.slug=invoices.serviceSlug),'kinesitherapie')=? OR EXISTS(SELECT 1 FROM invoice_items x WHERE x.invoiceId=invoices.id AND x.servicePole=?))";countParams.push(options.pole,options.pole); }
   const [countRes, invoices] = await Promise.all([
     executeQuery<{ cnt: number }>(countSql, countParams),
     dbGetInvoices({ ...options, limit, offset }),
@@ -2119,7 +2139,20 @@ export async function dbGetInvoicesPaginated(options: {
 
 export async function dbGetInvoiceById(id: string): Promise<Invoice | null> {
   const rows = await executeQuery<Invoice>('SELECT * FROM invoices WHERE id = ? OR invoiceNumber = ?', [id, id]);
-  return rows[0] ?? null;
+  return (await attachInvoiceItems(rows))[0] ?? null;
+}
+
+async function attachInvoiceItems(invoices: Invoice[]): Promise<Invoice[]> {
+  if (!invoices.length) return invoices;
+  const items: import('@/types/admin').InvoiceItem[] = [];
+  // Bound SQL parameters even for legacy exports that request the whole list.
+  for (let offset = 0; offset < invoices.length; offset += 100) {
+    const ids = invoices.slice(offset, offset + 100).map(invoice => invoice.id);
+    items.push(...await executeQuery<import('@/types/admin').InvoiceItem>(`SELECT * FROM invoice_items WHERE invoiceId IN (${ids.map(() => '?').join(',')}) ORDER BY date,startTime,id`, ids));
+  }
+  const byInvoice = new Map<string, import('@/types/admin').InvoiceItem[]>();
+  for (const item of items) { const list = byInvoice.get(item.invoiceId) ?? []; list.push(item); byInvoice.set(item.invoiceId, list); }
+  return invoices.map(invoice => ({ ...invoice, items: byInvoice.get(invoice.id) ?? [] }));
 }
 
 export async function dbUpdateInvoice(
@@ -2361,7 +2394,7 @@ async function readPatientPrescriptions(patientPhone?: string, patientId?: strin
 // ─── Full Database Snapshot Export & Restore ─────────────────────────────────
 // The allowlist also defines dependency order. Scheduling revisions are deliberately not
 // restored: a restore must invalidate every outstanding availability/configuration snapshot.
-const BACKUP_TABLES = ['practitioners','practitioner_services','working_hours','schedule_exceptions','resources','service_resources','patients','appointments','patient_sessions','clinical_session_revisions','invoices','prescriptions','blocked_slots','patient_notes','security_settings','security_audit_logs','reviews','idempotency_keys','treatment_catalog','treatment_revisions'] as const;
+const BACKUP_TABLES = ['practitioners','practitioner_services','working_hours','schedule_exceptions','resources','service_resources','patients','appointments','patient_sessions','clinical_session_revisions','invoices','invoice_items','prescriptions','blocked_slots','patient_notes','security_settings','security_audit_logs','reviews','idempotency_keys','treatment_catalog','treatment_revisions'] as const;
 const SCHEDULE_BACKUP_TABLES = new Set<string>(BACKUP_TABLES.slice(0,6));
 export async function dbExportFullDatabaseBackup() {
   const tables: Record<string, any[]> = {};
@@ -2380,7 +2413,7 @@ export async function dbRestoreFullDatabaseBackup(backupData: any): Promise<{suc
   if(!['1.0.0','2.0.0','3.0.0'].includes(backupData.version)) throw new Error('Unsupported backup version');
   const currentCatalogue=await getTreatments();
   const legacy=backupData.version==='1.0.0';
-  const selected=BACKUP_TABLES.filter(t=>backupData.version==='3.0.0'||!['treatment_catalog','treatment_revisions'].includes(t)).filter(t=>t!=='clinical_session_revisions' || Array.isArray(backupData.tables[t])).filter(t=>!legacy || (!SCHEDULE_BACKUP_TABLES.has(t)&&t!=='idempotency_keys'));
+  const selected=BACKUP_TABLES.filter(t=>backupData.version==='3.0.0'||!['treatment_catalog','treatment_revisions'].includes(t)).filter(t=>!['clinical_session_revisions','invoice_items'].includes(t) || Array.isArray(backupData.tables[t])).filter(t=>!legacy || (!SCHEDULE_BACKUP_TABLES.has(t)&&t!=='idempotency_keys'));
   for(const table of selected) if(!Array.isArray(backupData.tables[table])) throw new Error('Missing or invalid backup table: '+table);
   if(!legacy) {
     for(const table of selected) {
@@ -2414,6 +2447,7 @@ export async function dbRestoreFullDatabaseBackup(backupData: any): Promise<{suc
   const queries:{sql:string;args:any[]}[]=selected.slice().reverse().map(table=>({sql:'DELETE FROM '+table,args:[]}));
   if(legacy) queries.unshift({sql:'DELETE FROM idempotency_keys',args:[]});
   if(!selected.includes('clinical_session_revisions'))queries.unshift({sql:'DELETE FROM clinical_session_revisions',args:[]});
+  if(!selected.includes('invoice_items'))queries.unshift({sql:'DELETE FROM invoice_items',args:[]});
   const restoredCounts:Record<string,number>={};
   for(let i=0;i<selected.length;i++){
     const table=selected[i]; const rows=backupData.tables[table];
@@ -2443,6 +2477,15 @@ export async function dbDeletePrescription(id: string): Promise<void> {
 }
 
 // ─── Patient Reviews Engine ───────────────────────────────────────────────────
+
+export async function dbGetApprovedReviewStats(serviceSlug?: string): Promise<{total:number;average:number}> {
+  const filtered=Boolean(serviceSlug && serviceSlug !== 'all');
+  const [row]=await executeQuery<{total:number;average:number}>(
+    `SELECT COUNT(*) AS total, COALESCE(AVG(rating),0) AS average FROM reviews WHERE status='APPROVED'${filtered?' AND serviceSlug=?':''}`,
+    filtered?[serviceSlug!]:[],
+  );
+  return {total:Number(row.total),average:Number(row.average)};
+}
 
 export async function dbGetApprovedReviews(options?: {
   serviceSlug?: string;
@@ -2698,7 +2741,7 @@ export async function dbGetAnalyticsStats(lang: string = 'fr'): Promise<{
   const revenue = Math.max(paidInvoicesRevenue, appointmentsRevenue);
 
   const dowLabels =
-    lang === 'pt'
+    lang === 'es' ? ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] : lang === 'pt'
       ? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
       : lang === 'en'
       ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -2856,7 +2899,7 @@ export async function dbGetFilteredAnalyticsStats(
 ): Promise<FilteredAnalyticsResult> {
   const catalogue=await getTreatments();
   await dbAssertInvoiceAmountsReviewed();
-  const lang: Lang = options.lang === 'pt' ? 'pt' : options.lang === 'en' ? 'en' : 'fr';
+  const lang: Lang = options.lang === 'es' ? 'es' : options.lang === 'pt' ? 'pt' : options.lang === 'en' ? 'en' : 'fr';
   const rangeType = options.range || '30d';
   const targetPole = options.pole && options.pole !== 'all' ? options.pole : 'all';
 
@@ -3077,12 +3120,13 @@ export async function dbGetFilteredAnalyticsStats(
     isAllTime
       ? Promise.resolve([])
       : executeQuery<{
+          id: string;
           amount: number;
           paymentStatus: string;
           serviceSlug: string;
           servicePole: string|null;
         }>(
-          `SELECT amountCents / 100.0 AS amount, paymentStatus, serviceSlug, servicePole
+          `SELECT id, amountCents / 100.0 AS amount, paymentStatus, serviceSlug, servicePole
            FROM invoices
            WHERE COALESCE(paidAt, createdAt) >= ? AND COALESCE(paidAt, createdAt) <= ?`,
           [priorStartIso, priorEndIso]
@@ -3112,13 +3156,28 @@ export async function dbGetFilteredAnalyticsStats(
     ? priorAppts
     : priorAppts.filter(a => (a.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(a.service, catalogue)) === targetPole);
 
-  const invoices = targetPole === 'all'
-    ? currentInvoices
-    : currentInvoices.filter(i => (i.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(i.serviceSlug, catalogue)) === targetPole);
-
-  const filteredPriorInvoices = targetPole === 'all'
-    ? priorInvoices
-    : priorInvoices.filter(i => (i.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(i.serviceSlug, catalogue)) === targetPole);
+  // Split mixed documents by their saved line amounts while counting each document once.
+  type Allocation = { invoiceId: string; serviceSlug: string; servicePole: string | null; amount: number };
+  const allocations = new Map<string, Allocation[]>();
+  const invoiceIds = [...currentInvoices, ...priorInvoices].map(invoice => invoice.id);
+  for (let offset = 0; offset < invoiceIds.length; offset += 100) {
+    const ids = invoiceIds.slice(offset, offset + 100);
+    const rows = await executeQuery<Allocation>(`SELECT invoiceId,serviceSlug,servicePole,SUM(totalCents)/100.0 AS amount
+      FROM invoice_items WHERE invoiceId IN (${ids.map(() => '?').join(',')}) GROUP BY invoiceId,serviceSlug,servicePole`, ids);
+    for (const row of rows) allocations.set(row.invoiceId, [...(allocations.get(row.invoiceId) || []), row]);
+  }
+  const allocationPole = (row: {serviceSlug: string; servicePole: string | null}) => row.servicePole || getServicePole(row.serviceSlug, catalogue);
+  const filterInvoicePole = <T extends {id: string; amount: number; serviceSlug: string; servicePole: string | null}>(rows: T[]): T[] => {
+    if (targetPole === 'all') return rows;
+    return rows.flatMap(invoice => {
+      const lines = allocations.get(invoice.id);
+      if (!lines) return allocationPole(invoice) === targetPole ? [invoice] : [];
+      const matching = lines.filter(line => allocationPole(line) === targetPole);
+      return matching.length ? [{...invoice, amount: sumMoney(matching.map(line => line.amount))}] : [];
+    });
+  };
+  const invoices = filterInvoicePole(currentInvoices);
+  const filteredPriorInvoices = filterInvoicePole(priorInvoices);
 
   // Compute status metrics & revenue
   let total = 0;
@@ -3227,7 +3286,7 @@ export async function dbGetFilteredAnalyticsStats(
   };
   const pointsMap = new Map<string, TimePoint>();
 
-  const locale = lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
+  const locale = lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
 
   if (granularity === 'hour') {
     const slots = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
@@ -3409,11 +3468,15 @@ export async function dbGetFilteredAnalyticsStats(
 
   for (const inv of invoices) {
     if (inv.paymentStatus !== 'PAID') continue;
-    const amount = Number(inv.amount) || 0;
-    poleTotals[(inv.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(inv.serviceSlug, catalogue))].revenue = sumMoney([poleTotals[(inv.servicePole as 'kinesitherapie'|'minceur'|'bilan' || getServicePole(inv.serviceSlug, catalogue))].revenue,amount]);
-    const service = serviceStats.get(inv.serviceSlug) || { count: 0, revenue: 0 };
-    service.revenue = sumMoney([service.revenue,amount]);
-    serviceStats.set(inv.serviceSlug, service);
+    for (const line of allocations.get(inv.id) || [inv]) {
+      const pole = allocationPole(line) as keyof typeof poleTotals;
+      if (targetPole !== 'all' && pole !== targetPole) continue;
+      const amount = Number(line.amount) || 0;
+      if (poleTotals[pole]) poleTotals[pole].revenue = sumMoney([poleTotals[pole].revenue, amount]);
+      const service = serviceStats.get(line.serviceSlug) || { count: 0, revenue: 0 };
+      service.revenue = sumMoney([service.revenue, amount]);
+      serviceStats.set(line.serviceSlug, service);
+    }
   }
 
   const poleRevenueTotal =
@@ -3430,7 +3493,7 @@ export async function dbGetFilteredAnalyticsStats(
     {
       pole: 'kinesitherapie',
       name:
-        lang === 'pt'
+        lang === 'es' ? "Fisioterapia y rehabilitación" : lang === 'pt'
           ? 'Fisioterapia & Reabilitação'
           : lang === 'en'
           ? 'Physiotherapy & Rehab'
@@ -3446,7 +3509,7 @@ export async function dbGetFilteredAnalyticsStats(
     {
       pole: 'minceur',
       name:
-        lang === 'pt'
+        lang === 'es' ? "Reducción corporal y estética" : lang === 'pt'
           ? 'Estética & Emagrecimento'
           : lang === 'en'
           ? 'Slimming & Esthetics'
@@ -3462,7 +3525,7 @@ export async function dbGetFilteredAnalyticsStats(
     {
       pole: 'bilan',
       name:
-        lang === 'pt'
+        lang === 'es' ? "Evaluaciones iniciales" : lang === 'pt'
           ? 'Avaliações Iniciais'
           : lang === 'en'
           ? 'Initial Assessments'
@@ -3495,7 +3558,7 @@ export async function dbGetFilteredAnalyticsStats(
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00',
   ];
   const dowLabels =
-    lang === 'pt'
+    lang === 'es' ? ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"] : lang === 'pt'
       ? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
       : lang === 'en'
       ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -3538,7 +3601,7 @@ export async function dbGetFilteredAnalyticsStats(
     {
       id: 'booked',
       name:
-        lang === 'pt'
+        lang === 'es' ? "Citas reservadas" : lang === 'pt'
           ? 'Consultas Agendadas'
           : lang === 'en'
           ? 'Booked Appointments'
@@ -3549,7 +3612,7 @@ export async function dbGetFilteredAnalyticsStats(
     {
       id: 'confirmed',
       name:
-        lang === 'pt'
+        lang === 'es' ? "Confirmadas por la clínica" : lang === 'pt'
           ? 'Confirmadas pela Clínica'
           : lang === 'en'
           ? 'Confirmed by Clinic'
@@ -3560,7 +3623,7 @@ export async function dbGetFilteredAnalyticsStats(
     {
       id: 'completed',
       name:
-        lang === 'pt'
+        lang === 'es' ? "Sesiones completadas" : lang === 'pt'
           ? 'Sessões Concluídas'
           : lang === 'en'
           ? 'Completed Sessions'
@@ -3571,7 +3634,7 @@ export async function dbGetFilteredAnalyticsStats(
     {
       id: 'retained',
       name:
-        lang === 'pt'
+        lang === 'es' ? "Pacientes con varias sesiones" : lang === 'pt'
           ? 'Utentes Recorrentes'
           : lang === 'en'
           ? 'Multi-Session Patients'
@@ -3703,7 +3766,7 @@ export async function dbGetFilteredAnalyticsStats(
     },
     analyticsData: {
       dowLabels:
-        lang === 'pt'
+        lang === 'es' ? ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] : lang === 'pt'
           ? ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
           : lang === 'en'
           ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -3734,7 +3797,6 @@ export async function dbHealthCheck(): Promise<{
 }> {
   const start = Date.now();
   await executeQuery('SELECT 1 as ok');
-  const latencyMs = Date.now() - start;
 
   const engine = isTursoEnabled() ? 'turso_cloud' : 'local_sqlite';
 
@@ -3756,7 +3818,7 @@ export async function dbHealthCheck(): Promise<{
   return {
     status: 'connected',
     engine,
-    latencyMs,
+    latencyMs: Date.now() - start,
     writable,
   };
 }

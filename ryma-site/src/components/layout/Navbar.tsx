@@ -164,7 +164,7 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C49A3C]" />
               </span>
               <span className="text-[#F5E9C8] font-semibold tracking-wider uppercase text-[10px]">
-                {lang === 'pt' ? 'Clínica Aberta' : lang === 'en' ? 'Clinic Open' : 'Cabinet Ouvert'}
+                {lang === 'es' ? "Clínica abierta" : lang === 'pt' ? 'Clínica Aberta' : lang === 'en' ? 'Clinic Open' : 'Cabinet Ouvert'}
               </span>
               <span className="text-[#B8A88A]">— {t.common.location}</span>
             </span>
@@ -186,7 +186,7 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
             <span className="h-3 w-px bg-[#C49A3C]/30" />
             <span className="flex items-center gap-1.5 text-[#E8C97A] font-medium tracking-wide">
               <IconSparkles size={13} className="text-[#C49A3C]" />
-              {lang === 'pt' ? 'Recibos p/ Seguros de Saúde' : lang === 'en' ? 'Health Insurance Receipts' : 'Reçus pour Mutuelles / Assurances'}
+              {lang === 'es' ? "Recibos para el seguro médico" : lang === 'pt' ? 'Recibos p/ Seguros de Saúde' : lang === 'en' ? 'Health Insurance Receipts' : 'Reçus pour Mutuelles / Assurances'}
             </span>
           </div>
         </div>
@@ -279,13 +279,13 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                         <div className="bg-white border border-[#C49A3C]/25 rounded-2xl shadow-[0_20px_60px_rgba(196,154,60,0.15),_0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
                           <div className="px-6 py-3.5 border-b border-[#C49A3C]/15 bg-[#FDFAF4] flex items-center justify-between">
                             <span className="text-[11px] font-semibold tracking-widest text-[#9A7428] uppercase">
-                              {lang === 'pt' ? 'Os Nossos Polos de Cuidados' : lang === 'en' ? 'Our Treatment Centers' : 'Nos Pôles de Soins'}
+                              {lang === 'es' ? "Nuestras áreas de tratamiento" : lang === 'pt' ? 'Os Nossos Polos de Cuidados' : lang === 'en' ? 'Our Treatment Centers' : 'Nos Pôles de Soins'}
                             </span>
                             <Link
                               href="/services"
                               className="inline-flex items-center gap-1 text-xs font-semibold text-[#C49A3C] hover:text-[#9A7428] transition-colors"
                             >
-                              {lang === 'pt' ? 'Ver catálogo completo' : lang === 'en' ? 'View all treatments' : 'Voir tout le catalogue'}
+                              {lang === 'es' ? "Ver todos los tratamientos" : lang === 'pt' ? 'Ver catálogo completo' : lang === 'en' ? 'View all treatments' : 'Voir tout le catalogue'}
                               <IconArrowUpRight size={14} />
                             </Link>
                           </div>
@@ -295,7 +295,7 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                               <div className="flex items-center gap-2 mb-3 pb-1 border-b border-[#C49A3C]/10">
                                 <IconStethoscope size={16} className="text-[#9A7428]" />
                                 <span className="text-xs font-bold uppercase tracking-wider text-[#9A7428]">
-                                  {lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
+                                  {lang === 'es' ? "Fisioterapia" : lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
                                 </span>
                               </div>
                               <div className="space-y-1">
@@ -325,7 +325,7 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                               <div className="flex items-center gap-2 mb-3 pb-1 border-b border-[#C49A3C]/10">
                                 <IconFlame size={16} className="text-[#C49A3C]" />
                                 <span className="text-xs font-bold uppercase tracking-wider text-[#C49A3C]">
-                                  {lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
+                                  {lang === 'es' ? "Tratamientos reductores" : lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
                                 </span>
                               </div>
                               <div className="space-y-1">
@@ -382,7 +382,7 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                   type="button"
                   onClick={() => setMobileOpen(!mobileOpen)}
                   className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl text-[#1A1412] hover:bg-[#F5E9C8] active:scale-95 transition-all touch-manipulation"
-                  aria-label={mobileOpen ? (lang === 'pt' ? 'Fechar menu' : lang === 'en' ? 'Close menu' : 'Fermer le menu') : (lang === 'pt' ? 'Abrir menu' : lang === 'en' ? 'Open menu' : 'Ouvrir le menu')}
+                  aria-label={mobileOpen ? (lang === 'es' ? "Cerrar menú" : lang === 'pt' ? 'Fechar menu' : lang === 'en' ? 'Close menu' : 'Fermer le menu') : (lang === 'es' ? "Abrir menú" : lang === 'pt' ? 'Abrir menu' : lang === 'en' ? 'Open menu' : 'Ouvrir le menu')}
                   aria-expanded={mobileOpen}
                   aria-controls="mobile-navigation-drawer"
                 >
@@ -414,7 +414,7 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
               id="mobile-navigation-drawer"
               role="dialog"
               aria-modal="true"
-              aria-label={lang === 'pt' ? 'Menu de navegação' : lang === 'en' ? 'Navigation menu' : 'Menu de navigation'}
+              aria-label={lang === 'es' ? "Menú de navegación" : lang === 'pt' ? 'Menu de navegação' : lang === 'en' ? 'Navigation menu' : 'Menu de navigation'}
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
@@ -445,7 +445,7 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                   type="button"
                   onClick={() => setMobileOpen(false)}
                   className="p-2 rounded-xl text-[#8A6A24] active:scale-90 bg-[#F5E9C8] hover:bg-[#EEDBB2] border border-[#C49A3C]/30 transition-transform flex items-center justify-center shadow-2xs touch-manipulation"
-                  aria-label={lang === 'pt' ? 'Fechar menu' : lang === 'en' ? 'Close menu' : 'Fermer le menu'}
+                  aria-label={lang === 'es' ? "Cerrar menú" : lang === 'pt' ? 'Fechar menu' : lang === 'en' ? 'Close menu' : 'Fermer le menu'}
                 >
                   <IconX size={20} />
                 </button>
@@ -458,11 +458,11 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C49A3C] opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C49A3C]" />
                   </span>
-                  <span>{lang === 'pt' ? 'Clínica Aberta' : lang === 'en' ? 'Clinic Open' : 'Cabinet Ouvert'}</span>
+                  <span>{lang === 'es' ? "Clínica abierta" : lang === 'pt' ? 'Clínica Aberta' : lang === 'en' ? 'Clinic Open' : 'Cabinet Ouvert'}</span>
                 </div>
 
                 <div className="relative inline-flex items-center gap-1 bg-white p-0.5 rounded-full border border-[#C49A3C]/30 shadow-2xs">
-                  {(['pt', 'en', 'fr'] as const).map((l) => {
+                  {(['pt', 'en', 'fr', 'es'] as const).map((l) => {
                     const isSelected = lang === l;
                     return (
                       <button
@@ -498,32 +498,32 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                   {
                     href: '/',
                     label: t.nav.home,
-                    sublabel: lang === 'pt' ? 'Início & Apresentação' : lang === 'en' ? 'Welcome & Experience' : 'Accueil & Présentation',
+                    sublabel: lang === 'es' ? "Bienvenida y experiencia" : lang === 'pt' ? 'Início & Apresentação' : lang === 'en' ? 'Welcome & Experience' : 'Accueil & Présentation',
                     icon: IconHome,
                   },
                   {
                     href: '/services',
                     label: t.nav.services,
-                    sublabel: lang === 'pt' ? 'Fisioterapia & Emagrecimento' : lang === 'en' ? 'Physio & Slimming Care' : 'Kinésithérapie & Minceur',
+                    sublabel: lang === 'es' ? "Fisioterapia y tratamientos reductores" : lang === 'pt' ? 'Fisioterapia & Emagrecimento' : lang === 'en' ? 'Physio & Slimming Care' : 'Kinésithérapie & Minceur',
                     icon: IconStethoscope,
-                    badge: lang === 'pt' ? '2 Polos' : lang === 'en' ? '2 Centers' : '2 Pôles',
+                    badge: lang === 'es' ? "2 áreas" : lang === 'pt' ? '2 Polos' : lang === 'en' ? '2 Centers' : '2 Pôles',
                   },
                   {
                     href: '/tarifs',
                     label: t.nav.pricing,
-                    sublabel: lang === 'pt' ? 'Preços Claros & Seguros' : lang === 'en' ? 'Rates & Insurance Coverage' : 'Tarifs & Reçus Mutuelles',
+                    sublabel: lang === 'es' ? "Tarifas y cobertura del seguro" : lang === 'pt' ? 'Preços Claros & Seguros' : lang === 'en' ? 'Rates & Insurance Coverage' : 'Tarifs & Reçus Mutuelles',
                     icon: IconTag,
                   },
                   {
                     href: '/a-propos',
                     label: t.nav.about,
-                    sublabel: lang === 'pt' ? 'Ryma Ben Romdhane • D.E' : lang === 'en' ? 'Ryma Ben Romdhane • Specialist' : 'Ryma Ben Romdhane • D.E',
+                    sublabel: lang === 'es' ? "Ryma Ben Romdhane • Especialista" : lang === 'pt' ? 'Ryma Ben Romdhane • D.E' : lang === 'en' ? 'Ryma Ben Romdhane • Specialist' : 'Ryma Ben Romdhane • D.E',
                     icon: IconUserCheck,
                   },
                   {
                     href: '/avis',
                     label: t.nav.reviews,
-                    sublabel: lang === 'pt' ? 'Experiências Reais' : lang === 'en' ? 'Verified Patient Reviews' : 'Témoignages & Avis Vérifiés',
+                    sublabel: lang === 'es' ? "Opiniones verificadas de pacientes" : lang === 'pt' ? 'Experiências Reais' : lang === 'en' ? 'Verified Patient Reviews' : 'Témoignages & Avis Vérifiés',
                     icon: IconStar,
                     badge: '5.0 ★',
                   },
@@ -604,7 +604,7 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                 {/* ── Treatment Quick Jump Cards ──────────── */}
                 <div className="pt-2">
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#8A6A24] px-1 mb-2">
-                    {lang === 'pt' ? 'Acesso Direto aos Cuidados' : lang === 'en' ? 'Direct Care Access' : 'Accès Direct aux Soins'}
+                    {lang === 'es' ? "Acceso directo a la atención" : lang === 'pt' ? 'Acesso Direto aos Cuidados' : lang === 'en' ? 'Direct Care Access' : 'Accès Direct aux Soins'}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -618,10 +618,10 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                         <div className="w-5 h-5 rounded-md bg-[#F5E9C8] flex items-center justify-center border border-[#C49A3C]/30 text-[#8A6A24]">
                           <IconStethoscope size={13} />
                         </div>
-                        <span>{lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physio' : 'Kinésithérapie'}</span>
+                        <span>{lang === 'es' ? "Fisioterapia" : lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physio' : 'Kinésithérapie'}</span>
                       </div>
                       <span className="text-[10px] text-[#8A6A24] mt-1 line-clamp-1 font-medium">
-                        {lang === 'pt' ? 'Reabilitação & Postura' : lang === 'en' ? 'Rehab & Posture' : 'Rééducation & Dos'}
+                        {lang === 'es' ? "Rehabilitación y postura" : lang === 'pt' ? 'Reabilitação & Postura' : lang === 'en' ? 'Rehab & Posture' : 'Rééducation & Dos'}
                       </span>
                     </Link>
 
@@ -635,10 +635,10 @@ const minceurServices = SERVICES.filter((s) => s.pole === 'minceur').slice(0, 4)
                         <div className="w-5 h-5 rounded-md bg-[#F5E9C8] flex items-center justify-center border border-[#C49A3C]/30 text-[#8A6A24]">
                           <IconFlame size={13} />
                         </div>
-                        <span>{lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming' : 'Minceur'}</span>
+                        <span>{lang === 'es' ? "Reducción corporal" : lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming' : 'Minceur'}</span>
                       </div>
                       <span className="text-[10px] text-[#8A6A24] mt-1 line-clamp-1 font-medium">
-                        {lang === 'pt' ? 'Drenagem & Silhouette' : lang === 'en' ? 'Drainage & Body' : 'Drainage & Remodelage'}
+                        {lang === 'es' ? "Drenaje y cuerpo" : lang === 'pt' ? 'Drenagem & Silhouette' : lang === 'en' ? 'Drainage & Body' : 'Drainage & Remodelage'}
                       </span>
                     </Link>
                   </div>

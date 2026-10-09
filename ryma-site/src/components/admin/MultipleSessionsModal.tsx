@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { getLocalizedText } from '@/data/services';
 import { useServices } from '@/components/ServiceCatalogProvider';
 import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
@@ -56,6 +58,7 @@ interface PreviewSessionItem {
   dayNamePt: string;
   dayNameFr: string;
   dayNameEn: string;
+  dayNameEs: string;
   available: boolean;
   conflictReason: 'booked' | 'blocked' | 'sunday' | 'past' | null;
   availableFreeSlots?: string[];
@@ -81,7 +84,8 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
   onActionToast,
 }: MultipleSessionsModalProps) {
   const SERVICES = useServices();
-  const txt = (frStr: string, enStr: string, ptStr: string) => {
+  const txt = (frStr: string, enStr: string, ptStr: string, es: string) => {
+    if (lang === 'es') return es;
     if (lang === 'fr') return frStr;
     if (lang === 'en') return enStr;
     return ptStr;
@@ -182,7 +186,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
           txt(
             'Veuillez conserver au moins un jour de récurrence.',
             'Please keep at least one recurring day.',
-            'Mantenha pelo menos um dia de recorrência selecionado.'
+            'Mantenha pelo menos um dia de recorrência selecionado.', "Mantenga al menos un día de repetición."
           )
         );
         return prev;
@@ -208,9 +212,9 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
       (document.getElementById('sessions-phone') as HTMLInputElement | null)?.reportValidity();
       return;
     }
-    if (!practitionerId) { setPreviewError(txt('Choisissez un praticien.', 'Choose a practitioner.', 'Escolha um profissional.')); return; }
+    if (!practitionerId) { setPreviewError(txt('Choisissez un praticien.', 'Choose a practitioner.', 'Escolha um profissional.', "Elija un profesional.")); return; }
     if (schedulePatterns.length === 0) {
-      setPreviewError(txt('Veuillez sélectionner au moins un jour.', 'Please select at least one day.', 'Por favor, selecione pelo menos um dia da semana.'));
+      setPreviewError(txt('Veuillez sélectionner au moins un jour.', 'Please select at least one day.', 'Por favor, selecione pelo menos um dia da semana.', "Seleccione al menos un día."));
       return;
     }
 
@@ -300,12 +304,12 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
       return;
     }
     if (!patientName.trim() || !phone.trim()) {
-      setPreviewError(txt('Nom et téléphone du patient requis.', 'Patient name and phone required.', 'O nome e telefone do utente são obrigatórios.'));
+      setPreviewError(txt('Nom et téléphone du patient requis.', 'Patient name and phone required.', 'O nome e telefone do utente são obrigatórios.', "El nombre y el teléfono del paciente son obligatorios."));
       return;
     }
 
     if (previewSessions.length === 0) {
-      setPreviewError(txt('Veuillez d\'abord calculer le calendrier.', 'Please calculate schedule first.', 'Por favor, calcule primeiro o calendário.'));
+      setPreviewError(txt('Veuillez d\'abord calculer le calendrier.', 'Please calculate schedule first.', 'Por favor, calcule primeiro o calendário.', "Calcule primero el calendario."));
       return;
     }
 
@@ -315,7 +319,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
         txt(
           'Des créneaux sont en conflit. Veuillez ajuster les horaires marqués en rouge.',
           'Some slots have conflicts. Please adjust highlighted slots before confirming.',
-          'Existem horários com conflito (ocupados ou bloqueados). Ajuste os itens assinalados a vermelho antes de confirmar.'
+          'Existem horários com conflito (ocupados ou bloqueados). Ajuste os itens assinalados a vermelho antes de confirmar.', "Algunos horarios tienen conflictos. Ajuste los horarios destacados antes de confirmar."
         )
       );
       return;
@@ -356,7 +360,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
             txt(
               'Un créneau vient d\'être réservé par un autre utilisateur. Veuillez recalculer le calendrier.',
               'A slot was just booked by another user. Please recalculate the schedule.',
-              'Um dos horários acabou de ser ocupado. Por favor, recalcule o calendário.'
+              'Um dos horários acabou de ser ocupado. Por favor, recalcule o calendário.', "Otro usuario acaba de reservar un horario. Vuelva a calcular el calendario."
             )
           );
           handleCalculatePreview();
@@ -368,7 +372,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
       if (onActionToast) {
         onActionToast({
           type: 'success',
-          title: txt('Plano de Sessões Criado', 'Multiple Sessions Booked', 'Plano de Sessões Criado'),
+          title: txt('Plano de Sessões Criado', 'Multiple Sessions Booked', 'Plano de Sessões Criado', "Varias sesiones reservadas"),
           message: `${patientName} • ${data.count || previewSessions.length} sessões agendadas com sucesso.`,
         });
       }
@@ -394,8 +398,8 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
     <ResponsiveModal
       isOpen={isOpen}
       onClose={onClose}
-      title={txt('Agendamento de Múltiplas Sessões', 'Multiple Sessions Scheduler', 'Agendamento de Múltiplas Sessões')}
-      subtitle={txt('Configuração de plano com bloqueio automático e sincronização em tempo real', 'Recurring plan with automatic slot blocking and live sync', 'Configuração de plano com bloqueio automático e sincronização em tempo real')}
+      title={txt('Agendamento de Múltiplas Sessões', 'Multiple Sessions Scheduler', 'Agendamento de Múltiplas Sessões', "Programación de varias sesiones")}
+      subtitle={txt('Configuração de plano com bloqueio automático e sincronização em tempo real', 'Recurring plan with automatic slot blocking and live sync', 'Configuração de plano com bloqueio automático e sincronização em tempo real', "Plan periódico con bloqueo automático de horarios y sincronización en directo")}
       maxWidth="2xl"
     >
       <div className="relative space-y-4 font-sans text-xs min-h-[380px]">
@@ -421,13 +425,13 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
 
               <div className="space-y-1.5 max-w-sm">
                 <h4 className="font-bold text-sm text-[#0F172A]">
-                  {txt('Vérification des disponibilités en temps réel...', 'Checking live schedule availability...', 'A verificar disponibilidade em tempo real...')}
+                  {txt('Vérification des disponibilités en temps réel...', 'Checking live schedule availability...', 'A verificar disponibilidade em tempo real...', "Comprobando la disponibilidad de la agenda en tiempo real...")}
                 </h4>
                 <p className="text-[11px] text-[#64748B] font-medium leading-relaxed">
                   {txt(
                     `Analyse de ${totalSessions} séances contre les créneaux occupés, bloqués et fermetures cliniques.`,
                     `Testing ${totalSessions} sessions against booked slots, admin blocks and clinic closures.`,
-                    `A validar ${totalSessions} sessões contra consultas ocupadas, bloqueios e domingos.`
+                    `A validar ${totalSessions} sessões contra consultas ocupadas, bloqueios e domingos.`, `Comprobando ${totalSessions} sesiones frente a reservas, bloqueos administrativos y cierres de la clínica.`
                   )}
                 </p>
               </div>
@@ -438,7 +442,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
               </div>
 
               <span className="text-[10px] font-bold text-[#94A3B8] tracking-wider uppercase">
-                {txt('Patientez un instant', 'Please wait a moment', 'Por favor, aguarde')}
+                {txt('Patientez un instant', 'Please wait a moment', 'Por favor, aguarde', "Espere un momento")}
               </span>
             </motion.div>
           )}
@@ -456,7 +460,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
         <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 space-y-3">
           <div className="flex items-center gap-2 font-bold text-[#0F172A] text-xs pb-1 border-b border-[#E2E8F0]">
             <IconUser size={16} className="text-[#64748B]" />
-            <span>{txt('Informations Patient & Soin', 'Patient & Service Details', 'Dados do Utente & Tratamento')}</span>
+            <span>{txt('Informations Patient & Soin', 'Patient & Service Details', 'Dados do Utente & Tratamento', "Datos del paciente y del servicio")}</span>
           </div>
 
           <PractitionerSelect admin allowAny={false} lang={lang} value={practitionerId} service={serviceSlug} onChange={value => {setPractitionerId(value);setHasCalculated(false);}} />
@@ -464,12 +468,12 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="font-bold text-[#475569] block">
-                  {txt('Nom du Patient *', 'Patient Name *', 'Nome do Utente *')}
+                  {txt('Nom du Patient *', 'Patient Name *', 'Nome do Utente *', "Nombre del paciente *")}
                 </label>
                 {Boolean(initialPatient || patientId) && (
                   <span className="inline-flex items-center gap-1 text-[10px] text-[#64748B] font-bold bg-[#E2E8F0]/60 px-1.5 py-0.5 rounded-md">
                     <IconLock size={11} className="text-[#64748B]" />
-                    {txt('Fixé', 'Locked', 'Fixado')}
+                    {txt('Fixé', 'Locked', 'Fixado', "Bloqueado")}
                   </span>
                 )}
               </div>
@@ -484,7 +488,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                     setPatientName(e.target.value);
                     setHasCalculated(false);
                   }}
-                  placeholder="Ex: Maria Silva"
+                  placeholder={legacyText("Ex: Maria Silva", lang)}
                   className={`w-full rounded-xl p-2.5 text-xs focus:outline-none ${
                     Boolean(initialPatient || patientId)
                       ? 'bg-[#F1F5F9] text-[#334155] border border-[#CBD5E1] cursor-not-allowed select-none font-semibold pr-8'
@@ -500,12 +504,12 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label htmlFor="sessions-phone" className="font-bold text-[#475569] block">
-                  {txt('Téléphone *', 'Phone *', 'Telefone *')}
+                  {txt('Téléphone *', 'Phone *', 'Telefone *', "Teléfono *")}
                 </label>
                 {Boolean(initialPatient || patientId) && (
                   <span className="inline-flex items-center gap-1 text-[10px] text-[#64748B] font-bold bg-[#E2E8F0]/60 px-1.5 py-0.5 rounded-md">
                     <IconLock size={11} className="text-[#64748B]" />
-                    {txt('Fixé', 'Locked', 'Fixado')}
+                    {txt('Fixé', 'Locked', 'Fixado', "Bloqueado")}
                   </span>
                 )}
               </div>
@@ -538,7 +542,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="font-bold text-[#475569] block mb-1">
-                {txt('Soin / Prestation *', 'Treatment / Service *', 'Tratamento / Cuidado *')}
+                {txt('Soin / Prestation *', 'Treatment / Service *', 'Tratamento / Cuidado *', "Tratamiento / servicio *")}
               </label>
               <select
                 value={serviceSlug}
@@ -548,7 +552,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                 }}
                 className="w-full bg-white border border-[#CBD5E1] text-[#0F172A] rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#0F172A]"
               >
-                <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map(s => (
+                <option value="">{lang === 'es' ? "Elija un tratamiento" : lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map(s => (
                   <option key={s.slug} value={s.slug}>
                     {getLocalizedText(s.name,lang)} ({s.price} €)
                   </option>
@@ -558,7 +562,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
 
             <div>
               <label className="font-bold text-[#475569] block mb-1">
-                {txt('Nombre de Séances *', 'Total Sessions *', 'Número de Sessões *')}
+                {txt('Nombre de Séances *', 'Total Sessions *', 'Número de Sessões *', "Total de sesiones *")}
               </label>
               <div className="flex items-center gap-1.5">
                 {[5, 10, 15, 20].map(cnt => (
@@ -593,14 +597,14 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
           <div className="flex items-center justify-between font-bold text-[#0F172A] text-xs pb-1 border-b border-[#E2E8F0]">
             <div className="flex items-center gap-2">
               <IconCalendarRepeat size={16} className="text-[#64748B]" />
-              <span>{txt('Régularité & Horaires Hebdomadaires', 'Weekly Recurrence & Time Slots', 'Dias da Semana & Horários Recorrentes')}</span>
+              <span>{txt('Régularité & Horaires Hebdomadaires', 'Weekly Recurrence & Time Slots', 'Dias da Semana & Horários Recorrentes', "Repetición semanal y horarios")}</span>
               <span className="text-[10px] font-bold text-[#475569] bg-white px-2 py-0.5 rounded-md border border-[#CBD5E1] shadow-2xs">
-                {schedulePatterns.length} / {Math.min(6, totalSessions)} {txt('jours', 'days', 'dias')}
+                {schedulePatterns.length} / {Math.min(6, totalSessions)} {txt('jours', 'days', 'dias', "días")}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <label className="text-[11px] font-bold text-[#64748B]">
-                {txt('Date de Début:', 'Start Date:', 'Início:')}
+                {txt('Date de Début:', 'Start Date:', 'Início:', "Fecha de inicio:")}
               </label>
               <input
                 type="date"
@@ -636,7 +640,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                       ? txt(
                           `Maximum de ${totalSessions} jour(s) sélectionnable(s) pour ce plan`,
                           `Maximum of ${totalSessions} day(s) selectable for this plan`,
-                          `Máximo de ${totalSessions} dia(s) selecionável(is) para este plano`
+                          `Máximo de ${totalSessions} dia(s) selecionável(is) para este plano`, `Puede seleccionar un máximo de ${totalSessions} día(s) para este plan`
                         )
                       : undefined
                   }
@@ -660,8 +664,8 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                         type="button"
                         onClick={() => removeWeekday(w.day)}
                         className="w-5 h-5 rounded-md bg-rose-50 hover:bg-rose-100 active:scale-90 text-rose-600 hover:text-rose-700 flex items-center justify-center transition-all border border-rose-200 shadow-2xs"
-                        title={txt(`Supprimer le ${w.labelFr}`, `Remove ${w.labelEn}`, `Remover ${w.labelPt}`)}
-                        aria-label={txt(`Supprimer le ${w.labelFr}`, `Remove ${w.labelEn}`, `Remover ${w.labelPt}`)}
+                        title={txt(`Supprimer le ${w.labelFr}`, `Remove ${w.labelEn}`, `Remover ${w.labelPt}`, `Eliminar ${w.labelEn}`)}
+                        aria-label={txt(`Supprimer le ${w.labelFr}`, `Remove ${w.labelEn}`, `Remover ${w.labelPt}`, `Eliminar ${w.labelEn}`)}
                       >
                         <IconX size={12} strokeWidth={2.5} />
                       </button>
@@ -676,7 +680,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                             : 'text-[#0F172A] hover:bg-[#CBD5E1]/60 active:scale-95'
                         }`}
                       >
-                        + {txt('Ajouter', 'Add', 'Adicionar')}
+                        + {txt('Ajouter', 'Add', 'Adicionar', "Añadir")}
                       </button>
                     )}
                   </div>
@@ -713,7 +717,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                     {txt(
                       `Vérification de ${totalSessions} séances...`,
                       `Verifying ${totalSessions} sessions...`,
-                      `A verificar ${totalSessions} sessões...`
+                      `A verificar ${totalSessions} sessões...`, `Verificando ${totalSessions} sesiones...`
                     )}
                   </span>
                 </>
@@ -724,7 +728,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                     {txt(
                       'Calculer & Vérifier Disponibilités',
                       'Calculate & Check Availability',
-                      'Calcular & Verificar Disponibilidades'
+                      'Calcular & Verificar Disponibilidades', "Calcular y comprobar disponibilidad"
                     )}
                   </span>
                 </>
@@ -740,7 +744,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
               <div className="flex items-center gap-2">
                 <IconCalendarEvent size={16} className="text-[#0F172A]" />
                 <span>
-                  {txt('Planning Prévisionnel', 'Generated Schedule Preview', 'Pré-visualização do Plano Gerado')} ({previewSessions.length} {txt('séances', 'sessions', 'sessões')})
+                  {txt('Planning Prévisionnel', 'Generated Schedule Preview', 'Pré-visualização do Plano Gerado', "Vista previa del calendario generado")} ({previewSessions.length} {txt('séances', 'sessions', 'sessões', "sesiones")})
                 </span>
               </div>
 
@@ -748,12 +752,12 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                 {conflictCount === 0 ? (
                   <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center gap-1">
                     <IconCheck size={14} />
-                    {txt('Tous les créneaux sont libres', 'All slots available', 'Todos os horários disponíveis')}
+                    {txt('Tous les créneaux sont libres', 'All slots available', 'Todos os horários disponíveis', "Todos los horarios disponibles")}
                   </span>
                 ) : (
                   <span className="px-2.5 py-1 bg-rose-50 text-rose-800 border border-rose-200 rounded-lg text-[11px] font-bold flex items-center gap-1">
                     <IconAlertTriangle size={14} />
-                    {conflictCount} {txt('conflit(s) détecté(s)', 'conflict(s) detected', 'conflito(s) detetado(s)')}
+                    {conflictCount} {txt('conflit(s) détecté(s)', 'conflict(s) detected', 'conflito(s) detetado(s)', "conflicto(s) detectado(s)")}
                   </span>
                 )}
               </div>
@@ -777,7 +781,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                       </span>
                       <div>
                         <span className="font-bold text-[#0F172A] block">
-                          {lang === 'fr' ? sess.dayNameFr : lang === 'en' ? sess.dayNameEn : sess.dayNamePt}, {sess.date}
+                          {lang === 'es' ? sess.dayNameEs : lang === 'fr' ? sess.dayNameFr : lang === 'en' ? sess.dayNameEn : sess.dayNamePt}, {sess.date}
                         </span>
                         <span className="text-[11px] font-medium text-[#64748B]">
                           {sess.startTime} • {SERVICES.find(s => s.slug === serviceSlug)?.name[lang] || serviceSlug}
@@ -790,19 +794,19 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                       {sess.available ? (
                         <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-bold text-[11px] flex items-center gap-1">
                           <IconCheck size={13} />
-                          {txt('Disponível', 'Available', 'Disponível')}
+                          {txt('Disponível', 'Available', 'Disponível', "Disponible")}
                         </span>
                       ) : (
                         <div className="flex items-center gap-2">
                           <span className="px-2.5 py-1 bg-rose-100 text-rose-800 border border-rose-300 rounded-md font-bold text-[11px] flex items-center gap-1">
                             <IconX size={13} />
                             {sess.conflictReason === 'blocked'
-                              ? txt('Bloqué', 'Blocked', 'Bloqueado')
+                              ? txt('Bloqué', 'Blocked', 'Bloqueado', "Bloqueado")
                               : sess.conflictReason === 'sunday'
-                              ? txt('Dimanche', 'Sunday', 'Domingo')
+                              ? txt('Dimanche', 'Sunday', 'Domingo', "Domingo")
                               : sess.conflictReason === 'past'
-                              ? txt('Passé', 'Past', 'Passado')
-                              : txt('Occupé', 'Booked', 'Ocupado')}
+                              ? txt('Passé', 'Past', 'Passado', "Pasado")
+                              : txt('Occupé', 'Booked', 'Ocupado', "Reservado")}
                           </span>
 
                           {/* Time select fallback */}
@@ -815,7 +819,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                               const isSlotFree = sess.availableFreeSlots?.includes(t);
                               return (
                                 <option key={t} value={t}>
-                                  {isSlotFree ? `✓ ${t} (${txt('Libre', 'Free', 'Livre')})` : `✕ ${t}`}
+                                  {isSlotFree ? `✓ ${t} (${txt('Libre', 'Free', 'Livre', "Libre")})` : `✕ ${t}`}
                                 </option>
                               );
                             })}
@@ -831,10 +835,10 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="font-bold text-[#334155] flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 inline-block animate-pulse" />
-                          {txt('Horaires libres disponibles ce jour-là :', 'Available free slots this day:', 'Horários livres disponíveis neste dia:')}
+                          {txt('Horaires libres disponibles ce jour-là :', 'Available free slots this day:', 'Horários livres disponíveis neste dia:', "Horarios libres de este día:")}
                         </span>
                         <span className="text-[10px] text-[#64748B] font-medium hidden sm:inline">
-                          {txt('Cliquez sur un créneau vert pour l’appliquer', 'Click a green slot to select', 'Clique num horário verde para selecionar')}
+                          {txt('Cliquez sur un créneau vert pour l’appliquer', 'Click a green slot to select', 'Clique num horário verde para selecionar', "Pulse un horario verde para seleccionarlo")}
                         </span>
                       </div>
 
@@ -846,7 +850,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                               type="button"
                               onClick={() => handleAdjustSession(idx, sess.date, freeTime)}
                               className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 active:scale-95 border border-emerald-300 text-emerald-800 text-[11px] font-bold transition-all shadow-2xs hover:shadow-xs flex items-center gap-1"
-                              title={txt(`Choisir ${freeTime}`, `Pick ${freeTime}`, `Escolher ${freeTime}`)}
+                              title={txt(`Choisir ${freeTime}`, `Pick ${freeTime}`, `Escolher ${freeTime}`, `Elegir ${freeTime}`)}
                             >
                               <IconCheck size={12} className="text-emerald-600 shrink-0" />
                               <span>{freeTime}</span>
@@ -855,7 +859,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                         </div>
                       ) : (
                         <p className="text-[11px] font-medium text-rose-700 italic">
-                          {txt('Aucun créneau libre disponible à cette date.', 'No free slots available on this date.', 'Nenhum horário livre disponível nesta data.')}
+                          {txt('Aucun créneau libre disponible à cette date.', 'No free slots available on this date.', 'Nenhum horário livre disponível nesta data.', "No hay horarios libres en esta fecha.")}
                         </p>
                       )}
                     </div>
@@ -873,7 +877,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
             onClick={onClose}
             className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] font-bold text-xs transition-colors"
           >
-            {txt('Annuler', 'Cancel', 'Cancelar')}
+            {txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
           </button>
 
           <button
@@ -883,7 +887,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
             className="px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
-              <span>{txt('Confirmation en cours...', 'Booking sessions...', 'A confirmar agendamento...')}</span>
+              <span>{txt('Confirmation en cours...', 'Booking sessions...', 'A confirmar agendamento...', "Reservando sesiones...")}</span>
             ) : (
               <>
                 <IconCheck size={16} />
@@ -891,7 +895,7 @@ export const MultipleSessionsModal = React.memo(function MultipleSessionsModal({
                   {txt(
                     `Confirmer et Bloquer (${previewSessions.length} Séances)`,
                     `Confirm and Block (${previewSessions.length} Sessions)`,
-                    `Confirmar e Bloquear (${previewSessions.length} Sessões)`
+                    `Confirmar e Bloquear (${previewSessions.length} Sessões)`, `Confirmar y bloquear (${previewSessions.length} sesiones)`
                   )}
                 </span>
               </>

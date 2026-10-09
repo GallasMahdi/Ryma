@@ -1,0 +1,23 @@
+PASS running server and database health
+PASS all public pages and an unknown page render correctly
+PASS anonymous users cannot read any admin dataset
+PASS bad login rejected; valid login sets a usable protected session
+PASS team configuration persists through the real API
+PASS stale configuration edit returns conflict
+PASS malformed JSON and invalid selections return errors, not server crashes
+PASS public named booking and five retries create one pending reservation
+PASS parallel appointments on different practitioners succeed and overlaps fail
+PASS concurrent earliest requests consume only actual team capacity
+PASS rescheduling is versioned and malformed patches preserve the record
+PASS practitioner closures do not close another professional
+PASS admin alone cannot access owner analytics; explicit owner unlock works
+PASS logout revokes a copied session cookie
+PASS live fixture integrity and foreign keys remain valid
+15 running-app checks passed. Preview remains available at http://127.0.0.1:3008.
+PASS parallel public bookings obey the patient limit and verified replays remain available
+PASS 20 simultaneous independent HTTP bookings all succeed without false slot conflicts
+PASS parallel recurring retries return the same complete plan
+PASS malformed recurring identities and request keys return validation errors
+PASS database integrity, clinical links and collision invariants survive HTTP stress
+{"routePaths":35,"handlers":53,"anonymousProbesPassed":41}
+Both live HTTP suites passed on an isolated fixture.

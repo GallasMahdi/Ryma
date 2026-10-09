@@ -192,8 +192,8 @@ test(`WhatsApp booking integration against isolated ${cloudAdapter ? 'libSQL' : 
     assert.equal(await store.commitConversation('351966789012', 'wrong-token', {id: 'wrong', from: '351966789012', timestamp: Date.now()}, {lang: 'pt', step: 'done', choices: [], expiresAt: 0}, []), false);
     await store.unlockConversation('351966789012', lock.token);
   });
-  await t.test('Portuguese and French conversations understand service, tomorrow and afternoon', async () => {
-    for (const [text, lang] of [['Olá, massagem terapêutica amanhã à tarde', 'pt'], ['Bonjour, massage thérapeutique demain après-midi', 'fr']]) {
+  await t.test('Portuguese, French and Spanish conversations understand service, tomorrow and afternoon', async () => {
+    for (const [text, lang] of [['Olá, massagem terapêutica amanhã à tarde', 'pt'], ['Bonjour, massage thérapeutique demain après-midi', 'fr'], ['Hola, masaje terapéutico mañana por la tarde', 'es']]) {
       const result = await conversation.advanceConversation(null, {id: randomUUID(), from: phone, timestamp: Date.now(), text});
       assert.equal(result.state.lang, lang);
       assert.equal(result.state.service, 'massage-therapeutique');

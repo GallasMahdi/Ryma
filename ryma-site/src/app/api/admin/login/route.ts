@@ -1,10 +1,11 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { sealData } from 'iron-session';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
-import { dbCheckRateLimit, dbRecordRateLimitAttempt } from '@/lib/db';
+import { dbConsumeRateLimit } from '@/lib/db';
 import { getClientIp } from '@/lib/validation';
 import { env } from '@/lib/env';
 
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
     sessionSecret = env.SESSION_SECRET;
   } catch (error) {
     console.error('[AUTH CONFIGURATION]', error instanceof Error ? error.message : 'Invalid credentials configuration');
-    return NextResponse.json({ error: 'Authentication temporarily unavailable', code: 'AUTH_CONFIGURATION_ERROR' }, { status: 503 });
+    return NextResponse.json({ error: localizeApiError('Authentication temporarily unavailable', request), code: 'AUTH_CONFIGURATION_ERROR' }, { status: 503 });
   }
   const ip = getClientIp(request);
 
@@ -30,22 +31,22 @@ export async function POST(request: NextRequest) {
   const isDev = process.env.NODE_ENV !== 'production';
   const maxAttempts = isDev ? 100 : 10;
   try {
-    const allowed = await dbCheckRateLimit(ip, 'login', maxAttempts, 15 * 60);
+    const allowed = await dbConsumeRateLimit(ip, 'login', maxAttempts, 15 * 60);
     if (!allowed) {
       return NextResponse.json(
-        { error: 'Trop de tentatives. Veuillez attendre 15 minutes.' },
+        { error: localizeApiError('Trop de tentatives. Veuillez attendre 15 minutes.', request) },
         { status: 429 }
       );
     }
   } catch (err) {
     console.error('[LOGIN RATE LIMIT CHECK FAILED]:');
-    return NextResponse.json({ error: 'Authentication temporarily unavailable' }, { status: 503 });
+    return NextResponse.json({ error: localizeApiError('Authentication temporarily unavailable', request) }, { status: 503 });
   }
 
   let body: { password?: string };
   try {
     body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
   } catch {
     return NextResponse.json(GENERIC_ERROR, { status: 400 });
   }
@@ -53,13 +54,12 @@ export async function POST(request: NextRequest) {
   const { password } = body;
 
   if (!password || typeof password !== 'string' || password.length > 128) {
-    try { await dbRecordRateLimitAttempt(ip, 'login'); } catch {}
     return NextResponse.json(GENERIC_ERROR, { status: 401 });
   }
 
   if (!storedHash) {
     console.error('[SECURITY] ADMIN_PASSWORD_HASH is empty.');
-    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    return NextResponse.json({ error: localizeApiError('Server configuration error', request) }, { status: 500 });
   }
 
   let valid = false;
@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
   }
 
   if (!valid) {
-    try { await dbRecordRateLimitAttempt(ip, 'login'); } catch {}
     // Add a small delay to further slow brute-force attempts
     await new Promise(r => setTimeout(r, 500));
     return NextResponse.json(GENERIC_ERROR, { status: 401 });

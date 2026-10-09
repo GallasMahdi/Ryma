@@ -76,9 +76,9 @@ export function ServiceCard({ service, featured = false }: ServiceCardProps) {
             </div>
 
             <span className="font-mono text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-[#FAF8F5] border border-[#E8E2D8] text-[#7A7065]">
-              {service.pole === 'bilan' ? (lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : isKine
-                ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
-                : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
+              {service.pole === 'bilan' ? (lang === 'es' ? "Evaluación" : lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : isKine
+                ? lang === 'es' ? "Fisioterapia" : lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
+                : lang === 'es' ? "Tratamientos reductores" : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
             </span>
           </div>
 
@@ -129,7 +129,7 @@ export function ServiceCard({ service, featured = false }: ServiceCardProps) {
           onClick={playSoftClick}
           className="inline-flex items-center gap-1 text-xs font-bold text-[#7A7065] hover:text-[#C49A3C] transition-colors py-1 group/btn"
         >
-          <span>{lang === 'pt' ? 'Ver Detalhes' : lang === 'en' ? 'Learn More' : 'En savoir plus'}</span>
+          <span>{lang === 'es' ? "Más información" : lang === 'pt' ? 'Ver Detalhes' : lang === 'en' ? 'Learn More' : 'En savoir plus'}</span>
           <IconArrowRight size={13} className="group-hover/btn:translate-x-1 transition-transform" />
         </Link>
 
@@ -139,7 +139,7 @@ export function ServiceCard({ service, featured = false }: ServiceCardProps) {
           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-[#1A1412] text-xs font-bold transition-all shadow-xs border border-[#C49A3C]/30 hover:border-[#C49A3C]"
         >
           <IconCalendarEvent size={13} />
-          <span>{lang === 'pt' ? 'Agendar' : lang === 'en' ? 'Book' : 'Réserver'}</span>
+          <span>{lang === 'es' ? "Reservar" : lang === 'pt' ? 'Agendar' : lang === 'en' ? 'Book' : 'Réserver'}</span>
         </Link>
       </div>
     </div>

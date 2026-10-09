@@ -15,6 +15,27 @@ import { appointmentIcs, googleCalendarUrl, type AppointmentCalendarEvent } from
 import styles from './AppointmentConfirmation.module.css';
 
 const COPY = {
+    es: {
+    status: "Cita confirmada", title: "Su cita,", titleAccent: "confirmada.",
+    welcome: "esperamos darle la bienvenida.", intro: "Un momento dedicado a su cuidado, en Digital Clínica.",
+    appointment: "Su cita", reserved: "Reservada para usted", date: "Fecha", time: "Hora",
+    localTime: "Hora local de Lisboa", patient: "Paciente", contact: "Sus datos de contacto", coverage: "Cobertura",
+    private: "Consulta privada", insurance: "Seguro médico", other: "Otra cobertura",
+    physiotherapy: "Fisioterapia y rehabilitación", aesthetics: "Estética avanzada",
+    session: "por sesión", location: "Nos vemos aquí", directions: "Cómo llegar",
+    calendar: "Añadir al calendario", calendarOptions: "Elija su calendario", google: "Google Calendar",
+    download: "Apple / Outlook (.ics)", print: "Guardar o imprimir", copy: "Copiar datos", copied: "Datos copiados",
+    copyFailed: "No se han podido copiar. Use Guardar o imprimir para conservar los datos de su cita.",
+    downloadFailed: "No se ha podido descargar. Pruebe Google Calendar o Guardar o imprimir.",
+    saved: "Su archivo de calendario está listo.", keep: "Tenga a mano los datos de su cita.",
+    before: "Antes de su visita", beforeIntro: "Unos pequeños detalles para llegar con tranquilidad.",
+    arrival: "Tómese su tiempo", arrivalBody: "Llegue entre 5 y 10 minutos antes para acomodarse antes de su cita.",
+    bring: "Traiga lo esencial", bringBody: "Traiga los informes relevantes y los datos de su seguro, si corresponde.",
+    change: "Los planes pueden cambiar", changeBody: "Contacte con nuestro equipo si necesita ayuda con su cita.",
+    support: "¿Tiene alguna pregunta antes de su visita?", supportBody: "Nuestro equipo está para ayudarle.",
+    whatsapp: "Escribir a la clínica", home: "Volver al inicio",
+    message: "Hola, tengo una pregunta sobre mi cita:",
+  },
   en: {
     status: 'Appointment confirmed', title: 'Your appointment,', titleAccent: 'confirmed.',
     welcome: 'we look forward to welcoming you.', intro: 'A moment dedicated to your care, at Digital Clínica.',
@@ -100,8 +121,8 @@ export function AppointmentConfirmation({ service, date, time, patient, practiti
 }) {
   const { lang } = useLanguage();
   const pending = status === 'PENDING';
-  const copy = {...COPY[lang], ...(pending ? {status: lang==='pt'?'Marcação recebida':lang==='fr'?'Demande reçue':'Booking received', titleAccent: lang==='pt'?'recebida.':lang==='fr'?'reçu.':'received.', intro: lang==='pt'?'Aguarde a confirmação da clínica.':lang==='fr'?'Veuillez attendre la confirmation du cabinet.':'Please wait for the clinic to confirm.'} : {})};
-  const locale = lang === 'pt' ? 'pt-PT' : lang === 'fr' ? 'fr-FR' : 'en-GB';
+  const copy = {...COPY[lang], ...(pending ? {status: lang === 'es' ? "Reserva recibida" : lang==='pt'?'Marcação recebida':lang==='fr'?'Demande reçue':'Booking received', titleAccent: lang === 'es' ? "recibida." : lang==='pt'?'recebida.':lang==='fr'?'reçu.':'received.', intro: lang === 'es' ? "Espere la confirmación de la clínica." : lang==='pt'?'Aguarde a confirmação da clínica.':lang==='fr'?'Veuillez attendre la confirmation du cabinet.':'Please wait for the clinic to confirm.'} : {})};
+  const locale = lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'fr' ? 'fr-FR' : 'en-GB';
   const serviceName = getLocalizedText(service.name, lang);
   const address = SITE.address[lang] || SITE.address.pt || '';
   const appointmentDate = new Date(`${date}T12:00:00`);
@@ -192,7 +213,7 @@ export function AppointmentConfirmation({ service, date, time, patient, practiti
               <span className={styles.cardEyebrow}>{copy.reserved}</span>
             </div>
             <div className={styles.treatment}>
-              <span className={styles.eyebrow}>{service.pole === 'bilan' ? (lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : service.pole === 'kinesitherapie' ? copy.physiotherapy : copy.aesthetics}</span>
+              <span className={styles.eyebrow}>{service.pole === 'bilan' ? (lang === 'es' ? "Evaluación" : lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : service.pole === 'kinesitherapie' ? copy.physiotherapy : copy.aesthetics}</span>
               <h2>{serviceName}</h2>
               {practitionerName && <p className="mt-2 text-sm font-semibold text-slate-700">{practitionerName}</p>}
               <div className={styles.treatmentMeta}><span><IconClock size={15} aria-hidden="true" />{durationMinutes ? `${durationMinutes} min` : service.duration}</span><i aria-hidden="true" /><span><strong>{new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(service.price)}</strong> {copy.session}</span></div>
@@ -202,11 +223,11 @@ export function AppointmentConfirmation({ service, date, time, patient, practiti
               <div><dt>{copy.coverage}</dt><dd>{coverageText}</dd></div>
               <div className={styles.contact}><dt>{copy.contact}</dt><dd>{patient.phone}<span>{patient.email}</span></dd></div>
             </dl>
-            <div className={styles.location}>
+            {address && <div className={styles.location}>
               <IconMapPin size={21} stroke={1.5} aria-hidden="true" />
               <div><span className={styles.eyebrow}>{copy.location}</span><p>{address}</p></div>
               <a href={directionsUrl} target="_blank" rel="noopener noreferrer">{copy.directions}<IconArrowUpRight size={16} aria-hidden="true" /></a>
-            </div>
+            </div>}
           </div>
           <div className={styles.schedule}>
             <div className={styles.scheduleStatus}><span />{copy.reserved}</div>

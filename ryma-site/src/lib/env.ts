@@ -15,7 +15,7 @@ function credential(key: string, developmentDefault: string, isHash = false): st
   const raw = (process.env[key] ?? '').trim();
   const value = isHash ? raw.replace(/\\/g, '') : raw;
   const valid = isHash ? /^\$2[aby]\$(0[4-9]|[12]\d|3[01])\$[./A-Za-z0-9]{53}$/.test(value) : value.length >= 32;
-  const disallowedDefault = !isHash && value === DEFAULT_SESSION_SECRET;
+  const disallowedDefault = value === developmentDefault || value === DEFAULT_ADMIN_HASH || value === DEFAULT_OWNER_HASH || value === DEFAULT_SESSION_SECRET;
   if (process.env.NODE_ENV === 'production' && (!valid || disallowedDefault)) throw new AuthConfigurationError(key);
   return valid ? value : developmentDefault;
 }

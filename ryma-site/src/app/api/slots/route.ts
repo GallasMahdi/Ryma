@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isKnownTreatment, getTreatments } from '@/lib/treatments';
 import { NextRequest, NextResponse } from 'next/server';
 import { dbCheckSlotAvailability, dbCheckMultipleDatesAvailability } from '@/lib/db';
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const service = searchParams.get('service') || undefined;
   const practitionerId = searchParams.get('practitionerId') || undefined;
-  try { if (service && !(await isKnownTreatment(service, true))) return NextResponse.json({error: 'Invalid service'}, {status: 400}); } catch { return NextResponse.json({error:'Catalogue temporarily unavailable'}, {status:503,headers:{'Retry-After':'5','Cache-Control':'no-store'}}); }
+  try { if (service && !(await isKnownTreatment(service, true))) return NextResponse.json({error: localizeApiError('Invalid service', request)}, {status: 400}); } catch { return NextResponse.json({error:localizeApiError('Catalogue temporarily unavailable', request)}, {status:503,headers:{'Retry-After':'5','Cache-Control':'no-store'}}); }
 
   // ── Multi-date mode: calendar month prefetch ─────────────────────────────
   const datesParam = searchParams.get('dates');
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     const validDates = rawDates.map(d => d.trim()).filter(isCalendarDate);
 
     if (validDates.length === 0) {
-      return NextResponse.json({ error: 'Paramètre dates invalide' }, { status: 400 });
+      return NextResponse.json({ error: localizeApiError('Paramètre dates invalide', request) }, { status: 400 });
     }
 
     try {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       );
     } catch (err) {
       console.error('[API /api/slots multi-date Error]:');
-      return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+      return NextResponse.json({ error: localizeApiError('Erreur serveur', request) }, { status: 500 });
     }
   }
 
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
   const date = searchParams.get('date');
 
   if (!isCalendarDate(date)) {
-    return NextResponse.json({ error: 'Paramètre date invalide' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Paramètre date invalide', request) }, { status: 400 });
   }
 
   try {
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error('[API /api/slots Error]:');
     return NextResponse.json(
-      { error: 'Erreur lors du chargement des créneaux. Veuillez réessayer.' },
+      { error: localizeApiError('Erreur lors du chargement des créneaux. Veuillez réessayer.', request) },
       { status: 500 }
     );
   }

@@ -6,6 +6,7 @@ import type { Review } from '@/types/admin';
 /** Keep public testimonials in sync with moderation, including an empty approved list. */
 export function usePublicReviews(limit?: number) {
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [stats,setStats]=useState<{total:number;average:number}>({total:0,average:0});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const requestRef = useRef<AbortController | null>(null);
@@ -22,6 +23,7 @@ export function usePublicReviews(limit?: number) {
       if (!Array.isArray(data.reviews)) throw new Error('Invalid reviews response');
       if (request.signal.aborted || requestRef.current !== request) return;
       setReviews(data.reviews);
+      setStats(data.stats || {total:data.reviews.length,average:data.reviews.length?data.reviews.reduce((sum:number,review:Review)=>sum+review.rating,0)/data.reviews.length:0});
       setError(false);
     } catch {
       if (!request.signal.aborted && requestRef.current === request) setError(true);
@@ -40,7 +42,7 @@ export function usePublicReviews(limit?: number) {
     };
     window.addEventListener('focus', refreshVisible);
     document.addEventListener('visibilitychange', refreshVisible);
-    const interval = setInterval(refreshVisible, 15_000);
+    const interval = setInterval(refreshVisible, 60_000);
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', refreshVisible);
@@ -50,5 +52,5 @@ export function usePublicReviews(limit?: number) {
     };
   }, [refresh]);
 
-  return { reviews, loading, error, refresh };
+  return { reviews, stats, loading, error, refresh };
 }

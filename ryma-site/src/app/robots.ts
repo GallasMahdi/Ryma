@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin', '/admin/', '/api/'],
       },
     ],
-    sitemap: 'https://digitalclinica.pt/sitemap.xml',
+    sitemap: `${(process.env.NEXT_PUBLIC_SITE_URL || 'https://digitalclinica.pt').replace(/\/$/, '')}/sitemap.xml`,
   };
 }

@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
@@ -6,8 +7,7 @@ import {
   dbGetOwnerAnalyticsPasswordHash,
   dbSetOwnerAnalyticsPasswordHash,
   dbLogSecurityAudit,
-  dbCheckRateLimit,
-  dbRecordRateLimitAttempt,
+  dbConsumeRateLimit,
 } from '@/lib/db';
 import { getClientIp } from '@/lib/validation';
 
@@ -22,10 +22,10 @@ export async function POST(request: NextRequest) {
   const userAgent = request.headers.get('user-agent');
 
   // Rate limiting on password changes
-  const allowed = await dbCheckRateLimit(ip, 'owner_password_change', 5, 15 * 60);
+  const allowed = await dbConsumeRateLimit(ip, 'owner_password_change', 5, 15 * 60);
   if (!allowed) {
     return NextResponse.json(
-      { error: 'Trop de tentatives. Veuillez patienter 15 minutes.' },
+      { error: localizeApiError('Trop de tentatives. Veuillez patienter 15 minutes.', request) },
       { status: 429 }
     );
   }
@@ -33,26 +33,26 @@ export async function POST(request: NextRequest) {
   let body: { currentPassword?: string; newPassword?: string };
   try {
     body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Invalid JSON', request) }, { status: 400 });
   }
 
   const { currentPassword, newPassword } = body;
 
   if (!currentPassword || typeof currentPassword !== 'string') {
-    return NextResponse.json({ error: 'Le mot de passe actuel est requis.' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Le mot de passe actuel est requis.', request) }, { status: 400 });
   }
 
   if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
     return NextResponse.json(
-      { error: 'Le nouveau mot de passe doit comporter au moins 8 caractères.' },
+      { error: localizeApiError('Le nouveau mot de passe doit comporter au moins 8 caractères.', request) },
       { status: 422 }
     );
   }
 
   if (newPassword.length > 128) {
-    return NextResponse.json({ error: 'Mot de passe trop long (max 128 caractères).' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Mot de passe trop long (max 128 caractères).', request) }, { status: 422 });
   }
 
   // Verify current owner password
@@ -61,12 +61,11 @@ export async function POST(request: NextRequest) {
 
   const isCurrentValid = await bcrypt.compare(currentPassword, cleanHash);
   if (!isCurrentValid) {
-    await dbRecordRateLimitAttempt(ip, 'owner_password_change');
     await dbLogSecurityAudit('ANALYTICS_PASSWORD_CHANGE_FAILED', ip, userAgent, {
       reason: 'Current password verification failed',
     });
     await new Promise((r) => setTimeout(r, 500));
-    return NextResponse.json({ error: 'Mot de passe actuel incorrect.' }, { status: 401 });
+    return NextResponse.json({ error: localizeApiError('Mot de passe actuel incorrect.', request) }, { status: 401 });
   }
 
   // Hash new password using bcrypt cost factor 12

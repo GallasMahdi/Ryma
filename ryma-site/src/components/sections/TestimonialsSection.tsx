@@ -29,8 +29,8 @@ function TestimonialCard({
   const authorName = testimonial.patientName || 'Utente';
   const commentText = testimonial.comment;
   const roleText = testimonial.verified
-    ? (lang === 'pt' ? 'Paciente Verificado' : lang === 'en' ? 'Verified Patient' : 'Patient Vérifié')
-    : (lang === 'pt' ? 'Paciente' : lang === 'en' ? 'Patient' : 'Patient');
+    ? (lang === 'es' ? "Paciente verificado" : lang === 'pt' ? 'Paciente Verificado' : lang === 'en' ? 'Verified Patient' : 'Patient Vérifié')
+    : (lang === 'es' ? "Paciente" : lang === 'pt' ? 'Paciente' : lang === 'en' ? 'Patient' : 'Patient');
 
   return (
     <div className="bg-white/95 backdrop-blur-xl border border-[#C49A3C]/25 rounded-2xl p-5 sm:p-6 h-full flex flex-col justify-between shadow-[0_6px_25px_rgba(196,154,60,0.08)] hover:border-[#C49A3C]/60 hover:shadow-[0_12px_36px_rgba(196,154,60,0.18)] hover:-translate-y-1 transition-all duration-300 select-none">
@@ -186,16 +186,16 @@ export function TestimonialsSection() {
           <div className="inline-flex items-center gap-2 bg-white/90 border border-[#C49A3C]/30 px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-[0.22em] text-[#9A7428] mb-3 shadow-xs">
             <IconStar size={13} className="text-[#C49A3C]" fill="#C49A3C" />
             <span>
-              {lang === 'pt'
+              {lang === 'es' ? "Opiniones de pacientes" : lang === 'pt'
                 ? 'Testemunhos & Avaliações Reais'
                 : lang === 'en'
-                ? 'Verified Patient Reviews'
-                : 'Témoignages & Avis Vérifiés'}
+                ? 'Patient Reviews'
+                : 'Témoignages & Avis'}
             </span>
           </div>
 
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1A1412] mt-1 mb-3">
-            {lang === 'pt'
+            {lang === 'es' ? "Lo que dicen nuestros pacientes" : lang === 'pt'
               ? 'A Confiança dos Nossos Pacientes'
               : lang === 'en'
               ? 'What Our Patients Say'
@@ -203,11 +203,11 @@ export function TestimonialsSection() {
           </h2>
 
           <p className="text-[#6B6058] max-w-xl mx-auto text-xs sm:text-sm md:text-base leading-relaxed">
-            {lang === 'pt'
-              ? 'Mais de 1.200 pacientes acompanhados com sucesso em fisioterapia personalizada e tratamentos de alta performance.'
+            {lang === 'es' ? "Experiencias compartidas por nuestros pacientes y publicadas tras su moderación." : lang === 'pt'
+              ? 'Experiências partilhadas pelos nossos pacientes e publicadas após moderação.'
               : lang === 'en'
-              ? 'Over 1,200 patients successfully treated with tailored physiotherapy and advanced body aesthetics.'
-              : 'Plus de 1 200 patients accompagnés avec succès en kinésithérapie personnalisée et soins minceur de haute précision.'}
+              ? 'Experiences shared by our patients and published after moderation.'
+              : 'Expériences partagées par nos patients et publiées après modération.'}
           </p>
 
           {/* Minimalist Carousel Control Bar */}
@@ -220,10 +220,10 @@ export function TestimonialsSection() {
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold text-[#8A6A24] bg-white/90 border border-[#C49A3C]/30 hover:bg-[#FAF6EE] shadow-xs transition-colors"
             >
               {isPaused ? <IconPlayerPlay size={13} /> : <IconPlayerPause size={13} />}
-              <span>{isPaused ? (lang === 'pt' ? 'Continuar' : lang === 'en' ? 'Play' : 'Reprendre') : (lang === 'pt' ? 'Pausar' : lang === 'en' ? 'Pause' : 'Pause')}</span>
+              <span>{isPaused ? (lang === 'es' ? "Reproducir" : lang === 'pt' ? 'Continuar' : lang === 'en' ? 'Play' : 'Reprendre') : (lang === 'es' ? "Pausar" : lang === 'pt' ? 'Pausar' : lang === 'en' ? 'Pause' : 'Pause')}</span>
             </button>
             <span className="text-[11px] text-[#8A8078] font-sans">
-              {lang === 'pt' ? 'Passe o cursor para pausar' : lang === 'en' ? 'Hover to pause' : 'Survolez pour mettre en pause'}
+              {lang === 'es' ? "Pase el cursor para pausar" : lang === 'pt' ? 'Passe o cursor para pausar' : lang === 'en' ? 'Hover to pause' : 'Survolez pour mettre en pause'}
             </span>
           </div>
         </ScrollReveal>
@@ -270,22 +270,6 @@ export function TestimonialsSection() {
       {/* ── View All Reviews & Rating Bar ── */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-12 mt-10 sm:mt-14 text-center relative z-10">
         <div className="inline-flex flex-col sm:flex-row items-center gap-3 sm:gap-6 bg-white/90 backdrop-blur-xl border border-[#C49A3C]/30 px-5 py-3 rounded-2xl shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="flex gap-0.5 text-[#C49A3C]">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <IconStar key={i} size={15} fill="#C49A3C" />
-              ))}
-            </div>
-            <span className="font-serif font-bold text-[#1A1412] text-sm">
-              4.9 / 5.0
-            </span>
-            <span className="text-xs text-[#8A8078]">
-              (1,200+ {lang === 'pt' ? 'avaliações verificadas' : lang === 'en' ? 'verified reviews' : 'avis vérifiés'})
-            </span>
-          </div>
-
-          <span className="hidden sm:inline-block h-4 w-px bg-[#C49A3C]/30" />
-
           <Link
             href="/avis"
             onClick={playSoftClick}

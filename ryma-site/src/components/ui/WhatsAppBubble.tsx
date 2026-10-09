@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { useServices } from '@/components/ServiceCatalogProvider';
 import { getLocalizedText } from '@/data/services';
 
@@ -29,10 +31,10 @@ const WA_NUMBER = SITE.whatsapp;
 interface QuickAction {
   id: string;
   icon: React.ReactNode;
-  title: { pt: string; en: string; fr: string };
-  desc: { pt: string; en: string; fr: string };
-  answer: { pt: string; en: string; fr: string };
-  waText: { pt: string; en: string; fr: string };
+  title: { pt: string; en: string; es: string; fr: string };
+  desc: { pt: string; en: string; es: string; fr: string };
+  answer: { pt: string; en: string; es: string; fr: string };
+  waText: { pt: string; en: string; es: string; fr: string };
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
@@ -40,21 +42,25 @@ const QUICK_ACTIONS: QuickAction[] = [
     id: 'booking',
     icon: <IconCalendarEvent size={16} className="text-[#C49A3C]" />,
     title: {
+    es: "Reservar una cita",
       pt: 'Agendar Consulta',
       en: 'Book an Appointment',
       fr: 'Prendre Rendez-vous',
     },
     desc: {
+    es: "Reserva rápida y horarios en tiempo real",
       pt: 'Marcação rápida e disponibilidade',
       en: 'Fast scheduling & real-time slots',
       fr: 'Réservation rapide & créneaux',
     },
     answer: {
+    es: "¡Por supuesto! Puede seleccionar su horario preferido en nuestro formulario de reserva en línea o confirmarlo directamente con el equipo por WhatsApp.",
       pt: 'Com certeza! Pode escolher o horário diretamente na nossa página de agendamento online ou confirmar agora por WhatsApp com a nossa equipa.',
       en: 'Certainly! You can select your preferred time slot on our online booking wizard or confirm instantly via WhatsApp with our team.',
       fr: 'Avec plaisir ! Vous pouvez réserver votre créneau directement en ligne ou finaliser maintenant avec notre équipe sur WhatsApp.',
     },
     waText: {
+    es: "¡Hola! Me gustaría consultar la disponibilidad para reservar una cita en Digital Clínica.",
       pt: 'Olá! Gostaria de verificar a disponibilidade para agendar uma consulta na Digital Clínica.',
       en: 'Hello! I would like to check availability to schedule an appointment at Digital Clinic.',
       fr: 'Bonjour ! Je souhaite vérifier les disponibilités pour un rendez-vous à la Digital Clínica.',
@@ -64,21 +70,25 @@ const QUICK_ACTIONS: QuickAction[] = [
     id: 'insurance',
     icon: <IconReceipt2 size={16} className="text-[#6F8F72]" />,
     title: {
+    es: "Seguro médico y recibos",
       pt: 'Seguros de Saúde & Recibos',
       en: 'Health Insurance & Receipts',
       fr: 'Mutuelles & Remboursements',
     },
     desc: {
+    es: "Se facilitan facturas médicas oficiales",
       pt: 'Faturas-recibo para ADSE, Médis, etc.',
       en: 'Official medical invoices provided',
       fr: 'Factures conformes pour mutuelles',
     },
     answer: {
+    es: "¡Sí! Emitimos recibos médicos certificados con número de colegiación profesional para el reembolso del seguro médico.",
       pt: 'Sim! Emitimos fatura-recibo com número de cédula profissional da Ordem dos Fisioterapeutas para efeitos de reembolso no seu seguro ou subsistema.',
       en: 'Yes! We issue certified medical receipts with professional registration number for complete health insurance reimbursements.',
       fr: 'Oui ! Nous délivrons des factures officielles avec numéro d\'ordre pour le remboursement auprès de votre mutuelle ou assurance.',
     },
     waText: {
+    es: "¡Hola! Me gustaría saber cómo se tramitan los recibos para el reembolso del seguro.",
       pt: 'Olá! Gostaria de confirmar como funcionam os recibos para reembolso de seguro de saúde.',
       en: 'Hello! I would like to clarify how insurance reimbursement receipts are processed.',
       fr: 'Bonjour ! J\'aimerais savoir comment fonctionnent les reçus pour le remboursement de mon assurance.',
@@ -91,10 +101,14 @@ export function WhatsAppBubble() {
   const names=(lang:string)=>services.map(s=>getLocalizedText(s.name,lang)).join(', ');
   const quickActions:QuickAction[]=[QUICK_ACTIONS[0],{
     id:'treatments',icon:<IconStethoscope size={16}/>,
-    title:{pt:'Tratamentos disponíveis',en:'Available treatments',fr:'Soins disponibles'},
-    desc:{pt:services.length+' tratamentos',en:services.length+' treatments',fr:services.length+' soins'},
-    answer:{pt:services.length?names('pt'):'Sem tratamentos disponíveis. Contacte a clínica.',en:services.length?names('en'):'No treatments available. Please contact the clinic.',fr:services.length?names('fr'):'Aucun soin disponible. Contactez la clinique.'},
-    waText:{pt:'Olá! Gostaria de informações sobre os tratamentos disponíveis.',en:'Hello! I would like information about the available treatments.',fr:'Bonjour ! Je souhaite des informations sur les soins disponibles.'}
+    title:{
+    es: "Tratamientos disponibles",pt:'Tratamentos disponíveis',en:'Available treatments',fr:'Soins disponibles'},
+    desc:{
+    es: services.length+" tratamientos",pt:services.length+' tratamentos',en:services.length+' treatments',fr:services.length+' soins'},
+    answer:{
+    es: services.length?names("es"):"No hay tratamientos disponibles. Contacte con la clínica.",pt:services.length?names('pt'):'Sem tratamentos disponíveis. Contacte a clínica.',en:services.length?names('en'):'No treatments available. Please contact the clinic.',fr:services.length?names('fr'):'Aucun soin disponible. Contactez la clinique.'},
+    waText:{
+    es: "¡Hola! Me gustaría recibir información sobre los tratamientos disponibles.",pt:'Olá! Gostaria de informações sobre os tratamentos disponíveis.',en:'Hello! I would like information about the available treatments.',fr:'Bonjour ! Je souhaite des informations sur les soins disponibles.'}
   },...QUICK_ACTIONS.slice(1)];
   const { lang } = useLanguage();
   const pathname = usePathname();
@@ -138,7 +152,7 @@ export function WhatsAppBubble() {
     if (open) {
       playNotificationChime();
       const initialWelcome =
-        lang === 'pt'
+        lang === 'es' ? "👋 ¡Hola! Le damos la bienvenida a Digital Clínica. ¿Cómo podemos ayudarle hoy?" : lang === 'pt'
           ? '👋 Olá! Bem-vindo(a) à Digital Clínica. Como podemos ajudar o seu bem-estar hoje?'
           : lang === 'en'
           ? '👋 Hello! Welcome to Digital Clinic. How may our clinical concierge assist you today?'
@@ -148,7 +162,7 @@ export function WhatsAppBubble() {
         {
           sender: 'bot',
           text: initialWelcome,
-          time: new Date().toLocaleTimeString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
+          time: new Date().toLocaleTimeString(lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
             hour: '2-digit',
             minute: '2-digit',
           }),
@@ -174,7 +188,7 @@ export function WhatsAppBubble() {
     playSoftClick();
     setSelectedAction(action);
     const userMsg = action.title[lang] || action.title.pt;
-    const now = new Date().toLocaleTimeString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
+    const now = new Date().toLocaleTimeString(lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -218,7 +232,7 @@ export function WhatsAppBubble() {
                   <button
                     onClick={() => { setSelectedAction(null); playSoftClick(); }}
                     className="text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
-                    aria-label="Voltar"
+                    aria-label={legacyText("Voltar", lang)}
                   >
                     <IconArrowLeft size={17} />
                   </button>
@@ -236,7 +250,7 @@ export function WhatsAppBubble() {
                   </div>
                   <div className="flex items-center gap-1 text-[11px] text-[#A7E8BD] mt-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#25D366] animate-pulse" />
-                    <span>{lang === 'pt' ? 'Atendimento Online • Lisboa' : lang === 'en' ? 'Live Concierge • Lisbon' : 'En ligne • Lisbonne'}</span>
+                    <span>{lang === 'es' ? "Atención en directo • Lisboa" : lang === 'pt' ? 'Atendimento Online • Lisboa' : lang === 'en' ? 'Live Concierge • Lisbon' : 'En ligne • Lisbonne'}</span>
                   </div>
                 </div>
               </div>
@@ -244,7 +258,7 @@ export function WhatsAppBubble() {
               <button
                 onClick={() => { close(); playSoftClick(); }}
                 className="text-white/70 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
-                aria-label="Close"
+                aria-label={legacyText("Close", lang)}
               >
                 <IconX size={18} />
               </button>
@@ -315,21 +329,21 @@ export function WhatsAppBubble() {
                     className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5C] active:scale-[0.99] text-white text-xs sm:text-sm font-bold py-2.5 px-4 rounded-xl transition-all shadow-md"
                   >
                     <IconBrandWhatsapp size={18} />
-                    <span>{lang === 'pt' ? 'Continuar no WhatsApp Oficial' : lang === 'en' ? 'Continue on WhatsApp' : 'Continuer sur WhatsApp'}</span>
+                    <span>{lang === 'es' ? "Continuar en WhatsApp" : lang === 'pt' ? 'Continuar no WhatsApp Oficial' : lang === 'en' ? 'Continue on WhatsApp' : 'Continuer sur WhatsApp'}</span>
                   </button>
 
                   <button
                     onClick={() => { setSelectedAction(null); playSoftClick(); }}
                     className="w-full text-center text-xs font-semibold text-[#8A8078] hover:text-[#1A1412] py-1"
                   >
-                    ← {lang === 'pt' ? 'Ver outros tópicos' : lang === 'en' ? 'Choose another topic' : 'Autres sujets'}
+                    ← {lang === 'es' ? "Elegir otro tema" : lang === 'pt' ? 'Ver outros tópicos' : lang === 'en' ? 'Choose another topic' : 'Autres sujets'}
                   </button>
                 </motion.div>
               ) : (
                 /* Quick Action Shortcuts */
                 <div>
                   <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#9A7428] mb-2 px-1">
-                    {lang === 'pt' ? 'Ações Rápidas & FAQ' : lang === 'en' ? 'Quick Actions & FAQ' : 'Actions Rapides'}
+                    {lang === 'es' ? "Acciones rápidas y preguntas frecuentes" : lang === 'pt' ? 'Ações Rápidas & FAQ' : lang === 'en' ? 'Quick Actions & FAQ' : 'Actions Rapides'}
                   </p>
                   <div className="grid grid-cols-1 gap-1.5 max-h-[140px] overflow-y-auto pe-0.5">
                     {quickActions.map((action) => (
@@ -365,7 +379,7 @@ export function WhatsAppBubble() {
                   value={customMsg}
                   onChange={(e) => setCustomMsg(e.target.value)}
                   placeholder={
-                    lang === 'pt'
+                    lang === 'es' ? "Escriba su pregunta..." : lang === 'pt'
                       ? 'Escreva a sua mensagem...'
                       : lang === 'en'
                       ? 'Type your question...'
@@ -377,7 +391,7 @@ export function WhatsAppBubble() {
                   type="submit"
                   disabled={!customMsg.trim()}
                   className="grid place-items-center h-8 w-8 rounded-xl bg-[#25D366] hover:bg-[#20BD5C] disabled:opacity-40 disabled:hover:bg-[#25D366] text-white transition-all shrink-0"
-                  aria-label="Send to WhatsApp"
+                  aria-label={legacyText("Send to WhatsApp", lang)}
                 >
                   <IconSend size={14} />
                 </button>
@@ -399,7 +413,7 @@ export function WhatsAppBubble() {
           playSoftClick();
         }}
         className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-[#128C7E] to-[#25D366] hover:from-[#0E7A6D] hover:to-[#20BD5C] text-white shadow-[0_6px_28px_rgba(37,211,102,0.45)] hover:shadow-[0_8px_36px_rgba(37,211,102,0.6)] transition-all duration-200 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
-        aria-label="WhatsApp Concierge"
+        aria-label={legacyText("WhatsApp Concierge", lang)}
         aria-expanded={open}
       >
         <AnimatePresence mode="wait" initial={false}>

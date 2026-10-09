@@ -1,4 +1,7 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+import { spanishInvoiceMessage } from '@/lib/invoice-message';
+
 import { getLocalizedText } from '@/data/services';
 import { useAllServices, useServiceLabels } from '@/components/ServiceCatalogProvider';
 import { completedSessions, measuredSessions } from '@/lib/clinical';
@@ -112,7 +115,8 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 }: PatientNotesTabProps) {
   const SERVICES = useAllServices();
   const { getServiceName } = useServiceLabels();
-  const txt = (frStr: string, enStr: string, ptStr: string) => {
+  const txt = (frStr: string, enStr: string, ptStr: string, es: string) => {
+    if (lang === 'es') return es;
     if (lang === 'fr') return frStr;
     if (lang === 'en') return enStr;
     return ptStr;
@@ -491,7 +495,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       if (onActionToast) {
         onActionToast({
           type: 'success',
-          title: txt('Patient Enregistré', 'Patient Created', 'Utente Registado'),
+          title: txt('Patient Enregistré', 'Patient Created', 'Utente Registado', "Paciente creado"),
           message: data.patient?.patientName,
         });
       }
@@ -499,7 +503,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       if (onActionToast) {
         onActionToast({
           type: 'error',
-          title: txt('Erreur de Création', 'Creation Error', 'Erro ao Criar'),
+          title: txt('Erreur de Création', 'Creation Error', 'Erro ao Criar', "Error de creación"),
           message: err.message,
         });
       }
@@ -558,7 +562,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       if (onActionToast) {
         onActionToast({
           type: 'success',
-          title: txt('Fiche Mise à Jour', 'Record Updated', 'Ficha Atualizada'),
+          title: txt('Fiche Mise à Jour', 'Record Updated', 'Ficha Atualizada', "Ficha actualizada"),
           message: data.patient?.patientName,
         });
       }
@@ -566,7 +570,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       if (onActionToast) {
         onActionToast({
           type: 'error',
-          title: txt('Erreur', 'Error', 'Erro'),
+          title: txt('Erreur', 'Error', 'Erro', "Error"),
           message: err.message,
         });
       }
@@ -629,15 +633,15 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       if (onActionToast) {
         onActionToast({
           type: 'success',
-          title: txt('Séance Enregistrée', 'Session Logged', 'Sessão Registada'),
-          message: sessionForm.evaPainScore===null ? txt('Sans mesure EVA', 'No EVA measurement', 'Sem medição EVA') : `EVA: ${sessionForm.evaPainScore}/10`,
+          title: txt('Séance Enregistrée', 'Session Logged', 'Sessão Registada', "Sesión registrada"),
+          message: sessionForm.evaPainScore===null ? txt('Sans mesure EVA', 'No EVA measurement', 'Sem medição EVA', "Sin medición EVA") : `EVA: ${sessionForm.evaPainScore}/10`,
         });
       }
     } catch (err: any) {
       if (onActionToast) {
         onActionToast({
           type: 'error',
-          title: txt('Erreur', 'Error', 'Erro'),
+          title: txt('Erreur', 'Error', 'Erro', "Error"),
           message: err.message,
         });
       }
@@ -656,7 +660,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       if (!res.ok) throw new Error(data.error);
       onRefreshPatients?.();
     } catch(error) {
-      onActionToast?.({type:'error',title:txt('Enregistrement refusé','Save rejected','Gravação recusada'),message:error instanceof Error?error.message:String(error)});
+      onActionToast?.({type:'error',title:txt('Enregistrement refusé','Save rejected','Gravação recusada', "No se ha podido guardar"),message:error instanceof Error?error.message:String(error)});
     }
   };
 
@@ -681,7 +685,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       if (onActionToast) {
         onActionToast({
           type: 'success',
-          title: txt('Score EVA Atualizado', 'EVA Score Updated', 'Score EVA Atualizado'),
+          title: txt('Score EVA Atualizado', 'EVA Score Updated', 'Score EVA Atualizado', "Puntuación EVA actualizada"),
           message: `Sessão ajustada para EVA ${newScore}/10`,
         });
       }
@@ -689,7 +693,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       if (onActionToast) {
         onActionToast({
           type: 'error',
-          title: txt('Erreur', 'Error', 'Erro'),
+          title: txt('Erreur', 'Error', 'Erro', "Error"),
           message: error instanceof Error ? error.message : 'Falha ao atualizar score EVA',
         });
       }
@@ -738,7 +742,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
       title: txt(
         `Supprimer la fiche vide de ${patient.patientName} ? Toute fiche avec historique sera conservée.`,
         `Delete the empty record for ${patient.patientName}? Records with history will be retained.`,
-        `Eliminar a ficha vazia de ${patient.patientName}? As fichas com histórico serão preservadas.`
+        `Eliminar a ficha vazia de ${patient.patientName}? As fichas com histórico serão preservadas.`, `¿Eliminar la ficha vacía de ${patient.patientName}? Se conservarán las fichas con historial.`
       ),
       onConfirm: async () => {
         try {
@@ -753,12 +757,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           if (onActionToast) {
             onActionToast({
               type: 'info',
-              title: txt('Dossier Supprimé', 'Record Deleted', 'Ficha Eliminada'),
+              title: txt('Dossier Supprimé', 'Record Deleted', 'Ficha Eliminada', "Ficha eliminada"),
               message: patient.patientName,
             });
           }
         } catch (error) {
-          onActionToast?.({type:'error',title:txt('Suppression refusée','Record retained','Ficha preservada'),message:error instanceof Error?error.message:txt('Réessayez.','Please retry.','Tente novamente.')});
+          onActionToast?.({type:'error',title:txt('Suppression refusée','Record retained','Ficha preservada', "Ficha conservada"),message:error instanceof Error?error.message:txt('Réessayez.','Please retry.','Tente novamente.', "Vuelva a intentarlo.")});
         }
       },
     });
@@ -776,11 +780,11 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             <h2 className="font-bold text-base sm:text-lg text-[#0F172A] tracking-tight truncate">
-              {txt('Dossiers Médicaux & EMR Patients', 'Clinical Files & Patient Records', 'Processos Clínicos & Fichas')}
+              {txt('Dossiers Médicaux & EMR Patients', 'Clinical Files & Patient Records', 'Processos Clínicos & Fichas', "Archivos clínicos e historias de pacientes")}
             </h2>
           </div>
           <p className="text-xs text-[#64748B] mt-0.5 truncate">
-            {txt('Historique clinique, prescriptions, séances et facturation', 'Medical history, prescription tracking, sessions and billing', 'Histórico clínico, evolução da dor e faturação')}
+            {txt('Historique clinique, prescriptions, séances et facturation', 'Medical history, prescription tracking, sessions and billing', 'Histórico clínico, evolução da dor e faturação', "Antecedentes médicos, seguimiento de prescripciones, sesiones y facturación")}
           </p>
         </div>
 
@@ -789,7 +793,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] active:scale-[0.98] text-white text-xs font-bold shadow-sm transition-all touch-target w-full sm:w-auto shrink-0"
         >
           <IconUserPlus size={16} />
-          <span>{txt('Nouveau Patient', 'New Patient', 'Novo Utente')}</span>
+          <span>{txt('Nouveau Patient', 'New Patient', 'Novo Utente', "Nuevo paciente")}</span>
         </button>
       </div>
 
@@ -807,7 +811,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               type="text"
               value={noteSearch}
               onChange={e => setNoteSearch(e.target.value)}
-              placeholder={txt('Rechercher patient, téléphone...', 'Search patient, phone...', 'Pesquisar utente...')}
+              placeholder={txt('Rechercher patient, téléphone...', 'Search patient, phone...', 'Pesquisar utente...', "Buscar paciente, teléfono...")}
               className="w-full pl-10 pr-8 py-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm sm:text-xs text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0F172A] focus:ring-1 focus:ring-[#0F172A] transition-all"
             />
             {noteSearch && (
@@ -824,10 +828,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           {/* Quick Filter Chips */}
           <div className="flex items-center gap-1 mb-2.5 overflow-x-auto no-scrollbar pb-0.5">
             {[
-              { id: 'ALL' as const, label: txt('Tous', 'All', 'Todos'), count: filterCounts.all },
-              { id: 'INSURANCE' as const, label: txt('Assurance/Mutuelle', 'Insurance/ADSE', 'Seguro/ADSE'), count: filterCounts.insurance },
-              { id: 'PARTICULAR' as const, label: txt('Particulier', 'Private', 'Particular'), count: filterCounts.particular },
-              { id: 'ACTIVE_SESSIONS' as const, label: txt('Avec Séances', 'With Sessions', 'Com Sessões'), count: filterCounts.withSessions },
+              { id: 'ALL' as const, label: txt('Tous', 'All', 'Todos', "Todos"), count: filterCounts.all },
+              { id: 'INSURANCE' as const, label: txt('Assurance/Mutuelle', 'Insurance/ADSE', 'Seguro/ADSE', "Seguro/ADSE"), count: filterCounts.insurance },
+              { id: 'PARTICULAR' as const, label: txt('Particulier', 'Private', 'Particular', "Privado"), count: filterCounts.particular },
+              { id: 'ACTIVE_SESSIONS' as const, label: txt('Avec Séances', 'With Sessions', 'Com Sessões', "Con sesiones"), count: filterCounts.withSessions },
             ].map(f => (
               <button
                 key={f.id}
@@ -854,12 +858,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
             <span className="font-medium text-[11px]">
               {totalFiltered > 0 ? (
                 <>
-                  {txt('Affichage', 'Showing', 'A mostrar')}{' '}
-                  <strong className="text-[#0F172A] font-mono">{startIndex}–{endIndex}</strong> {txt('sur', 'of', 'de')}{' '}
+                  {txt('Affichage', 'Showing', 'A mostrar', "Mostrando")}{' '}
+                  <strong className="text-[#0F172A] font-mono">{startIndex}–{endIndex}</strong> {txt('sur', 'of', 'de', "de")}{' '}
                   <strong className="text-[#0F172A] font-mono">{totalFiltered}</strong>
                 </>
               ) : (
-                txt('0 dossier', '0 records', '0 fichas')
+                txt('0 dossier', '0 records', '0 fichas', "0 fichas")
               )}
             </span>
 
@@ -869,12 +873,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                 value={pageSize}
                 onChange={e => setPageSize(Number(e.target.value))}
                 className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg px-2 py-0.5 text-[11px] font-bold text-[#0F172A] outline-none cursor-pointer"
-                title={txt('Fiches par page', 'Records per page', 'Itens por página')}
+                title={txt('Fiches par page', 'Records per page', 'Itens por página', "Fichas por página")}
               >
-                <option value={8}>8 / {txt('page', 'page', 'pág')}</option>
-                <option value={10}>10 / {txt('page', 'page', 'pág')}</option>
-                <option value={20}>20 / {txt('page', 'page', 'pág')}</option>
-                <option value={50}>50 / {txt('page', 'page', 'pág')}</option>
+                <option value={8}>8 / {txt('page', 'page', 'pág', "página")}</option>
+                <option value={10}>10 / {txt('page', 'page', 'pág', "página")}</option>
+                <option value={20}>20 / {txt('page', 'page', 'pág', "página")}</option>
+                <option value={50}>50 / {txt('page', 'page', 'pág', "página")}</option>
               </select>
             </div>
           </div>
@@ -884,9 +888,9 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
             {paginatedPatients.length === 0 ? (
               <div className="text-center py-12 px-4 text-[#64748B] text-xs bg-[#F8FAFC] rounded-xl border border-dashed border-[#CBD5E1]">
                 <IconSearch size={28} className="mx-auto text-[#94A3B8] mb-2" />
-                <p className="font-semibold">{txt('Aucun dossier trouvé', 'No records found', 'Nenhuma ficha encontrada')}</p>
+                <p className="font-semibold">{txt('Aucun dossier trouvé', 'No records found', 'Nenhuma ficha encontrada', "No se han encontrado fichas")}</p>
                 <p className="text-[11px] text-[#94A3B8] mt-1">
-                  {txt('Vérifiez la recherche ou modifiez les filtres.', 'Check search or change filters.', 'Verifique a pesquisa ou altere os filtros.')}
+                  {txt('Vérifiez la recherche ou modifiez les filtres.', 'Check search or change filters.', 'Verifique a pesquisa ou altere os filtros.', "Revise la búsqueda o cambie los filtros.")}
                 </p>
               </div>
             ) : (
@@ -919,13 +923,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                           <span className="font-mono">{p.phone}</span>
                           {p.coverageType && p.coverageType !== 'PARTICULAR' && (
                             <span className="bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0] px-1.5 py-0.2 rounded text-[10px] font-semibold">
-                              {p.coverageType === 'ADSE' ? 'ADSE' : (p.coverageProvider || 'Mutuelle')}
+                              {p.coverageType === 'ADSE' ? 'ADSE' : (p.coverageProvider || (lang === 'es' ? 'Mutualidad' : 'Mutuelle'))}
                             </span>
                           )}
                           {(p.sessionCount || completedSessions(p.sessions).length || 0) > 0 && (
                             <span className="bg-[#EFF6FF] text-[#1E40AF] border border-[#DBEAFE] px-1.5 py-0.2 rounded text-[10px] font-semibold">
-                              {p.sessionCount || completedSessions(p.sessions).length || 0} sessões
-                            </span>
+                              {p.sessionCount || completedSessions(p.sessions).length || 0}{" "}{legacyText("sessões", lang)}</span>
                           )}
                         </div>
                       </div>
@@ -951,7 +954,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                   onClick={() => setCurrentPage(1)}
                   disabled={safeCurrentPage === 1}
                   className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  title="Primeira página"
+                  title={legacyText("Primeira página", lang)}
                 >
                   <IconChevronsLeft size={15} />
                 </button>
@@ -960,7 +963,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={safeCurrentPage === 1}
                   className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  title="Página anterior"
+                  title={legacyText("Página anterior", lang)}
                 >
                   <IconChevronLeft size={15} />
                 </button>
@@ -1001,7 +1004,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={safeCurrentPage === totalPages}
                   className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  title="Página seguinte"
+                  title={legacyText("Página seguinte", lang)}
                 >
                   <IconChevronRight size={15} />
                 </button>
@@ -1010,7 +1013,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={safeCurrentPage === totalPages}
                   className="p-1.5 rounded-lg border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  title="Última página"
+                  title={legacyText("Última página", lang)}
                 >
                   <IconChevronsRight size={15} />
                 </button>
@@ -1033,7 +1036,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                   className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#F1F5F9] hover:bg-[#E2E8F0] text-xs font-bold text-[#0F172A] transition-colors touch-target"
                 >
                   <IconArrowLeft size={16} />
-                  <span>{txt('← Retour à la liste des patients', '← Back to patient list', '← Voltar à lista de utentes')}</span>
+                  <span>{txt('← Retour à la liste des patients', '← Back to patient list', '← Voltar à lista de utentes', "← Volver a la lista de pacientes")}</span>
                 </button>
               </div>
 
@@ -1053,7 +1056,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                           <span className="bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                             <IconShieldCheck size={12} />
                             <span>
-                              {activePatient.coverageType === 'ADSE' ? 'ADSE' : (activePatient.coverageProvider || txt('Mutuelle', 'Insurance', 'Seguro'))}
+                              {activePatient.coverageType === 'ADSE' ? 'ADSE' : (activePatient.coverageProvider || txt('Mutuelle', 'Insurance', 'Seguro', "Seguro"))}
                             </span>
                           </span>
                         )}
@@ -1076,10 +1079,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                   <button
                     onClick={() => openEditPatientModal(activePatient)}
                     className="min-h-[46px] p-2 rounded-xl border border-[#CBD5E1] bg-white text-[#334155] hover:bg-[#F8FAFC] active:scale-95 text-xs font-bold transition-all touch-target flex flex-col items-center justify-center gap-1 shadow-2xs"
-                    title={txt('Modifier', 'Edit', 'Editar')}
+                    title={txt('Modifier', 'Edit', 'Editar', "Editar")}
                   >
                     <IconPencil size={16} className="text-[#64748B]" />
-                    <span className="text-[11px]">{txt('Modifier', 'Edit', 'Editar')}</span>
+                    <span className="text-[11px]">{txt('Modifier', 'Edit', 'Editar', "Editar")}</span>
                   </button>
 
                   {activePatient.phone.replace(/[^0-9]/g, '') ? (
@@ -1098,7 +1101,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                       type="button"
                       disabled
                       className="min-h-[46px] p-2 rounded-xl bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed flex flex-col items-center justify-center gap-1 text-xs opacity-50"
-                      title={txt('WhatsApp non disponible (aucun numéro)', 'WhatsApp unavailable (no phone)', 'WhatsApp indisponível (sem número)')}
+                      title={txt('WhatsApp non disponible (aucun numéro)', 'WhatsApp unavailable (no phone)', 'WhatsApp indisponível (sem número)', "WhatsApp no disponible (sin teléfono)")}
                     >
                       <IconBrandWhatsapp size={16} />
                       <span className="text-[11px]">WhatsApp</span>
@@ -1108,19 +1111,19 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                   <a
                     href={`tel:${activePatient.phone}`}
                     className="min-h-[46px] p-2 rounded-xl border border-[#CBD5E1] bg-white text-[#334155] hover:bg-[#F8FAFC] active:scale-95 transition-all touch-target flex flex-col items-center justify-center gap-1 text-xs font-bold shadow-2xs"
-                    title={txt('Appeler', 'Call', 'Telefonar')}
+                    title={txt('Appeler', 'Call', 'Telefonar', "Llamar")}
                   >
                     <IconPhoneCall size={16} className="text-[#64748B]" />
-                    <span className="text-[11px]">{txt('Appeler', 'Call', 'Telefonar')}</span>
+                    <span className="text-[11px]">{txt('Appeler', 'Call', 'Telefonar', "Llamar")}</span>
                   </a>
 
                   <button
                     onClick={() => handleDeletePatient(activePatient)}
                     className="min-h-[46px] p-2 rounded-xl border border-[#FECACA] bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] active:scale-95 transition-all touch-target flex flex-col items-center justify-center gap-1 text-xs font-bold shadow-2xs"
-                    title={txt('Supprimer Dossier', 'Delete File', 'Eliminar Ficha')}
+                    title={txt('Supprimer Dossier', 'Delete File', 'Eliminar Ficha', "Eliminar ficha")}
                   >
                     <IconTrash size={16} className="text-[#EF4444]" />
-                    <span className="text-[11px]">{txt('Supprimer', 'Delete', 'Eliminar')}</span>
+                    <span className="text-[11px]">{txt('Supprimer', 'Delete', 'Eliminar', "Eliminar")}</span>
                   </button>
                 </div>
               </div>
@@ -1133,13 +1136,13 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[11px] font-bold uppercase text-[#475569] flex flex-wrap items-center gap-2">
-                      <span>{txt('Prescription Médicale :', 'Prescription :', 'Prescrição Médica :')}</span>
+                      <span>{txt('Prescription Médicale :', 'Prescription :', 'Prescrição Médica :', "Prescripción:")}</span>
                       <div className="inline-flex items-center gap-1 bg-white p-1 rounded-xl border border-[#CBD5E1] shadow-2xs">
                         <button
                           type="button"
                           onClick={() => updatePrescribedTarget(-1)}
                           className="w-7 h-7 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] active:scale-95 font-bold flex items-center justify-center text-sm touch-target"
-                          title={txt('Diminuer séances', 'Decrease sessions', 'Diminuir sessões')}
+                          title={txt('Diminuer séances', 'Decrease sessions', 'Diminuir sessões', "Reducir sesiones")}
                         >
                           -
                         </button>
@@ -1150,12 +1153,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                           type="button"
                           onClick={() => updatePrescribedTarget(1)}
                           className="w-7 h-7 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] active:scale-95 font-bold flex items-center justify-center text-sm touch-target"
-                          title={txt('Augmenter séances', 'Increase sessions', 'Aumentar sessões')}
+                          title={txt('Augmenter séances', 'Increase sessions', 'Aumentar sessões', "Aumentar sesiones")}
                         >
                           +
                         </button>
                       </div>
-                      <span className="text-xs text-[#64748B] lowercase">{txt('séances', 'sessions', 'sessões')}</span>
+                      <span className="text-xs text-[#64748B] lowercase">{txt('séances', 'sessions', 'sessões', "sesiones")}</span>
                     </div>
 
                     <div className="flex items-center gap-2 mt-1.5">
@@ -1178,7 +1181,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                     className="px-3.5 py-2.5 rounded-xl bg-white border border-[#CBD5E1] hover:bg-[#F1F5F9] active:scale-[0.98] text-[#0F172A] text-xs font-bold transition-all shadow-2xs touch-target flex items-center justify-center gap-1.5 w-full sm:w-auto"
                   >
                     <IconCalendarRepeat size={16} className="text-[#0F172A]" />
-                    <span>{txt('Plan de Séances', 'Multiple Sessions', 'Plano de Sessões')}</span>
+                    <span>{txt('Plan de Séances', 'Multiple Sessions', 'Plano de Sessões', "Varias sesiones")}</span>
                   </button>
 
                   <button
@@ -1186,7 +1189,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                     className="px-4 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] active:scale-[0.98] text-white text-xs font-bold transition-all shadow-sm touch-target flex items-center justify-center gap-2 w-full sm:w-auto"
                   >
                     <IconPlus size={16} />
-                    <span>{txt('Enregistrer Séance', 'Log Session', 'Registar Sessão')}</span>
+                    <span>{txt('Enregistrer Séance', 'Log Session', 'Registar Sessão', "Registrar sesión")}</span>
                   </button>
                 </div>
               </div>
@@ -1195,12 +1198,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               <div className="bg-[#F1F5F9]/80 p-1.5 rounded-2xl border border-[#E2E8F0] overflow-x-auto no-scrollbar scroll-smooth">
                 <div className="flex items-center gap-1.5 min-w-max">
                   {[
-                    { id: 'overview', icon: IconFileText, label: txt('Aperçu Clinique', 'Overview', 'Visão Geral'), count: null },
-                    { id: 'timeline', icon: IconClock, label: txt('Historique', 'History', 'Histórico'), count: combinedTimeline.length },
-                    { id: 'eva', icon: IconActivity, label: txt('Échelle EVA', 'EVA Pain Scale', 'Escala EVA'), count: null },
-                    { id: 'invoices', icon: IconReceiptTax, label: txt('Facturation', 'Invoices', 'Faturação'), count: patientInvoices.length },
-                    { id: 'prescriptions', icon: IconNotes, label: txt('Recommandations', 'Recommendations', 'Recomendações'), count: patientPrescriptions.length },
-                    { id: 'notes', icon: IconPencil, label: txt('Notes Libres', 'Notes', 'Notas'), count: null },
+                    { id: 'overview', icon: IconFileText, label: txt('Aperçu Clinique', 'Overview', 'Visão Geral', "Resumen"), count: null },
+                    { id: 'timeline', icon: IconClock, label: txt('Historique', 'History', 'Histórico', "Historial"), count: combinedTimeline.length },
+                    { id: 'eva', icon: IconActivity, label: txt('Échelle EVA', 'EVA Pain Scale', 'Escala EVA', "Escala del dolor EVA"), count: null },
+                    { id: 'invoices', icon: IconReceiptTax, label: txt('Facturation', 'Invoices', 'Faturação', "Facturas"), count: patientInvoices.length },
+                    { id: 'prescriptions', icon: IconNotes, label: txt('Recommandations', 'Recommendations', 'Recomendações', "Recomendaciones"), count: patientPrescriptions.length },
+                    { id: 'notes', icon: IconPencil, label: txt('Notes Libres', 'Notes', 'Notas', "Notas"), count: null },
                   ].map(t => {
                     const Icon = t.icon;
                     const isActive = activeDossierTab === t.id;
@@ -1262,7 +1265,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                     <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-2xl space-y-2">
                       <div className="text-[11px] font-bold uppercase text-[#64748B] flex items-center gap-1.5">
                         <IconTag size={15} className="text-[#64748B]" />
-                        <span>{txt('Pathologies & Diagnostic', 'Pathologies & Diagnosis', 'Patologias & Diagnóstico')}</span>
+                        <span>{txt('Pathologies & Diagnostic', 'Pathologies & Diagnosis', 'Patologias & Diagnóstico', "Patologías y diagnóstico")}</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {activePatient.pathologyTags ? (
@@ -1276,7 +1279,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                           ))
                         ) : (
                           <span className="text-xs text-[#64748B] italic">
-                            {txt('Aucun diagnostic renseigné', 'No diagnosis specified', 'Sem diagnóstico')}
+                            {txt('Aucun diagnostic renseigné', 'No diagnosis specified', 'Sem diagnóstico', "No se ha indicado un diagnóstico")}
                           </span>
                         )}
                       </div>
@@ -1286,10 +1289,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                     <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-2xl space-y-2">
                       <div className="text-[11px] font-bold uppercase text-[#64748B] flex items-center gap-1.5">
                         <IconFileText size={15} className="text-[#64748B]" />
-                        <span>{txt('Antécédents & Observations', 'Medical History', 'Histórico Médico')}</span>
+                        <span>{txt('Antécédents & Observations', 'Medical History', 'Histórico Médico', "Antecedentes médicos")}</span>
                       </div>
                       <p className="text-sm sm:text-xs text-[#334155] leading-relaxed whitespace-pre-wrap font-sans bg-white p-3 rounded-xl border border-[#E2E8F0]">
-                        {activePatient.medicalHistory || txt('Aucune observation clinique pour le moment.', 'No clinical observations yet.', 'Sem observações clínicas.')}
+                        {activePatient.medicalHistory || txt('Aucune observation clinique pour le moment.', 'No clinical observations yet.', 'Sem observações clínicas.', "Aún no hay observaciones clínicas.")}
                       </p>
                     </div>
 
@@ -1298,10 +1301,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                       <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                         <div>
                           <div className="text-[11px] font-bold uppercase text-[#64748B]">
-                            {txt('Évolution de la douleur (EVA)', 'Pain Score Progression (EVA)', 'Evolução da Dor (EVA)')}
+                            {txt('Évolution de la douleur (EVA)', 'Pain Score Progression (EVA)', 'Evolução da Dor (EVA)', "Evolución del dolor (EVA)")}
                           </div>
                           <div className="font-bold text-sm sm:text-base text-[#0F172A] mt-0.5">
-                            {txt('Score Initial :', 'Initial :', 'Inicial :')} <span className="text-amber-600">{evaAnalytics.initial}/10</span> → {txt('Actuel :', 'Current :', 'Atual :')} <span className="text-emerald-600">{evaAnalytics.current}/10</span>
+                            {txt('Score Initial :', 'Initial :', 'Inicial :', "Inicial:")} <span className="text-amber-600">{evaAnalytics.initial}/10</span> → {txt('Actuel :', 'Current :', 'Atual :', "Actual:")} <span className="text-emerald-600">{evaAnalytics.current}/10</span>
                           </div>
                         </div>
                         <div
@@ -1310,7 +1313,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                             : 'bg-white text-[#64748B] border border-[#E2E8F0]'
                             }`}
                         >
-                          {evaAnalytics.diff > 0 ? `-${evaAnalytics.diff} pts (${txt('Amélioration', 'Improvement', 'Melhoria')})` : txt('Stable', 'Stable', 'Estável')}
+                          {evaAnalytics.diff > 0 ? `-${evaAnalytics.diff} pts (${txt('Amélioration', 'Improvement', 'Melhoria', "Mejoría")})` : txt('Stable', 'Stable', 'Estável', "Estable")}
                         </div>
                       </div>
                     )}
@@ -1323,14 +1326,14 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                       <div className="text-center py-12 px-4 bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] space-y-3">
                         <IconCalendarEvent size={32} className="mx-auto text-[#CBD5E1]" />
                         <p className="font-semibold text-xs text-[#64748B]">
-                          {txt('Aucune séance enregistrée pour ce patient', 'No recorded sessions for this patient', 'Sem sessões registadas')}
+                          {txt('Aucune séance enregistrée pour ce patient', 'No recorded sessions for this patient', 'Sem sessões registadas', "No hay sesiones registradas para este paciente")}
                         </p>
                         <button
                           type="button"
                           onClick={() => setIsAddSessionModalOpen(true)}
                           className="px-4 py-2 rounded-xl bg-[#0F172A] text-white text-xs font-bold shadow-xs hover:bg-[#1E293B] transition-all"
                         >
-                          {txt('Enregistrer Première Séance', 'Log First Session', 'Registar Primeira Sessão')}
+                          {txt('Enregistrer Première Séance', 'Log First Session', 'Registar Primeira Sessão', "Registrar primera sesión")}
                         </button>
                       </div>
                     ) : (
@@ -1352,14 +1355,14 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                   }`}
                               >
                                 {item.source === 'online'
-                                  ? txt('En ligne', 'Online', 'Online')
+                                  ? txt('En ligne', 'Online', 'Online', "En línea")
                                   : item.source === 'paper'
-                                    ? txt('Ordonnance papier', 'Paper Rx', 'Papel')
-                                    : txt('Presencial', 'Clinic', 'Presencial')}
+                                    ? txt('Ordonnance papier', 'Paper Rx', 'Papel', "Prescripción en papel")
+                                    : txt('Presencial', 'Clinic', 'Presencial', "Clínica")}
                               </span>
                             </div>
 
-                            {item.archivedAt && <span className="text-xs text-slate-600">{txt('Rendez-vous archivé', 'Appointment archived', 'Consulta arquivada')}</span>}
+                            {item.archivedAt && <span className="text-xs text-slate-600">{txt('Rendez-vous archivé', 'Appointment archived', 'Consulta arquivada', "Cita archivada")}</span>}
                             {item.evaPainScore != null && (
                               <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-white text-[#0F172A] border border-[#CBD5E1] shadow-2xs">
                                 EVA: <span className={item.evaPainScore >= 7 ? 'text-rose-600' : item.evaPainScore >= 4 ? 'text-amber-600' : 'text-emerald-600'}>{item.evaPainScore}/10</span>
@@ -1389,13 +1392,13 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                         <div>
                           <h4 className="font-bold text-sm text-[#0F172A] flex items-center gap-2">
                             <IconActivity size={18} className="text-[#C49A3C]" />
-                            <span>{txt('Échelle Visuelle Analogique (EVA 0 – 10)', 'Visual Analog Scale (EVA 0 – 10)', 'Escala Visual Analógica (EVA 0 – 10)')}</span>
+                            <span>{txt('Échelle Visuelle Analogique (EVA 0 – 10)', 'Visual Analog Scale (EVA 0 – 10)', 'Escala Visual Analógica (EVA 0 – 10)', "Escala visual analógica (EVA 0 – 10)")}</span>
                           </h4>
                           <p className="text-xs text-[#64748B] leading-relaxed mt-0.5">
                             {txt(
                               'Cliquez sur le score d’une séance pour ajuster instantanément le niveau de douleur.',
                               'Click on any session score to adjust pain level in real-time.',
-                              'Clique no score de uma sessão para ajustar instantaneamente o nível de dor.'
+                              'Clique no score de uma sessão para ajustar instantaneamente o nível de dor.', "Pulse la puntuación de cualquier sesión para ajustar el nivel de dolor en tiempo real."
                             )}
                           </p>
                         </div>
@@ -1405,7 +1408,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                           <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-[#CBD5E1] shadow-2xs">
                             <div className="text-right">
                               <div className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
-                                {txt('Évolution Globale', 'Pain Evolution', 'Evolução Global')}
+                                {txt('Évolution Globale', 'Pain Evolution', 'Evolução Global', "Evolución del dolor")}
                               </div>
                               <div className="text-xs font-bold font-mono">
                                 <span className="text-rose-600">EVA {evaAnalytics.initial}</span>
@@ -1425,7 +1428,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                 ? `-${evaAnalytics.diff} pts (${Math.round((evaAnalytics.diff / (evaAnalytics.initial || 1)) * 100)}%)`
                                 : evaAnalytics.diff < 0
                                   ? `+${Math.abs(evaAnalytics.diff)} pts`
-                                  : txt('Estável', 'Stable', 'Stable')}
+                                  : txt('Estável', 'Stable', 'Stable', "Estable")}
                             </span>
                           </div>
                         )}
@@ -1436,22 +1439,22 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                         const {todayStr,currentHHMM}=getLisbonDateTime();
                         const unavailable=s.date>todayStr || (s.date===todayStr && !!s.time && s.time>currentHHMM) || !!appointment?.archivedAt || ['CANCELLED','NO_SHOW'].includes(appointment?.status??'');
                         return <div key={s.id} className="p-3 border rounded-xl text-xs space-y-2">
-                          <p className="font-semibold">{s.date} {s.time} · {s.clinicalStatus==='LEGACY_REVIEW' ? txt('Ancienne séance à vérifier','Previous session to review','Sessão antiga a verificar') : txt('Séance prévue','Planned session','Sessão planeada')}</p>
-                          {s.legacyEvaPainScore!=null && <p>{txt('Ancienne valeur non validée','Unverified previous value','Valor anterior não validado')}: {s.legacyEvaPainScore}</p>}
+                          <p className="font-semibold">{s.date} {s.time} · {s.clinicalStatus==='LEGACY_REVIEW' ? txt('Ancienne séance à vérifier','Previous session to review','Sessão antiga a verificar', "Sesión anterior pendiente de revisión") : txt('Séance prévue','Planned session','Sessão planeada', "Sesión prevista")}</p>
+                          {s.legacyEvaPainScore!=null && <p>{txt('Ancienne valeur non validée','Unverified previous value','Valor anterior não validado', "Valor anterior sin verificar")}: {s.legacyEvaPainScore}</p>}
                           <p className="whitespace-pre-wrap">{s.notes}</p>
-                          <button type="button" disabled={unavailable} onClick={()=>completeSession(s.id,s.version)} className="px-3 py-2 border rounded-lg disabled:opacity-40">{txt('Confirmer la séance réalisée','Confirm session completed','Confirmar sessão realizada')}</button>
+                          <button type="button" disabled={unavailable} onClick={()=>completeSession(s.id,s.version)} className="px-3 py-2 border rounded-lg disabled:opacity-40">{txt('Confirmer la séance réalisée','Confirm session completed','Confirmar sessão realizada', "Confirmar sesión completada")}</button>
                         </div>;
                       })}
                       {/* Visual scale reference guide */}
                       <div className="grid grid-cols-3 gap-2 p-2.5 bg-white rounded-xl border border-[#E2E8F0] text-center text-[10px] font-bold">
                         <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          0 - 3 : {txt('Légère / Sans douleur', 'Mild / No pain', 'Leve / Sem dor')}
+                          0 - 3 : {txt('Légère / Sans douleur', 'Mild / No pain', 'Leve / Sem dor', "Leve / sin dolor")}
                         </div>
                         <div className="p-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
-                          4 - 6 : {txt('Modérée', 'Moderate', 'Moderada')}
+                          4 - 6 : {txt('Modérée', 'Moderate', 'Moderada', "Moderado")}
                         </div>
                         <div className="p-1.5 rounded-lg bg-rose-50 text-rose-800 border border-rose-200">
-                          7 - 10 : {txt('Intense / Sévère', 'Severe / Worst', 'Intensa / Severa')}
+                          7 - 10 : {txt('Intense / Sévère', 'Severe / Worst', 'Intensa / Severa', "Intenso / máximo")}
                         </div>
                       </div>
 
@@ -1493,10 +1496,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                       type="button"
                                       onClick={() => setEditingEvaSessionId(isEditing ? null : s.id)}
                                       className={`px-2.5 py-1 rounded-lg border font-bold text-xs flex items-center gap-1.5 transition-all touch-target shadow-2xs ${colorConf.badgeBg} hover:scale-105`}
-                                      title={txt('Cliquer pour modifier le score', 'Click to modify score', 'Clique para alterar')}
+                                      title={txt('Cliquer pour modifier le score', 'Click to modify score', 'Clique para alterar', "Pulse para modificar la puntuación")}
                                     >
                                       <IconPencil size={12} className="opacity-70" />
-                                      <span>{s.evaPainScore===null ? txt('EVA non mesurée','EVA not measured','EVA não medida') : `EVA ${s.evaPainScore}/10`}</span>
+                                      <span>{s.evaPainScore===null ? txt('EVA non mesurée','EVA not measured','EVA não medida', "EVA no medida") : `EVA ${s.evaPainScore}/10`}</span>
                                     </button>
                                   </div>
                                 </div>
@@ -1505,7 +1508,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                 {isEditing && (
                                   <div className="pt-2 border-t border-[#F1F5F9] space-y-2">
                                     <div className="flex items-center justify-between text-[11px] font-bold text-[#475569]">
-                                      <span>{txt('Sélectionnez le nouveau score :', 'Select new score:', 'Selecione o novo score:')}</span>
+                                      <span>{txt('Sélectionnez le nouveau score :', 'Select new score:', 'Selecione o novo score:', "Seleccione una nueva puntuación:")}</span>
                                       <button
                                         type="button"
                                         onClick={() => setEditingEvaSessionId(null)}
@@ -1541,7 +1544,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                         </div>
                       ) : (
                         <div className="text-center py-8 text-xs text-[#64748B]">
-                          {txt('Aucune note EVA enregistrée pour l’instant', 'No EVA score recorded yet', 'Sem notas EVA registadas')}
+                          {txt('Aucune note EVA enregistrée pour l’instant', 'No EVA score recorded yet', 'Sem notas EVA registadas', "Aún no hay puntuaciones EVA registradas")}
                         </div>
                       )}
                     </div>
@@ -1553,11 +1556,9 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                       <div>
                         <h4 className="font-bold text-[#0F172A] text-sm">
-                          {txt('Historique de Facturation & Reçus', 'Billing & Tax Receipts History', 'Histórico de Faturação & Recibos')}
+                          {txt('Historique de Facturation & Reçus', 'Billing & Tax Receipts History', 'Histórico de Faturação & Recibos', "Historial de facturación y recibos fiscales")}
                         </h4>
-                        <p className="text-[11px] text-[#64748B]">
-                          Documentos com NIF válidos para IRS e reembolso de seguros (ADSE, Médis, Multicare).
-                        </p>
+                        <p className="text-[11px] text-[#64748B]">{legacyText("Documentos com NIF válidos para IRS e reembolso de seguros (ADSE, Médis, Multicare).", lang)}</p>
                       </div>
                       <button
                         type="button"
@@ -1565,25 +1566,21 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                         className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#E8C97A] hover:brightness-105 active:scale-[0.98] text-[#1A1412] font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all w-full sm:w-auto"
                       >
                         <IconPlus size={16} />
-                        <span>{txt('Émettre Recibo', 'New Invoice', 'Emitir Recibo')}</span>
+                        <span>{txt('Émettre Recibo', 'New Invoice', 'Emitir Recibo', "Nueva factura")}</span>
                       </button>
                     </div>
 
                     {loadingInvoices ? (
-                      <div className="py-12 text-center text-xs text-[#94A3B8] bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0]">
-                        A carregar recibos...
-                      </div>
+                      <div className="py-12 text-center text-xs text-[#94A3B8] bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0]">{legacyText("A carregar recibos...", lang)}</div>
                     ) : patientInvoices.length === 0 ? (
                       <div className="p-8 text-center bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] space-y-3">
                         <IconReceiptTax size={36} className="mx-auto text-[#CBD5E1]" />
-                        <p className="font-bold text-xs text-[#475569]">Nenhum recibo emitido para este utente</p>
+                        <p className="font-bold text-xs text-[#475569]">{legacyText("Nenhum recibo emitido para este utente", lang)}</p>
                         <button
                           type="button"
                           onClick={() => setIsCreateInvoiceOpen(true)}
                           className="px-4 py-2 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-bold shadow-xs transition-all"
-                        >
-                          Emitir Primeiro Recibo
-                        </button>
+                        >{legacyText("Emitir Primeiro Recibo", lang)}</button>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -1604,7 +1601,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                       : 'bg-amber-50 text-amber-700 border border-amber-200'
                                       }`}
                                   >
-                                    {inv.paymentStatus === 'PAID' ? 'Pago' : 'Pendente'}
+                                    {lang === 'es' ? (inv.paymentStatus === 'PAID' ? 'Pagado' : inv.paymentStatus === 'CANCELLED' ? 'Anulado' : inv.paymentStatus === 'REFUNDED' ? 'Reembolsado' : 'Pendiente') : (inv.paymentStatus === 'PAID' ? 'Pago' : 'Pendente')}
                                   </span>
                                 </div>
                                 <p className="font-bold text-sm sm:text-xs text-[#1E293B]">{inv.serviceName}</p>
@@ -1629,10 +1626,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                   setIsInvoiceDetailOpen(true);
                                 }}
                                 className="min-h-[42px] sm:min-h-0 sm:py-2 px-3 rounded-xl border border-[#CBD5E1] bg-white text-[#334155] hover:bg-[#F8FAFC] active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs touch-target"
-                                title="Ver / Imprimir PDF"
+                                title={legacyText("Ver / Imprimir PDF", lang)}
                               >
                                 <IconPrinter size={16} />
-                                <span>Imprimir / PDF</span>
+                                <span>{legacyText("Imprimir / PDF", lang)}</span>
                               </button>
 
                               <button
@@ -1640,6 +1637,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                 onClick={() => {
                                   const cleanPhone = inv.patientPhone.replace(/[^0-9]/g, '');
                                   const msg = encodeURIComponent(
+                                    lang === 'es' ? spanishInvoiceMessage(inv) :
                                     `Olá ${inv.patientName}! 👋\n` +
                                     `Recibo da *Digital Clínica*:\n` +
                                     `🧾 *Nº:* ${inv.invoiceNumber}\n` +
@@ -1651,7 +1649,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                   window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
                                 }}
                                 className="min-h-[42px] sm:min-h-0 sm:py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:scale-95 border border-emerald-200 transition-all flex items-center justify-center gap-1.5 text-xs font-bold shadow-2xs touch-target"
-                                title="Enviar por WhatsApp"
+                                title={legacyText("Enviar por WhatsApp", lang)}
                               >
                                 <IconBrandWhatsapp size={16} />
                                 <span>WhatsApp</span>
@@ -1669,11 +1667,9 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                       <div>
                         <h4 className="font-bold text-[#0F172A] text-sm">
-                          {txt('Ordonnances de Conseils & Matériel Recommandé', 'Clinical Recommendations & Equipment Pad', 'Fichas de Recomendações & Material')}
+                          {txt('Ordonnances de Conseils & Matériel Recommandé', 'Clinical Recommendations & Equipment Pad', 'Fichas de Recomendações & Material', "Hoja de recomendaciones clínicas y material")}
                         </h4>
-                        <p className="text-[11px] text-[#64748B]">
-                          Orientações terapêuticas, produtos tópicos e ergonomia para acompanhamento ao domicílio.
-                        </p>
+                        <p className="text-[11px] text-[#64748B]">{legacyText("Orientações terapêuticas, produtos tópicos e ergonomia para acompanhamento ao domicílio.", lang)}</p>
                       </div>
                       <button
                         type="button"
@@ -1681,25 +1677,21 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                         className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#E8C97A] hover:brightness-105 active:scale-[0.98] text-[#1A1412] font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all w-full sm:w-auto"
                       >
                         <IconPlus size={16} />
-                        <span>{txt('Nouvelle Recommandation', 'New Recommendation', 'Nova Ficha')}</span>
+                        <span>{txt('Nouvelle Recommandation', 'New Recommendation', 'Nova Ficha', "Nueva recomendación")}</span>
                       </button>
                     </div>
 
                     {loadingPrescriptions ? (
-                      <div className="py-12 text-center text-xs text-[#94A3B8] bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0]">
-                        A carregar recomendações...
-                      </div>
+                      <div className="py-12 text-center text-xs text-[#94A3B8] bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0]">{legacyText("A carregar recomendações...", lang)}</div>
                     ) : patientPrescriptions.length === 0 ? (
                       <div className="p-8 text-center bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] space-y-3">
                         <IconNotes size={36} className="mx-auto text-[#CBD5E1]" />
-                        <p className="font-bold text-xs text-[#475569]">Nenhuma ficha de recomendações emitida</p>
+                        <p className="font-bold text-xs text-[#475569]">{legacyText("Nenhuma ficha de recomendações emitida", lang)}</p>
                         <button
                           type="button"
                           onClick={() => setIsCreatePrescriptionOpen(true)}
                           className="px-4 py-2 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-bold shadow-xs transition-all"
-                        >
-                          Criar Primeira Recomendação
-                        </button>
+                        >{legacyText("Criar Primeira Recomendação", lang)}</button>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -1714,8 +1706,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                   {rx.date}
                                 </span>
                                 <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FAF8F5] text-[#9A7428] border border-[#E8E2D8]">
-                                  {rx.items.length} itens prescritos
-                                </span>
+                                  {rx.items.length}{" "}{legacyText("itens prescritos", lang)}</span>
                               </div>
                               {rx.diagnosisOrGoal && (
                                 <p className="font-bold text-sm sm:text-xs text-[#1E293B]">{rx.diagnosisOrGoal}</p>
@@ -1728,8 +1719,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                 ))}
                                 {rx.items.length > 3 && (
                                   <span className="text-[10px] text-[#94A3B8] font-bold self-center">
-                                    +{rx.items.length - 3} mais
-                                  </span>
+                                    +{rx.items.length - 3}{" "}{legacyText("mais", lang)}</span>
                                 )}
                               </div>
                             </div>
@@ -1743,21 +1733,21 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                                   setIsPrescriptionDetailOpen(true);
                                 }}
                                 className="min-h-[42px] sm:min-h-0 sm:py-2 px-3 rounded-xl border border-[#CBD5E1] bg-white text-[#334155] hover:bg-[#F8FAFC] active:scale-95 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs touch-target"
-                                title="Ver / Imprimir PDF"
+                                title={legacyText("Ver / Imprimir PDF", lang)}
                               >
                                 <IconPrinter size={16} />
-                                <span>Imprimir / PDF</span>
+                                <span>{legacyText("Imprimir / PDF", lang)}</span>
                               </button>
 
                               <button
                                 type="button"
                                 onClick={() => {
                                   const cleanPhone = rx.patientPhone.replace(/[^0-9]/g, '');
-                                  const msg = encodeURIComponent(formatPrescriptionWhatsAppMessage(rx));
+                                  const msg = encodeURIComponent(formatPrescriptionWhatsAppMessage(rx, lang));
                                   window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
                                 }}
                                 className="min-h-[42px] sm:min-h-0 sm:py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:scale-95 border border-emerald-200 transition-all flex items-center justify-center gap-1.5 text-xs font-bold shadow-2xs touch-target"
-                                title="Enviar por WhatsApp"
+                                title={legacyText("Enviar por WhatsApp", lang)}
                               >
                                 <IconBrandWhatsapp size={16} />
                                 <span>WhatsApp</span>
@@ -1776,7 +1766,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                       rows={8}
                       value={noteForm.content}
                       onChange={e => setNoteForm(p => ({ ...p, content: e.target.value }))}
-                      placeholder={txt('Rédigez vos notes de suivi clinique...', 'Write your clinical session notes...', 'Escreva as notas de evolução clínica...')}
+                      placeholder={txt('Rédigez vos notes de suivi clinique...', 'Write your clinical session notes...', 'Escreva as notas de evolução clínica...', "Escriba las notas clínicas de la sesión...")}
                       className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-2xl p-3.5 text-sm sm:text-xs font-sans text-[#0F172A] focus:outline-none focus:border-[#0F172A] focus:ring-1 focus:ring-[#0F172A] transition-all"
                     />
                     <div className="flex justify-end">
@@ -1785,7 +1775,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                         disabled={savingNote}
                         className="px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] active:scale-[0.98] text-white font-bold text-xs transition-all shadow-sm touch-target w-full sm:w-auto"
                       >
-                        {savingNote ? txt('Enregistrement...', 'Saving...', 'A guardar...') : txt('Sauvegarder les Notes', 'Save Notes', 'Guardar Ficha')}
+                        {savingNote ? txt('Enregistrement...', 'Saving...', 'A guardar...', "Guardando...") : txt('Sauvegarder les Notes', 'Save Notes', 'Guardar Ficha', "Guardar notas")}
                       </button>
                     </div>
                   </div>
@@ -1800,10 +1790,10 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
                 <IconNotes size={32} />
               </div>
               <h3 className="font-bold text-base text-[#0F172A]">
-                {txt('Sélectionnez un patient', 'Select a patient', 'Selecione um utente')}
+                {txt('Sélectionnez un patient', 'Select a patient', 'Selecione um utente', "Seleccione un paciente")}
               </h3>
               <p className="text-xs max-w-sm leading-relaxed">
-                {txt('Choisissez une fiche patient dans la colonne de gauche pour consulter son dossier complet.', 'Pick a patient record to view their full EMR file.', 'Escolha uma ficha para consultar o processo clínico completo, recibos e recomendações.')}
+                {txt('Choisissez une fiche patient dans la colonne de gauche pour consulter son dossier complet.', 'Pick a patient record to view their full EMR file.', 'Escolha uma ficha para consultar o processo clínico completo, recibos e recomendações.', "Elija la ficha de un paciente para ver su historia clínica completa.")}
               </p>
             </div>
           )}
@@ -1815,20 +1805,20 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
         lang={lang}
         isOpen={isNewPatientModalOpen}
         onClose={() => setIsNewPatientModalOpen(false)}
-        title={txt('Nouveau Patient', 'New Patient Record', 'Nova Ficha de Utente')}
+        title={txt('Nouveau Patient', 'New Patient Record', 'Nova Ficha de Utente', "Nueva ficha de paciente")}
         maxWidth="lg"
       >
         <form onSubmit={handleCreatePatientSubmit} className="space-y-3.5 font-sans text-xs">
           <div>
             <label className="font-bold text-[#475569] block mb-1">
-              {txt('Nom Complet *', 'Full Name *', 'Nome Completo *')}
+              {txt('Nom Complet *', 'Full Name *', 'Nome Completo *', "Nombre completo *")}
             </label>
             <input
               type="text"
               required
               value={newPatientForm.patientName}
               onChange={e => setNewPatientForm(p => ({ ...p, patientName: e.target.value }))}
-              placeholder="Ex: Maria Silva"
+              placeholder={legacyText("Ex: Maria Silva", lang)}
               className="w-full bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] rounded-xl p-3 text-sm sm:text-xs focus:outline-none focus:border-[#0F172A]"
             />
           </div>
@@ -1836,7 +1826,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="new-patient-phone" className="font-bold text-[#475569] block mb-1">
-                {txt('Téléphone *', 'Phone *', 'Telefone *')}
+                {txt('Téléphone *', 'Phone *', 'Telefone *', "Teléfono *")}
               </label>
               <PhoneInput
                 id="new-patient-phone"
@@ -1849,12 +1839,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               />
             </div>
             <div>
-              <label className="font-bold text-[#475569] block mb-1">Email</label>
+              <label className="font-bold text-[#475569] block mb-1">{legacyText("Email", lang)}</label>
               <input
                 type="email"
                 value={newPatientForm.email}
                 onChange={e => setNewPatientForm(p => ({ ...p, email: e.target.value }))}
-                placeholder="paciente@email.pt"
+                placeholder={legacyText("paciente@email.pt", lang)}
                 className="w-full bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] rounded-xl p-3 text-sm sm:text-xs focus:outline-none focus:border-[#0F172A]"
               />
             </div>
@@ -1863,7 +1853,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="font-bold text-[#475569] block mb-1">
-                {txt('Séances prescrites', 'Prescribed Sessions', 'Sessões prescritas')}
+                {txt('Séances prescrites', 'Prescribed Sessions', 'Sessões prescritas', "Sesiones prescritas")}
               </label>
               <input
                 type="number"
@@ -1890,7 +1880,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
             </div>
             <div>
               <label className="font-bold text-[#475569] block mb-1">
-                {txt('Médecin prescripteur', 'Referring Doctor', 'Médico Prescritor')}
+                {txt('Médecin prescripteur', 'Referring Doctor', 'Médico Prescritor', "Médico remitente")}
               </label>
               <input
                 type="text"
@@ -1904,20 +1894,20 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
           <div>
             <label className="font-bold text-[#475569] block mb-1">
-              {txt('Pathologies / Tags (séparés par virgule)', 'Pathologies (comma separated)', 'Patologias')}
+              {txt('Pathologies / Tags (séparés par virgule)', 'Pathologies (comma separated)', 'Patologias', "Patologías (separadas por comas)")}
             </label>
             <input
               type="text"
               value={newPatientForm.pathologyTags}
               onChange={e => setNewPatientForm(p => ({ ...p, pathologyTags: e.target.value }))}
-              placeholder="Lombalgia, Escoliose..."
+              placeholder={legacyText("Lombalgia, Escoliose...", lang)}
               className="w-full bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] rounded-xl p-3 text-sm sm:text-xs focus:outline-none focus:border-[#0F172A]"
             />
           </div>
 
           <div>
             <label className="font-bold text-[#475569] block mb-1">
-              {txt('Antécédents & Observations', 'Medical History', 'Histórico Médico')}
+              {txt('Antécédents & Observations', 'Medical History', 'Histórico Médico', "Antecedentes médicos")}
             </label>
             <textarea
               rows={3}
@@ -1933,14 +1923,14 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               data-modal-dismiss
               className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] font-bold text-xs"
             >
-              {txt('Annuler', 'Cancel', 'Cancelar')}
+              {txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold text-xs disabled:opacity-50 shadow-sm"
             >
-              {submitting ? txt('Création...', 'Creating...', 'A criar...') : txt('Créer la Fiche', 'Create Record', 'Criar Ficha')}
+              {submitting ? txt('Création...', 'Creating...', 'A criar...', "Creando...") : txt('Créer la Fiche', 'Create Record', 'Criar Ficha', "Crear ficha")}
             </button>
           </div>
         </form>
@@ -1951,13 +1941,13 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
         lang={lang}
         isOpen={isEditPatientModalOpen}
         onClose={() => setIsEditPatientModalOpen(false)}
-        title={txt('Modifier le Patient', 'Edit Patient', 'Editar Utente')}
+        title={txt('Modifier le Patient', 'Edit Patient', 'Editar Utente', "Editar paciente")}
         maxWidth="lg"
       >
         <form onSubmit={handleEditPatientSubmit} className="space-y-3.5 font-sans text-xs">
           <div>
             <label className="font-bold text-[#475569] block mb-1">
-              {txt('Nom Complet *', 'Full Name *', 'Nome Completo *')}
+              {txt('Nom Complet *', 'Full Name *', 'Nome Completo *', "Nombre completo *")}
             </label>
             <input
               type="text"
@@ -1971,7 +1961,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="edit-patient-phone" className="font-bold text-[#475569] block mb-1">
-                {txt('Téléphone *', 'Phone *', 'Telefone *')}
+                {txt('Téléphone *', 'Phone *', 'Telefone *', "Teléfono *")}
               </label>
               <PhoneInput
                 id="edit-patient-phone"
@@ -1983,7 +1973,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               />
             </div>
             <div>
-              <label className="font-bold text-[#475569] block mb-1">Email</label>
+              <label className="font-bold text-[#475569] block mb-1">{legacyText("Email", lang)}</label>
               <input
                 type="email"
                 value={editPatientForm.email}
@@ -1996,7 +1986,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="font-bold text-[#475569] block mb-1">
-                {txt('Séances prescrites', 'Prescribed Sessions', 'Sessões prescritas')}
+                {txt('Séances prescrites', 'Prescribed Sessions', 'Sessões prescritas', "Sesiones prescritas")}
               </label>
               <input
                 type="number"
@@ -2023,7 +2013,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
             </div>
             <div>
               <label className="font-bold text-[#475569] block mb-1">
-                {txt('Médecin prescripteur', 'Referring Doctor', 'Médico Prescritor')}
+                {txt('Médecin prescripteur', 'Referring Doctor', 'Médico Prescritor', "Médico remitente")}
               </label>
               <input
                 type="text"
@@ -2036,7 +2026,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
           <div>
             <label className="font-bold text-[#475569] block mb-1">
-              {txt('Pathologies / Tags', 'Pathologies / Tags', 'Patologias')}
+              {txt('Pathologies / Tags', 'Pathologies / Tags', 'Patologias', "Patologías / etiquetas")}
             </label>
             <input
               type="text"
@@ -2048,7 +2038,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
           <div>
             <label className="font-bold text-[#475569] block mb-1">
-              {txt('Antécédents & Observations', 'Medical History', 'Histórico Médico')}
+              {txt('Antécédents & Observations', 'Medical History', 'Histórico Médico', "Antecedentes médicos")}
             </label>
             <textarea
               rows={3}
@@ -2064,14 +2054,14 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               data-modal-dismiss
               className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] font-bold text-xs"
             >
-              {txt('Annuler', 'Cancel', 'Cancelar')}
+              {txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold text-xs disabled:opacity-50 shadow-sm"
             >
-              {submitting ? txt('Enregistrement...', 'Saving...', 'A guardar...') : txt('Sauvegarder', 'Save', 'Guardar')}
+              {submitting ? txt('Enregistrement...', 'Saving...', 'A guardar...', "Guardando...") : txt('Sauvegarder', 'Save', 'Guardar', "Guardar")}
             </button>
           </div>
         </form>
@@ -2082,30 +2072,30 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
         lang={lang}
         isOpen={isAddSessionModalOpen}
         onClose={() => setIsAddSessionModalOpen(false)}
-        title={txt('Enregistrer une Séance de Soin', 'Log Clinical Session', 'Registar Sessão de Tratamento')}
+        title={txt('Enregistrer une Séance de Soin', 'Log Clinical Session', 'Registar Sessão de Tratamento', "Registrar sesión clínica")}
         subtitle={activePatient ? activePatient.patientName : ''}
         maxWidth="md"
       >
         <form onSubmit={handleAddSessionSubmit} className="space-y-3.5 font-sans text-xs">
-          <label className="block font-bold">{txt('Consultation existante','Existing appointment','Consulta existente')}
+          <label className="block font-bold">{txt('Consultation existante','Existing appointment','Consulta existente', "Cita existente")}
             <select value={sessionForm.appointmentId} onChange={e=>{
               const a=patientAppointments.find(a=>a.id===e.target.value);
               setSessionForm(p=>({...p,appointmentId:e.target.value,...(a?{date:a.date,time:a.startTime,serviceSlug:a.service,practitionerId:a.practitionerId}:{})}));
             }} className="w-full border rounded-lg p-3 mt-1">
-              <option value="">{txt('Sans rendez-vous lié','No linked appointment','Sem consulta associada')}</option>
+              <option value="">{txt('Sans rendez-vous lié','No linked appointment','Sem consulta associada', "Sin cita vinculada")}</option>
               {patientAppointments.filter(a=>!a.archivedAt && !['CANCELLED','NO_SHOW'].includes(a.status) && !activePatient?.sessions?.some(s=>s.appointmentId===a.id)).map(a=><option key={a.id} value={a.id}>{a.date} {a.startTime} · {getServiceName(a.service,lang, a)}</option>)}
             </select>
           </label>
-          <label className="block font-bold">{txt('État de la séance','Session state','Estado da sessão')}
+          <label className="block font-bold">{txt('État de la séance','Session state','Estado da sessão', "Estado de la sesión")}
             <select value={sessionForm.clinicalStatus} onChange={e=>setSessionForm(p=>({...p,clinicalStatus:e.target.value as 'PLANNED'|'COMPLETED',evaPainScore:null}))} className="w-full border rounded-lg p-3 mt-1">
-              <option value="COMPLETED">{txt('Réalisée','Completed','Realizada')}</option>
-              <option value="PLANNED">{txt('Prévue','Planned','Planeada')}</option>
+              <option value="COMPLETED">{txt('Réalisée','Completed','Realizada', "Completadas")}</option>
+              <option value="PLANNED">{txt('Prévue','Planned','Planeada', "Prevista")}</option>
             </select>
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="font-bold text-[#475569] block mb-1">
-                {txt('Date *', 'Date *', 'Data *')}
+                {txt('Date *', 'Date *', 'Data *', "Fecha *")}
               </label>
               <input
                 type="date"
@@ -2117,7 +2107,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
             </div>
             <div>
               <label className="font-bold text-[#475569] block mb-1">
-                {txt('Heure', 'Time', 'Hora')}
+                {txt('Heure', 'Time', 'Hora', "Hora")}
               </label>
               <input
                 type="time"
@@ -2132,14 +2122,14 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
           <div>
             <label className="font-bold text-[#475569] block mb-1">
-              {txt('Soin dispensé *', 'Treatment *', 'Tratamento *')}
+              {txt('Soin dispensé *', 'Treatment *', 'Tratamento *', "Tratamiento *")}
             </label>
             <select
               value={sessionForm.serviceSlug}
               onChange={e => setSessionForm(p => ({ ...p, serviceSlug: e.target.value }))}
               className="w-full bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] rounded-xl p-3 text-sm sm:text-xs focus:outline-none focus:border-[#0F172A]"
             >
-              <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map(s => (
+              <option value="">{lang === 'es' ? "Elija un tratamiento" : lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map(s => (
                 <option key={s.slug} value={s.slug}>
                   {getLocalizedText(s.name,lang)}
                 </option>
@@ -2151,7 +2141,7 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           <div className="bg-[#F8FAFC] border border-[#CBD5E1] p-4 rounded-2xl">
             <label className="block font-bold">EVA
               <select disabled={sessionForm.clinicalStatus!=='COMPLETED'} value={sessionForm.evaPainScore??''} onChange={e=>setSessionForm(p=>({...p,evaPainScore:e.target.value===''?null:Number(e.target.value)}))} className="w-full border rounded-lg p-3 mt-1">
-                <option value="">{txt('Non mesurée','Not measured','Não medida')}</option>
+                <option value="">{txt('Non mesurée','Not measured','Não medida', "Sin medir")}</option>
                 {Array.from({length:11},(_,n)=><option key={n} value={n}>{n}/10</option>)}
               </select>
             </label>
@@ -2159,13 +2149,13 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
 
           <div>
             <label className="font-bold text-[#475569] block mb-1">
-              {txt('Notes cliniques de séance', 'Session clinical notes', 'Notas clínicas')}
+              {txt('Notes cliniques de séance', 'Session clinical notes', 'Notas clínicas', "Notas clínicas de la sesión")}
             </label>
             <textarea
               rows={3}
               value={sessionForm.notes}
               onChange={e => setSessionForm(p => ({ ...p, notes: e.target.value }))}
-              placeholder={txt('Ex: mobilisation passive, étirements...', 'E.g. passive mobilization...', 'Ex: mobilização articular, alongamentos...')}
+              placeholder={txt('Ex: mobilisation passive, étirements...', 'E.g. passive mobilization...', 'Ex: mobilização articular, alongamentos...', "P. ej., movilización pasiva...")}
               className="w-full bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] rounded-xl p-3 text-sm sm:text-xs focus:outline-none focus:border-[#0F172A]"
             />
           </div>
@@ -2176,14 +2166,14 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
               data-modal-dismiss
               className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] font-bold text-xs"
             >
-              {txt('Annuler', 'Cancel', 'Cancelar')}
+              {txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white font-bold text-xs disabled:opacity-50 shadow-sm"
             >
-              {submitting ? txt('Enregistrement...', 'Saving...', 'A registar...') : txt('Valider la Séance', 'Confirm Session', 'Confirmar Sessão')}
+              {submitting ? txt('Enregistrement...', 'Saving...', 'A registar...', "Guardando...") : txt('Valider la Séance', 'Confirm Session', 'Confirmar Sessão', "Confirmar sesión")}
             </button>
           </div>
         </form>
@@ -2195,12 +2185,12 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
           isOpen={isCreateInvoiceOpen}
           onClose={() => setIsCreateInvoiceOpen(false)}
           onCreated={(newInv) => {
-            fetchActivePatientInvoices(activePatient);
+            fetchActivePatientInvoices(activePatient, true);
             if (onRefreshPatients) onRefreshPatients();
             if (onActionToast) {
               onActionToast({
                 type: 'success',
-                title: 'Fatura-Recibo Emitida',
+                title: txt('Document créé', 'Document created', 'Documento criado', "Documento creado"),
                 message: `${newInv.invoiceNumber} — ${newInv.amount.toFixed(2)} €`,
               });
             }
@@ -2252,8 +2242,8 @@ export const PatientNotesTab = React.memo(function PatientNotesTab({
             if (onActionToast) {
               onActionToast({
                 type: 'success',
-                title: lang === 'pt' ? 'Estado Atualizado' : lang === 'fr' ? 'Statut mis à jour' : 'Status Updated',
-                message: `${newStatus === 'PAID' ? (lang === 'fr' ? 'Payé' : lang === 'en' ? 'Paid' : 'Pago') : (lang === 'fr' ? 'En attente' : lang === 'en' ? 'Pending' : 'Pendente')}`,
+                title: lang === 'es' ? "Estado actualizado" : lang === 'pt' ? 'Estado Atualizado' : lang === 'fr' ? 'Statut mis à jour' : 'Status Updated',
+                message: `${newStatus === 'PAID' ? (lang === 'es' ? "Pagada" : lang === 'fr' ? 'Payé' : lang === 'en' ? 'Paid' : 'Pago') : (lang === 'es' ? "Pendientes" : lang === 'fr' ? 'En attente' : lang === 'en' ? 'Pending' : 'Pendente')}`,
               });
             }
           } catch {

@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { getLocalizedText } from '@/data/services';
 import { useServices } from '@/components/ServiceCatalogProvider';
 
@@ -60,7 +62,7 @@ export default function AvisPage() {
   const [formLocation, setFormLocation] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  const { reviews: reviewsList, loading: loadingReviews, error: reviewsError, refresh: fetchLiveReviews } = usePublicReviews();
+  const { reviews: reviewsList, stats, loading: loadingReviews, error: reviewsError, refresh: fetchLiveReviews } = usePublicReviews();
 
   // Filtering reviews
   const filteredReviews = reviewsList.filter((rev) => {
@@ -90,8 +92,8 @@ export default function AvisPage() {
     if (!formName.trim()) {
       playSoftClick();
       setAlertDialog({
-        title: lang === 'pt' ? 'Nome Obrigatório' : lang === 'en' ? 'Name Required' : 'Nom Requis',
-        description: lang === 'pt'
+        title: lang === 'es' ? "Nombre obligatorio" : lang === 'pt' ? 'Nome Obrigatório' : lang === 'en' ? 'Name Required' : 'Nom Requis',
+        description: lang === 'es' ? "Introduzca su nombre antes de enviar su opinión." : lang === 'pt'
           ? 'Por favor, indique o seu nome antes de submeter a sua avaliação.'
           : lang === 'en'
           ? 'Please enter your name before submitting your review.'
@@ -103,13 +105,13 @@ export default function AvisPage() {
     if (!formComment.trim() || formComment.trim().length < 5) {
       playSoftClick();
       setAlertDialog({
-        title: lang === 'pt' ? 'Atenção' : lang === 'en' ? 'Attention' : 'Attention',
-        description: lang === 'pt'
+        title: lang === 'es' ? "Atención" : lang === 'pt' ? 'Atenção' : lang === 'en' ? 'Attention' : 'Attention',
+        description: lang === 'es' ? "Escriba un comentario de al menos 5 caracteres." : lang === 'pt'
           ? 'Por favor, partilhe um comentário com pelo menos 5 caracteres.'
           : lang === 'en'
           ? 'Please share a comment with at least 5 characters.'
           : 'Veuillez partager un commentaire d\'au moins 5 caractères.',
-        confirmText: lang === 'pt' ? 'Entendido' : lang === 'en' ? 'Understood' : 'Compris',
+        confirmText: lang === 'es' ? "Entendido" : lang === 'pt' ? 'Entendido' : lang === 'en' ? 'Understood' : 'Compris',
       });
       return;
     }
@@ -143,27 +145,27 @@ export default function AvisPage() {
         const data = await res.json().catch(() => ({}));
         playSoftClick();
         setAlertDialog({
-          title: lang === 'pt' ? 'Atenção' : lang === 'en' ? 'Attention' : 'Attention',
+          title: lang === 'es' ? "Atención" : lang === 'pt' ? 'Atenção' : lang === 'en' ? 'Attention' : 'Attention',
           description: data.error || (
-            lang === 'pt'
+            lang === 'es' ? "Escriba un comentario de al menos 5 caracteres." : lang === 'pt'
               ? 'Por favor, partilhe um comentário com pelo menos 5 caracteres.'
               : lang === 'en'
               ? 'Please share a comment with at least 5 characters.'
               : 'Veuillez partager un commentaire d\'au moins 5 caractères.'
           ),
-          confirmText: lang === 'pt' ? 'Entendido' : lang === 'en' ? 'Understood' : 'Compris',
+          confirmText: lang === 'es' ? "Entendido" : lang === 'pt' ? 'Entendido' : lang === 'en' ? 'Understood' : 'Compris',
         });
       }
     } catch {
       playSoftClick();
       setAlertDialog({
-        title: lang === 'pt' ? 'Erro de Ligação' : lang === 'en' ? 'Connection Error' : 'Erreur de Connexion',
-        description: lang === 'pt'
+        title: lang === 'es' ? "Error de conexión" : lang === 'pt' ? 'Erro de Ligação' : lang === 'en' ? 'Connection Error' : 'Erreur de Connexion',
+        description: lang === 'es' ? "Se ha producido un error al enviar su opinión. Compruebe su conexión y vuelva a intentarlo." : lang === 'pt'
           ? 'Ocorreu um erro ao enviar a sua avaliação. Por favor, verifique a sua ligação e tente novamente.'
           : lang === 'en'
           ? 'An error occurred while submitting your review. Please check your connection and try again.'
           : 'Une erreur est survenue lors de l\'envoi de votre avis. Veuillez réessayer.',
-        confirmText: lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer',
+        confirmText: lang === 'es' ? "Cerrar" : lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer',
       });
     } finally {
       setSubmittingReview(false);
@@ -171,12 +173,12 @@ export default function AvisPage() {
   };
 
   const intro = EDITORIAL_PAGES.reviews[lang];
-  const averageRating = reviewsList.length ? reviewsList.reduce((total, review) => total + Number(review.rating || 0), 0) / reviewsList.length : 0;
+  const averageRating = stats.average;
   return (
     <div className="bg-[#FAFAF8] min-h-screen text-[#1A1412]">
       <EditorialPageHeader
         eyebrow={intro.eyebrow} title={intro.title} emphasis={intro.emphasis} description={intro.description}
-        aside={<><span className={headerStyles.asideLabel}>{intro.asideLabel}</span><p className={headerStyles.price}>{averageRating.toLocaleString(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}<small>/ 5</small></p><div className={headerStyles.stars} aria-hidden="true">{[1, 2, 3, 4, 5].map(star => <IconStar key={star} size={15} fill={star <= Math.round(averageRating) ? 'currentColor' : 'none'} />)}</div><p className={headerStyles.asideText}>{reviewsList.length} {intro.countLabel}</p></>}
+        aside={<><span className={headerStyles.asideLabel}>{intro.asideLabel}</span><p className={headerStyles.price}>{averageRating.toLocaleString(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}<small>/ 5</small></p><div className={headerStyles.stars} aria-hidden="true">{[1, 2, 3, 4, 5].map(star => <IconStar key={star} size={15} fill={star <= Math.round(averageRating) ? 'currentColor' : 'none'} />)}</div><p className={headerStyles.asideText}>{stats.total} {intro.countLabel}</p></>}
       >
         <div className={headerStyles.actions}>
           <a href="#patient-reviews" className={headerStyles.primary}>{intro.action}<span aria-hidden="true">↓</span></a>
@@ -200,7 +202,7 @@ export default function AvisPage() {
                     : 'text-[#6B6058] hover:text-[#1A1412]'
                 }`}
               >
-                {lang === 'pt' ? `Todas (${reviewsList.length})` : lang === 'en' ? `All (${reviewsList.length})` : `Tous (${reviewsList.length})`}
+                {lang === 'es' ? `Todos (${reviewsList.length})` : lang === 'pt' ? `Todas (${reviewsList.length})` : lang === 'en' ? `All (${reviewsList.length})` : `Tous (${reviewsList.length})`}
               </button>
               <button
                 onClick={() => { setActivePole('kine'); playSoftClick(); }}
@@ -210,7 +212,7 @@ export default function AvisPage() {
                     : 'text-[#6B6058] hover:text-[#1A1412]'
                 }`}
               >
-                {lang === 'pt' ? 'Fisioterapia & RPG' : lang === 'en' ? 'Physiotherapy & GPR' : 'Kinésithérapie & RPG'}
+                {lang === 'es' ? "Fisioterapia y RPG" : lang === 'pt' ? 'Fisioterapia & RPG' : lang === 'en' ? 'Physiotherapy & GPR' : 'Kinésithérapie & RPG'}
               </button>
               <button
                 onClick={() => { setActivePole('minceur'); playSoftClick(); }}
@@ -220,7 +222,7 @@ export default function AvisPage() {
                     : 'text-[#6B6058] hover:text-[#1A1412]'
                 }`}
               >
-                {lang === 'pt' ? 'Emagrecimento & Criolipólise' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
+                {lang === 'es' ? "Tratamientos reductores" : lang === 'pt' ? 'Emagrecimento & Criolipólise' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur'}
               </button>
               <button
                 onClick={() => { setActivePole('postpartum'); playSoftClick(); }}
@@ -230,7 +232,7 @@ export default function AvisPage() {
                     : 'text-[#6B6058] hover:text-[#1A1412]'
                 }`}
               >
-                {lang === 'pt' ? 'Pós-Parto & Drenagem' : lang === 'en' ? 'Postpartum & Drainage' : 'Post-Partum & Drainage'}
+                {lang === 'es' ? "Posparto y drenaje" : lang === 'pt' ? 'Pós-Parto & Drenagem' : lang === 'en' ? 'Postpartum & Drainage' : 'Post-Partum & Drainage'}
               </button>
             </div>
 
@@ -240,22 +242,22 @@ export default function AvisPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1A1412] hover:bg-[#2C2420] text-[#E8C97A] text-xs font-bold transition-all shadow-sm border border-[#C49A3C]/30 hover:scale-[1.02]"
             >
               <IconPlus size={15} />
-              <span>{lang === 'pt' ? 'Partilhar a Minha Experiência' : lang === 'en' ? 'Leave a Patient Review' : 'Laisser un Avis'}</span>
+              <span>{lang === 'es' ? "Dejar una opinión como paciente" : lang === 'pt' ? 'Partilhar a Minha Experiência' : lang === 'en' ? 'Leave a Patient Review' : 'Laisser un Avis'}</span>
             </button>
           </div>
 
           {/* ── Review Cards Grid ── */}
           {loadingReviews ? (
             <p role="status" className="py-10 text-center text-sm text-[#6B6058]">
-              {lang === 'pt' ? 'A carregar avaliações…' : lang === 'en' ? 'Loading reviews…' : 'Chargement des avis…'}
+              {lang === 'es' ? "Cargando opiniones…" : lang === 'pt' ? 'A carregar avaliações…' : lang === 'en' ? 'Loading reviews…' : 'Chargement des avis…'}
             </p>
           ) : reviewsList.length === 0 && (
             <div className="py-10 text-center text-sm text-[#6B6058] space-y-3">
               <p>{reviewsError
-                ? (lang === 'pt' ? 'Não foi possível carregar as avaliações.' : lang === 'en' ? 'Reviews could not be loaded.' : 'Impossible de charger les avis.')
-                : (lang === 'pt' ? 'Ainda não existem avaliações publicadas. Partilhe a sua experiência.' : lang === 'en' ? 'No reviews have been published yet. Share your experience.' : 'Aucun avis publié pour le moment. Partagez votre expérience.')}</p>
+                ? (lang === 'es' ? "No se han podido cargar las opiniones." : lang === 'pt' ? 'Não foi possível carregar as avaliações.' : lang === 'en' ? 'Reviews could not be loaded.' : 'Impossible de charger les avis.')
+                : (lang === 'es' ? "Aún no se han publicado opiniones. Comparta su experiencia." : lang === 'pt' ? 'Ainda não existem avaliações publicadas. Partilhe a sua experiência.' : lang === 'en' ? 'No reviews have been published yet. Share your experience.' : 'Aucun avis publié pour le moment. Partagez votre expérience.')}</p>
               {reviewsError && <button type="button" onClick={() => void fetchLiveReviews()} className="underline underline-offset-4">
-                {lang === 'pt' ? 'Tentar novamente' : lang === 'en' ? 'Try again' : 'Réessayer'}
+                {lang === 'es' ? "Volver a intentar" : lang === 'pt' ? 'Tentar novamente' : lang === 'en' ? 'Try again' : 'Réessayer'}
               </button>}
             </div>
           )}
@@ -265,7 +267,7 @@ export default function AvisPage() {
               const helpful = (helpfulCounts[review.id] || 0) + 4;
               const hasVoted = userVoted[review.id];
               const authorName = review.patientName || 'Utente';
-              const dateDisplay = review.createdAt ? new Date(review.createdAt).toLocaleDateString('pt-PT') : '';
+              const dateDisplay = review.createdAt ? new Date(review.createdAt).toLocaleDateString(lang === 'es' ? 'es-ES' : 'pt-PT') : '';
               const commentText = review.comment;
 
               return (
@@ -306,7 +308,7 @@ export default function AvisPage() {
                           <div className="font-serif text-sm font-bold text-[#1A1412] flex items-center gap-1.5">
                             <span>{authorName}</span>
                             {review.verified && (
-                              <span title="Paciente Verificado">
+                              <span title={legacyText("Paciente Verificado", lang)}>
                                 <IconShieldCheck size={15} className="text-[#6F8F72]" />
                               </span>
                             )}
@@ -369,14 +371,14 @@ export default function AvisPage() {
                       Digital Clínica • Lisboa
                     </span>
                     <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1A1412]">
-                      {lang === 'pt' ? 'Partilhar Avaliação' : lang === 'en' ? 'Submit Your Review' : 'Votre Avis'}
+                      {lang === 'es' ? "Enviar su opinión" : lang === 'pt' ? 'Partilhar Avaliação' : lang === 'en' ? 'Submit Your Review' : 'Votre Avis'}
                     </h3>
                   </div>
 
                   {/* Rating Selector */}
                   <div>
                     <label className="block text-xs font-bold text-[#1A1412] mb-1.5 text-center">
-                      {lang === 'pt' ? 'A Sua Classificação:' : lang === 'en' ? 'Your Rating:' : 'Votre Note :'}
+                      {lang === 'es' ? "Su valoración:" : lang === 'pt' ? 'A Sua Classificação:' : lang === 'en' ? 'Your Rating:' : 'Votre Note :'}
                     </label>
                     <div className="flex justify-center gap-1.5">
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -400,26 +402,26 @@ export default function AvisPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-[#1A1412] mb-1">
-                        {lang === 'pt' ? 'O Seu Nome *' : lang === 'en' ? 'Your Name *' : 'Votre Nom *'}
+                        {lang === 'es' ? "Su nombre *" : lang === 'pt' ? 'O Seu Nome *' : lang === 'en' ? 'Your Name *' : 'Votre Nom *'}
                       </label>
                       <input
                         type="text"
                         required
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
-                        placeholder="Ex: Beatriz Lima"
+                        placeholder={legacyText("Ex: Beatriz Lima", lang)}
                         className="w-full px-3.5 py-2 rounded-xl border border-[#E8E2D8] text-xs text-[#1A1412] focus:border-[#C49A3C] outline-none"
                       />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-[#1A1412] mb-1">
-                        {lang === 'pt' ? 'Localização' : lang === 'en' ? 'City / Location' : 'Ville'}
+                        {lang === 'es' ? "Ciudad / ubicación" : lang === 'pt' ? 'Localização' : lang === 'en' ? 'City / Location' : 'Ville'}
                       </label>
                       <input
                         type="text"
                         value={formLocation}
                         onChange={(e) => setFormLocation(e.target.value)}
-                        placeholder="Ex: Lisboa / Cascais"
+                        placeholder={legacyText("Ex: Lisboa / Cascais", lang)}
                         className="w-full px-3.5 py-2 rounded-xl border border-[#E8E2D8] text-xs text-[#1A1412] focus:border-[#C49A3C] outline-none"
                       />
                     </div>
@@ -428,7 +430,7 @@ export default function AvisPage() {
                   {/* Treatment Selector */}
                   <div>
                     <label className="block text-[11px] font-bold text-[#1A1412] mb-1">
-                      {lang === 'pt' ? 'Tratamento Realizado' : lang === 'en' ? 'Treatment Received' : 'Soin Réalisé'}
+                      {lang === 'es' ? "Tratamiento recibido" : lang === 'pt' ? 'Tratamento Realizado' : lang === 'en' ? 'Treatment Received' : 'Soin Réalisé'}
                     </label>
                     <select
                       required
@@ -436,7 +438,7 @@ export default function AvisPage() {
                       onChange={(e) => setFormService(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl border border-[#E8E2D8] text-xs text-[#1A1412] bg-white focus:border-[#C49A3C] outline-none"
                     >
-                      <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
+                      <option value="">{lang === 'es' ? "Elija un tratamiento" : lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
                         <option key={s.slug} value={s.slug}>
                           {getLocalizedText(s.name,lang)}
                         </option>
@@ -447,18 +449,18 @@ export default function AvisPage() {
                   {/* Comment */}
                   <div>
                     <label className="block text-[11px] font-bold text-[#1A1412] mb-1">
-                      {lang === 'pt' ? 'O Seu Testemunho *' : lang === 'en' ? 'Your Experience *' : 'Votre Témoignage *'}
+                      {lang === 'es' ? "Su experiencia *" : lang === 'pt' ? 'O Seu Testemunho *' : lang === 'en' ? 'Your Experience *' : 'Votre Témoignage *'}
                     </label>
                     <textarea
                       required
                       rows={3}
                       value={formComment}
                       onChange={(e) => setFormComment(e.target.value)}
-                      placeholder={lang === 'pt' ? 'Descreva os resultados e a sua experiência clínica...' : lang === 'en' ? 'Describe your results and clinical experience...' : 'Décrivez vos résultats...'}
+                      placeholder={lang === 'es' ? "Describa sus resultados y su experiencia en la clínica..." : lang === 'pt' ? 'Descreva os resultados e a sua experiência clínica...' : lang === 'en' ? 'Describe your results and clinical experience...' : 'Décrivez vos résultats...'}
                       className="w-full px-3.5 py-2 rounded-xl border border-[#E8E2D8] text-xs text-[#1A1412] focus:border-[#C49A3C] outline-none"
                     />
                     <div className="flex justify-between items-center mt-1 text-[10px] text-[#8A8078]">
-                      <span>{lang === 'pt' ? 'Mínimo 5 caracteres' : lang === 'en' ? 'Minimum 5 characters' : 'Minimum 5 caractères'}</span>
+                      <span>{lang === 'es' ? "Mínimo 5 caracteres" : lang === 'pt' ? 'Mínimo 5 caracteres' : lang === 'en' ? 'Minimum 5 characters' : 'Minimum 5 caractères'}</span>
                       <span className={formComment.trim().length > 0 && formComment.trim().length < 5 ? 'text-rose-600 font-semibold' : ''}>
                         {formComment.trim().length} / 5+
                       </span>
@@ -471,7 +473,7 @@ export default function AvisPage() {
                     className="w-full py-3 rounded-xl bg-[#C49A3C] hover:bg-[#E8C97A] text-[#1A1412] font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-60"
                   >
                     {submittingReview ? <IconLoader2 size={15} className="animate-spin" /> : <IconSend size={15} />}
-                    <span>{lang === 'pt' ? 'Submeter Avaliação' : lang === 'en' ? 'Submit Review' : 'Envoyer mon avis'}</span>
+                    <span>{lang === 'es' ? "Enviar opinión" : lang === 'pt' ? 'Submeter Avaliação' : lang === 'en' ? 'Submit Review' : 'Envoyer mon avis'}</span>
                   </button>
                 </form>
               ) : (
@@ -480,10 +482,10 @@ export default function AvisPage() {
                     <IconCheck size={28} />
                   </div>
                   <h3 className="font-serif text-xl font-bold text-[#1A1412] mb-2">
-                    {lang === 'pt' ? 'Obrigado pela sua Avaliação!' : lang === 'en' ? 'Thank You for Your Review!' : 'Merci pour votre avis !'}
+                    {lang === 'es' ? "¡Gracias por su opinión!" : lang === 'pt' ? 'Obrigado pela sua Avaliação!' : lang === 'en' ? 'Thank You for Your Review!' : 'Merci pour votre avis !'}
                   </h3>
                   <p className="text-xs text-[#6B6058]">
-                    {lang === 'pt'
+                    {lang === 'es' ? "Hemos recibido su opinión y se publicará tras la aprobación de la clínica. ¡Gracias!" : lang === 'pt'
                       ? 'O seu testemunho foi recebido e será publicado após aprovação da clínica. Obrigado!'
                       : lang === 'en'
                       ? 'Your review has been received and will be published after approval by the clinic. Thank you!'
@@ -532,7 +534,7 @@ export default function AvisPage() {
                   onClick={() => { playSoftClick(); setAlertDialog(null); }}
                   className="px-6 py-2.5 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold shadow-xs transition-colors touch-target"
                 >
-                  {alertDialog.confirmText || (lang === 'fr' ? 'Compris' : lang === 'en' ? 'Understood' : 'Entendido')}
+                  {alertDialog.confirmText || (lang === 'es' ? "Entendido" : lang === 'fr' ? 'Compris' : lang === 'en' ? 'Understood' : 'Entendido')}
                 </button>
               </div>
             </motion.div>
@@ -548,11 +550,11 @@ export default function AvisPage() {
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#E8C97A]" />
 
               <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-[#1A1412] mb-3">
-                {lang === 'pt' ? 'Pronta para Começar o Seu Tratamento?' : lang === 'en' ? 'Ready for Your Treatment?' : 'Prête à Vivre l\'Expérience ?'}
+                {lang === 'es' ? "¿Preparado para su tratamiento?" : lang === 'pt' ? 'Pronta para Começar o Seu Tratamento?' : lang === 'en' ? 'Ready for Your Treatment?' : 'Prête à Vivre l\'Expérience ?'}
               </h2>
 
               <p className="text-xs sm:text-sm md:text-base text-[#6B6058] max-w-lg mx-auto mb-8 leading-relaxed">
-                {lang === 'pt'
+                {lang === 'es' ? "Reserve su consulta de evaluación individual y descubra su programa de cuidados personalizado." : lang === 'pt'
                   ? 'Agende a sua consulta inicial de avaliação e descubra o plano personalizado para o seu corpo e postura.'
                   : lang === 'en'
                   ? 'Book your individual assessment consultation and discover your tailored care program.'

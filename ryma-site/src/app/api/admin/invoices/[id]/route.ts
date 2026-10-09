@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import type { PaymentMethod, InvoicePaymentStatus, CoverageType } from '@/types/admin';
 import { isJsonObject, invoiceUpdateError } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,7 +23,7 @@ export async function GET(
   const { id } = await params;
   const invoice = await dbGetInvoiceById(id);
   if (!invoice) {
-    return NextResponse.json({ error: 'Recibo não encontrado' }, { status: 404 });
+    return NextResponse.json({ error: localizeApiError('Recibo não encontrado', request) }, { status: 404 });
   }
 
   return NextResponse.json({ invoice }, { status: 200 });
@@ -39,21 +40,21 @@ export async function PUT(
   const { id } = await params;
   const existing = await dbGetInvoiceById(id);
   if (!existing) {
-    return NextResponse.json({ error: 'Recibo não encontrado' }, { status: 404 });
+    return NextResponse.json({ error: localizeApiError('Recibo não encontrado', request) }, { status: 404 });
   }
 
   let body: Record<string, any>;
   try {
     body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Invalid JSON body', request) }, { status: 400 });
   }
 
   const validationError = invoiceUpdateError(body);
-  if (validationError) return NextResponse.json({ error: validationError }, { status: 422 });
-  if (typeof body.patientName==='string' && body.patientName.trim()!==existing.patientName) return NextResponse.json({error:'The patient identity on an issued invoice cannot be changed.'},{status:422});
-  if (existing.paymentStatus === 'CANCELLED') return NextResponse.json({ error: 'Cancelled invoices cannot be edited' }, { status: 409 });
+  if (validationError) return NextResponse.json({ error: localizeApiError(validationError, request) }, { status: 422 });
+  if (typeof body.patientName==='string' && body.patientName.trim()!==existing.patientName) return NextResponse.json({error:localizeApiError('The patient identity on an issued invoice cannot be changed.', request)},{status:422});
+  if (existing.paymentStatus === 'CANCELLED') return NextResponse.json({ error: localizeApiError('Cancelled invoices cannot be edited', request) }, { status: 409 });
 
   const updated = await dbUpdateInvoice(id, {
     patientName: body.patientName !== undefined ? String(body.patientName).trim() : undefined,
@@ -82,7 +83,7 @@ export async function DELETE(
   const { id } = await params;
   const existing = await dbGetInvoiceById(id);
   if (!existing) {
-    return NextResponse.json({ error: 'Recibo não encontrado' }, { status: 404 });
+    return NextResponse.json({ error: localizeApiError('Recibo não encontrado', request) }, { status: 404 });
   }
 
   await dbDeleteInvoice(id);

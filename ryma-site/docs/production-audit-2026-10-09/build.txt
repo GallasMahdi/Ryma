@@ -1,0 +1,85 @@
+
+> ryma-site@0.1.0 build:audit
+> node scripts/build-isolated.cjs
+
+▲ Next.js 16.3.8 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 40ms
+- Experiments (use with caution):
+  · optimizePackageImports
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1761ms
+  Running TypeScript ...
+  Finished TypeScript in 4.1s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/23) ...
+  Generating static pages using 7 workers (5/23)
+  Generating static pages using 7 workers (11/23)
+  Generating static pages using 7 workers (17/23)
+✓ Generating static pages using 7 workers (23/23) in 461ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /a-propos
+├ ƒ /admin
+├ ƒ /admin/login
+├ ƒ /api/admin/analytics
+├ ƒ /api/admin/analytics/lock
+├ ƒ /api/admin/analytics/password
+├ ƒ /api/admin/analytics/verify
+├ ƒ /api/admin/appointments
+├ ƒ /api/admin/appointments/[id]
+├ ƒ /api/admin/appointments/multiple
+├ ƒ /api/admin/appointments/multiple/preview
+├ ƒ /api/admin/events
+├ ƒ /api/admin/export
+├ ƒ /api/admin/invoices
+├ ƒ /api/admin/invoices/[id]
+├ ƒ /api/admin/invoices/export
+├ ƒ /api/admin/login
+├ ƒ /api/admin/logout
+├ ƒ /api/admin/me
+├ ƒ /api/admin/patients
+├ ƒ /api/admin/patients/[id]/sessions
+├ ƒ /api/admin/practitioners
+├ ƒ /api/admin/prescriptions
+├ ƒ /api/admin/prescriptions/[id]
+├ ƒ /api/admin/reviews
+├ ƒ /api/admin/slots
+├ ƒ /api/admin/slots/bulk
+├ ƒ /api/admin/treatments
+├ ƒ /api/admin/whatsapp
+├ ƒ /api/appointments
+├ ƒ /api/contact
+├ ƒ /api/health
+├ ƒ /api/practitioners
+├ ƒ /api/reviews
+├ ƒ /api/slots
+├ ƒ /api/treatments
+├ ƒ /api/whatsapp/jobs
+├ ƒ /api/whatsapp/webhook
+├ ○ /apple-icon.png
+├ ƒ /avis
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ƒ /conditions-utilisation
+├ ƒ /confidentialite
+├ ƒ /contact
+├ ○ /icon.png
+├ ○ /icon.svg
+├ ƒ /mentions-legales
+├ ƒ /rendez-vous
+├ ○ /robots.txt
+├ ƒ /services
+├ ƒ /services/[slug]
+├ ƒ /sitemap.xml
+└ ƒ /tarifs
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

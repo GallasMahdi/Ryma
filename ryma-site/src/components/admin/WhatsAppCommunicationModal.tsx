@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { useServiceLabels } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useMemo } from 'react';
@@ -68,7 +70,7 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
       const parts = date.split('-');
       if (parts.length === 3) {
         const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-        return d.toLocaleDateString(lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-GB' : 'pt-PT', {
+        return d.toLocaleDateString(lang === 'es' ? "es-ES" : lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-GB' : 'pt-PT', {
           weekday: 'short',
           day: 'numeric',
           month: 'long',
@@ -82,6 +84,15 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
 
   // Pre-configured localized templates
   const templates = useMemo(() => {
+    if (lang === 'es') {
+      return [
+        { id: 'reminder', title: '📅 Recordatorio de cita', text: `Hola, ${name}:\n\nLe recordamos su cita de ${service} el ${formattedHumanDate || date} a las ${time} en Digital Clínica, Lisboa.\n\n📍 Ubicación: Lisboa, Portugal\nℹ️ Si necesita cambiarla, avísenos con al menos 24 horas de antelación.\n\n¡Hasta pronto!` },
+        { id: 'confirmation', title: '✅ Confirmación de reserva', text: `Hola, ${name}:\n\nSu cita de ${service} el ${formattedHumanDate || date} a las ${time} se ha confirmado correctamente.\n\n¡Esperamos darle la bienvenida en Digital Clínica, Lisboa!` },
+        { id: 'aftercare_kine', title: '🏃‍♂️ Cuidados tras la fisioterapia', text: `Hola, ${name}:\n\n¡Esperamos que se encuentre bien después de su sesión de ${service}!\n\n💡 Consejos de recuperación:\n• Mantenga una buena hidratación\n• Aplique frío o calor según las indicaciones de su profesional\n• Realice los estiramientos suaves recomendados\n\nContacte con nosotros si tiene alguna duda.` },
+        { id: 'aftercare_slimming', title: '✨ Cuidados tras el tratamiento estético', text: `Hola, ${name}:\n\n¡Gracias por visitar hoy Digital Clínica para su tratamiento de ${service}!\n\n💧 Para optimizar los resultados:\n• Beba abundante agua (al menos 1,5 l) para favorecer el drenaje\n• Mantenga comidas ligeras y equilibradas hoy\n\n¡Que tenga un buen día!` },
+        { id: 'custom', title: '✍️ Mensaje personalizado', text: `Hola, ${name}:\n\nEn relación con su visita a Digital Clínica:\n\n` },
+      ];
+    }
     if (lang === 'fr') {
       return [
         {
@@ -233,18 +244,16 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-sm sm:text-base text-white">
-                  {lang === 'fr'
+                  {lang === 'es' ? "Centro de comunicación por WhatsApp" : lang === 'fr'
                     ? 'Centre de Communication WhatsApp'
                     : lang === 'en'
                       ? 'WhatsApp Communication Hub'
                       : 'Central de Comunicação WhatsApp'}
                 </h3>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#25D366]/20 text-[#25D366] font-bold border border-[#25D366]/30">
-                  1-Click Direct
-                </span>
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#25D366]/20 text-[#25D366] font-bold border border-[#25D366]/30">{legacyText("1-Click Direct", lang)}</span>
               </div>
               <p className="text-xs text-slate-300">
-                {name} • <span className="font-mono text-slate-200">{phoneValidation.formatted || rawPhone || 'Sem telefone'}</span>
+                {name} • <span className="font-mono text-slate-200">{phoneValidation.formatted || rawPhone || (lang === 'es' ? 'Sin teléfono' : 'Sem telefone')}</span>
               </p>
             </div>
           </div>
@@ -263,19 +272,19 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
           {/* Patient / Appointment Context Banner */}
           <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
             <div>
-              <div className="text-[10px] uppercase text-[#64748B] font-semibold">{lang === 'fr' ? 'Patient' : lang === 'en' ? 'Patient' : 'Utente'}</div>
+              <div className="text-[10px] uppercase text-[#64748B] font-semibold">{lang === 'es' ? "Paciente" : lang === 'fr' ? 'Patient' : lang === 'en' ? 'Patient' : 'Utente'}</div>
               <div className="font-medium text-[#0F172A] truncate">{name}</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase text-[#64748B] font-semibold">{lang === 'fr' ? 'Prestation' : lang === 'en' ? 'Service' : 'Serviço'}</div>
+              <div className="text-[10px] uppercase text-[#64748B] font-semibold">{lang === 'es' ? "Servicio" : lang === 'fr' ? 'Prestation' : lang === 'en' ? 'Service' : 'Serviço'}</div>
               <div className="font-medium text-[#0F172A] truncate">{service}</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase text-[#64748B] font-semibold">{lang === 'fr' ? 'Date' : lang === 'en' ? 'Date' : 'Data'}</div>
+              <div className="text-[10px] uppercase text-[#64748B] font-semibold">{lang === 'es' ? "Fecha" : lang === 'fr' ? 'Date' : lang === 'en' ? 'Date' : 'Data'}</div>
               <div className="font-medium text-[#0F172A]">{date || 'N/A'}</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase text-[#64748B] font-semibold">{lang === 'fr' ? 'Heure' : lang === 'en' ? 'Time' : 'Horário'}</div>
+              <div className="text-[10px] uppercase text-[#64748B] font-semibold">{lang === 'es' ? "Hora" : lang === 'fr' ? 'Heure' : lang === 'en' ? 'Time' : 'Horário'}</div>
               <div className="font-medium text-[#0F172A]">{time || 'N/A'}</div>
             </div>
           </div>
@@ -283,7 +292,7 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
           {/* Template Selector Pills */}
           <div>
             <label className="block text-[11px] font-semibold text-[#475569] uppercase tracking-wider mb-2">
-              {lang === 'fr' ? 'Modèles Préconfigurés' : lang === 'en' ? 'Quick Message Templates' : 'Modelos de Mensagem'}
+              {lang === 'es' ? "Plantillas de mensajes rápidos" : lang === 'fr' ? 'Modèles Préconfigurés' : lang === 'en' ? 'Quick Message Templates' : 'Modelos de Mensagem'}
             </label>
             <div className="flex flex-wrap gap-1.5">
               {templates.map((tpl) => (
@@ -307,11 +316,10 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="block text-[11px] font-semibold text-[#475569] uppercase tracking-wider">
-                {lang === 'fr' ? 'Aperçu & Personnalisation' : lang === 'en' ? 'Message Preview & Customization' : 'Pré-visualização e Edição'}
+                {lang === 'es' ? "Vista previa y personalización del mensaje" : lang === 'fr' ? 'Aperçu & Personnalisation' : lang === 'en' ? 'Message Preview & Customization' : 'Pré-visualização e Edição'}
               </label>
               <span className="text-[11px] text-[#94A3B8]">
-                {customMessage.length} caracteres
-              </span>
+                {customMessage.length}{" "}{legacyText("caracteres", lang)}</span>
             </div>
 
             <div className="relative rounded-2xl bg-[#EFEAE2] p-3.5 border border-[#D9D2C7] shadow-inner">
@@ -321,7 +329,7 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
                   onChange={(e) => setCustomMessage(e.target.value)}
                   rows={6}
                   className="w-full bg-transparent resize-y border-none focus:outline-none text-[#111B21] font-sans text-xs sm:text-sm leading-relaxed"
-                  placeholder="Escreva a sua mensagem..."
+                  placeholder={legacyText("Escreva a sua mensagem...", lang)}
                 />
                 <div className="text-[10px] text-[#667781] text-right mt-1 font-mono">
                   {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ✓✓
@@ -335,7 +343,7 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
             <div className="p-3 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] text-[#DC2626] text-xs flex items-center gap-2">
               <span>⚠️</span>
               <span>
-                {lang === 'fr'
+                {lang === 'es' ? "Falta el teléfono del paciente o no es válido. Puede copiar el texto del mensaje." : lang === 'fr'
                   ? 'Le numéro de téléphone du patient semble incomplet. Vous pouvez quand même copier le texte.'
                   : lang === 'en'
                     ? 'Patient phone number is missing or invalid. You can still copy the message text.'
@@ -353,7 +361,7 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
             className="w-full sm:w-auto px-4 py-2 rounded-xl border border-[#CBD5E1] bg-white text-[#334155] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors text-xs font-medium flex items-center justify-center gap-1.5 shadow-2xs"
           >
             {copied ? <IconCheck size={16} className="text-[#22C55E]" /> : <IconCopy size={16} />}
-            <span>{copied ? (lang === 'fr' ? 'Copié !' : lang === 'en' ? 'Copied!' : 'Copiado!') : (lang === 'fr' ? 'Copier le texte' : lang === 'en' ? 'Copy Text' : 'Copiar Mensagem')}</span>
+            <span>{copied ? (lang === 'es' ? "¡Copiado!" : lang === 'fr' ? 'Copié !' : lang === 'en' ? 'Copied!' : 'Copiado!') : (lang === 'es' ? "Copiar texto" : lang === 'fr' ? 'Copier le texte' : lang === 'en' ? 'Copy Text' : 'Copiar Mensagem')}</span>
           </button>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -362,7 +370,7 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
               onClick={onClose}
               className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
             >
-              {lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar'}
+              {lang === 'es' ? "Cancelar" : lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar'}
             </button>
 
             <button
@@ -373,7 +381,7 @@ export const WhatsAppCommunicationModal = React.memo(function WhatsAppCommunicat
             >
               <IconBrandWhatsapp size={18} />
               <span>
-                {lang === 'fr'
+                {lang === 'es' ? "Abrir WhatsApp" : lang === 'fr'
                   ? 'Ouvrir dans WhatsApp'
                   : lang === 'en'
                     ? 'Launch WhatsApp'

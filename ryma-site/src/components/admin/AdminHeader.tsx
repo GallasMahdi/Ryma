@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React from 'react';
 import Link from 'next/link';
@@ -47,8 +49,8 @@ export const AdminHeader = React.memo(function AdminHeader({
   onOpenCommandPalette,
   onOpenHelpdesk,
 }: AdminHeaderProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   return (
     <header className="min-h-16 bg-[#FFFDF8] lg:bg-white border-b border-[#E8E1D3] lg:border-[#E2E8F0] px-3.5 sm:px-5 lg:px-6 flex items-center justify-between shrink-0 z-30 sticky top-0 font-sans gap-3 pt-[env(safe-area-inset-top,0px)]">
@@ -60,11 +62,11 @@ export const AdminHeader = React.memo(function AdminHeader({
             onClick={onToggleSidebar}
             title={
               isSidebarCollapsed
-                ? txt('Agrandir la barre latérale (Ctrl+B)', 'Expand sidebar (Ctrl+B)', 'Expandir menu lateral (Ctrl+B)')
-                : txt('Réduire la barre latérale (Ctrl+B)', 'Collapse sidebar (Ctrl+B)', 'Recolher menu lateral (Ctrl+B)')
+                ? txt('Agrandir la barre latérale (Ctrl+B)', 'Expand sidebar (Ctrl+B)', 'Expandir menu lateral (Ctrl+B)', "Expandir barra lateral (Ctrl+B)")
+                : txt('Réduire la barre latérale (Ctrl+B)', 'Collapse sidebar (Ctrl+B)', 'Recolher menu lateral (Ctrl+B)', "Contraer barra lateral (Ctrl+B)")
             }
             className="hidden lg:flex items-center justify-center p-2 rounded-xl border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] active:scale-95 transition-all touch-target shrink-0"
-            aria-label="Toggle sidebar drawer"
+            aria-label={legacyText("Toggle sidebar drawer", lang)}
           >
             {isSidebarCollapsed ? (
               <IconLayoutSidebarLeftExpand size={18} />
@@ -84,7 +86,7 @@ export const AdminHeader = React.memo(function AdminHeader({
           </span>
           <span className="text-[#CBD5E1] hidden lg:inline">/</span>
           <span className="text-xs text-[#64748B] font-medium hidden lg:inline truncate">
-            {txt('Administration Clinique', 'Clinic Management', 'Gestão Clínica')}
+            {txt('Administration Clinique', 'Clinic Management', 'Gestão Clínica', "Gestión de la clínica")}
           </span>
 
           {/* Live Real-time SSE Connection Indicator */}
@@ -94,7 +96,7 @@ export const AdminHeader = React.memo(function AdminHeader({
                 ? 'bg-[#F0FDF4] border-[#BBF7D0] text-[#166534]'
                 : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#94A3B8]'
             }`}
-            title={isLive ? txt('Connexion en direct active', 'Live real-time sync active', 'Sincronização em direto ativa') : txt('Hors ligne', 'Offline', 'Offline')}
+            title={isLive ? txt('Connexion en direct active', 'Live real-time sync active', 'Sincronização em direto ativa', "Sincronización en tiempo real activa") : txt('Hors ligne', 'Offline', 'Offline', "Sin conexión")}
           >
             <span
               className={`w-1.5 h-1.5 rounded-full shrink-0 ${
@@ -102,7 +104,7 @@ export const AdminHeader = React.memo(function AdminHeader({
               }`}
             />
             <span className="hidden sm:inline font-semibold">
-              {isLive ? txt('Direct', 'Live', 'Direto') : 'Offline'}
+              {isLive ? txt('Direct', 'Live', 'Direto', "En directo") : 'Offline'}
             </span>
           </div>
         </div>
@@ -114,12 +116,12 @@ export const AdminHeader = React.memo(function AdminHeader({
           type="button"
           onClick={onOpenCommandPalette}
           className="hidden xl:flex items-center justify-between gap-3 px-3.5 py-1.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] hover:bg-[#F1F5F9] hover:border-[#94A3B8] text-xs text-[#64748B] hover:text-[#0F172A] transition-all shadow-2xs max-w-md w-full min-w-0"
-          title={txt('Ouvrir la palette de commandes (Ctrl+K)', 'Open Command Palette (Ctrl+K)', 'Abrir Paleta de Comandos (Ctrl+K)')}
+          title={txt('Ouvrir la palette de commandes (Ctrl+K)', 'Open Command Palette (Ctrl+K)', 'Abrir Paleta de Comandos (Ctrl+K)', "Abrir comandos (Ctrl+K)")}
         >
           <div className="flex items-center gap-2 truncate">
             <IconSearch size={15} className="text-[#94A3B8] shrink-0" />
             <span className="truncate">
-              {txt('Rechercher patient, action...', 'Search patient, action...', 'Pesquisar utente, ação...')}
+              {txt('Rechercher patient, action...', 'Search patient, action...', 'Pesquisar utente, ação...', "Buscar paciente, acción...")}
             </span>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -138,7 +140,7 @@ export const AdminHeader = React.memo(function AdminHeader({
             type="button"
             onClick={onOpenCommandPalette}
             className="xl:hidden p-2.5 rounded-xl border border-[#E8E1D3] text-[#766E60] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors touch-target flex items-center justify-center"
-            aria-label={txt('Rechercher', 'Search', 'Pesquisar')}
+            aria-label={txt('Rechercher', 'Search', 'Pesquisar', "Buscar")}
           >
             <IconSearch size={16} />
           </button>
@@ -149,7 +151,7 @@ export const AdminHeader = React.memo(function AdminHeader({
           target="_blank"
           download
           className="hidden lg:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] text-[#334155] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors"
-          title={txt('Exporter les rendez-vous en CSV', 'Export appointments to CSV', 'Exportar consultas em CSV')}
+          title={txt('Exporter les rendez-vous en CSV', 'Export appointments to CSV', 'Exportar consultas em CSV', "Exportar citas a CSV")}
         >
           <IconFileSpreadsheet size={15} className="text-[#64748B]" />
           <span>CSV</span>
@@ -161,10 +163,10 @@ export const AdminHeader = React.memo(function AdminHeader({
             type="button"
             onClick={onOpenHelpdesk}
             className="hidden lg:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-[#C49A3C]/40 bg-[#FAFAF8] text-[#9A7428] hover:bg-[#C49A3C]/10 hover:text-[#1A1412] transition-colors shadow-2xs"
-            title={txt('Assistance & Helpdesk Clinique', 'Clinic Support & Helpdesk', 'Suporte Técnico & Helpdesk')}
+            title={txt('Assistance & Helpdesk Clinique', 'Clinic Support & Helpdesk', 'Suporte Técnico & Helpdesk', "Asistencia de la clínica")}
           >
             <IconLifebuoy size={15} className="text-[#C49A3C]" />
-            <span className="hidden xl:inline">{txt('Support', 'Helpdesk', 'Ajuda')}</span>
+            <span className="hidden xl:inline">{txt('Support', 'Helpdesk', 'Ajuda', "Asistencia")}</span>
           </button>
         )}
 
@@ -172,7 +174,7 @@ export const AdminHeader = React.memo(function AdminHeader({
         <button
           onClick={onRefresh}
           disabled={loadingAppointments}
-          title={txt('Actualiser', 'Refresh', 'Atualizar')}
+          title={txt('Actualiser', 'Refresh', 'Atualizar', "Actualizar")}
           className="p-2 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] active:scale-95 transition-all touch-target hidden lg:flex items-center justify-center"
         >
           <IconRefresh
@@ -186,11 +188,11 @@ export const AdminHeader = React.memo(function AdminHeader({
           <button
             onClick={onOpenMultipleSessions}
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3 sm:py-2 rounded-lg bg-white border border-[#CBD5E1] hover:bg-[#F1F5F9] text-[#0F172A] font-medium text-xs shadow-2xs transition-all touch-target"
-            title={txt('Planifier des séances multiples récurrentes', 'Schedule multiple recurring sessions', 'Marcar múltiplas sessões recorrentes')}
+            title={txt('Planifier des séances multiples récurrentes', 'Schedule multiple recurring sessions', 'Marcar múltiplas sessões recorrentes', "Programar varias sesiones periódicas")}
           >
             <IconCalendarRepeat size={15} className="text-[#0F172A]" />
             <span className="hidden xl:inline">
-              {txt('Séances Multiples', 'Multiple Sessions', 'Múltiplas Sessões')}
+              {txt('Séances Multiples', 'Multiple Sessions', 'Múltiplas Sessões', "Varias sesiones")}
             </span>
           </button>
         )}
@@ -198,12 +200,12 @@ export const AdminHeader = React.memo(function AdminHeader({
         {/* New Appointment Primary Button */}
         <button
           onClick={onOpenAddModal}
-          aria-label={txt('Nouveau RDV', 'New appointment', 'Nova Consulta')}
+          aria-label={txt('Nouveau RDV', 'New appointment', 'Nova Consulta', "Nueva cita")}
           className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl lg:rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs shadow-xs hover:shadow transition-all touch-target"
         >
           <IconPlus size={16} />
           <span className="hidden xs:inline sm:inline">
-            {txt('Nouveau RDV', 'New Appt', 'Nova Consulta')}
+            {txt('Nouveau RDV', 'New Appt', 'Nova Consulta', "Nueva cita")}
           </span>
         </button>
 
@@ -214,9 +216,9 @@ export const AdminHeader = React.memo(function AdminHeader({
           href="/"
           target="_blank"
           className="hidden lg:inline-flex items-center gap-1 text-xs text-[#64748B] hover:text-[#0F172A] px-2 py-1.5 rounded-lg hover:bg-[#F8FAFC] transition-colors font-medium"
-          title={txt('Voir le site public', 'View public website', 'Ver site público')}
+          title={txt('Voir le site public', 'View public website', 'Ver site público', "Ver sitio web público")}
         >
-          <span>{txt('Site', 'Site', 'Site')}</span>
+          <span>{txt('Site', 'Site', 'Site', "Sitio web")}</span>
           <IconExternalLink size={13} />
         </Link>
 
@@ -224,7 +226,7 @@ export const AdminHeader = React.memo(function AdminHeader({
         <button
           onClick={toggleLang}
           className="text-xs px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] text-[#334155] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors font-semibold uppercase touch-target hidden lg:flex items-center justify-center"
-          title={txt('Changer de langue', 'Switch language', 'Mudar idioma')}
+          title={txt('Changer de langue', 'Switch language', 'Mudar idioma', "Cambiar idioma")}
         >
           {lang}
         </button>
@@ -233,11 +235,11 @@ export const AdminHeader = React.memo(function AdminHeader({
         <button
           onClick={onLogout}
           className="hidden lg:inline-flex items-center gap-1 text-xs text-[#991B1B] hover:text-[#7F1D1D] px-2.5 py-1.5 rounded-lg hover:bg-[#FEE2E2]/50 transition-colors font-medium"
-          title={txt('Déconnexion', 'Sign Out', 'Terminar Sessão')}
+          title={txt('Déconnexion', 'Sign Out', 'Terminar Sessão', "Cerrar sesión")}
         >
           <IconLock size={14} />
           <span className="hidden lg:inline">
-            {txt('Quitter', 'Logout', 'Sair')}
+            {txt('Quitter', 'Logout', 'Sair', "Cerrar sesión")}
           </span>
         </button>
       </div>

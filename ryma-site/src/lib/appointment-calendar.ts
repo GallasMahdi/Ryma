@@ -36,7 +36,7 @@ function calendarDates(event: AppointmentCalendarEvent) {
 }
 
 function eventTitle(event: AppointmentCalendarEvent) {
-  const label = event.lang === 'pt' ? 'Consulta' : event.lang === 'fr' ? 'Rendez-vous' : 'Appointment';
+  const label = event.lang === 'es' ? "Cita" : event.lang === 'pt' ? 'Consulta' : event.lang === 'fr' ? 'Rendez-vous' : 'Appointment';
   return `${label}: ${event.service} — Digital Clínica`;
 }
 

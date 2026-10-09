@@ -1,3 +1,4 @@
+import type { Lang } from '@/lib/locales';
 import { googleCalendarUrl } from '@/lib/appointment-calendar';
 import nodemailer from 'nodemailer';
 import { getTreatments } from '@/lib/treatments';
@@ -20,6 +21,20 @@ interface AppointmentData {
   notes?: string | null;
   coverageType?: string | null;
   coverageProvider?: string | null;
+}
+
+/** Contact success means the configured SMTP server accepted the message. */
+export async function sendContactMessage(input: {name:string;email:string;phone:string;subject:string;message:string}, lang: Lang = 'en'): Promise<boolean> {
+  const transporter=getTransporter(),recipient=process.env.ADMIN_NOTIFICATION_EMAIL;
+  if(!transporter||!recipient)return false;
+  try {
+    const result=await transporter.sendMail({
+      from:{name:SITE.name,address:process.env.SMTP_USER!},to:recipient,replyTo:input.email,
+      subject:lang === 'es' ? `Contacto de la clínica: ${input.subject || 'Información'}` : `Clinic contact: ${input.subject||'Information'}`,
+      text:lang === 'es' ? `Nombre: ${input.name}\nCorreo electrónico: ${input.email}\nTeléfono: ${input.phone}\n\n${input.message}` : `Name: ${input.name}\nEmail: ${input.email}\nPhone: ${input.phone}\n\n${input.message}`,
+    });
+    return result.accepted.length>0;
+  }catch{return false;}finally{transporter.close();}
 }
 
 function escapeHtml(str: unknown): string {
@@ -50,6 +65,9 @@ function getTransporter() {
     host,
     port,
     secure,
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
     auth: {
       user,
       pass,
@@ -64,7 +82,7 @@ function formatHumanDate(dateStr: string, lang = 'en'): string {
   try {
     const [year, month, day] = dateStr.split('-').map(Number);
     const d = new Date(year, month - 1, day, 12, 0, 0);
-    const locale = lang === 'pt' ? 'pt-PT' : lang === 'fr' ? 'fr-FR' : 'en-US';
+    const locale = lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'fr' ? 'fr-FR' : 'en-US';
     return d.toLocaleDateString(locale, {
       weekday: 'long',
       day: 'numeric',
@@ -79,11 +97,37 @@ function formatHumanDate(dateStr: string, lang = 'en'): string {
 /**
  * Generate 1-Click Google Calendar URL
  */
-function getGoogleCalendarUrl(appointment: AppointmentData, serviceName: string): string {
-  return googleCalendarUrl({service:serviceName,date:appointment.date,time:appointment.startTime,duration:appointment.durationMinutes??30,location:SITE.address.en||SITE.address.pt||'Lisboa, Portugal',description:[appointment.status==='PENDING'?'Booking request pending confirmation':'Clinic appointment',appointment.practitionerName||'',SITE.phone].join(' · '),lang:'en',uid:appointment.id||'booking'});
+function getGoogleCalendarUrl(appointment: AppointmentData, serviceName: string, lang: 'pt' | 'en' | 'fr' | 'es'): string {
+  const pending = {pt:'Pedido de consulta pendente de confirmação',en:'Booking request pending confirmation',fr:'Demande de rendez-vous en attente de confirmation',es:'Solicitud de cita pendiente de confirmación'};
+  const confirmed = {pt:'Consulta na clínica',en:'Clinic appointment',fr:'Rendez-vous à la clinique',es:'Cita en la clínica'};
+  return googleCalendarUrl({service:serviceName,date:appointment.date,time:appointment.startTime,duration:appointment.durationMinutes??30,location:SITE.address[lang]||SITE.address.pt||'Lisboa, Portugal',description:[appointment.status==='PENDING'?pending[lang]:confirmed[lang],appointment.practitionerName||'',SITE.phone].join(' · '),lang,uid:appointment.id||'booking'});
 }
 
 const EMAIL_TRANSLATIONS = {
+    es: {
+    tagline: "Clínica de fisioterapia y estética avanzada",
+    badge: "✓ Cita confirmada",
+    greeting: (name: string) => `Hola, ${escapeHtml(name)}:`,
+    intro: "Su cita en Digital Clínica, Lisboa, se ha programado correctamente. A continuación encontrará los datos de su cita y las indicaciones para llegar.",
+    detailsTitle: "Detalles de la cita",
+    treatment: "Tratamiento",
+    durationPrice: "Duración y precio",
+    date: "Fecha",
+    time: "Hora",
+    locationTitle: "📍 Lugar de la consulta",
+    openMaps: "→ Abrir ruta en Google Maps",
+    tipsTitle: "💡 Consejos para su cita:",
+    tip1: "Use ropa cómoda y flexible.",
+    tip2: "Traiga las prescripciones médicas, los informes de derivación o las pruebas de imagen recientes que tenga.",
+    tip3: "Llegue 5 minutos antes de la hora de su cita.",
+    addToCalendar: "📅 Añadir a Google Calendar",
+    whatsappHelp: "💬 ¿Tiene alguna pregunta? Contacte por WhatsApp",
+    footerName: "Digital Clínica — Fisioterapia y estética avanzada",
+    footerPhone: "Teléfono",
+    footerDisclaimer: "Este es un correo automático de confirmación. Para cambiar o cancelar su sesión, contacte con nosotros con al menos 24 horas de antelación.",
+    subject: (service: string, date: string, time: string) => `Confirmación de cita — ${service} (${date} a las ${time})`,
+    fromName: "Digital Clínica — Fisioterapia y cuidados",
+  },
   pt: {
     tagline: 'Clínica de Fisioterapia & Estética Avançada',
     badge: '✓ Consulta Confirmada',
@@ -162,24 +206,24 @@ const EMAIL_TRANSLATIONS = {
  * Build Luxury Responsive HTML Email Template
  */
 async function buildPatientConfirmationHtml(appointment: AppointmentData, lang = 'pt') {
-  const normLang = (lang === 'fr' || lang === 'en' || lang === 'pt') ? lang : 'pt';
+  const normLang = (lang === 'fr' || lang === 'en' || lang === 'pt' || lang === 'es') ? lang : 'pt';
   const pending=appointment.status==='PENDING';
   const t = {...EMAIL_TRANSLATIONS[normLang],...(pending?{
-    badge: normLang==='pt'?'Pedido recebido':normLang==='fr'?'Demande reçue':'Booking received',
-    intro: normLang==='pt'?'Recebemos o seu pedido de consulta. Aguarde a confirmação da clínica.':normLang==='fr'?'Votre demande a été reçue. Veuillez attendre la confirmation du cabinet.':'We received your booking request. Please wait for the clinic to confirm.',
+    badge: normLang === 'es' ? "Reserva recibida" : normLang==='pt'?'Pedido recebido':normLang==='fr'?'Demande reçue':'Booking received',
+    intro: normLang === 'es' ? "Hemos recibido su solicitud de reserva. Espere la confirmación de la clínica." : normLang==='pt'?'Recebemos o seu pedido de consulta. Aguarde a confirmação da clínica.':normLang==='fr'?'Votre demande a été reçue. Veuillez attendre la confirmation du cabinet.':'We received your booking request. Please wait for the clinic to confirm.',
   }:{})};
   const current = (await getTreatments()).find(s => s.slug === appointment.service);
   const serviceObj = appointment.serviceNameJson ? {name:JSON.parse(appointment.serviceNameJson),price:(appointment.servicePriceCents??0)/100} : current;
   const serviceName = serviceObj ? getLocalizedText(serviceObj.name, normLang) : appointment.service;
-  const servicePrice = serviceObj?.price != null ? `${serviceObj.price} €` : (normLang === 'pt' ? 'Sob Consulta' : normLang === 'fr' ? 'Sur Devis' : 'Custom Quote');
+  const servicePrice = serviceObj?.price != null ? `${serviceObj.price} €` : (normLang === 'es' ? "Presupuesto personalizado" : normLang === 'pt' ? 'Sob Consulta' : normLang === 'fr' ? 'Sur Devis' : 'Custom Quote');
   const durationMinutes=appointment.durationMinutes??current?.durationMinutes??30;
   const duration = String(durationMinutes)+' min';
   const formattedDate = formatHumanDate(appointment.date, normLang);
-  const googleCalendarUrl = getGoogleCalendarUrl({...appointment,durationMinutes}, serviceName);
-  const clinicAddress = SITE.address[normLang] || SITE.address.pt || 'Avenida da Liberdade 120, 1250-146 Lisboa, Portugal';
+  const googleCalendarUrl = getGoogleCalendarUrl({...appointment,durationMinutes}, serviceName, normLang);
+  const clinicAddress = SITE.address[normLang] || SITE.address.pt || '';
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinicAddress)}`;
   const whatsappUrl = `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(
-    normLang === 'pt'
+    normLang === 'es' ? `Hola, Digital Clínica. He reservado una sesión de ${serviceName} el ${appointment.date} a las ${appointment.startTime}.` : normLang === 'pt'
       ? `Olá Digital Clínica, agendei uma consulta para ${serviceName} no dia ${appointment.date} às ${appointment.startTime}.`
       : normLang === 'fr'
       ? `Bonjour Digital Clínica, j'ai réservé un soin pour ${serviceName} le ${appointment.date} à ${appointment.startTime}.`
@@ -489,9 +533,9 @@ export async function sendAppointmentConfirmationEmail(
     return { success: true, skipped: true };
   }
 
-  const normLang = (lang === 'fr' || lang === 'en' || lang === 'pt') ? lang : 'pt';
+  const normLang = (lang === 'fr' || lang === 'en' || lang === 'pt' || lang === 'es') ? lang : 'pt';
   const pending=appointment.status==='PENDING';
-  const t = {...EMAIL_TRANSLATIONS[normLang],...(pending?{badge:normLang==='pt'?'Pedido recebido':normLang==='fr'?'Demande reçue':'Booking received'}:{})};
+  const t = {...EMAIL_TRANSLATIONS[normLang],...(pending?{badge:normLang === 'es' ? "Reserva recibida" : normLang==='pt'?'Pedido recebido':normLang==='fr'?'Demande reçue':'Booking received'}:{})};
   const current = (await getTreatments()).find(s => s.slug === appointment.service);
   const serviceObj = appointment.serviceNameJson ? {name:JSON.parse(appointment.serviceNameJson),price:(appointment.servicePriceCents??0)/100} : current;
   const serviceName = serviceObj ? getLocalizedText(serviceObj.name, normLang) : appointment.service;
@@ -521,7 +565,7 @@ export async function sendAppointmentConfirmationEmail(
  * Send Clinic Owner / Admin New Booking Alert (English)
  */
 export async function sendAdminNewBookingNotification(
-  appointment: AppointmentData
+  appointment: AppointmentData, lang: Lang = 'en'
 ): Promise<{ success: boolean; error?: string; skipped?: boolean }> {
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.SMTP_USER;
   if (!adminEmail) return { success: true, skipped: true };
@@ -535,37 +579,38 @@ export async function sendAdminNewBookingNotification(
   const fromName = process.env.SMTP_FROM_NAME || 'Digital Clínica System';
   const fromAddress = process.env.SMTP_USER;
 
-  const subject = `🔔 New Online Booking: ${appointment.patientName} (${appointment.date} at ${appointment.startTime})`;
+  const subject = lang === 'es' ? `Nueva cita: ${appointment.patientName} (${appointment.date} a las ${appointment.startTime})` : `🔔 New Online Booking: ${appointment.patientName} (${appointment.date} at ${appointment.startTime})`;
 
+  const copy = (en: string, es: string) => lang === 'es' ? es : en;
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #E2E8F0; border-radius: 14px; background-color: #FFFFFF;">
-      <h2 style="color: #0F172A; margin-top: 0; font-size: 20px;">New Online Appointment Received!</h2>
-      <p style="color: #475569; font-size: 14px;">A patient has just booked an appointment on the clinic website:</p>
+      <h2 style="color: #0F172A; margin-top: 0; font-size: 20px;">${copy("New Online Appointment Received!","Nueva solicitud de cita recibida")}</h2>
+      <p style="color: #475569; font-size: 14px;">${copy("A patient has just booked an appointment on the clinic website:","Un paciente acaba de solicitar una cita en la página de la clínica:")}</p>
 
       <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
         <tr style="border-bottom: 1px solid #F1F5F9;">
-          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Patient</td>
+          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">${copy("Patient","Paciente")}</td>
           <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${escapeHtml(appointment.patientName)}</td>
         </tr>
         <tr style="border-bottom: 1px solid #F1F5F9;">
-          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Phone</td>
+          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">${copy("Phone","Teléfono")}</td>
           <td style="padding: 10px 0; color: #0F172A;"><a href="tel:${escapeHtml(appointment.phone)}" style="color: #2563EB; text-decoration: none;">${escapeHtml(appointment.phone)}</a></td>
         </tr>
         <tr style="border-bottom: 1px solid #F1F5F9;">
-          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Email</td>
-          <td style="padding: 10px 0; color: #0F172A;">${escapeHtml(appointment.email || 'Not provided')}</td>
+          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">${copy("Email","Correo electrónico")}</td>
+          <td style="padding: 10px 0; color: #0F172A;">${escapeHtml(appointment.email || (lang === 'es' ? 'No facilitado' : 'Not provided'))}</td>
         </tr>
         <tr style="border-bottom: 1px solid #F1F5F9;">
-          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Requested Care</td>
+          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">${copy("Requested Care","Tratamiento solicitado")}</td>
           <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${escapeHtml(serviceName)}</td>
         </tr>
         <tr style="border-bottom: 1px solid #F1F5F9;">
-          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Date & Time</td>
-          <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${escapeHtml(appointment.date)} at ${escapeHtml(appointment.startTime)}</td>
+          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">${copy("Date & Time","Fecha y hora")}</td>
+          <td style="padding: 10px 0; color: #0F172A; font-weight: bold;">${escapeHtml(appointment.date)} ${lang === 'es' ? 'a las' : 'at'} ${escapeHtml(appointment.startTime)}</td>
         </tr>
         ${appointment.notes ? `
         <tr style="border-bottom: 1px solid #F1F5F9;">
-          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">Notes</td>
+          <td style="padding: 10px 0; color: #64748B; font-weight: 600;">${copy("Notes","Notas")}</td>
           <td style="padding: 10px 0; color: #0F172A;">${escapeHtml(appointment.notes)}</td>
         </tr>
         ` : ''}
@@ -573,7 +618,7 @@ export async function sendAdminNewBookingNotification(
 
       <div style="margin-top: 24px;">
         <a href="https://wa.me/${appointment.phone.replace(/[^0-9]/g, '')}" style="display: inline-block; background-color: #22C55E; color: #FFFFFF; padding: 12px 20px; border-radius: 10px; text-decoration: none; font-size: 13px; font-weight: bold;">
-          💬 Contact Patient on WhatsApp
+          ${copy("💬 Contact Patient on WhatsApp","💬 Contactar con el paciente por WhatsApp")}
         </a>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { unsealData } from 'iron-session';
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       console.error('[Logout Session Unseal/Revoke Error]:');
-      return NextResponse.json({ error: 'Unable to revoke session. Please retry.' }, { status: 503 });
+      return NextResponse.json({ error: localizeApiError('Unable to revoke session. Please retry.', request) }, { status: 503 });
     }
   }
 

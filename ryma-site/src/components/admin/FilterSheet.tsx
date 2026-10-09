@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React from 'react';
 import { ResponsiveModal } from './ResponsiveModal';
@@ -39,22 +41,22 @@ export const FilterSheet = React.memo(function FilterSheet({
   totalResults,
   calendarMode = false,
 }: FilterSheetProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const statusOptions: Array<{ id: AppointmentStatus | 'all'; label: string }> = [
-    { id: 'all', label: txt('Tous les statuts', 'All statuses', 'Todos os estados') },
-    { id: 'CONFIRMED', label: txt('Confirmés', 'Confirmed', 'Confirmados') },
-    { id: 'PENDING', label: txt('En attente', 'Pending', 'Pendentes') },
-    { id: 'COMPLETED', label: txt('Terminés', 'Completed', 'Concluídos') },
-    { id: 'CANCELLED', label: txt('Annulés', 'Cancelled', 'Cancelados') },
+    { id: 'all', label: txt('Tous les statuts', 'All statuses', 'Todos os estados', "Todos los estados") },
+    { id: 'CONFIRMED', label: txt('Confirmés', 'Confirmed', 'Confirmados', "Confirmadas") },
+    { id: 'PENDING', label: txt('En attente', 'Pending', 'Pendentes', "Pendientes") },
+    { id: 'COMPLETED', label: txt('Terminés', 'Completed', 'Concluídos', "Completadas") },
+    { id: 'CANCELLED', label: txt('Annulés', 'Cancelled', 'Cancelados', "Canceladas") },
   ];
 
   const dateOptions: Array<{ id: 'all' | 'today' | 'tomorrow' | 'upcoming'; label: string }> = [
-    { id: 'all', label: txt('Toutes les dates', 'All dates', 'Todas as datas') },
-    { id: 'today', label: txt("Aujourd'hui", 'Today', 'Hoje') },
-    { id: 'tomorrow', label: txt('Demain', 'Tomorrow', 'Amanhã') },
-    { id: 'upcoming', label: txt('À venir', 'Upcoming', 'Próximas') },
+    { id: 'all', label: txt('Toutes les dates', 'All dates', 'Todas as datas', "Todas las fechas") },
+    { id: 'today', label: txt("Aujourd'hui", 'Today', 'Hoje', "Hoy") },
+    { id: 'tomorrow', label: txt('Demain', 'Tomorrow', 'Amanhã', "Mañana") },
+    { id: 'upcoming', label: txt('À venir', 'Upcoming', 'Próximas', "Próximas") },
   ];
 
   const isFiltered = searchQuery || filter !== 'all' || dateFilter !== 'all' || specificDateFilter !== null;
@@ -63,15 +65,15 @@ export const FilterSheet = React.memo(function FilterSheet({
     <ResponsiveModal
       isOpen={isOpen}
       onClose={onClose}
-      title={txt('Filtres & Recherche', 'Filters & Search', 'Filtros & Pesquisa')}
-      subtitle={txt(`${totalResults} résultats correspondants`, `${totalResults} matching results`, `${totalResults} resultados encontrados`)}
+      title={txt('Filtres & Recherche', 'Filters & Search', 'Filtros & Pesquisa', "Filtros y búsqueda")}
+      subtitle={txt(`${totalResults} résultats correspondants`, `${totalResults} matching results`, `${totalResults} resultados encontrados`, `${totalResults} resultados`)}
       maxWidth="md"
     >
       <div className="space-y-4 font-sans text-xs">
         {/* Search Bar */}
         <div className="space-y-1.5">
           <label className="font-semibold uppercase tracking-wider text-[#475569] text-[11px]">
-            {txt('Recherche patient', 'Patient search', 'Pesquisa do utente')}
+            {txt('Recherche patient', 'Patient search', 'Pesquisa do utente', "Búsqueda de pacientes")}
           </label>
           <div className="relative">
             <IconSearch
@@ -82,7 +84,7 @@ export const FilterSheet = React.memo(function FilterSheet({
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={txt('Nom, téléphone, traitement...', 'Name, phone, service...', 'Nome, telefone, tratamento...')}
+              placeholder={txt('Nom, téléphone, traitement...', 'Name, phone, service...', 'Nome, telefone, tratamento...', "Nombre, teléfono, servicio...")}
               className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-[#2563EB] transition-colors"
             />
           </div>
@@ -91,7 +93,7 @@ export const FilterSheet = React.memo(function FilterSheet({
         {/* Status Filter */}
         <div className="space-y-1.5">
           <label className="font-semibold uppercase tracking-wider text-[#475569] text-[11px]">
-            {txt('Statut du rendez-vous', 'Appointment status', 'Estado da consulta')}
+            {txt('Statut du rendez-vous', 'Appointment status', 'Estado da consulta', "Estado de la cita")}
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {statusOptions.map(opt => {
@@ -118,7 +120,7 @@ export const FilterSheet = React.memo(function FilterSheet({
         {/* Date Filter & Specific Date Jump */}
         <div className="space-y-1.5">
           <label className="font-semibold uppercase tracking-wider text-[#475569] text-[11px]">
-            {txt('Période / Date', 'Period / Date', 'Período / Data')}
+            {txt('Période / Date', 'Period / Date', 'Período / Data', "Periodo / fecha")}
           </label>
           <div className="grid grid-cols-2 gap-2">
             {dateOptions.filter(opt => !calendarMode || opt.id === 'today' || opt.id === 'tomorrow').map(opt => {
@@ -147,11 +149,11 @@ export const FilterSheet = React.memo(function FilterSheet({
           <div className="pt-2">
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
               <span className="text-[11px] font-semibold text-[#475569] whitespace-nowrap">
-                {txt('Date exacte:', 'Exact date:', 'Data exata:')}
+                {txt('Date exacte:', 'Exact date:', 'Data exata:', "Fecha exacta:")}
               </span>
               <input
                 type="date"
-                aria-label={txt('Date exacte', 'Exact date', 'Data exata')}
+                aria-label={txt('Date exacte', 'Exact date', 'Data exata', "Fecha exacta")}
                 value={specificDateFilter || ''}
                 onChange={(e) => {
                   if (setSpecificDateFilter) {
@@ -167,7 +169,7 @@ export const FilterSheet = React.memo(function FilterSheet({
                     if (setSpecificDateFilter) setSpecificDateFilter(null);
                   }}
                   className="p-1 rounded-md text-[#991B1B] hover:bg-[#FEE2E2] transition-colors"
-                  title="Effacer"
+                  title={legacyText("Effacer", lang)}
                 >
                   ✕
                 </button>
@@ -185,7 +187,7 @@ export const FilterSheet = React.memo(function FilterSheet({
               className="flex items-center gap-1.5 text-xs font-semibold text-[#991B1B] hover:text-[#7F1D1D] p-2"
             >
               <IconRotate size={15} />
-              <span>{txt('Réinitialiser', 'Reset', 'Repor')}</span>
+              <span>{txt('Réinitialiser', 'Reset', 'Repor', "Restablecer")}</span>
             </button>
           ) : (
             <div />
@@ -196,7 +198,7 @@ export const FilterSheet = React.memo(function FilterSheet({
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium text-xs transition-colors shadow-xs touch-target"
           >
-            {txt('Appliquer les filtres', 'Apply filters', 'Aplicar filtros')}
+            {txt('Appliquer les filtres', 'Apply filters', 'Aplicar filtros', "Aplicar filtros")}
           </button>
         </div>
       </div>

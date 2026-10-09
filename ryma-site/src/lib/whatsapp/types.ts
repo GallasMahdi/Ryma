@@ -1,4 +1,4 @@
-export type Language = 'pt' | 'en' | 'fr';
+export type Language = 'pt' | 'en' | 'fr' | 'es';
 export type Action = {kind: 'practitioner' | 'practitioners' | 'service' | 'services' | 'date' | 'dates' | 'time' | 'times' | 'confirm' | 'restart'; value?: string};
 export type Choice = {id: string; title: string; description?: string; action: Action};
 export interface Conversation {

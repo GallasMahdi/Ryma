@@ -9,6 +9,7 @@ assert(Number.isInteger(port)&&port>=1024&&port<=65535,'Invalid preview port');
 const base='http://127.0.0.1:'+port,checks=[];
 let cookie='';
 async function call(url,body,admin=false){
+  if(url==='/api/appointments' && body)body={...body,recaptchaToken:'isolated-http-token'};
   const response=await fetch(base+url,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(admin?{cookie}:{})},...(body?{body:JSON.stringify(body)}:{})});
   return {status:response.status,body:await response.json(),headers:response.headers};
 }

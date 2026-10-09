@@ -62,13 +62,13 @@ export default function TarifsPage() {
             
             <ScrollReveal className="text-center mb-8 sm:mb-12">
               <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-bold block mb-1">
-                — {lang === 'pt' ? 'Valores por Sessão Avulsa' : lang === 'en' ? 'Single Session Pricing' : 'Tarifs à la séance'} —
+                — {lang === 'es' ? "Precios por sesión" : lang === 'pt' ? 'Valores por Sessão Avulsa' : lang === 'en' ? 'Single Session Pricing' : 'Tarifs à la séance'} —
               </span>
               <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-[#1A1412] mb-3">
-                {lang === 'pt' ? 'Catálogo Individual de Tratamentos' : lang === 'en' ? 'Individual Treatment Catalog' : 'Catalogue des Soins Individuels'}
+                {lang === 'es' ? "Catálogo de tratamientos individuales" : lang === 'pt' ? 'Catálogo Individual de Tratamentos' : lang === 'en' ? 'Individual Treatment Catalog' : 'Catalogue des Soins Individuels'}
               </h2>
               <p className="text-xs sm:text-sm text-[#6B6058] max-w-xl mx-auto">
-                {lang === 'pt'
+                {lang === 'es' ? "Consulte la duración y el precio habituales de cada terapia clínica especializada." : lang === 'pt'
                   ? 'Consulte os valores individuais para cada cuidado clínico ou estético com duração standard.'
                   : lang === 'en'
                   ? 'Explore standard session duration and prices across each specialized clinical therapy.'
@@ -84,7 +84,7 @@ export default function TarifsPage() {
                       activePole === 'all' ? 'bg-[#C49A3C] text-white shadow-xs' : 'text-[#6B6058] hover:text-[#1A1412]'
                     }`}
                   >
-                    {lang === 'pt' ? 'Todos' : lang === 'en' ? 'All' : 'Tous'} ({SERVICES.length})
+                    {lang === 'es' ? "Todos" : lang === 'pt' ? 'Todos' : lang === 'en' ? 'All' : 'Tous'} ({SERVICES.length})
                   </button>
                   <button
                     onClick={() => { setActivePole('kinesitherapie'); playSoftClick(); }}
@@ -92,7 +92,7 @@ export default function TarifsPage() {
                       activePole === 'kinesitherapie' ? 'bg-[#C49A3C] text-white shadow-xs' : 'text-[#6B6058] hover:text-[#1A1412]'
                     }`}
                   >
-                    {lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
+                    {lang === 'es' ? "Fisioterapia" : lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'}
                   </button>
                   <button
                     onClick={() => { setActivePole('minceur'); playSoftClick(); }}
@@ -100,7 +100,7 @@ export default function TarifsPage() {
                       activePole === 'minceur' ? 'bg-[#C49A3C] text-white shadow-xs' : 'text-[#6B6058] hover:text-[#1A1412]'
                     }`}
                   >
-                    {lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming' : 'Minceur'}
+                    {lang === 'es' ? "Reducción corporal" : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming' : 'Minceur'}
                   </button>
                 </div>
 
@@ -110,7 +110,7 @@ export default function TarifsPage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={lang === 'pt' ? 'Procurar...' : lang === 'en' ? 'Search...' : 'Recherche...'}
+                    placeholder={lang === 'es' ? "Buscar..." : lang === 'pt' ? 'Procurar...' : lang === 'en' ? 'Search...' : 'Recherche...'}
                     className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E8E2D8] rounded-full text-xs text-[#1A1412] focus:outline-none focus:border-[#C49A3C] transition-colors"
                   />
                 </div>
@@ -125,7 +125,7 @@ export default function TarifsPage() {
                     <IconStethoscope size={16} />
                   </div>
                   <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412]">
-                    {lang === 'pt' ? 'Polo de Fisioterapia & Reeducação' : lang === 'en' ? 'Physiotherapy & Rehabilitation' : 'Pôle Kinésithérapie'}
+                    {lang === 'es' ? "Fisioterapia y rehabilitación" : lang === 'pt' ? 'Polo de Fisioterapia & Reeducação' : lang === 'en' ? 'Physiotherapy & Rehabilitation' : 'Pôle Kinésithérapie'}
                   </h3>
                 </div>
 
@@ -171,7 +171,7 @@ export default function TarifsPage() {
               </div>
             )}
 
-            {activePole==='all'&&assessments.length>0&&<div className="mb-10"><h3 className="mb-4 font-serif text-xl font-bold">{lang==='pt'?'Avaliações':lang==='fr'?'Bilans':'Assessments'}</h3><div className="space-y-2.5">{assessments.map(service=><div key={service.slug} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E8E2D8] bg-white p-5"><div className="min-w-0"><h4 className="font-semibold">{getLocalizedText(service.name,lang)}</h4><p className="mt-1 text-sm text-[#6B6058]">{service.duration}</p></div><div className="flex items-center gap-4"><strong>{service.price} €</strong><Link className="rounded-xl border border-[#C49A3C]/40 px-4 py-2 text-sm" href={`/rendez-vous?service=${service.slug}`}>{t.common.bookAppointment}</Link></div></div>)}</div></div>}
+            {activePole==='all'&&assessments.length>0&&<div className="mb-10"><h3 className="mb-4 font-serif text-xl font-bold">{lang === 'es' ? "Evaluaciones" : lang==='pt'?'Avaliações':lang==='fr'?'Bilans':'Assessments'}</h3><div className="space-y-2.5">{assessments.map(service=><div key={service.slug} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E8E2D8] bg-white p-5"><div className="min-w-0"><h4 className="font-semibold">{getLocalizedText(service.name,lang)}</h4><p className="mt-1 text-sm text-[#6B6058]">{service.duration}</p></div><div className="flex items-center gap-4"><strong>{service.price} €</strong><Link className="rounded-xl border border-[#C49A3C]/40 px-4 py-2 text-sm" href={`/rendez-vous?service=${service.slug}`}>{t.common.bookAppointment}</Link></div></div>)}</div></div>}
             {/* ── Minceur Category Table ── */}
             {(activePole === 'all' || activePole === 'minceur') && minceurServices.length > 0 && (
               <div className="mb-10">
@@ -180,7 +180,7 @@ export default function TarifsPage() {
                     <IconFlame size={16} />
                   </div>
                   <h3 className="font-serif text-lg sm:text-xl font-bold text-[#1A1412]">
-                    {lang === 'pt' ? 'Polo de Estética Corporal & Emagrecimento' : lang === 'en' ? 'Body Contouring & Slimming Care' : 'Pôle Soins Minceur High-Tech'}
+                    {lang === 'es' ? "Remodelado y reducción corporal" : lang === 'pt' ? 'Polo de Estética Corporal & Emagrecimento' : lang === 'en' ? 'Body Contouring & Slimming Care' : 'Pôle Soins Minceur High-Tech'}
                   </h3>
                 </div>
 
@@ -214,7 +214,7 @@ export default function TarifsPage() {
                             href={`/rendez-vous?service=${service.slug}`}
                             onClick={playSoftClick}
                             className="hidden sm:inline-flex items-center justify-center p-2 rounded-xl text-[#9A7428] bg-[#FAF5EA] hover:bg-[#C49A3C] hover:text-white transition-all shadow-xs"
-                            aria-label={`Agendar ${service.name.pt}`}
+                            aria-label={lang === 'es' ? `Reservar ${getLocalizedText(service.name, lang)}` : `Agendar ${service.name.pt}`}
                           >
                             <IconArrowRight size={15} />
                           </Link>
@@ -241,11 +241,11 @@ export default function TarifsPage() {
               </div>
 
               <span className="font-mono text-xs font-bold tracking-widest text-[#9A7428] uppercase block mb-2">
-                {lang === 'pt' ? 'Seguros de Saúde & Comparticipações' : lang === 'en' ? 'Health Insurance & Coverage' : 'Mutuelles & Assurances Santé'}
+                {lang === 'es' ? "Seguros médicos y cobertura" : lang === 'pt' ? 'Seguros de Saúde & Comparticipações' : lang === 'en' ? 'Health Insurance & Coverage' : 'Mutuelles & Assurances Santé'}
               </span>
 
               <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1A1412] mb-3">
-                {lang === 'pt'
+                {lang === 'es' ? "Facturas certificadas para el reembolso completo" : lang === 'pt'
                   ? 'Faturas Certificadas para Efeitos de Reembolso'
                   : lang === 'en'
                   ? 'Certified Invoices for Complete Reimbursement'
@@ -253,7 +253,7 @@ export default function TarifsPage() {
               </h3>
 
               <p className="text-xs sm:text-sm text-[#554C42] leading-relaxed max-w-2xl mx-auto mb-6">
-                {lang === 'pt'
+                {lang === 'es' ? "Emitimos facturas médicas certificadas con el número de colegiación profesional para facilitar el reembolso con las principales aseguradoras (ADSE, Médis, Multicare, AdvanceCare, etc.)." : lang === 'pt'
                   ? 'Emitimos faturas-recibo com número de cédula profissional da Ordem dos Fisioterapeutas para que possa solicitar o reembolso junto do seu seguro de saúde ou subsistema (ADSE, Médis, Multicare, AdvanceCare, SAMS, etc.).'
                   : lang === 'en'
                   ? 'We provide certified medical invoices with registered professional license number, enabling fast reimbursement with all major health insurance providers (ADSE, Médis, Multicare, AdvanceCare, etc.).'

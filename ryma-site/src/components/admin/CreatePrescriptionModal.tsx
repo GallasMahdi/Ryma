@@ -55,7 +55,8 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
   const [practitionerId, setPractitionerId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const txt = (fr: string, en: string, pt: string) => {
+  const txt = (fr: string, en: string, pt: string, es: string) => {
+    if (lang === 'es') return es;
     if (lang === 'fr') return fr;
     if (lang === 'en') return en;
     return pt;
@@ -133,7 +134,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
         txt(
           'Veuillez sélectionner ou ajouter au moins un conseil ou produit',
           'Please select or add at least one recommendation or product',
-          'Por favor, selecione ou adicione pelo menos um conselho ou produto'
+          'Por favor, selecione ou adicione pelo menos um conselho ou produto', "Seleccione o añada al menos una recomendación o un producto"
         )
       );
       return;
@@ -164,7 +165,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
             txt(
               'Erreur lors de la création de la prescription',
               'Error creating prescription sheet',
-              'Erro ao criar prescrição de recomendações'
+              'Erro ao criar prescrição de recomendações', "Error al crear la hoja de prescripción"
             )
         );
       }
@@ -175,7 +176,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
     } catch (err: any) {
       setError(
         err.message ||
-          txt('Erreur de communication', 'Communication error', 'Erro de comunicação')
+          txt('Erreur de communication', 'Communication error', 'Erro de comunicação', "Error de comunicación")
       );
     } finally {
       setSubmitting(false);
@@ -209,11 +210,11 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                     {txt(
                       'Nouvelle Fiche Conseils & Matériel',
                       'New Recommendations & Equipment Pad',
-                      'Nova Ficha de Recomendações & Material'
+                      'Nova Ficha de Recomendações & Material', "Nueva hoja de recomendaciones y material"
                     )}
                   </h3>
                   <p className="text-xs text-[#94A3B8]">
-                    {txt('Patient', 'Patient', 'Utente')}: <strong>{patientName}</strong> ({patientPhone})
+                    {txt('Patient', 'Patient', 'Utente', "Paciente")}: <strong>{patientName}</strong> ({patientPhone})
                   </p>
                 </div>
               </div>
@@ -221,7 +222,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                 type="button"
                 onClick={onClose}
                 className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                title={txt('Fermer', 'Close', 'Fechar')}
+                title={txt('Fermer', 'Close', 'Fechar', "Cerrar")}
               >
                 <IconX size={20} />
               </button>
@@ -242,7 +243,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                   {txt(
                     'Objectif Clinique / Contexte du Traitement (Optionnel)',
                     'Clinical Goal / Treatment Context (Optional)',
-                    'Objetivo Clínico / Enquadramento do Tratamento (Opcional)'
+                    'Objetivo Clínico / Enquadramento do Tratamento (Opcional)', "Objetivo clínico / contexto del tratamiento (opcional)"
                   )}
                 </label>
                 <input
@@ -252,7 +253,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                   placeholder={txt(
                     'Ex : Soulagement lombalgie posturale, récupération post-séance RPG et drainage...',
                     'E.g. Postural lower back pain relief, post-session recovery and drainage...',
-                    'Ex: Alívio de lombalgia postural, recuperação pós-sessão de RPG e drenagem...'
+                    'Ex: Alívio de lombalgia postural, recuperação pós-sessão de RPG e drenagem...', "P. ej., alivio de lumbalgia postural, recuperación tras la sesión y drenaje..."
                   )}
                   className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none"
                 />
@@ -267,12 +268,12 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                       {txt(
                         'Sélectionner dans la Bibliothèque Clinique',
                         'Select from Clinical Catalog',
-                        'Selecionar da Biblioteca Clínica'
+                        'Selecionar da Biblioteca Clínica', "Seleccionar del catálogo clínico"
                       )}
                     </span>
                   </h4>
                   <span className="text-[11px] text-[#64748B] font-mono">
-                    {selectedItems.length} {txt('articles sélectionnés', 'items selected', 'itens selecionados')}
+                    {selectedItems.length} {txt('articles sélectionnés', 'items selected', 'itens selecionados', "elementos seleccionados")}
                   </span>
                 </div>
 
@@ -281,15 +282,15 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                   {[
                     {
                       id: 'care_product' as const,
-                      label: `🧴 ${txt('Soins & Produits', 'Care & Products', 'Cuidados & Produtos')}`,
+                      label: `🧴 ${txt('Soins & Produits', 'Care & Products', 'Cuidados & Produtos', "Cuidados y productos")}`,
                     },
                     {
                       id: 'ergonomic_equipment' as const,
-                      label: `🧘 ${txt('Matériel Ergonomique', 'Ergonomic Equipment', 'Material Ergonómico')}`,
+                      label: `🧘 ${txt('Matériel Ergonomique', 'Ergonomic Equipment', 'Material Ergonómico', "Material ergonómico")}`,
                     },
                     {
                       id: 'lifestyle_habit' as const,
-                      label: `💡 ${txt('Habitudes & Posture', 'Habits & Posture', 'Hábitos & Postura')}`,
+                      label: `💡 ${txt('Habitudes & Posture', 'Habits & Posture', 'Hábitos & Postura', "Hábitos y postura")}`,
                     },
                   ].map(cat => (
                     <button
@@ -350,7 +351,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                       {txt(
                         'Ajuster Posologie & Conseils Personnalisés',
                         'Adjust Dosage & Personalized Advice',
-                        'Ajustar Posologia & Conselhos Personalizados'
+                        'Ajustar Posologia & Conselhos Personalizados', "Ajustar pauta y consejos personalizados"
                       )}{' '}
                       ({selectedItems.length})
                     </span>
@@ -370,7 +371,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                             type="button"
                             onClick={() => handleRemoveItem(idx)}
                             className="text-rose-500 hover:text-rose-700 p-1"
-                            title={txt('Supprimer l’article', 'Remove item', 'Remover item')}
+                            title={txt('Supprimer l’article', 'Remove item', 'Remover item', "Eliminar elemento")}
                           >
                             <IconTrash size={14} />
                           </button>
@@ -380,7 +381,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                             {txt(
                               'Posologie / Mode d’Application :',
                               'Dosage / Instructions :',
-                              'Posologia / Modo de Aplicação :'
+                              'Posologia / Modo de Aplicação :', "Pauta / instrucciones:"
                             )}
                           </label>
                           <input
@@ -404,7 +405,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                     {txt(
                       'Ajouter une Recommandation ou un Produit Personnalisé',
                       'Add Custom Recommendation or Product',
-                      'Adicionar Recomendação ou Produto Personalizado'
+                      'Adicionar Recomendação ou Produto Personalizado', "Añadir recomendación o producto personalizado"
                     )}
                   </span>
                 </h5>
@@ -416,7 +417,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                     placeholder={txt(
                       'Nom du produit ou conseil...',
                       'Product name or advice...',
-                      'Nome do produto ou conselho...'
+                      'Nome do produto ou conselho...', "Nombre del producto o consejo..."
                     )}
                     className="bg-white border border-[#CBD5E1] rounded-xl px-3 py-1.5 text-xs outline-none"
                   />
@@ -427,7 +428,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                     placeholder={txt(
                       'Instructions d’utilisation / fréquence...',
                       'Usage instructions / frequency...',
-                      'Instruções de utilização / frequência...'
+                      'Instruções de utilização / frequência...', "Instrucciones de uso / frecuencia..."
                     )}
                     className="bg-white border border-[#CBD5E1] rounded-xl px-3 py-1.5 text-xs outline-none"
                   />
@@ -438,7 +439,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                   disabled={!customTitle.trim() || !customInstructions.trim()}
                   className="px-3.5 py-1.5 rounded-xl bg-[#0F172A] text-white text-xs font-semibold disabled:opacity-40"
                 >
-                  + {txt('Ajouter à la Fiche', 'Add to Prescription', 'Adicionar à Prescrição')}
+                  + {txt('Ajouter à la Fiche', 'Add to Prescription', 'Adicionar à Prescrição', "Añadir a la prescripción")}
                 </button>
               </div>
 
@@ -448,7 +449,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                   {txt(
                     'Remarque / Message Complémentaire du Thérapeute',
                     'Additional Note / Message from Physiotherapist',
-                    'Nota / Mensagem Adicional do Fisioterapeuta'
+                    'Nota / Mensagem Adicional do Fisioterapeuta', "Nota adicional / mensaje del fisioterapeuta"
                   )}
                 </label>
                 <textarea
@@ -458,7 +459,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                   placeholder={txt(
                     'Ex : En cas d’inconfort ou de doute, contactez-nous par WhatsApp...',
                     'E.g. In case of discomfort or questions, contact us via WhatsApp...',
-                    'Ex: Em caso de desconforto ou dúvida, contacte-nos pelo WhatsApp...'
+                    'Ex: Em caso de desconforto ou dúvida, contacte-nos pelo WhatsApp...', "P. ej., si tiene molestias o dudas, contacte por WhatsApp..."
                   )}
                   className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none"
                 />
@@ -471,7 +472,7 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                   onClick={onClose}
                   className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] font-semibold text-xs"
                 >
-                  {txt('Annuler', 'Cancel', 'Cancelar')}
+                  {txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
                 </button>
                 <button
                   type="submit"
@@ -481,8 +482,8 @@ export const CreatePrescriptionModal = React.memo(function CreatePrescriptionMod
                   <IconNotes size={16} />
                   <span>
                     {submitting
-                      ? txt('Émission en cours...', 'Generating pad...', 'A emitir ficha...')
-                      : txt('Émettre la Fiche Conseils', 'Issue Recommendations Pad', 'Emitir Ficha de Recomendações')}
+                      ? txt('Émission en cours...', 'Generating pad...', 'A emitir ficha...', "Generando hoja...")
+                      : txt('Émettre la Fiche Conseils', 'Issue Recommendations Pad', 'Emitir Ficha de Recomendações', "Emitir hoja de recomendaciones")}
                   </span>
                 </button>
               </div>

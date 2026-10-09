@@ -176,14 +176,16 @@ function getFirstDayOfMonth(year: number, month: number) {
 const MONTH_NAMES_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const MONTH_NAMES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const MONTH_NAMES_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTH_NAMES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 const DAY_NAMES_FR = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
 const DAY_NAMES_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const DAY_NAMES_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_NAMES_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 // ── Step Indicator ───────────────────────────────────────────
 function StepIndicator({ step, lang }: { step: BookingStep; lang: string }) {
-  const steps = lang === 'pt'
+  const steps = lang === 'es' ? ["Tratamiento", "Fecha", "Horario", "Sus datos"] : lang === 'pt'
     ? ['Tratamento', 'Data', 'Horário', 'Os Seus Dados']
     : lang === 'en'
       ? ['Treatment', 'Date', 'Slot', 'Your Info']
@@ -380,7 +382,7 @@ function BookingWizardContent() {
       } else {
         // API error (500 etc.) — show actionable error, not "no slots"
         setSlotError(
-          lang === 'pt' ? 'Erro ao carregar horários. Por favor, tente novamente.' :
+          lang === 'es' ? "Error al cargar los horarios. Vuelva a intentarlo." : lang === 'pt' ? 'Erro ao carregar horários. Por favor, tente novamente.' :
             lang === 'en' ? 'Error loading slots. Please try again.' :
               'Erreur lors du chargement des créneaux. Veuillez réessayer.'
         );
@@ -388,7 +390,7 @@ function BookingWizardContent() {
     } catch {
       if (request.signal.aborted) return;
       setSlotError(
-        lang === 'pt' ? 'Sem ligação. Verifique a sua internet e tente novamente.' :
+        lang === 'es' ? "Error de conexión. Compruebe su conexión a internet y vuelva a intentarlo." : lang === 'pt' ? 'Sem ligação. Verifique a sua internet e tente novamente.' :
           lang === 'en' ? 'Connection error. Check your internet and try again.' :
             'Erreur de connexion. Vérifiez votre internet et réessayez.'
       );
@@ -465,11 +467,11 @@ function BookingWizardContent() {
       showToast({
         type: 'error',
         title:
-          lang === 'pt' ? 'Nome obrigatório' :
+          lang === 'es' ? "Nombre obligatorio" : lang === 'pt' ? 'Nome obrigatório' :
             lang === 'en' ? 'Name required' :
               'Nom requis',
         message:
-          lang === 'pt' ? 'Por favor, introduza o seu nome completo (mínimo 2 caracteres).' :
+          lang === 'es' ? "Introduzca su nombre completo (al menos 2 caracteres)." : lang === 'pt' ? 'Por favor, introduza o seu nome completo (mínimo 2 caracteres).' :
             lang === 'en' ? 'Please enter your full name (at least 2 characters).' :
               'Veuillez saisir votre nom complet (2 caractères minimum).',
         field: 'name',
@@ -482,11 +484,11 @@ function BookingWizardContent() {
       showToast({
         type: 'error',
         title:
-          lang === 'pt' ? 'Telefone obrigatório' :
+          lang === 'es' ? "Teléfono obligatorio" : lang === 'pt' ? 'Telefone obrigatório' :
             lang === 'en' ? 'Phone required' :
               'Téléphone requis',
         message:
-          lang === 'pt' ? 'Introduza o seu número de telefone para confirmar a marcação.' :
+          lang === 'es' ? "Introduzca su número de teléfono para confirmar la reserva." : lang === 'pt' ? 'Introduza o seu número de telefone para confirmar a marcação.' :
             lang === 'en' ? 'Enter your phone number to confirm your booking.' :
               'Veuillez entrer votre numéro de téléphone pour confirmer le rendez-vous.',
         field: 'phone',
@@ -501,12 +503,12 @@ function BookingWizardContent() {
       showToast({
         type: 'error',
         title:
-          lang === 'pt' ? 'Telefone inválido' :
+          lang === 'es' ? "Número de teléfono no válido" : lang === 'pt' ? 'Telefone inválido' :
             lang === 'en' ? 'Invalid phone number' :
               'Numéro invalide',
         message:
           phoneCheck.error || (
-            lang === 'pt' ? 'Por favor, insira um número de telefone válido (ex: 912 345 678 ou +351 912 345 678).' :
+            lang === 'es' ? "Introduzca un número de teléfono válido (p. ej., 912 345 678 o +351 912 345 678)." : lang === 'pt' ? 'Por favor, insira um número de telefone válido (ex: 912 345 678 ou +351 912 345 678).' :
               lang === 'en' ? 'Please enter a valid phone number (e.g. 912 345 678 or +351 912 345 678).' :
                 'Veuillez entrer un numéro de téléphone valide (ex: 912 345 678 ou +351 912 345 678).'
           ),
@@ -523,11 +525,11 @@ function BookingWizardContent() {
         showToast({
           type: 'error',
           title:
-            lang === 'pt' ? 'Email inválido' :
+            lang === 'es' ? "Correo electrónico no válido" : lang === 'pt' ? 'Email inválido' :
               lang === 'en' ? 'Invalid email' :
                 'Email invalide',
           message:
-            lang === 'pt' ? 'O formato do email não é válido. Exemplo: nome@exemplo.pt' :
+            lang === 'es' ? "Formato de correo electrónico no válido. Ejemplo: nombre@ejemplo.com" : lang === 'pt' ? 'O formato do email não é válido. Exemplo: nome@exemplo.pt' :
               lang === 'en' ? 'Invalid email format. Example: name@example.com' :
                 'Format email invalide. Exemple: nom@exemple.fr',
           field: 'email',
@@ -543,7 +545,7 @@ function BookingWizardContent() {
     const loadingToastId = showToast({
       type: 'loading',
       title:
-        lang === 'pt' ? 'A confirmar a sua marcação…' :
+        lang === 'es' ? "Confirmando su reserva…" : lang === 'pt' ? 'A confirmar a sua marcação…' :
           lang === 'en' ? 'Confirming your booking…' :
             'Confirmation en cours…',
     });
@@ -586,11 +588,11 @@ function BookingWizardContent() {
           showToast({
             type: 'error',
             title:
-              lang === 'pt' ? 'Horário já reservado' :
+              lang === 'es' ? "Horario ya no disponible" : lang === 'pt' ? 'Horário já reservado' :
                 lang === 'en' ? 'Slot no longer available' :
                   'Créneau non disponible',
             message:
-              lang === 'pt' ? 'Este horário acabou de ser reservado. Iremos mostrar os horários disponíveis.' :
+              lang === 'es' ? "Este horario acaba de ocuparse. Le mostraremos los horarios disponibles." : lang === 'pt' ? 'Este horário acabou de ser reservado. Iremos mostrar os horários disponíveis.' :
                 lang === 'en' ? 'This slot was just taken. We will show you the available slots.' :
                   'Ce créneau vient d\u2019être réservé. Nous affichons les créneaux disponibles.',
             duration: 5000,
@@ -602,11 +604,11 @@ function BookingWizardContent() {
           showToast({
             type: 'error',
             title:
-              lang === 'pt' ? 'Demasiadas tentativas' :
+              lang === 'es' ? "Demasiados intentos" : lang === 'pt' ? 'Demasiadas tentativas' :
                 lang === 'en' ? 'Too many attempts' :
                   'Trop de tentatives',
             message:
-              lang === 'pt' ? 'Aguarde um momento antes de tentar novamente.' :
+              lang === 'es' ? "Espere un momento antes de volver a intentarlo." : lang === 'pt' ? 'Aguarde um momento antes de tentar novamente.' :
                 lang === 'en' ? 'Please wait a moment before trying again.' :
                   'Veuillez patienter avant de réessayer.',
             duration: 6000,
@@ -615,7 +617,7 @@ function BookingWizardContent() {
           // Translate known server error messages or error codes to the active language
           let errorMsg = data.error;
           if (data.errorCode === 'SCHEDULE_BUSY') {
-            errorMsg = lang === 'pt' ? 'A agenda está temporariamente ocupada. Tente novamente dentro de instantes.' : lang === 'en' ? 'The schedule is temporarily busy. Please retry in a moment.' : 'Le planning est temporairement occupé. Veuillez réessayer dans un instant.';
+            errorMsg = lang === 'es' ? "La agenda está ocupada temporalmente. Vuelva a intentarlo en un momento." : lang === 'pt' ? 'A agenda está temporariamente ocupada. Tente novamente dentro de instantes.' : lang === 'en' ? 'The schedule is temporarily busy. Please retry in a moment.' : 'Le planning est temporairement occupé. Veuillez réessayer dans un instant.';
           }
           if (
             data.errorCode === 'INVALID_PHONE' ||
@@ -624,22 +626,22 @@ function BookingWizardContent() {
             errorMsg?.includes('telefone')
           ) {
             errorMsg =
-              lang === 'pt' ? 'Por favor, insira um número de telefone válido (ex: 912 345 678 ou +351 912 345 678).' :
+              lang === 'es' ? "Introduzca un número de teléfono válido (p. ej., 912 345 678 o +351 912 345 678)." : lang === 'pt' ? 'Por favor, insira um número de telefone válido (ex: 912 345 678 ou +351 912 345 678).' :
                 lang === 'en' ? 'Please enter a valid phone number (e.g. 912 345 678 or +351 912 345 678).' :
                   'Veuillez entrer un numéro de téléphone valide (ex: 912 345 678 ou +351 912 345 678).';
           } else if (data.errorCode === 'PATIENT_NAME_REQUIRED' || errorMsg?.includes('nome do utente')) {
             errorMsg =
-              lang === 'pt' ? 'O nome do utente é obrigatório (mínimo 2 caracteres).' :
+              lang === 'es' ? "El nombre del paciente es obligatorio (mínimo 2 caracteres)." : lang === 'pt' ? 'O nome do utente é obrigatório (mínimo 2 caracteres).' :
                 lang === 'en' ? 'Patient name is required (minimum 2 characters).' :
                   'Le nom du patient est obligatoire (minimum 2 caractères).';
           } else if (data.errorCode === 'INVALID_EMAIL' || errorMsg?.includes('email')) {
             errorMsg =
-              lang === 'pt' ? 'Endereço de email inválido.' :
+              lang === 'es' ? "Dirección de correo electrónico no válida." : lang === 'pt' ? 'Endereço de email inválido.' :
                 lang === 'en' ? 'Invalid email address.' :
                   'Adresse e-mail invalide.';
           } else if (data.errorCode === 'PAST_DATE' || data.errorCode === 'PAST_TIME' || errorMsg?.includes('passado')) {
             errorMsg =
-              lang === 'pt' ? 'A data ou horário da consulta não pode ser no passado.' :
+              lang === 'es' ? "La fecha o la hora de la cita no pueden ser anteriores al momento actual." : lang === 'pt' ? 'A data ou horário da consulta não pode ser no passado.' :
                 lang === 'en' ? 'The appointment date or time cannot be in the past.' :
                   'La date ou l’heure du rendez-vous ne peut pas être dans le passé.';
           }
@@ -647,11 +649,11 @@ function BookingWizardContent() {
           showToast({
             type: 'error',
             title:
-              lang === 'pt' ? 'Erro no agendamento' :
+              lang === 'es' ? "Error de reserva" : lang === 'pt' ? 'Erro no agendamento' :
                 lang === 'en' ? 'Booking error' :
                   'Erreur de réservation',
             message: errorMsg ?? (
-              lang === 'pt' ? 'Ocorreu um erro. Por favor tente novamente.' :
+              lang === 'es' ? "Se ha producido un error. Vuelva a intentarlo." : lang === 'pt' ? 'Ocorreu um erro. Por favor tente novamente.' :
                 lang === 'en' ? 'An error occurred. Please try again.' :
                   'Une erreur est survenue. Veuillez réessayer.'
             ),
@@ -670,11 +672,11 @@ function BookingWizardContent() {
       showToast({
         type: 'error',
         title:
-          lang === 'pt' ? 'Erro de ligação' :
+          lang === 'es' ? "Error de conexión" : lang === 'pt' ? 'Erro de ligação' :
             lang === 'en' ? 'Connection error' :
               'Erreur de connexion',
         message:
-          lang === 'pt' ? 'Verifique a sua ligação à internet e tente novamente.' :
+          lang === 'es' ? "Compruebe su conexión a internet y vuelva a intentarlo." : lang === 'pt' ? 'Verifique a sua ligação à internet e tente novamente.' :
             lang === 'en' ? 'Check your internet connection and try again.' :
               'Vérifiez votre connexion Internet et réessayez.',
         duration: 5000,
@@ -711,7 +713,7 @@ function BookingWizardContent() {
       <section className="pt-28 pb-8 text-center bg-gradient-to-b from-[#FDF9F2] to-[#FAFAF8]">
         <div className="mx-auto max-w-2xl px-6">
           <Badge variant="gold" className="mb-4">
-            {lang === 'pt' ? 'Agendamento Online' : lang === 'en' ? 'Online Booking' : 'Réservation en ligne'}
+            {lang === 'es' ? "Reserva en línea" : lang === 'pt' ? 'Agendamento Online' : lang === 'en' ? 'Online Booking' : 'Réservation en ligne'}
           </Badge>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-[#1A1412] mb-3">
             {t.booking.title}
@@ -757,7 +759,7 @@ function BookingWizardContent() {
                   <div>
                     <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412]">{t.booking.step2Title}</h2>
                     <p className="text-xs sm:text-sm text-[#6B6058] mt-0.5 font-normal">
-                      {lang === 'pt'
+                      {lang === 'es' ? "Seleccione la fecha que prefiera para su cita." : lang === 'pt'
                         ? 'Selecione o dia pretendido para o seu tratamento.'
                         : lang === 'en'
                           ? 'Select the preferred date for your appointment.'
@@ -773,10 +775,10 @@ function BookingWizardContent() {
                       <div className="text-left min-w-0">
                         <div className="text-[9.5px] font-mono uppercase font-bold text-[#8A6A24] leading-none mb-0.5">
                           {selectedService.pole === 'kinesitherapie'
-                            ? (lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie')
+                            ? (lang === 'es' ? "Fisioterapia" : lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie')
                             : selectedService.pole === 'bilan'
-                              ? (lang === 'pt' ? 'Avaliação inicial' : lang === 'en' ? 'Initial assessment' : 'Bilan initial')
-                              : (lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur')}
+                              ? (lang === 'es' ? "Evaluación inicial" : lang === 'pt' ? 'Avaliação inicial' : lang === 'en' ? 'Initial assessment' : 'Bilan initial')
+                              : (lang === 'es' ? "Tratamientos reductores" : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming Care' : 'Soins Minceur')}
                         </div>
                         <div className="text-xs font-serif font-bold text-[#1A1412] truncate max-w-[180px] sm:max-w-[240px]">
                           {selectedService.name[lang] || selectedService.name.pt || selectedService.name.en || selectedService.name.fr}
@@ -787,7 +789,7 @@ function BookingWizardContent() {
                         onClick={() => { playSoftClick(); setStep(1); }}
                         className="ml-1 px-2.5 py-1 text-[10.5px] font-bold text-[#9A7428] hover:text-white bg-[#FAF5EA] hover:bg-[#C49A3C] border border-[#C49A3C]/30 rounded-xl transition-all shadow-2xs cursor-pointer whitespace-nowrap"
                       >
-                        {lang === 'pt' ? 'Alterar' : lang === 'en' ? 'Change' : 'Changer'}
+                        {lang === 'es' ? "Cambiar" : lang === 'pt' ? 'Alterar' : lang === 'en' ? 'Change' : 'Changer'}
                       </button>
                     </div>
                   )}
@@ -803,7 +805,7 @@ function BookingWizardContent() {
                       <IconArrowLeft size={20} className="rtl-flip" />
                     </button>
                     <span className="font-serif text-xl font-bold text-[#1A1412] capitalize">
-                      {(lang === 'pt' ? MONTH_NAMES_PT : lang === 'en' ? MONTH_NAMES_EN : MONTH_NAMES_FR)[calMonth]} {calYear}
+                      {(lang === 'es' ? MONTH_NAMES_ES : lang === 'pt' ? MONTH_NAMES_PT : lang === 'en' ? MONTH_NAMES_EN : MONTH_NAMES_FR)[calMonth]} {calYear}
                     </span>
                     <button
                       onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }}
@@ -815,7 +817,7 @@ function BookingWizardContent() {
 
                   {/* Day headers */}
                   <div className="grid grid-cols-7 gap-1 mb-3">
-                    {(lang === 'pt' ? DAY_NAMES_PT : lang === 'en' ? DAY_NAMES_EN : DAY_NAMES_FR).map((d: string) => (
+                    {(lang === 'es' ? DAY_NAMES_ES : lang === 'pt' ? DAY_NAMES_PT : lang === 'en' ? DAY_NAMES_EN : DAY_NAMES_FR).map((d: string) => (
                       <div key={d} className="text-center font-mono text-xs font-bold text-[#9A7428] py-1 uppercase">{d}</div>
                     ))}
                   </div>
@@ -838,7 +840,7 @@ function BookingWizardContent() {
                           disabled={isDisabled}
                           title={
                             isFullyBooked
-                              ? (lang === 'pt' ? 'Dia esgotado' : lang === 'en' ? 'Fully booked' : 'Journée complète')
+                              ? (lang === 'es' ? "Sin disponibilidad" : lang === 'pt' ? 'Dia esgotado' : lang === 'en' ? 'Fully booked' : 'Journée complète')
                               : undefined
                           }
                           className={`aspect-square rounded-xl text-[15px] font-semibold transition-all duration-200 flex flex-col items-center justify-center relative ${
@@ -854,7 +856,7 @@ function BookingWizardContent() {
                           <span className={isFullyBooked ? 'line-through opacity-75' : ''}>{d}</span>
                           {isFullyBooked && (
                             <span className="text-[8.5px] font-mono tracking-tighter text-[#A85850] -mt-0.5 leading-none">
-                              {lang === 'pt' ? 'Esgotado' : lang === 'en' ? 'Full' : 'Complet'}
+                              {lang === 'es' ? "Completo" : lang === 'pt' ? 'Esgotado' : lang === 'en' ? 'Full' : 'Complet'}
                             </span>
                           )}
                         </button>
@@ -864,7 +866,7 @@ function BookingWizardContent() {
 
                   {selectedDate && (
                     <div className="mt-6 text-center font-mono text-sm font-semibold text-[#9A7428] bg-[#F5E9C8] py-2 rounded-lg border border-[#C49A3C]/20">
-                      ✓ {new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      ✓ {new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </div>
                   )}
                 </div>
@@ -896,13 +898,13 @@ function BookingWizardContent() {
               >
                 <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412] mb-3">{t.booking.step3Title}</h2>
                 <p className="text-[#6B6058] text-[15px] mb-8">
-                  {t.booking.availableSlots} <span className="font-semibold text-[#9A7428]">{selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                  {t.booking.availableSlots} <span className="font-semibold text-[#9A7428]">{selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                 </p>
 
                 {loadingSlots ? (
                   <div className="flex items-center justify-center py-12 text-[#8A8078]">
                     <div className="w-6 h-6 border-2 border-[#C49A3C] border-t-transparent rounded-full animate-spin mr-3" />
-                    <span className="font-mono text-sm">{lang === 'pt' ? 'A carregar horários...' : lang === 'en' ? 'Loading slots...' : 'Chargement des créneaux...'}</span>
+                    <span className="font-mono text-sm">{lang === 'es' ? "Cargando horarios..." : lang === 'pt' ? 'A carregar horários...' : lang === 'en' ? 'Loading slots...' : 'Chargement des créneaux...'}</span>
                   </div>
                 ) : slotError ? (
                   <div className="flex flex-col items-center justify-center py-10 gap-4">
@@ -912,12 +914,12 @@ function BookingWizardContent() {
                       onClick={() => selectedDate && fetchSlots(selectedDate)}
                       className="px-5 py-2.5 rounded-xl bg-[#C49A3C] text-white font-mono text-sm font-semibold hover:bg-[#9A7428] transition-colors"
                     >
-                      {lang === 'pt' ? '↺ Tentar novamente' : lang === 'en' ? '↺ Try again' : '↺ Réessayer'}
+                      {lang === 'es' ? "↺ Volver a intentar" : lang === 'pt' ? '↺ Tentar novamente' : lang === 'en' ? '↺ Try again' : '↺ Réessayer'}
                     </button>
                   </div>
                 ) : availableSlots.length === 0 ? (
                   <div className="text-center py-10 text-[#8A8078] font-mono text-sm">
-                    {lang === 'pt' ? 'Nenhum horário disponível para esta data.' : lang === 'en' ? 'No slots available for this date.' : 'Aucun créneau disponible pour cette date.'}
+                    {lang === 'es' ? "No hay horarios disponibles para esta fecha." : lang === 'pt' ? 'Nenhum horário disponível para esta data.' : lang === 'en' ? 'No slots available for this date.' : 'Aucun créneau disponible pour cette date.'}
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
@@ -942,13 +944,13 @@ function BookingWizardContent() {
 
                 <div className="flex flex-wrap items-center gap-6 mt-8 p-4 bg-white border border-[#E8E2D8] rounded-xl text-xs text-[#6B6058] font-mono font-medium justify-center">
                   <span className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 rounded-sm bg-white border border-[#E8E2D8]" /> {lang === 'pt' ? 'Disponível' : lang === 'en' ? 'Available' : 'Disponible'}
+                    <span className="w-3.5 h-3.5 rounded-sm bg-white border border-[#E8E2D8]" /> {lang === 'es' ? "Disponible" : lang === 'pt' ? 'Disponível' : lang === 'en' ? 'Available' : 'Disponible'}
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 rounded-sm bg-[#FAFAF8] border border-[#E8E2D8]/50" /> {lang === 'pt' ? 'Reservado' : lang === 'en' ? 'Booked' : 'Réservé'}
+                    <span className="w-3.5 h-3.5 rounded-sm bg-[#FAFAF8] border border-[#E8E2D8]/50" /> {lang === 'es' ? "Reservado" : lang === 'pt' ? 'Reservado' : lang === 'en' ? 'Booked' : 'Réservé'}
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 rounded-sm bg-[#C49A3C] shadow-sm" /> {lang === 'pt' ? 'Selecionado' : lang === 'en' ? 'Selected' : 'Sélectionné'}
+                    <span className="w-3.5 h-3.5 rounded-sm bg-[#C49A3C] shadow-sm" /> {lang === 'es' ? "Seleccionado" : lang === 'pt' ? 'Selecionado' : lang === 'en' ? 'Selected' : 'Sélectionné'}
                   </span>
                 </div>
 
@@ -981,22 +983,22 @@ function BookingWizardContent() {
               >
                 <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412] mb-6">{t.booking.step4Title}</h2>
 
-                <p className="mb-4 text-sm text-slate-700">{lang==='pt'?'Profissional':lang==='fr'?'Praticien':'Practitioner'}: <strong>{practitionerName||(lang==='pt'?'Primeira disponibilidade':lang==='fr'?'Premier créneau disponible':'Earliest available')}</strong></p>
+                <p className="mb-4 text-sm text-slate-700">{lang === 'es' ? "Profesional" : lang==='pt'?'Profissional':lang==='fr'?'Praticien':'Practitioner'}: <strong>{practitionerName||(lang === 'es' ? "Primera disponibilidad" : lang==='pt'?'Primeira disponibilidade':lang==='fr'?'Premier créneau disponible':'Earliest available')}</strong></p>
                 {/* Summary */}
                 <div className="bg-white border border-[#C49A3C]/30 rounded-2xl p-5 md:p-6 mb-8 shadow-sm">
                   <div className="grid grid-cols-3 gap-4 text-center divide-x divide-[#E8E2D8]">
                     <div className="px-2">
-                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'pt' ? 'Tratamento' : lang === 'en' ? 'Treatment' : 'Soin'}</div>
+                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'es' ? "Tratamiento" : lang === 'pt' ? 'Tratamento' : lang === 'en' ? 'Treatment' : 'Soin'}</div>
                       <div className="text-[13px] md:text-sm font-semibold text-[#1A1412] leading-tight">{selectedService?.name[lang] || selectedService?.name.pt || selectedService?.name.en || selectedService?.name.fr}</div>
                     </div>
                     <div className="px-2">
-                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'pt' ? 'Data' : lang === 'en' ? 'Date' : 'Date'}</div>
+                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'es' ? "Fecha" : lang === 'pt' ? 'Data' : lang === 'en' ? 'Date' : 'Date'}</div>
                       <div className="text-[13px] md:text-sm font-semibold text-[#1A1412] capitalize">
-                        {selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString(lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
                     </div>
                     <div className="px-2">
-                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'pt' ? 'Horário' : lang === 'en' ? 'Slot' : 'Heure'}</div>
+                      <div className="font-mono text-[11px] font-bold text-[#9A7428] uppercase tracking-wider mb-2">{lang === 'es' ? "Horario" : lang === 'pt' ? 'Horário' : lang === 'en' ? 'Slot' : 'Heure'}</div>
                       <div className="text-base md:text-lg font-mono font-bold text-[#C49A3C]">{selectedSlot}</div>
                     </div>
                   </div>
@@ -1027,7 +1029,7 @@ function BookingWizardContent() {
                         type="text"
                         value={form.name}
                         onChange={e => { setForm(p => ({ ...p, name: e.target.value })); if (fieldErrors.name) setFieldErrors(p => ({ ...p, name: false })); }}
-                        placeholder={lang === 'pt' ? 'O seu nome completo' : lang === 'en' ? 'Your full name' : 'Votre nom complet'}
+                        placeholder={lang === 'es' ? "Su nombre completo" : lang === 'pt' ? 'O seu nome completo' : lang === 'en' ? 'Your full name' : 'Votre nom complet'}
                         className={inputCls('name')}
                       />
                     </div>
@@ -1057,7 +1059,7 @@ function BookingWizardContent() {
                       type="email"
                       value={form.email}
                       onChange={e => { setForm(p => ({ ...p, email: e.target.value })); if (fieldErrors.email) setFieldErrors(p => ({ ...p, email: false })); }}
-                      placeholder={lang === 'pt' ? 'seu.email@exemplo.pt' : lang === 'en' ? 'your.email@example.com' : 'votre@email.com'}
+                      placeholder={lang === 'es' ? "su.correo@ejemplo.com" : lang === 'pt' ? 'seu.email@exemplo.pt' : lang === 'en' ? 'your.email@example.com' : 'votre@email.com'}
                       className={inputCls('email')}
                     />
                   </div>
@@ -1065,13 +1067,13 @@ function BookingWizardContent() {
                   {/* Coverage Selector */}
                   <div>
                     <label className="font-mono text-xs font-semibold text-[#8A8078] uppercase tracking-wide block mb-2">
-                      {lang === 'pt' ? 'Regime / Cobertura de Saúde' : lang === 'en' ? 'Healthcare Coverage' : 'Prise en charge / Couverture'}
+                      {lang === 'es' ? "Cobertura sanitaria" : lang === 'pt' ? 'Regime / Cobertura de Saúde' : lang === 'en' ? 'Healthcare Coverage' : 'Prise en charge / Couverture'}
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                       {[
-                        { id: 'PARTICULAR', label: lang === 'pt' ? 'Particular' : lang === 'en' ? 'Private' : 'Privé', sub: lang === 'pt' ? 'Sem seguro' : lang === 'en' ? 'Self-pay' : 'Sans mutuelle' },
-                        { id: 'INSURANCE', label: lang === 'pt' ? 'Seguro de Saúde' : lang === 'en' ? 'Health Insurance' : 'Assurance / Mutuelle', sub: 'Médis, Multicare...' },
-                        { id: 'ADSE', label: 'ADSE / Subsistema', sub: lang === 'pt' ? 'Regime Livre' : lang === 'en' ? 'Public Subsystem' : 'Secteur public' },
+                        { id: 'PARTICULAR', label: lang === 'es' ? "Privado" : lang === 'pt' ? 'Particular' : lang === 'en' ? 'Private' : 'Privé', sub: lang === 'es' ? "Pago particular" : lang === 'pt' ? 'Sem seguro' : lang === 'en' ? 'Self-pay' : 'Sans mutuelle' },
+                        { id: 'INSURANCE', label: lang === 'es' ? "Seguro médico" : lang === 'pt' ? 'Seguro de Saúde' : lang === 'en' ? 'Health Insurance' : 'Assurance / Mutuelle', sub: 'Médis, Multicare...' },
+                        { id: 'ADSE', label: 'ADSE / Subsistema', sub: lang === 'es' ? "Subsistema público" : lang === 'pt' ? 'Regime Livre' : lang === 'en' ? 'Public Subsystem' : 'Secteur public' },
                       ].map((item) => (
                         <button
                           key={item.id}
@@ -1102,7 +1104,7 @@ function BookingWizardContent() {
                       rows={3}
                       value={form.notes}
                       onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                      placeholder={lang === 'pt' ? 'Motivo da consulta, sintomas, antecedentes...' : lang === 'en' ? 'Reason for visit, symptoms, medical history...' : 'Motif de consultation, antécédents importants...'}
+                      placeholder={lang === 'es' ? "Motivo de la consulta, síntomas, antecedentes médicos..." : lang === 'pt' ? 'Motivo da consulta, sintomas, antecedentes...' : lang === 'en' ? 'Reason for visit, symptoms, medical history...' : 'Motif de consultation, antécédents importants...'}
                       className={`${inputClass} resize-none`}
                     />
                   </div>
@@ -1119,7 +1121,7 @@ function BookingWizardContent() {
 
                   {/* Google reCAPTCHA subtle notice */}
                   <p className="text-[10px] text-center text-[#8A8078] leading-tight pt-1">
-                    {lang === 'pt'
+                    {lang === 'es' ? "Este sitio está protegido por reCAPTCHA y se aplican la política de privacidad y las condiciones de uso de Google." : lang === 'pt'
                       ? 'Este site é protegido pelo reCAPTCHA e aplicam-se a Política de Privacidade e os Termos de Serviço da Google.'
                       : lang === 'en'
                         ? 'This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.'

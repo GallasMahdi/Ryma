@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { getLocalizedText } from '@/data/services';
 import { useAllServices } from '@/components/ServiceCatalogProvider';
 
@@ -117,7 +119,8 @@ export const ReviewsTab = React.memo(function ReviewsTab({
   const [formSubmitting, setFormSubmitting] = useState(false);
 
   const txt = useCallback(
-    (pt: string, en: string, fr: string) => {
+    (pt: string, en: string, fr: string, es: string) => {
+    if (lang === 'es') return es;
       if (lang === 'fr') return fr;
       if (lang === 'en') return en;
       return pt;
@@ -134,11 +137,11 @@ export const ReviewsTab = React.memo(function ReviewsTab({
       setLocalLoading(true);
       setError(null);
       const res = await fetch('/api/admin/reviews', { cache: 'no-store' });
-      if (!res.ok) throw new Error(txt('Falha ao carregar as avaliações.', 'Failed to load reviews.', 'Échec du chargement des avis.'));
+      if (!res.ok) throw new Error(txt('Falha ao carregar as avaliações.', 'Failed to load reviews.', 'Échec du chargement des avis.', "No se han podido cargar las opiniones."));
       const data = await res.json();
       setReviews(data.reviews || []);
     } catch (err: any) {
-      setError(err.message || txt('Erro inesperado.', 'Unexpected error.', 'Erreur inattendue.'));
+      setError(err.message || txt('Erro inesperado.', 'Unexpected error.', 'Erreur inattendue.', "Error inesperado."));
     } finally {
       setLocalLoading(false);
     }
@@ -165,18 +168,18 @@ export const ReviewsTab = React.memo(function ReviewsTab({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, ...updates }),
       });
-      if (!res.ok) throw new Error(txt('Falha ao atualizar avaliação.', 'Failed to update review.', 'Échec de la mise à jour de l\'avis.'));
+      if (!res.ok) throw new Error(txt('Falha ao atualizar avaliação.', 'Failed to update review.', 'Échec de la mise à jour de l\'avis.', "No se ha podido actualizar la opinión."));
       const data = await res.json();
       setReviews((prev) =>
         prev.map((r) => (r.id === id ? { ...r, ...data.review } : r))
       );
       onAddToast?.({
-        message: txt('Avaliação atualizada com sucesso!', 'Review updated successfully!', 'Avis mis à jour avec succès !'),
+        message: txt('Avaliação atualizada com sucesso!', 'Review updated successfully!', 'Avis mis à jour avec succès !', "¡Opinión actualizada correctamente!"),
         type: 'success',
       });
     } catch (err: any) {
       onAddToast?.({
-        message: err.message || txt('Erro ao atualizar.', 'Error updating.', 'Erreur lors de la mise à jour.'),
+        message: err.message || txt('Erro ao atualizar.', 'Error updating.', 'Erreur lors de la mise à jour.', "Error al actualizar."),
         type: 'error',
       });
     } finally {
@@ -190,15 +193,15 @@ export const ReviewsTab = React.memo(function ReviewsTab({
     const title = txt(
       `Tem a certeza que deseja remover permanentemente a avaliação de "${name}"?`,
       `Are you sure you want to permanently delete the review by "${name}"?`,
-      `Êtes-vous sûr de vouloir supprimer définitivement l'avis de "${name}" ?`
+      `Êtes-vous sûr de vouloir supprimer définitivement l'avis de "${name}" ?`, `¿Seguro que desea eliminar de forma permanente la opinión de «${name}»?`
     );
     const description = txt(
       'Esta ação não pode ser revertida e removerá este testemunho do website.',
       'This action cannot be undone and will permanently remove this review from your website.',
-      'Cette action est irréversible et supprimera cet avis de votre site web.'
+      'Cette action est irréversible et supprimera cet avis de votre site web.', "Esta acción no se puede deshacer y eliminará permanentemente esta opinión del sitio web."
     );
-    const confirmText = txt('Eliminar', 'Delete', 'Supprimer');
-    const cancelText = txt('Cancelar', 'Cancel', 'Annuler');
+    const confirmText = txt('Eliminar', 'Delete', 'Supprimer', "Eliminar");
+    const cancelText = txt('Cancelar', 'Cancel', 'Annuler', "Cancelar");
 
     const executeDelete = async () => {
       setBusyId(id);
@@ -207,15 +210,15 @@ export const ReviewsTab = React.memo(function ReviewsTab({
         const res = await fetch(`/api/admin/reviews?id=${id}`, {
           method: 'DELETE',
         });
-        if (!res.ok) throw new Error(txt('Falha ao remover avaliação.', 'Failed to delete review.', 'Échec de la suppression de l\'avis.'));
+        if (!res.ok) throw new Error(txt('Falha ao remover avaliação.', 'Failed to delete review.', 'Échec de la suppression de l\'avis.', "No se ha podido eliminar la opinión."));
         setReviews((prev) => prev.filter((r) => r.id !== id));
         onAddToast?.({
-          message: txt('Avaliação removida.', 'Review deleted.', 'Avis supprimé.'),
+          message: txt('Avaliação removida.', 'Review deleted.', 'Avis supprimé.', "Opinión eliminada."),
           type: 'info',
         });
       } catch (err: any) {
         onAddToast?.({
-          message: err.message || txt('Erro ao remover.', 'Error deleting.', 'Erreur de suppression.'),
+          message: err.message || txt('Erro ao remover.', 'Error deleting.', 'Erreur de suppression.', "Error al eliminar."),
           type: 'error',
         });
       } finally {
@@ -250,7 +253,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
     setCopiedId(rev.id);
     setTimeout(() => setCopiedId(null), 2000);
     onAddToast?.({
-      message: txt('Testemunho copiado para a área de transferência!', 'Testimonial copied to clipboard!', 'Témoignage copié dans le presse-papiers !'),
+      message: txt('Testemunho copiado para a área de transferência!', 'Testimonial copied to clipboard!', 'Témoignage copié dans le presse-papiers !', "¡Testimonio copiado al portapapeles!"),
       type: 'success',
     });
   };
@@ -262,24 +265,24 @@ export const ReviewsTab = React.memo(function ReviewsTab({
 
     if (formComment.trim().length < 5) {
       playSoftClick();
-      const title = txt('Atenção', 'Attention', 'Attention');
+      const title = txt('Atenção', 'Attention', 'Attention', "Atención");
       const description = txt(
         'Por favor, partilhe um comentário com pelo menos 5 caracteres.',
         'Please share a comment with at least 5 characters.',
-        'Veuillez partager un commentaire d\'au moins 5 caractères.'
+        'Veuillez partager un commentaire d\'au moins 5 caractères.', "Escriba un comentario de al menos 5 caracteres."
       );
       if (setConfirmDialog) {
         setConfirmDialog({
           title,
           description,
-          confirmText: txt('Entendido', 'Understood', 'Compris'),
+          confirmText: txt('Entendido', 'Understood', 'Compris', "Entendido"),
           onConfirm: () => {},
         });
       } else {
         setLocalConfirm({
           title,
           description,
-          confirmText: txt('Entendido', 'Understood', 'Compris'),
+          confirmText: txt('Entendido', 'Understood', 'Compris', "Entendido"),
           onConfirm: () => {},
         });
       }
@@ -303,12 +306,12 @@ export const ReviewsTab = React.memo(function ReviewsTab({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        const errMsg = data.error || txt('Falha ao guardar.', 'Failed to save.', 'Échec de l\'enregistrement.');
+        const errMsg = data.error || txt('Falha ao guardar.', 'Failed to save.', 'Échec de l\'enregistrement.', "No se ha podido guardar.");
         if (setConfirmDialog) {
           setConfirmDialog({
-            title: txt('Atenção', 'Attention', 'Attention'),
+            title: txt('Atenção', 'Attention', 'Attention', "Atención"),
             description: errMsg,
-            confirmText: txt('Entendido', 'Understood', 'Compris'),
+            confirmText: txt('Entendido', 'Understood', 'Compris', "Entendido"),
             onConfirm: () => {},
           });
           return;
@@ -344,12 +347,12 @@ export const ReviewsTab = React.memo(function ReviewsTab({
       setFormFeatured(false);
 
       onAddToast?.({
-        message: txt('Nova apreciação registada e publicada com sucesso!', 'New review recorded successfully!', 'Nouvel avis enregistré et publié avec succès !'),
+        message: txt('Nova apreciação registada e publicada com sucesso!', 'New review recorded successfully!', 'Nouvel avis enregistré et publié avec succès !', "¡Nueva opinión registrada correctamente!"),
         type: 'success',
       });
     } catch (err: any) {
       onAddToast?.({
-        message: err.message || txt('Erro ao adicionar.', 'Error adding review.', 'Erreur lors de l\'ajout.'),
+        message: err.message || txt('Erro ao adicionar.', 'Error adding review.', 'Erreur lors de l\'ajout.', "Error al añadir la opinión."),
         type: 'error',
       });
     } finally {
@@ -453,15 +456,15 @@ export const ReviewsTab = React.memo(function ReviewsTab({
   const getRatingLabel = (rating: number) => {
     switch (rating) {
       case 5:
-        return txt('Excelente • Experiência Excecional', 'Excellent • Exceptional Experience', 'Excellent • Expérience Exceptionnelle');
+        return txt('Excelente • Experiência Excecional', 'Excellent • Exceptional Experience', 'Excellent • Expérience Exceptionnelle', "Excelente • Experiencia excepcional");
       case 4:
-        return txt('Muito Bom • Elevada Satisfação', 'Very Good • High Satisfaction', 'Très Bien • Grande Satisfaction');
+        return txt('Muito Bom • Elevada Satisfação', 'Very Good • High Satisfaction', 'Très Bien • Grande Satisfaction', "Muy buena • Gran satisfacción");
       case 3:
-        return txt('Bom • Atendimento Positivo', 'Good • Positive Care', 'Bien • Soin Positif');
+        return txt('Bom • Atendimento Positivo', 'Good • Positive Care', 'Bien • Soin Positif', "Buena • Atención positiva");
       case 2:
-        return txt('Razoável • Com Observações', 'Fair • With Remarks', 'Passable • Avec Remarques');
+        return txt('Razoável • Com Observações', 'Fair • With Remarks', 'Passable • Avec Remarques', "Regular • Con observaciones");
       case 1:
-        return txt('Insatisfatório • Requer Atenção', 'Poor • Requires Attention', 'Insatisfaisant • Requiert Attention');
+        return txt('Insatisfatório • Requer Atenção', 'Poor • Requires Attention', 'Insatisfaisant • Requiert Attention', "Mala • Requiere atención");
       default:
         return '';
     }
@@ -482,18 +485,18 @@ export const ReviewsTab = React.memo(function ReviewsTab({
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C49A3C]/15 border border-[#C49A3C]/30 text-[#E8C97A] text-[11px] font-semibold tracking-wide uppercase">
               <IconAward size={13} className="text-[#E8C97A]" />
-              <span>{txt('Gestão de Reputação & Excelência', 'Reputation & Excellence Management', 'Gestion de Réputation & Excellence')}</span>
+              <span>{txt('Gestão de Reputação & Excelência', 'Reputation & Excellence Management', 'Gestion de Réputation & Excellence', "Gestión de reputación y excelencia")}</span>
             </div>
 
             <h2 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight leading-tight">
-              {txt('Apreciações & Testemunhos Clínicos', 'Clinical Reviews & Patient Voice', 'Avis & Témoignages Cliniques')}
+              {txt('Apreciações & Testemunhos Clínicos', 'Clinical Reviews & Patient Voice', 'Avis & Témoignages Cliniques', "Opiniones clínicas y voz del paciente")}
             </h2>
 
             <p className="text-xs sm:text-sm text-stone-300 font-light leading-relaxed">
               {txt(
                 'Curadoria de satisfação dos utentes, moderação de feedback em tempo real e gestão do carrossel em destaque na homepage.',
                 'Curate patient satisfaction, moderate live clinical feedback and spotlight featured testimonials on the homepage.',
-                'Gérez la satisfaction des patients, modérez les retours cliniques et mettez en avant les témoignages sur la page d’accueil.'
+                'Gérez la satisfaction des patients, modérez les retours cliniques et mettez en avant les témoignages sur la page d’accueil.', "Gestione la satisfacción de los pacientes, modere sus comentarios y destaque testimonios en la página de inicio."
               )}
             </p>
           </div>
@@ -518,7 +521,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                 </div>
                 <div className="text-[10px] text-stone-300 font-medium mt-0.5 flex items-center gap-1">
                   <IconThumbUp size={11} className="text-[#E8C97A]" />
-                  <span>{metrics.satisfactionRate}% {txt('Recomendação', 'Satisfaction', 'Satisfaction')}</span>
+                  <span>{metrics.satisfactionRate}% {txt('Recomendação', 'Satisfaction', 'Satisfaction', "Satisfacción")}</span>
                 </div>
               </div>
             </div>
@@ -533,7 +536,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#C49A3C] to-[#D4AF37] hover:from-[#B3892B] hover:to-[#C49A3C] active:scale-[0.98] text-[#1A1412] font-bold text-xs tracking-wide transition-all shadow-md hover:shadow-lg flex items-center gap-2 touch-target"
             >
               <IconPlus size={16} strokeWidth={2.5} />
-              <span>{txt('Registar Avaliação', 'New Review', 'Ajouter un Avis')}</span>
+              <span>{txt('Registar Avaliação', 'New Review', 'Ajouter un Avis', "Nueva opinión")}</span>
             </button>
 
             {/* Refresh Button */}
@@ -541,9 +544,9 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               type="button"
               onClick={fetchReviews}
               disabled={loading}
-              title={txt('Atualizar lista', 'Refresh reviews', 'Actualiser les avis')}
+              title={txt('Atualizar lista', 'Refresh reviews', 'Actualiser les avis', "Actualizar opiniones")}
               className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-stone-300 hover:text-white border border-white/10 transition-colors disabled:opacity-50"
-              aria-label="Refresh"
+              aria-label={legacyText("Refresh", lang)}
             >
               <IconRefresh size={16} className={loading ? 'animate-spin' : ''} />
             </button>
@@ -563,7 +566,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-[#64748B]">
-              {txt('Classificação Global', 'Overall Rating', 'Note Globale')}
+              {txt('Classificação Global', 'Overall Rating', 'Note Globale', "Valoración general")}
             </span>
             <span className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 transition-transform group-hover:scale-105">
               <IconStar size={16} fill="currentColor" />
@@ -575,14 +578,14 @@ export const ReviewsTab = React.memo(function ReviewsTab({
             </span>
             <span className="text-xs text-[#94A3B8] font-medium">/ 5.0</span>
             <span className="ml-auto text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-              {metrics.satisfactionRate}% {txt('Positivas', 'Positive', 'Positifs')}
+              {metrics.satisfactionRate}% {txt('Positivas', 'Positive', 'Positifs', "Positivas")}
             </span>
           </div>
           <div className="mt-2 flex items-center justify-between text-[11px] text-[#64748B]">
-            <span>{metrics.total} {txt('avaliações totais', 'total reviews', 'avis totaux')}</span>
+            <span>{metrics.total} {txt('avaliações totais', 'total reviews', 'avis totaux', "opiniones en total")}</span>
             <span className="text-[#C49A3C] font-semibold flex items-center gap-0.5">
               {showRatingBreakdown ? <IconChevronUp size={13} /> : <IconChevronDown size={13} />}
-              <span>{txt('Distribuição', 'Breakdown', 'Détails')}</span>
+              <span>{txt('Distribuição', 'Breakdown', 'Détails', "Distribución")}</span>
             </span>
           </div>
         </div>
@@ -597,7 +600,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-[#64748B]">
-              {txt('Publicadas no Website', 'Live on Website', 'En Ligne')}
+              {txt('Publicadas no Website', 'Live on Website', 'En Ligne', "Publicadas en el sitio web")}
             </span>
             <span className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-600">
               <IconShieldCheck size={16} />
@@ -613,7 +616,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-700 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
-            <span>{txt('Visíveis para visitantes', 'Visible to public', 'Visibles au public')}</span>
+            <span>{txt('Visíveis para visitantes', 'Visible to public', 'Visibles au public', "Visibles al público")}</span>
           </div>
         </div>
 
@@ -631,7 +634,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-[#64748B]">
-              {txt('Aguardam Moderação', 'Pending Review', 'En Attente')}
+              {txt('Aguardam Moderação', 'Pending Review', 'En Attente', "Pendientes de revisión")}
             </span>
             <span
               className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
@@ -653,14 +656,14 @@ export const ReviewsTab = React.memo(function ReviewsTab({
             </span>
             {metrics.pending > 0 && (
               <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
-                {txt('Ação necessária', 'Action required', 'Action requise')}
+                {txt('Ação necessária', 'Action required', 'Action requise', "Acción necesaria")}
               </span>
             )}
           </div>
           <div className="mt-2 text-[11px] text-[#64748B]">
             {metrics.pending > 0
-              ? txt('Requer aprovação prévia', 'Requires admin review', 'Modération requise')
-              : txt('Todas as análises em dia ✓', 'All caught up ✓', 'Tout est à jour ✓')}
+              ? txt('Requer aprovação prévia', 'Requires admin review', 'Modération requise', "Requiere revisión del administrador")
+              : txt('Todas as análises em dia ✓', 'All caught up ✓', 'Tout est à jour ✓', "Todo al día ✓")}
           </div>
         </div>
 
@@ -674,7 +677,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-[#64748B]">
-              {txt('Destaque Homepage', 'Featured Testimonials', 'En Vedette')}
+              {txt('Destaque Homepage', 'Featured Testimonials', 'En Vedette', "Testimonios destacados")}
             </span>
             <span className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#C49A3C]/30 flex items-center justify-center text-[#C49A3C]">
               <IconSparkles size={16} />
@@ -685,11 +688,11 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               {metrics.featured}
             </span>
             <span className="text-[10px] font-bold text-[#854D0E] bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-              {txt('Carrossel Ativo', 'Active Carousel', 'Carrousel Actif')}
+              {txt('Carrossel Ativo', 'Active Carousel', 'Carrousel Actif', "Carrusel activo")}
             </span>
           </div>
           <div className="mt-2 text-[11px] text-[#64748B]">
-            {txt('Apresentadas na página inicial', 'Displayed on landing page', 'Sur la page d’accueil')}
+            {txt('Apresentadas na página inicial', 'Displayed on landing page', 'Sur la page d’accueil', "Mostrados en la página de inicio")}
           </div>
         </div>
       </div>
@@ -708,10 +711,10 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               <div className="flex items-center justify-between pb-2 border-b border-[#F1F5F9]">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-[#0F172A]">
-                    {txt('Distribuição das Avaliações por Estrelas', 'Rating Distribution Breakdown', 'Détail des Évaluations par Étoiles')}
+                    {txt('Distribuição das Avaliações por Estrelas', 'Rating Distribution Breakdown', 'Détail des Évaluations par Étoiles', "Distribución de valoraciones")}
                   </span>
                   <span className="text-[11px] text-[#64748B]">
-                    ({txt('Clique numa barra para filtrar', 'Click a row to filter', 'Cliquez pour filtrer')})
+                    ({txt('Clique numa barra para filtrar', 'Click a row to filter', 'Cliquez pour filtrer', "Pulse una fila para filtrar")})
                   </span>
                 </div>
                 {filterRating !== 'ALL' && (
@@ -720,7 +723,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                     onClick={() => setFilterRating('ALL')}
                     className="text-[11px] font-semibold text-[#C49A3C] hover:underline"
                   >
-                    {txt('Limpar filtro de estrelas', 'Clear star filter', 'Effacer le filtre')}
+                    {txt('Limpar filtro de estrelas', 'Clear star filter', 'Effacer le filtre', "Borrar filtro de estrellas")}
                   </button>
                 )}
               </div>
@@ -779,11 +782,11 @@ export const ReviewsTab = React.memo(function ReviewsTab({
           {/* Status Tabs Segmented Control */}
           <div className="flex items-center gap-1 p-1 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl overflow-x-auto select-none shrink-0">
             {[
-              { id: 'ALL', label: txt('Todas', 'All', 'Toutes'), count: metrics.total },
-              { id: 'APPROVED', label: txt('Publicadas', 'Live', 'En Ligne'), count: metrics.approved },
-              { id: 'PENDING', label: txt('Pendentes', 'Pending', 'En Attente'), count: metrics.pending },
-              { id: 'FEATURED', label: txt('Destaques', 'Featured', 'Vedettes'), count: metrics.featured },
-              { id: 'REJECTED', label: txt('Ocultadas', 'Hidden', 'Masquées'), count: metrics.rejected },
+              { id: 'ALL', label: txt('Todas', 'All', 'Toutes', "Todos"), count: metrics.total },
+              { id: 'APPROVED', label: txt('Publicadas', 'Live', 'En Ligne', "En directo"), count: metrics.approved },
+              { id: 'PENDING', label: txt('Pendentes', 'Pending', 'En Attente', "Pendientes"), count: metrics.pending },
+              { id: 'FEATURED', label: txt('Destaques', 'Featured', 'Vedettes', "Destacadas"), count: metrics.featured },
+              { id: 'REJECTED', label: txt('Ocultadas', 'Hidden', 'Masquées', "Ocultas"), count: metrics.rejected },
             ].map((tab) => {
               const isActive = filterStatus === tab.id;
               return (
@@ -827,7 +830,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               placeholder={txt(
                 'Pesquisar por utente, texto, serviço ou localização...',
                 'Search reviews by patient, quote, service or city...',
-                'Rechercher par patient, texte, soin ou ville...'
+                'Rechercher par patient, texte, soin ou ville...', "Buscar opiniones por paciente, comentario, servicio o ciudad..."
               )}
               className="w-full pl-9 pr-8 py-2 text-xs bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C49A3C]/30 text-[#0F172A] placeholder:text-[#94A3B8]"
             />
@@ -850,10 +853,10 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               className="text-xs bg-[#F8FAFC] border border-[#CBD5E1] text-[#334155] rounded-xl px-2.5 py-2 font-medium focus:outline-none focus:border-[#0F172A]"
             >
-              <option value="recent">{txt('Mais Recentes', 'Most Recent', 'Plus Récents')}</option>
-              <option value="oldest">{txt('Mais Antigas', 'Oldest', 'Plus Anciens')}</option>
-              <option value="rating_desc">{txt('Melhor Nota (5★ → 1★)', 'Highest Rating', 'Meilleure Note')}</option>
-              <option value="rating_asc">{txt('Menor Nota (1★ → 5★)', 'Lowest Rating', 'Note la Plus Basse')}</option>
+              <option value="recent">{txt('Mais Recentes', 'Most Recent', 'Plus Récents', "Más recientes")}</option>
+              <option value="oldest">{txt('Mais Antigas', 'Oldest', 'Plus Anciens', "Más antiguas")}</option>
+              <option value="rating_desc">{txt('Melhor Nota (5★ → 1★)', 'Highest Rating', 'Meilleure Note', "Mayor valoración")}</option>
+              <option value="rating_asc">{txt('Menor Nota (1★ → 5★)', 'Lowest Rating', 'Note la Plus Basse', "Menor valoración")}</option>
             </select>
 
             {/* Layout Toggle (Grid vs Table) */}
@@ -861,7 +864,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                title={txt('Vista em grelha de cartões', 'Grid view', 'Vue grille')}
+                title={txt('Vista em grelha de cartões', 'Grid view', 'Vue grille', "Vista de cuadrícula")}
                 className={`p-1.5 rounded-lg transition-colors ${
                   viewMode === 'grid'
                     ? 'bg-white text-[#0F172A] shadow-2xs font-bold'
@@ -873,7 +876,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               <button
                 type="button"
                 onClick={() => setViewMode('table')}
-                title={txt('Vista compacta em lista', 'Table view', 'Vue liste')}
+                title={txt('Vista compacta em lista', 'Table view', 'Vue liste', "Vista de tabla")}
                 className={`p-1.5 rounded-lg transition-colors ${
                   viewMode === 'table'
                     ? 'bg-white text-[#0F172A] shadow-2xs font-bold'
@@ -890,15 +893,15 @@ export const ReviewsTab = React.memo(function ReviewsTab({
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#F1F5F9] text-xs">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-semibold text-[#64748B]">
-              {txt('Filtrar Tratamento:', 'Filter Treatment:', 'Filtrer Soin :')}
+              {txt('Filtrar Tratamento:', 'Filter Treatment:', 'Filtrer Soin :', "Filtrar tratamiento:")}
             </span>
             <select
               value={filterService}
               onChange={(e) => setFilterService(e.target.value)}
               className="text-xs bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg px-2 py-1 font-medium focus:outline-none focus:border-[#0F172A]"
             >
-              <option value="ALL">{txt('Todos os Tratamentos', 'All Treatments', 'Tous les Soins')}</option>
-              <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
+              <option value="ALL">{txt('Todos os Tratamentos', 'All Treatments', 'Tous les Soins', "Todos los tratamientos")}</option>
+              <option value="">{lang === 'es' ? "Elija un tratamiento" : lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
                 <option key={s.slug} value={s.slug}>
                   {getLocalizedText(s.name,lang)}
                 </option>
@@ -907,11 +910,11 @@ export const ReviewsTab = React.memo(function ReviewsTab({
 
             {/* Star Rating Quick Filter */}
             <span className="text-[11px] font-semibold text-[#64748B] ml-2">
-              {txt('Estrelas:', 'Stars:', 'Étoiles :')}
+              {txt('Estrelas:', 'Stars:', 'Étoiles :', "Estrellas:")}
             </span>
             <div className="flex items-center gap-1">
               {[
-                { val: 'ALL', label: txt('Todas', 'All', 'Toutes') },
+                { val: 'ALL', label: txt('Todas', 'All', 'Toutes', "Todos") },
                 { val: 5, label: '5 ★' },
                 { val: 4, label: '4 ★' },
                 { val: 3, label: '≤ 3 ★' },
@@ -936,10 +939,10 @@ export const ReviewsTab = React.memo(function ReviewsTab({
           </div>
 
           <div className="text-[11px] text-[#64748B]">
-            {txt('A apresentar', 'Showing', 'Affichage de')}{' '}
+            {txt('A apresentar', 'Showing', 'Affichage de', "Mostrando")}{' '}
             <strong className="text-[#0F172A] font-mono">{filteredReviews.length}</strong>{' '}
-            {txt('de', 'of', 'sur')}{' '}
-            <span className="font-mono">{reviews.length}</span> {txt('avaliações', 'reviews', 'avis')}
+            {txt('de', 'of', 'sur', "de")}{' '}
+            <span className="font-mono">{reviews.length}</span> {txt('avaliações', 'reviews', 'avis', "opiniones")}
           </div>
         </div>
       </div>
@@ -952,7 +955,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
             <IconMessageHeart size={20} className="absolute inset-0 m-auto text-[#C49A3C]" />
           </div>
           <p className="text-xs font-semibold text-[#64748B]">
-            {txt('A carregar base de dados de avaliações...', 'Loading reviews database...', 'Chargement des avis cliniques...')}
+            {txt('A carregar base de dados de avaliações...', 'Loading reviews database...', 'Chargement des avis cliniques...', "Cargando base de datos de opiniones...")}
           </p>
         </div>
       ) : error ? (
@@ -965,19 +968,19 @@ export const ReviewsTab = React.memo(function ReviewsTab({
             <IconMessageHeart size={30} />
           </div>
           <h3 className="text-sm font-serif font-bold text-[#0F172A]">
-            {txt('Nenhuma avaliação encontrada', 'No reviews found', 'Aucun avis trouvé')}
+            {txt('Nenhuma avaliação encontrada', 'No reviews found', 'Aucun avis trouvé', "No se han encontrado opiniones")}
           </h3>
           <p className="text-xs text-[#64748B] max-w-sm mx-auto leading-relaxed">
             {searchQuery || filterRating !== 'ALL' || filterStatus !== 'ALL' || filterService !== 'ALL'
               ? txt(
                   'Nenhum testemunho corresponde aos filtros ativos. Tente redefinir os critérios de pesquisa.',
                   'No reviews match your selected filters. Try clearing your search parameters.',
-                  'Aucun avis ne correspond à vos filtres. Essayez de réinitialiser la recherche.'
+                  'Aucun avis ne correspond à vos filtres. Essayez de réinitialiser la recherche.', "Ninguna opinión coincide con los filtros seleccionados. Pruebe a borrar los parámetros de búsqueda."
                 )
               : txt(
                   'Ainda não existem testemunhos registados. Registe a primeira avaliação de um utente com o botão acima.',
                   'No patient reviews recorded yet. Add your first clinical review using the button above.',
-                  'Aucun avis enregistré pour l’instant. Ajoutez un premier retour patient avec le bouton ci-dessus.'
+                  'Aucun avis enregistré pour l’instant. Ajoutez un premier retour patient avec le bouton ci-dessus.', "Aún no hay opiniones de pacientes registradas. Añada la primera con el botón de arriba."
                 )}
           </p>
           {(searchQuery || filterRating !== 'ALL' || filterStatus !== 'ALL' || filterService !== 'ALL') && (
@@ -991,7 +994,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               }}
               className="text-xs font-bold text-[#C49A3C] hover:underline pt-1"
             >
-              {txt('Limpar todos os filtros', 'Reset all filters', 'Réinitialiser les filtres')}
+              {txt('Limpar todos os filtros', 'Reset all filters', 'Réinitialiser les filtres', "Restablecer todos los filtros")}
             </button>
           )}
         </div>
@@ -1047,20 +1050,20 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                           </h4>
                           {rev.verified && (
                             <span
-                              title={txt('Utente Verificado pela Clínica', 'Verified Clinic Patient', 'Patient Vérifié')}
+                              title={txt('Utente Verificado pela Clínica', 'Verified Clinic Patient', 'Patient Vérifié', "Paciente de la clínica verificado")}
                               className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md shrink-0"
                             >
                               <IconShieldCheck size={11} className="text-emerald-600" />
-                              <span>{txt('Verificado', 'Verified', 'Vérifié')}</span>
+                              <span>{txt('Verificado', 'Verified', 'Vérifié', "Verificado")}</span>
                             </span>
                           )}
                           {rev.isFeatured && (
                             <span
-                              title={txt('Destaque na Homepage', 'Featured on Homepage', 'En Vedette')}
+                              title={txt('Destaque na Homepage', 'Featured on Homepage', 'En Vedette', "Destacado en el inicio")}
                               className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#854D0E] bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-md shrink-0"
                             >
                               <IconSparkles size={11} className="text-[#C49A3C]" />
-                              <span>{txt('Destaque', 'Featured', 'Vedette')}</span>
+                              <span>{txt('Destaque', 'Featured', 'Vedette', "Destacadas")}</span>
                             </span>
                           )}
                         </div>
@@ -1073,7 +1076,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                           <span>•</span>
                           <span className="flex items-center gap-1">
                             <IconCalendar size={11} className="text-[#94A3B8]" />
-                            <span>{new Date(rev.createdAt).toLocaleDateString('pt-PT')}</span>
+                            <span>{new Date(rev.createdAt).toLocaleDateString(lang === 'es' ? 'es-ES' : 'pt-PT')}</span>
                           </span>
                         </div>
                       </div>
@@ -1084,16 +1087,16 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                       {rev.status === 'APPROVED' ? (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                           <IconCheck size={11} strokeWidth={2.5} />
-                          <span>{txt('Publicada', 'Live', 'Publié')}</span>
+                          <span>{txt('Publicada', 'Live', 'Publié', "En directo")}</span>
                         </span>
                       ) : rev.status === 'PENDING' ? (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
-                          <span>{txt('Pendente', 'Pending', 'En Attente')}</span>
+                          <span>{txt('Pendente', 'Pending', 'En Attente', "Pendientes")}</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200">
                           <IconX size={11} strokeWidth={2.5} />
-                          <span>{txt('Ocultada', 'Hidden', 'Masqué')}</span>
+                          <span>{txt('Ocultada', 'Hidden', 'Masqué', "Ocultas")}</span>
                         </span>
                       )}
                     </div>
@@ -1147,11 +1150,11 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                     title={txt(
                       rev.verified ? 'Clique para remover verificação' : 'Clique para verificar utente',
                       rev.verified ? 'Click to unverify patient' : 'Click to verify patient',
-                      rev.verified ? 'Cliquer pour retirer la vérification' : 'Cliquer pour vérifier le patient'
+                      rev.verified ? 'Cliquer pour retirer la vérification' : 'Cliquer pour vérifier le patient', rev.verified ? "Pulse para retirar la verificación del paciente" : "Pulse para verificar al paciente"
                     )}
                   >
                     <IconShieldCheck size={14} />
-                    <span>{rev.verified ? txt('Verificado', 'Verified', 'Vérifié') : txt('Não verificado', 'Unverified', 'Non vérifié')}</span>
+                    <span>{rev.verified ? txt('Verificado', 'Verified', 'Vérifié', "Verificado") : txt('Não verificado', 'Unverified', 'Non vérifié', "Sin verificar")}</span>
                   </button>
 
                   <div className="flex items-center gap-1.5">
@@ -1162,10 +1165,10 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                         onClick={() => handleUpdate(rev.id, { status: 'APPROVED' })}
                         disabled={isBusy}
                         className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition-all shadow-2xs inline-flex items-center gap-1"
-                        title={txt('Aprovar e publicar no website', 'Approve and publish', 'Approuver et publier')}
+                        title={txt('Aprovar e publicar no website', 'Approve and publish', 'Approuver et publier', "Aprobar y publicar")}
                       >
                         <IconCheck size={12} strokeWidth={2.5} />
-                        <span>{txt('Publicar', 'Publish', 'Publier')}</span>
+                        <span>{txt('Publicar', 'Publish', 'Publier', "Publicar")}</span>
                       </button>
                     )}
 
@@ -1176,9 +1179,9 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                         onClick={() => handleUpdate(rev.id, { status: 'REJECTED' })}
                         disabled={isBusy}
                         className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] transition-colors"
-                        title={txt('Ocultar do website', 'Hide from site', 'Masquer')}
+                        title={txt('Ocultar do website', 'Hide from site', 'Masquer', "Ocultar del sitio")}
                       >
-                        {txt('Ocultar', 'Hide', 'Masquer')}
+                        {txt('Ocultar', 'Hide', 'Masquer', "Ocultar")}
                       </button>
                     )}
 
@@ -1194,8 +1197,8 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                       }`}
                       title={
                         rev.isFeatured
-                          ? txt('Remover da homepage', 'Remove from homepage', 'Retirer de la page d’accueil')
-                          : txt('Destacar na homepage', 'Feature on homepage', 'Mettre en vedette')
+                          ? txt('Remover da homepage', 'Remove from homepage', 'Retirer de la page d’accueil', "Quitar del inicio")
+                          : txt('Destacar na homepage', 'Feature on homepage', 'Mettre en vedette', "Destacar en el inicio")
                       }
                     >
                       <IconStar size={14} fill={rev.isFeatured ? 'currentColor' : 'none'} />
@@ -1206,7 +1209,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                       type="button"
                       onClick={() => handleCopyQuote(rev)}
                       className="p-1.5 rounded-xl border border-[#E2E8F0] text-slate-500 hover:text-[#0F172A] hover:bg-slate-50 transition-colors"
-                      title={txt('Copiar citação para partilha', 'Copy quote', 'Copier la citation')}
+                      title={txt('Copiar citação para partilha', 'Copy quote', 'Copier la citation', "Copiar comentario")}
                     >
                       {isCopied ? <IconCheck size={14} className="text-emerald-600" /> : <IconCopy size={14} />}
                     </button>
@@ -1217,7 +1220,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                       onClick={() => handleDelete(rev.id, rev.patientName)}
                       disabled={isBusy}
                       className="p-1.5 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 transition-colors"
-                      title={txt('Eliminar avaliação permanentemente', 'Delete review', 'Supprimer')}
+                      title={txt('Eliminar avaliação permanentemente', 'Delete review', 'Supprimer', "Eliminar opinión")}
                     >
                       <IconTrash size={14} />
                     </button>
@@ -1234,13 +1237,13 @@ export const ReviewsTab = React.memo(function ReviewsTab({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] font-semibold text-[11px] uppercase tracking-wider">
-                  <th className="py-3 px-4">{txt('Utente & Local', 'Patient & Location', 'Patient & Lieu')}</th>
-                  <th className="py-3 px-4">{txt('Tratamento', 'Treatment', 'Soin')}</th>
-                  <th className="py-3 px-4">{txt('Nota', 'Rating', 'Note')}</th>
-                  <th className="py-3 px-4">{txt('Testemunho', 'Quote', 'Témoignage')}</th>
-                  <th className="py-3 px-4">{txt('Estado', 'Status', 'Statut')}</th>
-                  <th className="py-3 px-4 text-center">{txt('Destaque', 'Featured', 'Vedette')}</th>
-                  <th className="py-3 px-4 text-right">{txt('Ações', 'Actions', 'Actions')}</th>
+                  <th className="py-3 px-4">{txt('Utente & Local', 'Patient & Location', 'Patient & Lieu', "Paciente y ubicación")}</th>
+                  <th className="py-3 px-4">{txt('Tratamento', 'Treatment', 'Soin', "Tratamiento")}</th>
+                  <th className="py-3 px-4">{txt('Nota', 'Rating', 'Note', "Valoración")}</th>
+                  <th className="py-3 px-4">{txt('Testemunho', 'Quote', 'Témoignage', "Comentario")}</th>
+                  <th className="py-3 px-4">{txt('Estado', 'Status', 'Statut', "Estado")}</th>
+                  <th className="py-3 px-4 text-center">{txt('Destaque', 'Featured', 'Vedette', "Destacadas")}</th>
+                  <th className="py-3 px-4 text-right">{txt('Ações', 'Actions', 'Actions', "Acciones")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F1F5F9]">
@@ -1271,15 +1274,15 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                       <td className="py-3 px-4 whitespace-nowrap">
                         {rev.status === 'APPROVED' ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                            {txt('Publicada', 'Live', 'Publié')}
+                            {txt('Publicada', 'Live', 'Publié', "En directo")}
                           </span>
                         ) : rev.status === 'PENDING' ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                            {txt('Pendente', 'Pending', 'En Attente')}
+                            {txt('Pendente', 'Pending', 'En Attente', "Pendientes")}
                           </span>
                         ) : (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
-                            {txt('Ocultada', 'Hidden', 'Masqué')}
+                            {txt('Ocultada', 'Hidden', 'Masqué', "Ocultas")}
                           </span>
                         )}
                       </td>
@@ -1304,7 +1307,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                               disabled={isBusy}
                               className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[11px] font-semibold hover:bg-emerald-700"
                             >
-                              {txt('Aprovar', 'Approve', 'Approuver')}
+                              {txt('Aprovar', 'Approve', 'Approuver', "Aprobar")}
                             </button>
                           )}
                           {rev.status !== 'REJECTED' && (
@@ -1314,7 +1317,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                               disabled={isBusy}
                               className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] hover:bg-slate-200"
                             >
-                              {txt('Ocultar', 'Hide', 'Masquer')}
+                              {txt('Ocultar', 'Hide', 'Masquer', "Ocultar")}
                             </button>
                           )}
                           <button
@@ -1340,11 +1343,11 @@ export const ReviewsTab = React.memo(function ReviewsTab({
       <ResponsiveModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title={txt('Registar Nova Avaliação Clínica', 'Add New Clinical Review', 'Enregistrer un Nouvel Avis')}
+        title={txt('Registar Nova Avaliação Clínica', 'Add New Clinical Review', 'Enregistrer un Nouvel Avis', "Añadir nueva opinión clínica")}
         subtitle={txt(
           'Adicione feedback autêntico de utentes com curadoria de classificação e estado',
           'Add genuine patient review with tailored rating and homepage placement',
-          'Ajoutez un témoignage patient avec note et statut de publication'
+          'Ajoutez un témoignage patient avec note et statut de publication', "Añada una opinión real de un paciente con su valoración y ubicación en el inicio"
         )}
         maxWidth="lg"
       >
@@ -1352,7 +1355,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
           {/* Interactive Star Rating Picker */}
           <div className="bg-[#FAF8F5] border border-[#E8DCC4] rounded-2xl p-4 text-center space-y-2">
             <label className="block font-bold text-xs text-[#1A1412] uppercase tracking-wider">
-              {txt('Classificação do Utente', 'Patient Rating', 'Note du Patient')}
+              {txt('Classificação do Utente', 'Patient Rating', 'Note du Patient', "Valoración del paciente")}
             </label>
 
             <div className="flex items-center justify-center gap-2 py-1">
@@ -1391,27 +1394,27 @@ export const ReviewsTab = React.memo(function ReviewsTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-bold text-[#334155] mb-1">
-                {txt('Nome do Utente *', 'Patient Name *', 'Nom du Patient *')}
+                {txt('Nome do Utente *', 'Patient Name *', 'Nom du Patient *', "Nombre del paciente *")}
               </label>
               <input
                 type="text"
                 required
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                placeholder="Ex: Ana Rodrigues"
+                placeholder={legacyText("Ex: Ana Rodrigues", lang)}
                 className="w-full px-3 py-2 bg-white border border-[#CBD5E1] rounded-xl text-[#0F172A] focus:outline-none focus:border-[#0F172A]"
               />
             </div>
 
             <div>
               <label className="block font-bold text-[#334155] mb-1">
-                {txt('Localização', 'Location', 'Localisation')}
+                {txt('Localização', 'Location', 'Localisation', "Ubicación")}
               </label>
               <input
                 type="text"
                 value={formLocation}
                 onChange={(e) => setFormLocation(e.target.value)}
-                placeholder="Ex: Lisboa, Oeiras, Cascais"
+                placeholder={legacyText("Ex: Lisboa, Oeiras, Cascais", lang)}
                 className="w-full px-3 py-2 bg-white border border-[#CBD5E1] rounded-xl text-[#0F172A] focus:outline-none focus:border-[#0F172A]"
               />
             </div>
@@ -1421,14 +1424,14 @@ export const ReviewsTab = React.memo(function ReviewsTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-bold text-[#334155] mb-1">
-                {txt('Tratamento / Especialidade *', 'Service *', 'Soin *')}
+                {txt('Tratamento / Especialidade *', 'Service *', 'Soin *', "Servicio *")}
               </label>
               <select
                 value={formService}
                 onChange={(e) => setFormService(e.target.value)}
                 className="w-full px-3 py-2 bg-white border border-[#CBD5E1] rounded-xl text-[#0F172A] focus:outline-none focus:border-[#0F172A]"
               >
-                <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
+                <option value="">{lang === 'es' ? "Elija un tratamiento" : lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
                   <option key={s.slug} value={s.slug}>
                     {getLocalizedText(s.name,lang)}
                   </option>
@@ -1438,13 +1441,13 @@ export const ReviewsTab = React.memo(function ReviewsTab({
 
             <div>
               <label className="block font-bold text-[#334155] mb-1">
-                {txt('Email do Utente (Opcional)', 'Email (Optional)', 'Email (Optionnel)')}
+                {txt('Email do Utente (Opcional)', 'Email (Optional)', 'Email (Optionnel)', "Correo electrónico (opcional)")}
               </label>
               <input
                 type="email"
                 value={formEmail}
                 onChange={(e) => setFormEmail(e.target.value)}
-                placeholder="utente@exemplo.pt"
+                placeholder={legacyText("utente@exemplo.pt", lang)}
                 className="w-full px-3 py-2 bg-white border border-[#CBD5E1] rounded-xl text-[#0F172A] focus:outline-none focus:border-[#0F172A]"
               />
             </div>
@@ -1454,7 +1457,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="font-bold text-[#334155]">
-                {txt('Testemunho / Depoimento do Utente *', 'Review Feedback *', 'Commentaire *')}
+                {txt('Testemunho / Depoimento do Utente *', 'Review Feedback *', 'Commentaire *', "Opinión del paciente *")}
               </label>
               <span className="text-[10px] text-[#94A3B8]">
                 {formComment.length} / 1000
@@ -1469,7 +1472,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               placeholder={txt(
                 'Descreva a experiência do utente, recuperação clínica ou elogio ao atendimento...',
                 'Write patient feedback or testimonial quote...',
-                'Décrivez le retour d’expérience du patient...'
+                'Décrivez le retour d’expérience du patient...', "Escriba la opinión o el testimonio del paciente..."
               )}
               className="w-full px-3 py-2.5 bg-white border border-[#CBD5E1] rounded-xl text-[#0F172A] focus:outline-none focus:border-[#0F172A] leading-relaxed"
             />
@@ -1481,10 +1484,10 @@ export const ReviewsTab = React.memo(function ReviewsTab({
             <label className="flex items-center justify-between cursor-pointer select-none">
               <div>
                 <span className="font-bold text-[#0F172A] block">
-                  {txt('Publicar Imediatamente no Website', 'Publish Live on Website', 'Publier Immédiatement')}
+                  {txt('Publicar Imediatamente no Website', 'Publish Live on Website', 'Publier Immédiatement', "Publicar en el sitio web")}
                 </span>
                 <span className="text-[11px] text-[#64748B]">
-                  {txt('Ficará visível de imediato para todos os visitantes', 'Visible right away to prospective patients', 'Visible immédiatement aux visiteurs')}
+                  {txt('Ficará visível de imediato para todos os visitantes', 'Visible right away to prospective patients', 'Visible immédiatement aux visiteurs', "Visible de inmediato para futuros pacientes")}
                 </span>
               </div>
               <input
@@ -1499,10 +1502,10 @@ export const ReviewsTab = React.memo(function ReviewsTab({
             <label className="flex items-center justify-between cursor-pointer select-none pt-2 border-t border-[#E2E8F0]">
               <div>
                 <span className="font-bold text-[#0F172A] block">
-                  {txt('Marcar como Utente Verificado', 'Mark as Verified Patient', 'Marquer Patient Vérifié')}
+                  {txt('Marcar como Utente Verificado', 'Mark as Verified Patient', 'Marquer Patient Vérifié', "Marcar como paciente verificado")}
                 </span>
                 <span className="text-[11px] text-[#64748B]">
-                  {txt('Adiciona selo de autenticidade clínica ao testemunho', 'Adds green clinic verification shield', 'Ajoute un badge d’authenticité')}
+                  {txt('Adiciona selo de autenticidade clínica ao testemunho', 'Adds green clinic verification shield', 'Ajoute un badge d’authenticité', "Añade el distintivo verde de verificación de la clínica")}
                 </span>
               </div>
               <input
@@ -1517,10 +1520,10 @@ export const ReviewsTab = React.memo(function ReviewsTab({
             <label className="flex items-center justify-between cursor-pointer select-none pt-2 border-t border-[#E2E8F0]">
               <div>
                 <span className="font-bold text-[#0F172A] block">
-                  {txt('Destacar no Carrossel da Homepage', 'Spotlight on Homepage', 'Mettre en Vedette sur l’Accueil')}
+                  {txt('Destacar no Carrossel da Homepage', 'Spotlight on Homepage', 'Mettre en Vedette sur l’Accueil', "Destacar en la página de inicio")}
                 </span>
                 <span className="text-[11px] text-[#64748B]">
-                  {txt('Exibição prioritária nos testemunhos da página principal', 'Featured in the hero feedback carousel', 'Mise en avant prioritaire')}
+                  {txt('Exibição prioritária nos testemunhos da página principal', 'Featured in the hero feedback carousel', 'Mise en avant prioritaire', "Se muestra en el carrusel principal de opiniones")}
                 </span>
               </div>
               <input
@@ -1539,7 +1542,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               onClick={() => setIsAddModalOpen(false)}
               className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#64748B] hover:bg-slate-50 font-bold text-xs transition-colors"
             >
-              {txt('Cancelar', 'Cancel', 'Annuler')}
+              {txt('Cancelar', 'Cancel', 'Annuler', "Cancelar")}
             </button>
 
             <button
@@ -1550,12 +1553,12 @@ export const ReviewsTab = React.memo(function ReviewsTab({
               {formSubmitting ? (
                 <>
                   <IconLoader2 size={15} className="animate-spin text-[#E8C97A]" />
-                  <span>{txt('A gravar...', 'Saving...', 'Enregistrement...')}</span>
+                  <span>{txt('A gravar...', 'Saving...', 'Enregistrement...', "Guardando...")}</span>
                 </>
               ) : (
                 <>
                   <IconSparkles size={15} className="text-[#E8C97A]" />
-                  <span>{txt('Gravar & Publicar Avaliação', 'Save & Publish Review', 'Enregistrer & Publier')}</span>
+                  <span>{txt('Gravar & Publicar Avaliação', 'Save & Publish Review', 'Enregistrer & Publier', "Guardar y publicar opinión")}</span>
                 </>
               )}
             </button>
@@ -1601,7 +1604,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                   onClick={() => setLocalConfirm(null)}
                   className="px-4 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target"
                 >
-                  {localConfirm.cancelText || txt('Cancelar', 'Cancel', 'Annuler')}
+                  {localConfirm.cancelText || txt('Cancelar', 'Cancel', 'Annuler', "Cancelar")}
                 </button>
                 <button
                   type="button"
@@ -1612,7 +1615,7 @@ export const ReviewsTab = React.memo(function ReviewsTab({
                   }}
                   className="px-4 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold shadow-xs transition-colors touch-target"
                 >
-                  {localConfirm.confirmText || txt('Eliminar', 'Delete', 'Supprimer')}
+                  {localConfirm.confirmText || txt('Eliminar', 'Delete', 'Supprimer', "Eliminar")}
                 </button>
               </div>
             </motion.div>

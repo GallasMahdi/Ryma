@@ -13,7 +13,7 @@ interface ResponsiveModalProps {
   children: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   showCloseButton?: boolean;
-  lang?: 'fr' | 'en' | 'pt';
+  lang?: 'fr' | 'en' | 'pt' | 'es';
 }
 
 const MAX_WIDTH_CLASSES = {
@@ -42,7 +42,7 @@ export function ResponsiveModal({
   const [confirmDiscard,setConfirmDiscard]=useState(false);
   const titleId=useId();
   const keepButton=useRef<HTMLButtonElement>(null);
-  const t=(fr:string,en:string,pt:string)=>lang==='fr'?fr:lang==='en'?en:pt;
+  const t=(fr:string,en:string,pt:string, es: string)=>lang === 'es' ? es : lang==='fr'?fr:lang==='en'?en:pt;
   const requestClose=()=>dirty.current?setConfirmDiscard(true):closeRef.current();
   useEffect(() => {
     if (!isOpen) return;
@@ -148,7 +148,7 @@ export function ResponsiveModal({
                   type="button"
                   onClick={requestClose}
                   className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors shrink-0 touch-target flex items-center justify-center"
-                  aria-label={t('Fermer','Close','Fechar')}
+                  aria-label={t('Fermer','Close','Fechar', "Cerrar")}
                 >
                   <IconX size={18} />
                 </button>
@@ -159,11 +159,11 @@ export function ResponsiveModal({
             <div inert={confirmDiscard} className="p-5 md:p-6 overflow-y-auto flex-1 custom-scrollbar">
               {children}
             </div>
-            {confirmDiscard && <div role="alertdialog" aria-modal="true" aria-label={t('Abandonner les modifications ?','Discard changes?','Descartar alterações?')} className="p-5 border-t bg-white space-y-3">
-              <p>{t('Les modifications ne sont pas enregistrées.','Your changes have not been saved.','As alterações não foram guardadas.')}</p>
+            {confirmDiscard && <div role="alertdialog" aria-modal="true" aria-label={t('Abandonner les modifications ?','Discard changes?','Descartar alterações?', "¿Descartar los cambios?")} className="p-5 border-t bg-white space-y-3">
+              <p>{t('Les modifications ne sont pas enregistrées.','Your changes have not been saved.','As alterações não foram guardadas.', "Sus cambios no se han guardado.")}</p>
               <div className="flex gap-3">
-                <button ref={keepButton} type="button" onClick={()=>setConfirmDiscard(false)} className="border rounded-lg px-3 py-2">{t('Continuer la saisie','Keep editing','Continuar a editar')}</button>
-                <button type="button" onClick={()=>{dirty.current=false;setConfirmDiscard(false);closeRef.current();}} className="border rounded-lg px-3 py-2">{t('Abandonner','Discard','Descartar')}</button>
+                <button ref={keepButton} type="button" onClick={()=>setConfirmDiscard(false)} className="border rounded-lg px-3 py-2">{t('Continuer la saisie','Keep editing','Continuar a editar', "Seguir editando")}</button>
+                <button type="button" onClick={()=>{dirty.current=false;setConfirmDiscard(false);closeRef.current();}} className="border rounded-lg px-3 py-2">{t('Abandonner','Discard','Descartar', "Descartar")}</button>
               </div>
             </div>}
           </motion.div>

@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,16 +42,16 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
   if (!prescription) return null;
 
   const handlePrint = () => {
-    printPrescriptionPdf(prescription);
+    printPrescriptionPdf(prescription, lang);
   };
 
   const handleWhatsAppSend = () => {
     const cleanPhone = (prescription.patientPhone || '').replace(/[^0-9]/g, '');
     if (!cleanPhone) {
-      alert(lang === 'pt' ? 'Número de telefone do utente não disponível.' : 'Patient phone number is not available.');
+      alert(lang === 'es' ? "El teléfono del paciente no está disponible." : lang === 'pt' ? 'Número de telefone do utente não disponível.' : 'Patient phone number is not available.');
       return;
     }
-    const msg = encodeURIComponent(formatPrescriptionWhatsAppMessage(prescription));
+    const msg = encodeURIComponent(formatPrescriptionWhatsAppMessage(prescription, lang));
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
   };
 
@@ -77,9 +79,7 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
             {/* Top Action Bar */}
             <div className="px-3.5 sm:px-6 py-3 bg-[#0F172A] text-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 shrink-0 border-b border-white/10">
               <div className="flex items-center gap-2 sm:gap-3">
-                <span className="font-mono text-xs font-bold text-[#E8C97A] tracking-wider uppercase">
-                  Recomendações Clínicas
-                </span>
+                <span className="font-mono text-xs font-bold text-[#E8C97A] tracking-wider uppercase">{legacyText("Recomendações Clínicas", lang)}</span>
                 <span className="text-[11px] text-white/70">
                   {prescription.date}
                 </span>
@@ -90,7 +90,7 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
                   type="button"
                   onClick={handleWhatsAppSend}
                   className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
-                  title="Enviar por WhatsApp"
+                  title={legacyText("Enviar por WhatsApp", lang)}
                 >
                   <IconBrandWhatsapp size={15} />
                   <span className="inline sm:inline">WhatsApp</span>
@@ -100,17 +100,17 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
                   type="button"
                   onClick={handlePrint}
                   className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#C49A3C] hover:bg-[#D4AA4C] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
-                  title="Imprimir ou Salvar PDF"
+                  title={legacyText("Imprimir ou Salvar PDF", lang)}
                 >
                   <IconPrinter size={15} />
-                  <span className="hidden sm:inline">Imprimir / PDF</span>
+                  <span className="hidden sm:inline">{legacyText("Imprimir / PDF", lang)}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={onClose}
                   className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors ms-1 touch-target"
-                  title="Fechar"
+                  title={legacyText("Fechar", lang)}
                 >
                   <IconX size={20} />
                 </button>
@@ -130,26 +130,22 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
                       {SITE.name}
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#475569] font-medium">
-                    Clínica de Fisioterapia & Estética Médica Avançada
-                  </p>
+                  <p className="text-[11px] text-[#475569] font-medium">{legacyText("Clínica de Fisioterapia & Estética Médica Avançada", lang)}</p>
                   <p className="text-[10px] text-[#64748B]">
-                    Avenida da Liberdade 120, 1250-146 Lisboa, Portugal
+                    {SITE.address.pt}
                   </p>
                 </div>
 
                 <div className="sm:text-right shrink-0">
-                  <span className="inline-block px-3 py-1 bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg font-mono font-bold text-xs text-[#0F172A] mb-1">
-                    FICHA DE CONSELHOS
-                  </span>
-                  <p className="text-[11px] text-[#64748B]">Data: <strong>{prescription.date}</strong></p>
+                  <span className="inline-block px-3 py-1 bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg font-mono font-bold text-xs text-[#0F172A] mb-1">{legacyText("FICHA DE CONSELHOS", lang)}</span>
+                  <p className="text-[11px] text-[#64748B]">{legacyText("Data:", lang)}{" "}<strong>{prescription.date}</strong></p>
                 </div>
               </div>
 
               {/* Patient */}
               <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">Utente:</span>
+                  <span className="text-[10px] uppercase font-bold text-[#94A3B8] block">{legacyText("Utente:", lang)}</span>
                   <span className="font-bold text-sm text-[#0F172A]">{prescription.patientName}</span>
                 </div>
                 <div className="text-right font-mono text-xs text-[#64748B]">
@@ -159,22 +155,20 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
 
               {prescription.diagnosisOrGoal && (
                 <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#E8E2D8] text-xs">
-                  <strong>Objetivo Clínico:</strong> {prescription.diagnosisOrGoal}
+                  <strong>{legacyText("Objetivo Clínico:", lang)}</strong> {prescription.diagnosisOrGoal}
                 </div>
               )}
 
               {/* Care Products */}
               {careProducts.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-bold text-xs text-[#0F172A] uppercase tracking-wider bg-[#F1F5F9] border-l-4 border-[#C49A3C] px-3 py-1.5 rounded-r-lg">
-                    🧴 Produtos & Cuidados Tópicos Recomendados
-                  </h4>
+                  <h4 className="font-bold text-xs text-[#0F172A] uppercase tracking-wider bg-[#F1F5F9] border-l-4 border-[#C49A3C] px-3 py-1.5 rounded-r-lg">{legacyText("🧴 Produtos & Cuidados Tópicos Recomendados", lang)}</h4>
                   <div className="space-y-1.5">
                     {careProducts.map((it, idx) => (
                       <div key={it.id || `care-${idx}-${it.title}`} className="p-2.5 bg-white border border-[#E2E8F0] rounded-xl">
                         <p className="font-bold text-[#0F172A]">{it.title}</p>
                         <p className="text-[11px] text-[#475569] mt-0.5">
-                          <strong>Aplicação / Posologia:</strong> {it.instructions}
+                          <strong>{legacyText("Aplicação / Posologia:", lang)}</strong> {it.instructions}
                         </p>
                       </div>
                     ))}
@@ -185,15 +179,13 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
               {/* Equipment */}
               {equipment.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-bold text-xs text-[#0F172A] uppercase tracking-wider bg-[#F1F5F9] border-l-4 border-[#C49A3C] px-3 py-1.5 rounded-r-lg">
-                    🧘 Material Ergonómico & Auto-Reabilitação
-                  </h4>
+                  <h4 className="font-bold text-xs text-[#0F172A] uppercase tracking-wider bg-[#F1F5F9] border-l-4 border-[#C49A3C] px-3 py-1.5 rounded-r-lg">{legacyText("🧘 Material Ergonómico & Auto-Reabilitação", lang)}</h4>
                   <div className="space-y-1.5">
                     {equipment.map((it, idx) => (
                       <div key={it.id || `equip-${idx}-${it.title}`} className="p-2.5 bg-white border border-[#E2E8F0] rounded-xl">
                         <p className="font-bold text-[#0F172A]">{it.title}</p>
                         <p className="text-[11px] text-[#475569] mt-0.5">
-                          <strong>Utilização:</strong> {it.instructions}
+                          <strong>{legacyText("Utilização:", lang)}</strong> {it.instructions}
                         </p>
                       </div>
                     ))}
@@ -204,15 +196,13 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
               {/* Habits */}
               {habits.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-bold text-xs text-[#0F172A] uppercase tracking-wider bg-[#F1F5F9] border-l-4 border-[#C49A3C] px-3 py-1.5 rounded-r-lg">
-                    💡 Hábitos & Higiene Postural
-                  </h4>
+                  <h4 className="font-bold text-xs text-[#0F172A] uppercase tracking-wider bg-[#F1F5F9] border-l-4 border-[#C49A3C] px-3 py-1.5 rounded-r-lg">{legacyText("💡 Hábitos & Higiene Postural", lang)}</h4>
                   <div className="space-y-1.5">
                     {habits.map((it, idx) => (
                       <div key={it.id || `habit-${idx}-${it.title}`} className="p-2.5 bg-white border border-[#E2E8F0] rounded-xl">
                         <p className="font-bold text-[#0F172A]">{it.title}</p>
                         <p className="text-[11px] text-[#475569] mt-0.5">
-                          <strong>Conselho:</strong> {it.instructions}
+                          <strong>{legacyText("Conselho:", lang)}</strong> {it.instructions}
                         </p>
                       </div>
                     ))}
@@ -223,21 +213,19 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
               {/* Notes */}
               {prescription.generalNotes && (
                 <div className="p-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-[11px] text-[#475569]">
-                  <strong>Observações do Fisioterapeuta:</strong><br />
+                  <strong>{legacyText("Observações do Fisioterapeuta:", lang)}</strong><br />
                   {prescription.generalNotes}
                 </div>
               )}
 
               {/* Signature */}
               <div className="pt-6 border-t border-dashed border-[#CBD5E1] flex justify-between items-end">
-                <p className="text-[10px] text-[#94A3B8] max-w-sm">
-                  Documento terapêutico de apoio domiciliário.
-                </p>
+                <p className="text-[10px] text-[#94A3B8] max-w-sm">{legacyText("Documento terapêutico de apoio domiciliário.", lang)}</p>
                 <div className="text-center w-52 border-t border-[#475569] pt-1">
                   <p className="font-serif italic text-xs text-[#0F172A]">
                     {prescription.practitioner || SITE.professionalName}
                   </p>
-                  <p className="text-[9px] text-[#64748B]">Fisioterapeuta Licenciado</p>
+                  <p className="text-[9px] text-[#64748B]">{legacyText("Fisioterapeuta Licenciado", lang)}</p>
                 </div>
               </div>
             </div>
@@ -248,12 +236,12 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
                 <button
                   type="button"
                   onClick={() => {
-                    const title = lang === 'fr' 
-                      ? 'Supprimer cette fiche de recommandations ?' 
-                      : lang === 'en' 
-                      ? 'Delete this recommendation sheet?' 
+                    const title = lang === 'es' ? "¿Eliminar esta hoja de recomendaciones?" : lang === 'fr'
+                      ? 'Supprimer cette fiche de recommandations ?'
+                      : lang === 'en'
+                      ? 'Delete this recommendation sheet?'
                       : 'Eliminar esta ficha de recomendações?';
-                    const desc = lang === 'fr'
+                    const desc = lang === 'es' ? "Esta acción no se puede deshacer y eliminará la hoja de forma permanente." : lang === 'fr'
                       ? 'Cette action est irréversible et supprimera définitivement cette fiche.'
                       : lang === 'en'
                       ? 'This action cannot be undone and will permanently delete this sheet.'
@@ -266,8 +254,8 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
                       setConfirmDialog({
                         title,
                         description: desc,
-                        confirmText: lang === 'fr' ? 'Supprimer' : lang === 'en' ? 'Delete' : 'Eliminar',
-                        cancelText: lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar',
+                        confirmText: lang === 'es' ? "Eliminar" : lang === 'fr' ? 'Supprimer' : lang === 'en' ? 'Delete' : 'Eliminar',
+                        cancelText: lang === 'es' ? "Cancelar" : lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar',
                         onConfirm: doDelete,
                       });
                     } else {
@@ -277,7 +265,7 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
                   className="text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 transition-colors"
                 >
                   <IconTrash size={14} />
-                  <span>{lang === 'fr' ? 'Supprimer Fiche' : lang === 'en' ? 'Delete Sheet' : 'Eliminar Ficha'}</span>
+                  <span>{lang === 'es' ? "Eliminar hoja" : lang === 'fr' ? 'Supprimer Fiche' : lang === 'en' ? 'Delete Sheet' : 'Eliminar Ficha'}</span>
                 </button>
                 <span className="text-[11px] text-[#94A3B8]">
                   ID: {prescription.id}

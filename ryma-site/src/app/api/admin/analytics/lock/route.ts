@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { sealData, unsealData } from 'iron-session';
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       });
     }
   } catch {
-    return NextResponse.json({ error: 'Unable to lock analytics' }, { status: 503 });
+    return NextResponse.json({ error: localizeApiError('Unable to lock analytics', request) }, { status: 503 });
   }
 
   return NextResponse.json({ success: true, message: 'Statistiques verrouillées' });

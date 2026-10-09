@@ -7,8 +7,8 @@ import './globals.css';
 import { LanguageProvider, type Lang } from '@/lib/i18n';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { SplashScreen } from '@/components/ui/SplashScreen';
 import { WhatsAppBubble } from '@/components/ui/WhatsAppBubble';
+import { SplashScreen } from '@/components/ui/SplashScreen';
 
 export const viewport: Viewport = {
   themeColor: '#0F172A',
@@ -47,7 +47,7 @@ const siteUrl =
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
   'https://digitalclinica.pt';
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: 'Digital Clínica — Fisioterapia & Estética Avançada em Lisboa',
@@ -122,10 +122,22 @@ export const metadata: Metadata = {
   },
 };
 
+export async function generateMetadata(): Promise<Metadata> {
+  if ((await cookies()).get('ryma_lang')?.value !== 'es') return baseMetadata;
+  const title = "Digital Clínica — Fisioterapia y estética avanzada en Lisboa";
+  const description = "Clínica de fisioterapia y estética avanzada en Lisboa, Portugal. Reeducación postural, recuperación posparto, drenaje linfático y tratamientos corporales. Reserve su cita en línea.";
+  const images = [{ url: `${siteUrl}/og-image.jpg`, width: 1200, height: 630, alt: title }];
+  return { ...baseMetadata, title, description,
+    keywords: ['fisioterapia Lisboa', 'rehabilitación posparto', 'drenaje linfático', 'estética corporal', 'Digital Clínica'],
+    openGraph: { ...baseMetadata.openGraph, locale: 'es_ES', title, description, siteName: 'Digital Clínica', images },
+    twitter: { ...baseMetadata.twitter, title, description, images },
+  };
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const langCookie = cookieStore.get('ryma_lang')?.value;
-  const initialLang: Lang = (langCookie === 'fr' || langCookie === 'en' || langCookie === 'pt') ? (langCookie as Lang) : 'pt';
+  const initialLang: Lang = (langCookie === 'fr' || langCookie === 'en' || langCookie === 'pt' || langCookie === 'es') ? (langCookie as Lang) : 'pt';
 
   return (
     <html
@@ -146,32 +158,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': ['LocalBusiness', 'MedicalBusiness', 'PhysicalTherapy'],
-              name: 'Digital Clínica — Fisioterapia & Estética Avançada',
-              description: 'Clínica de fisioterapia e estética médica avançada em Lisboa, Portugal.',
-              url: 'https://digitalclinica.pt',
-              telephone: '+351912345678',
-              email: 'contacto@digitalclinica.pt',
-              address: {
-                '@type': 'PostalAddress',
-                streetAddress: 'Avenida da Liberdade 120',
-                addressLocality: 'Lisboa',
-                postalCode: '1250-146',
-                addressCountry: 'PT',
-              },
-              geo: {
-                '@type': 'GeoCoordinates',
-                latitude: 38.7196,
-                longitude: -9.1449,
-              },
-              openingHoursSpecification: [
-                {
-                  '@type': 'OpeningHoursSpecification',
-                  dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-                  opens: '08:30',
-                  closes: '19:00',
-                },
-              ],
-              priceRange: '€€',
+              name: initialLang === 'es' ? 'Digital Clínica — Fisioterapia y estética avanzada' : 'Digital Clínica — Fisioterapia & Estética Avançada',
+              description: initialLang === 'es' ? 'Clínica de fisioterapia y estética avanzada en Lisboa, Portugal.' : 'Clínica de fisioterapia e estética médica avançada em Lisboa, Portugal.',
+              url: siteUrl,
             }),
           }}
         />
@@ -183,7 +172,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               (function() {
                 try {
                   var saved = localStorage.getItem('ryma_lang');
-                  if (saved && (saved === 'pt' || saved === 'en' || saved === 'fr')) {
+                  if (saved && (saved === 'pt' || saved === 'en' || saved === 'fr' || saved === 'es')) {
                     document.documentElement.setAttribute('lang', saved);
                     if (!document.cookie.includes('ryma_lang=' + saved)) {
                       document.cookie = 'ryma_lang=' + saved + '; path=/; max-age=31536000; SameSite=Lax';
@@ -214,62 +203,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             `,
           }}
         />
-        {/* Prevent browser extensions (Bitdefender bis_skin_checked, etc.) from causing React hydration mismatches */}
-        <script
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  if (typeof window !== 'undefined') {
-                    var origSetAttr = Element.prototype.setAttribute;
-                    Element.prototype.setAttribute = function(name, value) {
-                      if (typeof name === 'string' && (name.indexOf('bis_') === 0 || name.indexOf('data-bitdefender') === 0)) {
-                        return;
-                      }
-                      return origSetAttr.apply(this, arguments);
-                    };
-
-                    var cleanAttrs = function(node) {
-                      if (!node || node.nodeType !== 1) return;
-                      var attrs = node.attributes;
-                      if (!attrs) return;
-                      for (var i = attrs.length - 1; i >= 0; i--) {
-                        var a = attrs[i].name;
-                        if (a && (a.indexOf('bis_') === 0 || a.indexOf('data-bitdefender') === 0)) {
-                          node.removeAttribute(a);
-                        }
-                      }
-                    };
-
-                    var observer = new MutationObserver(function(mutations) {
-                      for (var i = 0; i < mutations.length; i++) {
-                        var m = mutations[i];
-                        if (m.type === 'attributes' && m.attributeName && (m.attributeName.indexOf('bis_') === 0 || m.attributeName.indexOf('data-bitdefender') === 0)) {
-                          m.target.removeAttribute(m.attributeName);
-                        }
-                        if (m.type === 'childList') {
-                          for (var j = 0; j < m.addedNodes.length; j++) {
-                            cleanAttrs(m.addedNodes[j]);
-                          }
-                        }
-                      }
-                    });
-
-                    observer.observe(document.body, {
-                      attributes: true,
-                      childList: false,
-                      subtree: true,
-                      attributeFilter: ['bis_skin_checked', 'bis_size', 'bis_status', 'bis_register']
-                    });
-                  }
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
-        {/* Google Analytics placeholder */}
-        {/* TODO: Add your GA4 script here: G-XXXXXXXXXX */}
       </head>
       <body
         suppressHydrationWarning

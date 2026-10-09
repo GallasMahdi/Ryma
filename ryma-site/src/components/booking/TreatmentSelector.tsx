@@ -13,6 +13,21 @@ import { playSoftClick } from '@/lib/sound';
 import styles from './TreatmentSelector.module.css';
 
 const COPY = {
+    es: {
+    eyebrow: "La carta de tratamientos", intro: "Un momento para usted. Cuidados elegidos con atención.",
+    categories: "Especialidades de tratamiento", kinesitherapie: "Fisioterapia", minceur: "Estética", bilan: "Evaluación",
+    kineTitle: "Movimiento. Equilibrio. Recuperación.", kineNote: "Atención especializada para mejorar cómo se mueve y se siente.",
+    minceurTitle: "Su cuerpo. Su confianza.", minceurNote: "Descubra nuestros tratamientos corporales y estéticos.",
+    bilanTitle: "Un plan a su medida.", bilanNote: "Una evaluación personal para sus objetivos de cuidado corporal.",
+    allTitle: "Descubra su próximo tratamiento.", allNote: "Toda nuestra oferta de cuidados, en un solo lugar.",
+    treatment: "tratamiento", treatments: "tratamientos", search: "Buscar un tratamiento", clear: "Borrar búsqueda",
+    all: "Todos los tratamientos", results: "Resultados de búsqueda", resultsNote: "Tratamientos coincidentes en todas las especialidades.",
+    details: "Detalles", hide: "Cerrar detalles", book: "Reservar", bookLabel: "Reservar tratamiento:",
+    duration: "Duración", session: "por sesión", expect: "Durante su visita", next: "Elija una fecha",
+    noResults: "No se han encontrado tratamientos.", noResultsNote: "Pruebe otro nombre o vuelva a la carta completa.", reset: "Mostrar todos los tratamientos",
+    help: "¿Es su primer tratamiento corporal?", helpNote: "Empiece con una evaluación personal.", helpAction: "Descubra su evaluación",
+    footer: "Elija su tratamiento. Después, encuentre su horario.", receipt: "Facturas médicas disponibles",
+  },
   en: {
     eyebrow: 'The treatment menu', intro: 'A moment for you. Care chosen with intention.',
     categories: 'Treatment specialties', kinesitherapie: 'Physiotherapy', minceur: 'Aesthetics', bilan: 'Assessment',
@@ -100,7 +115,7 @@ export function TreatmentSelector({ selectedService, onBook }: TreatmentSelector
     ? normalizeSearch(`${getLocalizedText(service.name, lang)} ${getLocalizedText(service.shortDesc, lang)} ${copy[service.pole]} ${service.keywords.join(' ')}`).includes(query)
     : category === 'all' || service.pole === category);
   const countLabel = (count: number) => `${count} ${count === 1 ? copy.treatment : copy.treatments}`;
-  const formatter = new Intl.NumberFormat(lang === 'en' ? 'en-IE' : lang === 'pt' ? 'pt-PT' : 'fr-FR', {
+  const formatter = new Intl.NumberFormat(lang === 'es' ? "es-ES" : lang === 'en' ? 'en-IE' : lang === 'pt' ? 'pt-PT' : 'fr-FR', {
     style: 'currency', currency: 'EUR', maximumFractionDigits: 2,
   });
   const changeCategory = (pole: ServicePole | 'all') => {

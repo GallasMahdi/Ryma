@@ -1,4 +1,8 @@
-import { Invoice, calculateVatBreakdown } from '@/types/admin';
+import { exportLabel } from '@/lib/export-i18n';
+import { legacyText } from '@/data/translations/legacy-es';
+import type { Lang } from './locales';
+import { Invoice } from '@/types/admin';
+import { invoiceDisplayTotals } from './invoice-display';
 import { SITE } from '@/lib/site';
 
 function escapeHtml(str: unknown): string {
@@ -12,19 +16,18 @@ function escapeHtml(str: unknown): string {
 }
 
 /**
- * Generate a standalone, pristine HTML document for an official Portuguese Medical Invoice / Receipt.
+ * Generate an internal billing document; official fiscal issuance is external.
  * Designed for perfect A4 vector rendering with zero background bleed-through.
  */
-export function generateInvoiceHtml(invoice: Invoice): string {
+export function generateInvoiceHtml(invoice: Invoice, lang: Lang = 'pt'): string {
   const isPaid = invoice.paymentStatus === 'PAID';
   const issueDate = invoice.createdAt ? invoice.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
-  const paidDate = invoice.paidAt ? invoice.paidAt.split('T')[0] : issueDate;
+  const paidDate = invoice.paidAt ? invoice.paidAt.split('T')[0] : '—';
 
-  const totalAmount = Number(invoice.amount) || 0;
-  const { vatRate, vatAmount, incidence, isExempt } = calculateVatBreakdown(totalAmount, invoice.vatRate);
+  const { lines, quantity, totalAmount, vatAmount, incidence, vatRates } = invoiceDisplayTotals(invoice);
 
   return `<!DOCTYPE html>
-<html lang="pt">
+<html lang="${lang}">
 <head>
   <meta charset="utf-8">
   <title>${escapeHtml(invoice.invoiceNumber)} - ${escapeHtml(invoice.patientName)} - Digital Clínica</title>
@@ -205,6 +208,7 @@ export function generateInvoiceHtml(invoice: Invoice): string {
       margin-top: 3px;
     }
     .totals-section {
+      break-inside: avoid;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -302,22 +306,24 @@ export function generateInvoiceHtml(invoice: Invoice): string {
           <div class="logo-badge">DC</div>
           <span class="clinic-title">${escapeHtml(SITE.name)}</span>
         </div>
-        <p class="clinic-subtitle">Clínica de Fisioterapia & Estética Médica Avançada</p>
-        <p class="clinic-address">Avenida da Liberdade 120, 1250-146 Lisboa, Portugal</p>
+        <p class="clinic-subtitle">${legacyText("Clínica de Fisioterapia & Estética Médica Avançada", lang)}</p>
+        <p class="clinic-address">${escapeHtml(SITE.address[lang] || SITE.address.pt || '')}</p>
         <div class="clinic-identifiers">
           ${SITE.clinicNif ? `<span><strong>NIF:</strong> ${escapeHtml(SITE.clinicNif)}</span>` : ''}
-          ${SITE.ersRegistration ? `<span><strong>Registo ERS:</strong> ${escapeHtml(SITE.ersRegistration)}</span>` : ''}
-          ${SITE.professionalLicense ? `<span><strong>Ordem Fisio:</strong> ${escapeHtml(SITE.professionalLicense)}</span>` : ''}
+          ${SITE.ersRegistration ? `<span><strong>${legacyText("Registo ERS:", lang)}</strong> ${escapeHtml(SITE.ersRegistration)}</span>` : ''}
+          ${SITE.professionalLicense ? `<span><strong>${legacyText("Ordem Fisio:", lang)}</strong> ${escapeHtml(SITE.professionalLicense)}</span>` : ''}
         </div>
       </div>
 
       <div class="doc-meta">
         <div class="doc-badge">${escapeHtml(invoice.invoiceNumber)}</div>
-        <div class="doc-type">${isPaid ? 'Fatura-Recibo de Quitação' : 'Fatura / Aviso de Cobrança'}</div>
+        <div class="doc-type">${legacyText("Documento de faturação interno", lang)}</div>
         <div class="doc-dates">
-          <div><strong>Emissão:</strong> ${escapeHtml(issueDate)}</div>
-          <div><strong>Liquidação:</strong> ${escapeHtml(paidDate)}</div>
-          <div><strong>Meio:</strong> ${escapeHtml(invoice.paymentMethod)}</div>
+          <div><strong>${legacyText("Emissão:", lang)}</strong> ${escapeHtml(issueDate)}</div>
+          <div><strong>${legacyText("Liquidação:", lang)}</strong> ${escapeHtml(paidDate)}</div>
+          <div><strong>${legacyText("Meio:", lang)}</strong> ${escapeHtml(exportLabel(invoice.paymentMethod, lang))}</div>
+          ${invoice.externalReference ? `<div><strong>${legacyText("Referência fiscal externa:", lang)}</strong> ${escapeHtml(invoice.externalReference)}</div>` : ''}
+          <div><strong>${legacyText("Sessões:", lang)}</strong> ${quantity}</div>
         </div>
       </div>
     </div>
@@ -325,9 +331,9 @@ export function generateInvoiceHtml(invoice: Invoice): string {
     <!-- Recipient -->
     <div class="recipient-box">
       <div>
-        <div class="recipient-label">Exmo.(a) Senhor(a) (Destinatário):</div>
+        <div class="recipient-label">${legacyText("Exmo.(a) Senhor(a) (Destinatário):", lang)}</div>
         <div class="recipient-name">${escapeHtml(invoice.patientName)}</div>
-        <div class="recipient-detail">${escapeHtml(invoice.patientAddress || 'Lisboa, Portugal')}</div>
+        ${invoice.patientAddress ? `<div class="recipient-detail">${escapeHtml(invoice.patientAddress)}</div>` : ''}
         <div class="recipient-detail" style="font-family: monospace;">Tel: ${escapeHtml(invoice.patientPhone)}</div>
       </div>
 
@@ -338,8 +344,8 @@ export function generateInvoiceHtml(invoice: Invoice): string {
         ${
           invoice.coverageProvider
             ? `<div style="font-size: 10px; color: #475569; margin-top: 6px;">
-                <strong>Seguro / Subsistema:</strong> ${escapeHtml(invoice.coverageProvider)}
-                ${invoice.coverageNumber ? `<br><span style="font-family: monospace;">Nº Beneficiário: ${escapeHtml(invoice.coverageNumber)}</span>` : ''}
+                <strong>${legacyText("Seguro / Subsistema:", lang)}</strong> ${escapeHtml(invoice.coverageProvider)}
+                ${invoice.coverageNumber ? `<br><span style="font-family: monospace;">${legacyText("Nº Beneficiário:", lang)} ${escapeHtml(invoice.coverageNumber)}</span>` : ''}
               </div>`
             : ''
         }
@@ -350,51 +356,49 @@ export function generateInvoiceHtml(invoice: Invoice): string {
     <table class="items-table">
       <thead>
         <tr>
-          <th>Descrição do Ato Clínico / Tratamento</th>
-          <th style="text-align: center; width: 50px;">Qtd</th>
-          <th style="text-align: right; width: 85px;">Preço s/ IVA</th>
-          <th style="text-align: center; width: 60px;">Taxa IVA</th>
-          <th style="text-align: right; width: 90px;">Total c/ IVA</th>
+          <th>${legacyText("Descrição do Ato Clínico / Tratamento", lang)}</th>
+          <th style="text-align: center; width: 50px;">${legacyText("Qtd", lang)}</th>
+          <th style="text-align: right; width: 85px;">${legacyText("Preço s/ IVA", lang)}</th>
+          <th style="text-align: center; width: 60px;">${legacyText("Taxa IVA", lang)}</th>
+          <th style="text-align: right; width: 90px;">${legacyText("Total c/ IVA", lang)}</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
+        ${lines.map(line => `<tr>
           <td>
-            <div class="service-title">${escapeHtml(invoice.serviceName)}</div>
-            <div class="service-sub">Praticante: ${escapeHtml(invoice.practitioner || SITE.professionalName)}</div>
+            <div class="service-title">${escapeHtml(line.serviceName)}</div>
+            <div class="service-sub">${legacyText("Profissional:", lang)} ${escapeHtml(line.practitioner)}</div>
+            ${line.dates.length ? `<div class="service-sub">${legacyText("Sessões:", lang)} ${line.dates.map(escapeHtml).join('; ')}</div>` : ''}
             ${
-              invoice.vatExemptionReason
-                ? `<div class="service-exemption">* ${escapeHtml(invoice.vatExemptionReason)}</div>`
+              line.vatExemptionReason
+                ? `<div class="service-exemption">* ${escapeHtml(line.vatExemptionReason)}</div>`
                 : ''
             }
+            ${line.priceAdjustmentReason ? `<div class="service-sub">${legacyText("Ajuste:", lang)} ${escapeHtml(line.priceAdjustmentReason)}</div>` : ''}
           </td>
-          <td style="text-align: center; font-family: monospace; font-weight: bold;">1</td>
-          <td style="text-align: right; font-family: monospace;">${incidence.toFixed(2)} €</td>
-          <td style="text-align: center; font-family: monospace;">${vatRate}%</td>
-          <td style="text-align: right; font-family: monospace; font-weight: bold;">${totalAmount.toFixed(2)} €</td>
-        </tr>
+          <td style="text-align: center; font-family: monospace; font-weight: bold;">${line.quantity}</td>
+          <td style="text-align: right; font-family: monospace;">${(line.netUnitCents/100).toFixed(2)} €</td>
+          <td style="text-align: center; font-family: monospace;">${line.vatRate}%</td>
+          <td style="text-align: right; font-family: monospace; font-weight: bold;">${(line.totalCents/100).toFixed(2)} €</td>
+        </tr>`).join('')}
       </tbody>
     </table>
 
     <!-- Totals & Legal Notice -->
     <div class="totals-section">
       <div class="legal-notice">
-        <strong>Enquadramento Legal & Fiscal</strong><br>
-        ${
-          isExempt
-            ? 'Serviço de saúde e fisioterapia isento de IVA nos termos do Artigo 9.º do Código do IVA (CIVA).'
-            : `Taxa de IVA a ${vatRate}% incluída (${vatAmount.toFixed(2)} € de imposto sobre incidência tributável de ${incidence.toFixed(2)} €).`
-        }<br>
-        Comprovativo interno de ato clínico / recibo de consulta médica e fisioterapia. Válido para efeitos de dedução em IRS e reembolso junto de seguradoras de saúde e subsistemas (ADSE, Médis, Multicare, AdvanceCare) ao abrigo do art.º 9.º do CIVA. Não substitui fatura fiscal emitida nos termos do art.º 29.º do CIVA.
+        <strong>${legacyText("Documento interno — sem valor fiscal", lang)}</strong><br>
+        ${legacyText("Registo das sessões e valores acordados. Não substitui uma fatura ou recibo fiscal. A emissão fiscal e o respetivo enquadramento são tratados no sistema escolhido pela clínica.", lang)}
+        ${invoice.notes ? `<br>${escapeHtml(invoice.notes)}` : ''}
       </div>
 
       <div class="totals-box">
         <div class="totals-row">
-          <span>Incidência (Base Tributável):</span>
+          <span>${legacyText("Incidência (Base Tributável):", lang)}</span>
           <span style="font-family: monospace;">${incidence.toFixed(2)} €</span>
         </div>
         <div class="totals-row">
-          <span>IVA (${vatRate}%):</span>
+          <span>IVA (${vatRates}%):</span>
           <span style="font-family: monospace;">${vatAmount.toFixed(2)} €</span>
         </div>
         <div class="totals-row grand-total">
@@ -408,19 +412,21 @@ export function generateInvoiceHtml(invoice: Invoice): string {
     <div class="stamp-signature">
       <div>
         ${
-          isPaid
+          invoice.paymentStatus==='CANCELLED' || invoice.paymentStatus==='REFUNDED'
+            ? `<div class="stamp-pending">${invoice.paymentStatus==='CANCELLED'?'ANULADO':'REEMBOLSADO'}</div>`
+            : isPaid
             ? `<div class="stamp-paid">
-                ✓ QUITADO / PAGO &nbsp;•&nbsp; ${escapeHtml(paidDate)}
+                ✓ ${legacyText("QUITADO / PAGO", lang)} &nbsp;•&nbsp; ${escapeHtml(paidDate)}
               </div>`
             : `<div class="stamp-pending">
-                ⏱ AGUARDA LIQUIDAÇÃO
+                ⏱ ${legacyText("AGUARDA LIQUIDAÇÃO", lang)}
               </div>`
         }
       </div>
 
       <div class="signature-block">
         <div class="signature-name">${escapeHtml(SITE.professionalName)}</div>
-        <div class="signature-sub">Fisioterapeuta Licenciado</div>
+        <div class="signature-sub">${legacyText("Fisioterapeuta Licenciado", lang)}</div>
       </div>
     </div>
   </div>
@@ -440,8 +446,8 @@ export function generateInvoiceHtml(invoice: Invoice): string {
  * Print or download an invoice PDF in complete isolation.
  * Uses an invisible iframe to avoid any dashboard/background page bleed-through.
  */
-export function printInvoicePdf(invoice: Invoice) {
-  const html = generateInvoiceHtml(invoice);
+export function printInvoicePdf(invoice: Invoice, lang: Lang = 'pt') {
+  const html = generateInvoiceHtml(invoice, lang);
 
   // Create or reuse hidden iframe
   let iframe = document.getElementById('invoice-print-frame') as HTMLIFrameElement | null;

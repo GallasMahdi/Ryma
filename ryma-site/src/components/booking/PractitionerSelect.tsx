@@ -10,7 +10,7 @@ export function PractitionerSelect({value,onChange,service,lang,admin=false,allo
 }) {
   const [items,setItems]=useState<Practitioner[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(false),[reload,setReload]=useState(0);
   const callbacks=useRef({onChange,onReady,value});callbacks.current={onChange,onReady,value};
-  const txt=(pt:string,en:string,fr:string)=>lang==='pt'?pt:lang==='fr'?fr:en;
+  const txt=(pt:string,en:string,fr:string, es: string)=>lang === 'es' ? es : lang==='pt'?pt:lang==='fr'?fr:en;
   useEffect(()=>{const refresh=()=>setReload(n=>n+1);window.addEventListener('ryma_schedule_changed',refresh);return()=>window.removeEventListener('ryma_schedule_changed',refresh);},[]);
   useEffect(()=>{
     const controller=new AbortController();setLoading(true);setError(false);callbacks.current.onReady?.(false);
@@ -29,12 +29,12 @@ export function PractitionerSelect({value,onChange,service,lang,admin=false,allo
   useEffect(()=>{onName?.(items.find(p=>p.id===value)?.name||'');},[items,value,onName]);
   return <div className="space-y-1.5 text-sm">
     <label className="block font-semibold text-slate-700">
-      {txt('Profissional','Practitioner','Praticien')}
-      <select aria-label={txt('Profissional','Practitioner','Praticien')} value={value} onChange={e=>onChange(e.target.value)} disabled={loading||error||items.length===0} className="mt-1 block w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 disabled:opacity-60">
-        {loading?<option value="">{txt('A carregar…','Loading…','Chargement…')}</option>:allowAny?<option value="">{allowAny==='all'?txt('Todos os profissionais','All practitioners','Tous les praticiens'):txt('Primeira disponibilidade','Earliest available','Premier créneau disponible')}</option>:<option value="">{txt('Escolha um profissional','Choose a practitioner','Choisissez un praticien')}</option>}
-        {items.map(p=><option key={p.id} value={p.id}>{p.name}{p.active===0?' · '+txt('Arquivado','Archived','Archivé'):''}</option>)}
+      {txt('Profissional','Practitioner','Praticien', "Profesional")}
+      <select aria-label={txt('Profissional','Practitioner','Praticien', "Profesional")} value={value} onChange={e=>onChange(e.target.value)} disabled={loading||error||items.length===0} className="mt-1 block w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 disabled:opacity-60">
+        {loading?<option value="">{txt('A carregar…','Loading…','Chargement…', "Cargando…")}</option>:allowAny?<option value="">{allowAny==='all'?txt('Todos os profissionais','All practitioners','Tous les praticiens', "Todos los profesionales"):txt('Primeira disponibilidade','Earliest available','Premier créneau disponible', "Primera disponibilidad")}</option>:<option value="">{txt('Escolha um profissional','Choose a practitioner','Choisissez un praticien', "Elija un profesional")}</option>}
+        {items.map(p=><option key={p.id} value={p.id}>{p.name}{p.active===0?' · '+txt('Arquivado','Archived','Archivé', "Archivado"):''}</option>)}
       </select>
     </label>
-    {error?<button type="button" onClick={()=>setReload(n=>n+1)} className="text-red-700 underline">{txt('Falha ao carregar. Tentar novamente.','Could not load practitioners. Retry.','Chargement impossible. Réessayer.')}</button>:!loading&&!items.length?<p role="status" className="text-amber-800">{txt('Sem profissionais disponíveis para este tratamento.','No practitioners available for this treatment.','Aucun praticien disponible pour ce soin.')}</p>:null}
+    {error?<button type="button" onClick={()=>setReload(n=>n+1)} className="text-red-700 underline">{txt('Falha ao carregar. Tentar novamente.','Could not load practitioners. Retry.','Chargement impossible. Réessayer.', "No se han podido cargar los profesionales. Vuelva a intentarlo.")}</button>:!loading&&!items.length?<p role="status" className="text-amber-800">{txt('Sem profissionais disponíveis para este tratamento.','No practitioners available for this treatment.','Aucun praticien disponible pour ce soin.', "No hay profesionales disponibles para este tratamiento.")}</p>:null}
   </div>;
 }

@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isAdminSessionValid } from './session-policy';
 import { unsealData } from 'iron-session';
 import { cookies } from 'next/headers';
@@ -25,7 +26,7 @@ export async function requireAdmin(
 
     if (!cookieValue) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: localizeApiError('Authentication required', request) },
         { status: 401 }
       );
     }
@@ -36,7 +37,7 @@ export async function requireAdmin(
 
     if (!isAdminSessionValid(session)) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: localizeApiError('Authentication required', request) },
         { status: 401 }
       );
     }
@@ -45,7 +46,7 @@ export async function requireAdmin(
     const isRevoked = await dbIsSessionRevoked(session.sessionId);
     if (isRevoked) {
       return NextResponse.json(
-        { error: 'Session has been revoked. Please log in again.' },
+        { error: localizeApiError('Session has been revoked. Please log in again.', request) },
         { status: 401 }
       );
     }
@@ -53,7 +54,7 @@ export async function requireAdmin(
     return { ok: true, session };
   } catch {
     return NextResponse.json(
-      { error: 'Authentication required' },
+      { error: localizeApiError('Authentication required', request) },
       { status: 401 }
     );
   }
@@ -85,7 +86,7 @@ export async function requireOwnerAnalytics(
 
     if (!cookieValue) {
       return NextResponse.json(
-        { error: 'Authentication required', code: 'UNAUTHENTICATED' },
+        { error: localizeApiError('Authentication required', request), code: 'UNAUTHENTICATED' },
         { status: 401 }
       );
     }
@@ -96,7 +97,7 @@ export async function requireOwnerAnalytics(
 
     if (!isAdminSessionValid(session)) {
       return NextResponse.json(
-        { error: 'Authentication required', code: 'UNAUTHENTICATED' },
+        { error: localizeApiError('Authentication required', request), code: 'UNAUTHENTICATED' },
         { status: 401 }
       );
     }
@@ -105,7 +106,7 @@ export async function requireOwnerAnalytics(
     const isRevoked = await dbIsSessionRevoked(session.sessionId);
     if (isRevoked) {
       return NextResponse.json(
-        { error: 'Session has been revoked. Please log in again.', code: 'UNAUTHENTICATED' },
+        { error: localizeApiError('Session has been revoked. Please log in again.', request), code: 'UNAUTHENTICATED' },
         { status: 401 }
       );
     }
@@ -129,7 +130,7 @@ export async function requireOwnerAnalytics(
 
       return NextResponse.json(
         {
-          error: 'Autorisation Propriétaire requise pour accéder aux statistiques.',
+          error: localizeApiError('Autorisation Propriétaire requise pour accéder aux statistiques.', request),
           code: 'OWNER_AUTH_REQUIRED',
           expired: Boolean(session.analyticsUnlockedUntil && (now >= session.analyticsUnlockedUntil || !isStepUpActive)),
         },
@@ -140,7 +141,7 @@ export async function requireOwnerAnalytics(
     return { ok: true, session };
   } catch {
     return NextResponse.json(
-      { error: 'Authentication required', code: 'UNAUTHENTICATED' },
+      { error: localizeApiError('Authentication required', request), code: 'UNAUTHENTICATED' },
       { status: 401 }
     );
   }

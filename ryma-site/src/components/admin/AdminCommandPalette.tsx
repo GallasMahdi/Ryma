@@ -112,8 +112,8 @@ export function AdminCommandPalette({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   // Auto focus input when opened
   useEffect(() => {
@@ -137,7 +137,7 @@ export function AdminCommandPalette({
       if (!existingPhones.has(n.phone)) {
         list.push({
           id: `legacy_${n.phone}`,
-          patientName: n.patientName || txt('Sans Nom', 'Unnamed', 'Sem Nome'),
+          patientName: n.patientName || txt('Sans Nom', 'Unnamed', 'Sem Nome', "Sin nombre"),
           phone: n.phone,
           medicalHistory: n.content,
           pathologyTags: n.tags,
@@ -162,9 +162,9 @@ export function AdminCommandPalette({
       {
         id: 'action-new-appointment',
         category: 'action',
-        title: txt('Nouveau Rendez-vous', 'New Appointment', 'Nova Consulta'),
-        subtitle: txt('Créer une consultation pour un patient', 'Book an appointment slot', 'Marcar consulta para utente'),
-        badge: txt('Action', 'Action', 'Ação'),
+        title: txt('Nouveau Rendez-vous', 'New Appointment', 'Nova Consulta', "Nueva cita"),
+        subtitle: txt('Créer une consultation pour un patient', 'Book an appointment slot', 'Marcar consulta para utente', "Reservar un horario"),
+        badge: txt('Action', 'Action', 'Ação', "Acción"),
         badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
         icon: IconPlus,
         onSelect: () => {
@@ -177,9 +177,9 @@ export function AdminCommandPalette({
             {
               id: 'action-multiple-sessions',
               category: 'action',
-              title: txt('Planifier Séances Multiples', 'Multiple Sessions / Treatment Plan', 'Marcar Múltiplas Sessões (Plano)'),
-              subtitle: txt('Créer un forfait récurrent avec validation des créneaux', 'Book recurring plan with real-time slot blocking', 'Agendamento recorrente com validação e bloqueio'),
-              badge: txt('Forfait', 'Plan', 'Pacote'),
+              title: txt('Planifier Séances Multiples', 'Multiple Sessions / Treatment Plan', 'Marcar Múltiplas Sessões (Plano)', "Varias sesiones / plan de tratamiento"),
+              subtitle: txt('Créer un forfait récurrent avec validation des créneaux', 'Book recurring plan with real-time slot blocking', 'Agendamento recorrente com validação e bloqueio', "Reservar un plan periódico con bloqueo de horarios en tiempo real"),
+              badge: txt('Forfait', 'Plan', 'Pacote', "Plan"),
               badgeColor: 'bg-purple-100 text-purple-800 border-purple-200',
               icon: IconCalendarRepeat,
               onSelect: () => {
@@ -192,9 +192,9 @@ export function AdminCommandPalette({
       {
         id: 'action-new-invoice',
         category: 'action',
-        title: txt('Créer une Facture / Recibo', 'Create Invoice / Receipt', 'Emitir Fatura / Recibo'),
-        subtitle: txt('Facturation avec calcul TVA & NIF', 'Invoice with VAT & tax receipt', 'Faturação com NIF e taxas'),
-        badge: txt('Finances', 'Finance', 'Finanças'),
+        title: txt('Créer une Facture / Recibo', 'Create Invoice / Receipt', 'Emitir Fatura / Recibo', "Crear factura / recibo"),
+        subtitle: txt('Facturation avec calcul TVA & NIF', 'Invoice with VAT & tax receipt', 'Faturação com NIF e taxas', "Factura con IVA y recibo fiscal"),
+        badge: txt('Finances', 'Finance', 'Finanças', "Finanzas"),
         badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
         icon: IconReceiptTax,
         onSelect: () => {
@@ -207,9 +207,9 @@ export function AdminCommandPalette({
             {
               id: 'action-new-prescription',
               category: 'action',
-              title: txt('Nouvelle Prescription / Ordonnance', 'New Prescription / Care Pad', 'Novo Plano de Cuidados'),
-              subtitle: txt('Recommandations kiné, exercices & conseils', 'Physio recommendations & exercises', 'Recomendações e exercícios'),
-              badge: txt('EMR', 'EMR', 'Clínica'),
+              title: txt('Nouvelle Prescription / Ordonnance', 'New Prescription / Care Pad', 'Novo Plano de Cuidados', "Nueva prescripción / hoja de cuidados"),
+              subtitle: txt('Recommandations kiné, exercices & conseils', 'Physio recommendations & exercises', 'Recomendações e exercícios', "Recomendaciones y ejercicios de fisioterapia"),
+              badge: txt('EMR', 'EMR', 'Clínica', "Historia clínica electrónica"),
               badgeColor: 'bg-blue-100 text-blue-800 border-blue-200',
               icon: IconNotes,
               onSelect: () => {
@@ -222,9 +222,9 @@ export function AdminCommandPalette({
       {
         id: 'action-refresh',
         category: 'action',
-        title: txt('Actualiser les Données', 'Refresh System Data', 'Atualizar Dados do Sistema'),
-        subtitle: txt('Synchronisation en direct avec la base de données', 'Live refresh from server database', 'Sincronizar com base de dados'),
-        badge: txt('Système', 'System', 'Sistema'),
+        title: txt('Actualiser les Données', 'Refresh System Data', 'Atualizar Dados do Sistema', "Actualizar datos del sistema"),
+        subtitle: txt('Synchronisation en direct avec la base de données', 'Live refresh from server database', 'Sincronizar com base de dados', "Actualizar desde la base de datos en tiempo real"),
+        badge: txt('Système', 'System', 'Sistema', "Sistema"),
         badgeColor: 'bg-slate-100 text-slate-700 border-slate-200',
         icon: IconRefresh,
         onSelect: () => {
@@ -235,8 +235,8 @@ export function AdminCommandPalette({
       {
         id: 'action-export-csv',
         category: 'action',
-        title: txt('Exporter les Rendez-vous (CSV)', 'Export Appointments (CSV)', 'Exportar Consultas (CSV)'),
-        subtitle: txt('Téléchargement direct du tableur', 'Direct spreadsheet download', 'Descarregar ficheiro CSV'),
+        title: txt('Exporter les Rendez-vous (CSV)', 'Export Appointments (CSV)', 'Exportar Consultas (CSV)', "Exportar citas (CSV)"),
+        subtitle: txt('Téléchargement direct du tableur', 'Direct spreadsheet download', 'Descarregar ficheiro CSV', "Descarga directa de hoja de cálculo"),
         badge: 'CSV',
         badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
         icon: IconFileSpreadsheet,
@@ -248,8 +248,8 @@ export function AdminCommandPalette({
       {
         id: 'action-toggle-lang',
         category: 'action',
-        title: txt('Changer de Langue (FR / EN / PT)', 'Switch Language (FR / EN / PT)', 'Mudar Idioma (FR / EN / PT)'),
-        subtitle: txt(`Langue actuelle: ${lang.toUpperCase()}`, `Current language: ${lang.toUpperCase()}`, `Idioma atual: ${lang.toUpperCase()}`),
+        title: txt('Changer de Langue (FR / EN / PT)', 'Switch Language (FR / EN / PT)', 'Mudar Idioma (FR / EN / PT)', "Cambiar idioma (FR / EN / PT / ES)"),
+        subtitle: txt(`Langue actuelle: ${lang.toUpperCase()}`, `Current language: ${lang.toUpperCase()}`, `Idioma atual: ${lang.toUpperCase()}`, `Idioma actual: ${lang.toUpperCase()}`),
         badge: lang.toUpperCase(),
         badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-200',
         icon: IconLanguage,
@@ -262,9 +262,9 @@ export function AdminCommandPalette({
             {
               id: 'action-helpdesk',
               category: 'action',
-              title: txt('Assistance & Support Technique Clinique', 'Clinic Support & Tech Helpdesk', 'Suporte Técnico & Helpdesk'),
-              subtitle: txt('Urgences, diagnostic et cheatsheet réception', 'Emergencies, diagnostic & reception cheatsheet', 'Canais de emergência, diagnóstico e Wi-Fi'),
-              badge: txt('Support', 'Helpdesk', 'Ajuda'),
+              title: txt('Assistance & Support Technique Clinique', 'Clinic Support & Tech Helpdesk', 'Suporte Técnico & Helpdesk', "Asistencia clínica y técnica"),
+              subtitle: txt('Urgences, diagnostic et cheatsheet réception', 'Emergencies, diagnostic & reception cheatsheet', 'Canais de emergência, diagnóstico e Wi-Fi', "Urgencias, diagnóstico y guía de recepción"),
+              badge: txt('Support', 'Helpdesk', 'Ajuda', "Asistencia"),
               badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
               icon: IconLifebuoy,
               onSelect: () => {
@@ -277,9 +277,9 @@ export function AdminCommandPalette({
       {
         id: 'action-logout',
         category: 'action',
-        title: txt('Se Déconnecter', 'Sign Out / Logout', 'Terminar Sessão'),
-        subtitle: txt('Fermer la session clinique sécurisée', 'End authenticated session', 'Fechar sessão segura'),
-        badge: txt('Sécurité', 'Security', 'Segurança'),
+        title: txt('Se Déconnecter', 'Sign Out / Logout', 'Terminar Sessão', "Cerrar sesión"),
+        subtitle: txt('Fermer la session clinique sécurisée', 'End authenticated session', 'Fechar sessão segura', "Finalizar la sesión autenticada"),
+        badge: txt('Sécurité', 'Security', 'Segurança', "Seguridad"),
         badgeColor: 'bg-rose-100 text-rose-800 border-rose-200',
         icon: IconLock,
         onSelect: () => {
@@ -294,8 +294,8 @@ export function AdminCommandPalette({
       {
         id: 'nav-appointments',
         category: 'navigation',
-        title: txt('Planning & Rendez-vous', 'Appointments & Schedule', 'Consultas & Agenda'),
-        subtitle: txt('Liste des rendez-vous et KPIs', 'List of all bookings and metrics', 'Lista de consultas e métricas'),
+        title: txt('Planning & Rendez-vous', 'Appointments & Schedule', 'Consultas & Agenda', "Citas y agenda"),
+        subtitle: txt('Liste des rendez-vous et KPIs', 'List of all bookings and metrics', 'Lista de consultas e métricas', "Lista de todas las reservas e indicadores"),
         badge: `${appointments.length}`,
         badgeColor: 'bg-slate-900 text-white',
         icon: IconCalendarEvent,
@@ -307,9 +307,9 @@ export function AdminCommandPalette({
       {
         id: 'nav-slots',
         category: 'navigation',
-        title: txt('Créneaux & Horaires', 'Slots & Availability', 'Vagas & Horários'),
-        subtitle: txt('Gestion des disponibilités et blocages', 'Manage opening hours & blocked slots', 'Gestão de horários e bloqueios'),
-        badge: txt('Agenda', 'Calendar', 'Agenda'),
+        title: txt('Créneaux & Horaires', 'Slots & Availability', 'Vagas & Horários', "Horarios y disponibilidad"),
+        subtitle: txt('Gestion des disponibilités et blocages', 'Manage opening hours & blocked slots', 'Gestão de horários e bloqueios', "Gestionar horarios de apertura y bloqueos"),
+        badge: txt('Agenda', 'Calendar', 'Agenda', "Calendario"),
         badgeColor: 'bg-blue-100 text-blue-800',
         icon: IconClock,
         onSelect: () => {
@@ -320,8 +320,8 @@ export function AdminCommandPalette({
       {
         id: 'nav-patients',
         category: 'navigation',
-        title: txt('Dossiers Patients (EMR & EVA)', 'Patient Records (EMR & Pain Scale)', 'Fichas de Utentes (Processos & EVA)'),
-        subtitle: txt('Historique médical, séances et prescriptions', 'Medical history, sessions and care plans', 'Histórico clínico e sessões'),
+        title: txt('Dossiers Patients (EMR & EVA)', 'Patient Records (EMR & Pain Scale)', 'Fichas de Utentes (Processos & EVA)', "Historias clínicas y escala del dolor"),
+        subtitle: txt('Historique médical, séances et prescriptions', 'Medical history, sessions and care plans', 'Histórico clínico e sessões', "Antecedentes médicos, sesiones y planes de cuidados"),
         badge: `${unifiedPatients.length}`,
         badgeColor: 'bg-slate-900 text-white',
         icon: IconNotes,
@@ -333,8 +333,8 @@ export function AdminCommandPalette({
       {
         id: 'nav-invoices',
         category: 'navigation',
-        title: txt('Facturation & Recibos Fiscaux', 'Invoicing & Tax Receipts', 'Faturação & Recibos Fiscais'),
-        subtitle: txt('Historique des factures et récapitulatif TVA', 'Invoice history and tax compliance', 'Histórico de faturas e recibos'),
+        title: txt('Facturation & Recibos Fiscaux', 'Invoicing & Tax Receipts', 'Faturação & Recibos Fiscais', "Facturación y recibos fiscales"),
+        subtitle: txt('Historique des factures et récapitulatif TVA', 'Invoice history and tax compliance', 'Histórico de faturas e recibos', "Historial de facturas y cumplimiento fiscal"),
         badge: `${invoices.length}`,
         badgeColor: 'bg-slate-900 text-white',
         icon: IconReceiptTax,
@@ -346,9 +346,9 @@ export function AdminCommandPalette({
       {
         id: 'nav-analytics',
         category: 'navigation',
-        title: txt('Statistiques & Revenus', 'Analytics & Revenue Reports', 'Estatísticas & Receitas'),
-        subtitle: txt('Graphiques de fréquentation et taux de présence', 'Attendance rates and clinic performance', 'Taxas de ocupação e métricas'),
-        badge: txt('Rapports', 'Reports', 'Relatórios'),
+        title: txt('Statistiques & Revenus', 'Analytics & Revenue Reports', 'Estatísticas & Receitas', "Estadísticas e informes de ingresos"),
+        subtitle: txt('Graphiques de fréquentation et taux de présence', 'Attendance rates and clinic performance', 'Taxas de ocupação e métricas', "Tasas de asistencia y rendimiento de la clínica"),
+        badge: txt('Rapports', 'Reports', 'Relatórios', "Informes"),
         badgeColor: 'bg-indigo-100 text-indigo-800',
         icon: IconChartBar,
         onSelect: () => {
@@ -391,8 +391,8 @@ export function AdminCommandPalette({
             title: p.patientName,
             subtitle: `${p.phone}${p.email ? ` • ${p.email}` : ''}${p.pathologyTags ? ` • [${p.pathologyTags}]` : ''}`,
             badge: isInsured
-              ? (p.coverageType === 'ADSE' ? 'ADSE' : p.coverageProvider || txt('Mutuelle', 'Insurance', 'Seguro'))
-              : txt('Utente', 'Patient', 'Utente'),
+              ? (p.coverageType === 'ADSE' ? 'ADSE' : p.coverageProvider || txt('Mutuelle', 'Insurance', 'Seguro', "Seguro"))
+              : txt('Utente', 'Patient', 'Utente', "Paciente"),
             badgeColor: isInsured
               ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
               : 'bg-slate-100 text-slate-700 border-slate-200',
@@ -579,7 +579,7 @@ export function AdminCommandPalette({
                 placeholder={txt(
                   'Rechercher patient, action, RDV, facture, commande...',
                   'Search patient, action, appointment, invoice, command...',
-                  'Pesquisar utente, ação, consulta, fatura, comando...'
+                  'Pesquisar utente, ação, consulta, fatura, comando...', "Buscar paciente, acción, cita, factura, comando..."
                 )}
                 className="w-full bg-transparent text-sm sm:text-base text-[#0F172A] placeholder:text-[#94A3B8] font-medium outline-none"
               />
@@ -603,11 +603,11 @@ export function AdminCommandPalette({
             {/* Category Filter Chips */}
             <div className="flex items-center gap-1.5 px-4 py-2 border-b border-[#E2E8F0] bg-white overflow-x-auto no-scrollbar">
               {[
-                { id: 'all' as const, label: txt('Tout', 'All', 'Tudo') },
-                { id: 'actions' as const, label: txt('Actions & Menu', 'Actions & Menu', 'Ações & Menu') },
-                { id: 'patients' as const, label: txt('Patients', 'Patients', 'Utentes') },
-                { id: 'appointments' as const, label: txt('Rendez-vous', 'Appointments', 'Consultas') },
-                { id: 'invoices' as const, label: txt('Factures', 'Invoices', 'Faturas') },
+                { id: 'all' as const, label: txt('Tout', 'All', 'Tudo', "Todos") },
+                { id: 'actions' as const, label: txt('Actions & Menu', 'Actions & Menu', 'Ações & Menu', "Acciones y menú") },
+                { id: 'patients' as const, label: txt('Patients', 'Patients', 'Utentes', "Pacientes") },
+                { id: 'appointments' as const, label: txt('Rendez-vous', 'Appointments', 'Consultas', "Citas") },
+                { id: 'invoices' as const, label: txt('Factures', 'Invoices', 'Faturas', "Facturas") },
               ].map((cat) => (
                 <button
                   key={cat.id}
@@ -636,13 +636,13 @@ export function AdminCommandPalette({
                 <div className="text-center py-12 px-4 text-[#64748B]">
                   <IconSparkles size={28} className="mx-auto text-[#94A3B8] mb-2" />
                   <p className="font-semibold text-xs text-[#0F172A]">
-                    {txt('Aucun résultat trouvé', 'No matching results', 'Nenhum resultado encontrado')}
+                    {txt('Aucun résultat trouvé', 'No matching results', 'Nenhum resultado encontrado', "No hay resultados")}
                   </p>
                   <p className="text-[11px] text-[#94A3B8] mt-0.5">
                     {txt(
                       'Essayez de rechercher par nom, téléphone, statut ou commande.',
                       'Try searching by name, phone, status or action command.',
-                      'Tente pesquisar por nome, telefone, estado ou comando.'
+                      'Tente pesquisar por nome, telefone, estado ou comando.', "Pruebe a buscar por nombre, teléfono, estado o acción."
                     )}
                   </p>
                 </div>
@@ -728,17 +728,17 @@ export function AdminCommandPalette({
                   <kbd className="px-1.5 py-0.5 bg-white border border-[#CBD5E1] rounded text-[10px] font-mono font-bold shadow-2xs">
                     ↓
                   </kbd>
-                  <span>{txt('Naviguer', 'Navigate', 'Navegar')}</span>
+                  <span>{txt('Naviguer', 'Navigate', 'Navegar', "Navegar")}</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <kbd className="px-1.5 py-0.5 bg-white border border-[#CBD5E1] rounded text-[10px] font-mono font-bold shadow-2xs">
                     ↵
                   </kbd>
-                  <span>{txt('Ouvrir', 'Select', 'Selecionar')}</span>
+                  <span>{txt('Ouvrir', 'Select', 'Selecionar', "Seleccionar")}</span>
                 </span>
               </div>
               <span className="text-[10px] font-mono text-[#94A3B8]">
-                {items.length} {txt('résultats', 'results', 'resultados')}
+                {items.length} {txt('résultats', 'results', 'resultados', "resultados")}
               </span>
             </div>
           </motion.div>

@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { getLocalizedText } from '@/data/services';
 import { useAllServices } from '@/components/ServiceCatalogProvider';
 
@@ -28,6 +30,7 @@ import {
 } from '@/types/admin';
 import { SITE } from '@/lib/site';
 import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
+import { SessionInvoiceModal } from './SessionInvoiceModal';
 
 interface CreateInvoiceModalProps {
   isOpen: boolean;
@@ -39,7 +42,15 @@ interface CreateInvoiceModalProps {
   prefilledData?: Partial<CreateInvoiceInput> | null;
 }
 
-export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
+export function CreateInvoiceModal(props: CreateInvoiceModalProps) {
+  const [single, setSingle] = useState(Boolean(props.prefilledData?.appointmentId));
+  useEffect(() => { if (props.isOpen) setSingle(Boolean(props.prefilledData?.appointmentId)); }, [props.isOpen, props.prefilledData?.appointmentId]);
+  return single
+    ? <SingleInvoiceModal {...props} />
+    : <SessionInvoiceModal {...props} onSingle={() => setSingle(true)} />;
+}
+
+const SingleInvoiceModal = React.memo(function SingleInvoiceModal({
   isOpen,
   onClose,
   onCreated,
@@ -49,7 +60,8 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
   prefilledData,
 }: CreateInvoiceModalProps) {
   const SERVICES = useAllServices();
-  const txt = (frStr: string, enStr: string, ptStr: string) => {
+  const txt = (frStr: string, enStr: string, ptStr: string, es: string) => {
+    if (lang === 'es') return es;
     if (lang === 'fr') return frStr;
     if (lang === 'en') return enStr;
     return ptStr;
@@ -212,7 +224,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
     if (inFlight.current) return;
     if (!patientName.trim() || !patientPhone.trim()) {
       setError(
-        txt('Nom et téléphone requis', 'Name and phone are required', 'Nome e telefone são obrigatórios')
+        txt('Nom et téléphone requis', 'Name and phone are required', 'Nome e telefone são obrigatórios', "El nombre y el teléfono son obligatorios")
       );
       return;
     }
@@ -250,13 +262,13 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || txt('Erreur de création du reçu', 'Error creating invoice', 'Erro ao criar fatura/recibo'));
+        throw new Error(data.error || txt('Erreur de création du reçu', 'Error creating invoice', 'Erro ao criar fatura/recibo', "Error al crear la factura"));
       }
 
       onCreated(data.invoice);
       onClose();
     } catch (err: any) {
-      setError(err.message || txt('Erreur de communication', 'Communication error', 'Erro de comunicação'));
+      setError(err.message || txt('Erreur de communication', 'Communication error', 'Erro de comunicação', "Error de comunicación"));
     } finally {
       inFlight.current=false;
       setSubmitting(false);
@@ -288,7 +300,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                 </div>
                 <div>
                   <h3 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-white">
-                    {txt('Émettre une Facture-Reçu', 'Issue Invoice-Receipt', 'Emitir Fatura-Recibo / Recibo de Quitação')}
+                    {txt('Émettre une Facture-Reçu', 'Issue Invoice-Receipt', 'Emitir Fatura-Recibo / Recibo de Quitação', "Emitir factura-recibo")}
                   </h3>
                   <p className="text-xs text-[#94A3B8]">
                     {SITE.name} • ERS: {SITE.ersRegistration || 'E164321'} • NIF: {SITE.clinicNif || '518923456'}
@@ -299,7 +311,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                 type="button"
                 onClick={onClose}
                 className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                title={txt('Fermer', 'Close', 'Fechar')}
+                title={txt('Fermer', 'Close', 'Fechar', "Cerrar")}
               >
                 <IconX size={20} />
               </button>
@@ -319,10 +331,10 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                 <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#E2E8F0] relative" ref={patientDropdownRef}>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block font-bold text-[#0F172A] text-xs">
-                      {txt('Sélectionner un patient existant', 'Select registered patient', 'Preencher a partir de Utente registado')}
+                      {txt('Sélectionner un patient existant', 'Select registered patient', 'Preencher a partir de Utente registado', "Seleccionar paciente registrado")}
                     </label>
                     <span className="text-[10px] text-[#94A3B8]">
-                      {patients.length} {txt('patients enregistrés', 'registered patients', 'utentes registados')}
+                      {patients.length} {txt('patients enregistrés', 'registered patients', 'utentes registados', "pacientes registrados")}
                     </span>
                   </div>
 
@@ -346,7 +358,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                         onClick={handleClearPatientSelection}
                         className="px-2 py-1 text-[11px] font-semibold text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                       >
-                        {txt('Changer', 'Change', 'Alterar')} ✕
+                        {txt('Changer', 'Change', 'Alterar', "Cambiar")} ✕
                       </button>
                     </div>
                   ) : (
@@ -364,7 +376,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                           placeholder={txt(
                             'Rechercher par nom, téléphone, NIF...',
                             'Search patient name, phone, NIF...',
-                            'Pesquisar nome, telefone, NIF...'
+                            'Pesquisar nome, telefone, NIF...', "Buscar nombre, teléfono, NIF..."
                           )}
                           className="w-full pl-8.5 pr-8 py-2 bg-white border border-[#CBD5E1] rounded-xl text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none font-medium placeholder:text-[#94A3B8]"
                         />
@@ -376,7 +388,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#CBD5E1] rounded-2xl shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-[#F1F5F9]">
                           {filteredPatients.length === 0 ? (
                             <div className="p-4 text-center text-xs text-[#94A3B8]">
-                              {txt('Aucun patient correspondant', 'No matching patient found', 'Nenhum utente encontrado')}
+                              {txt('Aucun patient correspondant', 'No matching patient found', 'Nenhum utente encontrado', "No se ha encontrado ningún paciente")}
                             </div>
                           ) : (
                             filteredPatients.map((pat) => (
@@ -407,7 +419,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                                     ADSE
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] text-[#94A3B8]">{txt('Privé', 'Private', 'Particular')}</span>
+                                  <span className="text-[10px] text-[#94A3B8]">{txt('Privé', 'Private', 'Particular', "Privado")}</span>
                                 )}
                               </button>
                             ))
@@ -423,37 +435,37 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
               <div>
                 <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-[11px] mb-3 flex items-center gap-1.5">
                   <IconUser size={15} className="text-[#C49A3C]" />
-                  <span>{txt('Données du Patient / Destinataire', 'Patient & Billing Details', 'Identificação do Utente')}</span>
+                  <span>{txt('Données du Patient / Destinataire', 'Patient & Billing Details', 'Identificação do Utente', "Datos del paciente y de facturación")}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                      {txt('Nom Complet *', 'Full Name *', 'Nome Completo *')}
+                      {txt('Nom Complet *', 'Full Name *', 'Nome Completo *', "Nombre completo *")}
                     </label>
                     <input
                       type="text"
                       required
                       value={patientName}
                       onChange={(e) => setPatientName(e.target.value)}
-                      placeholder="Ex: Maria Santos Silva"
+                      placeholder={legacyText("Ex: Maria Santos Silva", lang)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none font-medium"
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                      {txt('NIF Patient (Fiscal)', 'Patient Tax ID / NIF', 'NIF Utente (Contribuinte)')}
+                      {txt('NIF Patient (Fiscal)', 'Patient Tax ID / NIF', 'NIF Utente (Contribuinte)', "NIF del paciente")}
                     </label>
                     <input
                       type="text"
                       value={patientNif}
                       onChange={(e) => setPatientNif(e.target.value)}
-                      placeholder="Ex: 234567890 ou 999999990"
+                      placeholder={legacyText("Ex: 234567890 ou 999999990", lang)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none font-mono"
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                      {txt('Téléphone / WhatsApp *', 'Phone / WhatsApp *', 'Telefone / WhatsApp *')}
+                      {txt('Téléphone / WhatsApp *', 'Phone / WhatsApp *', 'Telefone / WhatsApp *', "Teléfono / WhatsApp *")}
                     </label>
                     <input
                       type="tel"
@@ -466,19 +478,19 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                      {txt('E-mail (Envoi PDF)', 'Email (PDF Receipt)', 'E-mail (Envio PDF)')}
+                      {txt('E-mail (Envoi PDF)', 'Email (PDF Receipt)', 'E-mail (Envio PDF)', "Correo electrónico (recibo en PDF)")}
                     </label>
                     <input
                       type="email"
                       value={patientEmail}
                       onChange={(e) => setPatientEmail(e.target.value)}
-                      placeholder="paciente@email.pt"
+                      placeholder={legacyText("paciente@email.pt", lang)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none"
                     />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                      {txt('Adresse Fiscale (Optionnel)', 'Billing Address (Optional)', 'Morada Fiscal (Opcional)')}
+                      {txt('Adresse Fiscale (Optionnel)', 'Billing Address (Optional)', 'Morada Fiscal (Opcional)', "Dirección de facturación (opcional)")}
                     </label>
                     <input
                       type="text"
@@ -495,45 +507,45 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
               <div className="bg-[#F8FAFC] p-3.5 rounded-2xl border border-[#E2E8F0]">
                 <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-[11px] mb-2.5 flex items-center gap-1.5">
                   <IconBuildingHospital size={15} className="text-[#C49A3C]" />
-                  <span>{txt('Mutuelle de Santé / Subsystème (p/ Remboursement)', 'Health Insurance / Health Subsystem (for Reimbursement)', 'Seguro de Saúde / Subsistema (p/ Reembolso)')}</span>
+                  <span>{txt('Mutuelle de Santé / Subsystème (p/ Remboursement)', 'Health Insurance / Health Subsystem (for Reimbursement)', 'Seguro de Saúde / Subsistema (p/ Reembolso)', "Seguro médico / subsistema sanitario (para reembolso)")}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div>
                     <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
-                      {txt('Régime', 'Plan Type', 'Regime')}
+                      {txt('Régime', 'Plan Type', 'Regime', "Tipo de cobertura")}
                     </label>
                     <select
                       value={coverageType}
                       onChange={(e) => setCoverageType(e.target.value as CoverageType)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-2.5 py-1.5 text-xs outline-none font-semibold"
                     >
-                      <option value="PARTICULAR">{txt('Privé', 'Private', 'Particular')}</option>
-                      <option value="INSURANCE">{txt('Assurance Privée', 'Private Insurance', 'Seguro Privado')}</option>
+                      <option value="PARTICULAR">{txt('Privé', 'Private', 'Particular', "Privado")}</option>
+                      <option value="INSURANCE">{txt('Assurance Privée', 'Private Insurance', 'Seguro Privado', "Seguro privado")}</option>
                       <option value="ADSE">ADSE</option>
-                      <option value="OTHER">{txt('Autre Subsystème', 'Other Subsystem', 'Outro Subsistema')}</option>
+                      <option value="OTHER">{txt('Autre Subsystème', 'Other Subsystem', 'Outro Subsistema', "Otro subsistema")}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
-                      {txt('Assurance / Entité', 'Insurer / Provider', 'Seguradora / Entidade')}
+                      {txt('Assurance / Entité', 'Insurer / Provider', 'Seguradora / Entidade', "Aseguradora / entidad")}
                     </label>
                     <input
                       type="text"
                       value={coverageProvider}
                       onChange={(e) => setCoverageProvider(e.target.value)}
-                      placeholder="Ex: Médis, Multicare, ADSE"
+                      placeholder={legacyText("Ex: Médis, Multicare, ADSE", lang)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-2.5 py-1.5 text-xs outline-none"
                     />
                   </div>
                   <div>
                     <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
-                      {txt('Nº Adhérent / Carte', 'Policy / Card #', 'Nº Beneficiário / Cartão')}
+                      {txt('Nº Adhérent / Carte', 'Policy / Card #', 'Nº Beneficiário / Cartão', "N.º de póliza / tarjeta")}
                     </label>
                     <input
                       type="text"
                       value={coverageNumber}
                       onChange={(e) => setCoverageNumber(e.target.value)}
-                      placeholder="Ex: 892345671"
+                      placeholder={legacyText("Ex: 892345671", lang)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-2.5 py-1.5 text-xs outline-none font-mono"
                     />
                   </div>
@@ -544,24 +556,24 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
               <div>
                 <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-[11px] mb-3 flex items-center gap-1.5">
                   <IconReceiptTax size={15} className="text-[#C49A3C]" />
-                  <span>{txt('Soin Clinique & Tarifs', 'Clinical Service & Pricing', 'Serviço Clínico & Valores')}</span>
+                  <span>{txt('Soin Clinique & Tarifs', 'Clinical Service & Pricing', 'Serviço Clínico & Valores', "Servicio clínico y precio")}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-2">
                     <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                      {txt('Traitement / Acte Médical *', 'Treatment / Medical Service *', 'Tratamento / Ato Médico *')}
+                      {txt('Traitement / Acte Médical *', 'Treatment / Medical Service *', 'Tratamento / Ato Médico *', "Tratamiento / servicio médico *")}
                     </label>
                     <select
                       value={serviceSlug}
                       onChange={(e) => handleServiceChange(e.target.value)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none font-medium"
                     >
-                      <option value="">{lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
+                      <option value="">{lang === 'es' ? "Elija un tratamiento" : lang==='pt'?'Escolha um tratamento':lang==='fr'?'Choisissez un soin':'Choose a treatment'}</option>{SERVICES.map((s) => (
                         <option key={s.slug} value={s.slug}>
                           {getLocalizedText(s.name,lang)} ({s.price} € -{' '}
-                          {s.pole === 'bilan' ? txt('Bilan', 'Assessment', 'Avaliação') : s.pole === 'kinesitherapie'
-                            ? txt('Kinésithérapie', 'Physiotherapy', 'Fisioterapia')
-                            : txt('Esthétique', 'Aesthetics', 'Estética')}
+                          {s.pole === 'bilan' ? txt('Bilan', 'Assessment', 'Avaliação', "Evaluación") : s.pole === 'kinesitherapie'
+                            ? txt('Kinésithérapie', 'Physiotherapy', 'Fisioterapia', "Fisioterapia")
+                            : txt('Esthétique', 'Aesthetics', 'Estética', "Estética")}
                           )
                         </option>
                       ))}
@@ -569,7 +581,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                      {txt('Montant Total (€) *', 'Total Amount (€) *', 'Valor Total (€) *')}
+                      {txt('Montant Total (€) *', 'Total Amount (€) *', 'Valor Total (€) *', "Importe total (€) *")}
                     </label>
                     <input
                       type="number"
@@ -587,7 +599,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                   <div>
                     <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                      {txt('Taux de TVA', 'VAT Rate', 'Taxa de IVA')}
+                      {txt('Taux de TVA', 'VAT Rate', 'Taxa de IVA', "Tipo de IVA")}
                     </label>
                     <select
                       value={vatRate}
@@ -599,21 +611,21 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                       }}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs outline-none font-semibold"
                     >
-                      <option value={0}>{txt('0% — Exonéré de TVA (Art. 9 CIVA)', '0% — VAT Exempt (Art. 9 CIVA)', '0% — Isento de IVA (Artigo 9.º do CIVA)')}</option>
-                      <option value={23}>{txt('23% — Taux Normal (Esthétique)', '23% — Standard Rate (Aesthetics)', '23% — Taxa Normal (Estética Não-Médica)')}</option>
-                      <option value={6}>{txt('6% — Taux Réduit', '6% — Reduced Rate', '6% — Taxa Reduzida')}</option>
+                      <option value={0}>{txt('0% — Exonéré de TVA (Art. 9 CIVA)', '0% — VAT Exempt (Art. 9 CIVA)', '0% — Isento de IVA (Artigo 9.º do CIVA)', "0 % — Exento de IVA (art. 9 del CIVA)")}</option>
+                      <option value={23}>{txt('23% — Taux Normal (Esthétique)', '23% — Standard Rate (Aesthetics)', '23% — Taxa Normal (Estética Não-Médica)', "23 % — Tipo general (estética)")}</option>
+                      <option value={6}>{txt('6% — Taux Réduit', '6% — Reduced Rate', '6% — Taxa Reduzida', "6 % — Tipo reducido")}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                      {txt('Motif d\'Exonération', 'Exemption Reason', 'Motivo de Isenção')}
+                      {txt('Motif d\'Exonération', 'Exemption Reason', 'Motivo de Isenção', "Motivo de exención")}
                     </label>
                     <input
                       type="text"
                       value={vatExemptionReason}
                       disabled={vatRate > 0}
                       onChange={(e) => setVatExemptionReason(e.target.value)}
-                      placeholder="Artigo 9.º do CIVA"
+                      placeholder={legacyText("Artigo 9.º do CIVA", lang)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs outline-none disabled:bg-slate-100 disabled:text-slate-400"
                     />
                   </div>
@@ -626,13 +638,13 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                     <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-[#FAF8F5] to-white border border-[#E8E2D8] flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-2xs">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[#64748B] font-medium">
-                          {txt('Base HT / Incidência :', 'Net Tax Base :', 'Incidência (s/ IVA) :')}
+                          {txt('Base HT / Incidência :', 'Net Tax Base :', 'Incidência (s/ IVA) :', "Base imponible:")}
                         </span>
                         <span className="font-mono font-bold text-[#0F172A]">{vatData.incidence.toFixed(2)} €</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-[#64748B] font-medium">
-                          {txt(`Montant TVA (${vatRate}%) :`, `VAT Amount (${vatRate}%) :`, `Valor IVA (${vatRate}%) :`)}
+                          {txt(`Montant TVA (${vatRate}%) :`, `VAT Amount (${vatRate}%) :`, `Valor IVA (${vatRate}%) :`, `Importe del IVA (${vatRate} %):`)}
                         </span>
                         <span className={`font-mono font-bold ${vatData.vatAmount > 0 ? 'text-[#0F172A]' : 'text-[#64748B]'}`}>
                           {vatData.vatAmount.toFixed(2)} €
@@ -640,7 +652,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                       </div>
                       <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-[#C49A3C]/30 shadow-xs">
                         <span className="text-[#9A7428] font-semibold">
-                          {txt('Total TTC :', 'Total (Gross) :', 'Total c/ IVA :')}
+                          {txt('Total TTC :', 'Total (Gross) :', 'Total c/ IVA :', "Total (bruto):")}
                         </span>
                         <span className="font-mono font-bold text-[#1A1412]">{vatData.total.toFixed(2)} €</span>
                       </div>
@@ -653,12 +665,12 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
               <div className="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#E8E2D8]">
                 <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-[11px] mb-2.5 flex items-center gap-1.5">
                   <IconCreditCard size={15} className="text-[#C49A3C]" />
-                  <span>{txt('Mode de Paiement & Statut', 'Payment Method & Status', 'Método de Pagamento & Estado')}</span>
+                  <span>{txt('Mode de Paiement & Statut', 'Payment Method & Status', 'Método de Pagamento & Estado', "Método y estado del pago")}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
-                      {txt('Mode de Règlement', 'Payment Method', 'Método de Liquidação')}
+                      {txt('Mode de Règlement', 'Payment Method', 'Método de Liquidação', "Método de pago")}
                     </label>
                     <select
                       value={paymentMethod}
@@ -667,22 +679,22 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                     >
                       <option value="MULTIBANCO">Multibanco (TPA)</option>
                       <option value="MBWAY">MB Way</option>
-                      <option value="CASH">{txt('Espèces / Cash', 'Cash', 'Numerário / Dinheiro')}</option>
-                      <option value="CARD">{txt('Carte Bancaire', 'Credit/Debit Card', 'Cartão de Crédito/Débito')}</option>
-                      <option value="TRANSFER">{txt('Virement Bancaire', 'Bank Transfer', 'Transferência Bancária')}</option>
+                      <option value="CASH">{txt('Espèces / Cash', 'Cash', 'Numerário / Dinheiro', "Efectivo")}</option>
+                      <option value="CARD">{txt('Carte Bancaire', 'Credit/Debit Card', 'Cartão de Crédito/Débito', "Tarjeta de crédito/débito")}</option>
+                      <option value="TRANSFER">{txt('Virement Bancaire', 'Bank Transfer', 'Transferência Bancária', "Transferencia bancaria")}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
-                      {txt('Statut du Reçu', 'Invoice Status', 'Estado da Fatura')}
+                      {txt('Statut du Reçu', 'Invoice Status', 'Estado da Fatura', "Estado de la factura")}
                     </label>
                     <select
                       value={paymentStatus}
                       onChange={(e) => setPaymentStatus(e.target.value as InvoicePaymentStatus)}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs outline-none font-semibold"
                     >
-                      <option value="PAID">{txt('PAYÉ / Réglé (Facture-Reçu)', 'PAID / Settled (Invoice-Receipt)', 'PAGO / Quitado (Fatura-Recibo)')}</option>
-                      <option value="PENDING">{txt('EN ATTENTE (En attente de règlement)', 'PENDING (Awaiting Settlement)', 'PENDENTE (Aguardar Liquidação)')}</option>
+                      <option value="PAID">{txt('PAYÉ / Réglé (Facture-Reçu)', 'PAID / Settled (Invoice-Receipt)', 'PAGO / Quitado (Fatura-Recibo)', "PAGADA / liquidada (factura-recibo)")}</option>
+                      <option value="PENDING">{txt('EN ATTENTE (En attente de règlement)', 'PENDING (Awaiting Settlement)', 'PENDENTE (Aguardar Liquidação)', "PENDIENTE (a la espera de pago)")}</option>
                     </select>
                   </div>
                 </div>
@@ -691,7 +703,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
               {/* ── Notes ────────────────────────────────────────────────── */}
               <div>
                 <label className="block text-[11px] font-medium text-[#64748B] mb-1">
-                  {txt('Remarques Internes / Description', 'Internal Notes / Additional Info', 'Observações Internas / Descrição Adicional')}
+                  {txt('Remarques Internes / Description', 'Internal Notes / Additional Info', 'Observações Internas / Descrição Adicional', "Notas internas / información adicional")}
                 </label>
                 <textarea
                   rows={2}
@@ -700,7 +712,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                   placeholder={txt(
                     'Ex: Séance 1/10 prescription orthopédique Dr. Silva...',
                     'e.g. Session 1/10 orthopedic prescription Dr. Silva...',
-                    'Ex: Sessão 1/10 prescrição ortopédica Dr. Silva...'
+                    'Ex: Sessão 1/10 prescrição ortopédica Dr. Silva...', "P. ej., sesión 1/10, prescripción ortopédica del Dr. Silva..."
                   )}
                   className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#C49A3C] outline-none"
                 />
@@ -713,7 +725,7 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                   onClick={onClose}
                   className="px-4 py-2.5 rounded-xl border border-[#CBD5E1] text-[#475569] hover:bg-[#F1F5F9] transition-colors font-semibold text-xs"
                 >
-                  {txt('Annuler', 'Cancel', 'Cancelar')}
+                  {txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
                 </button>
                 <button
                   type="submit"
@@ -723,8 +735,8 @@ export const CreateInvoiceModal = React.memo(function CreateInvoiceModal({
                   <IconReceiptTax size={16} />
                   <span>
                     {submitting
-                      ? txt('Émission en cours...', 'Issuing invoice...', 'A emitir recibo...')
-                      : txt('Émettre la Facture-Reçu', 'Issue Invoice-Receipt', 'Emitir Fatura-Recibo')}
+                      ? txt('Émission en cours...', 'Issuing invoice...', 'A emitir recibo...', "Emitiendo factura...")
+                      : txt('Émettre la Facture-Reçu', 'Issue Invoice-Receipt', 'Emitir Fatura-Recibo', "Emitir factura-recibo")}
                   </span>
                 </button>
               </div>

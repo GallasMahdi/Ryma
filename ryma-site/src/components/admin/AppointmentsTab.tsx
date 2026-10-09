@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { useServiceLabels } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -122,8 +124,8 @@ function WeekCalendarView({
   loading,
   onDateChange,
 }: WeekCalendarViewProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const todayStr = useMemo(() => toDateStr(new Date()), []);
   const weekStart = useMemo(() => getWeekStart(new Date(selectedDate + 'T12:00:00')), [selectedDate]);
@@ -167,14 +169,14 @@ function WeekCalendarView({
   }, [appointments]);
 
   const weekLabel = useMemo(() => {
-    const locale = lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
+    const locale = lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
     const s = weekDays[0].toLocaleDateString(locale, { day: 'numeric', month: 'short' });
     const e = weekDays[6].toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
     return `${s} – ${e}`;
   }, [weekDays, lang]);
 
   const dayShort = (d: Date) => {
-    const locale = lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
+    const locale = lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
     return d.toLocaleDateString(locale, { weekday: 'short' });
   };
 
@@ -189,14 +191,14 @@ function WeekCalendarView({
           <button
             onClick={() => onDateChange(shiftDateString(selectedDate, -7))}
             className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
-            title={txt('Semaine précédente', 'Previous week', 'Semana anterior')}
+            title={txt('Semaine précédente', 'Previous week', 'Semana anterior', "Semana anterior")}
           >
             <IconChevronLeft size={16} />
           </button>
           <button
             onClick={() => onDateChange(shiftDateString(selectedDate, 7))}
             className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
-            title={txt('Semaine suivante', 'Next week', 'Semana seguinte')}
+            title={txt('Semaine suivante', 'Next week', 'Semana seguinte', "Semana siguiente")}
           >
             <IconChevronRight size={16} />
           </button>
@@ -214,7 +216,7 @@ function WeekCalendarView({
           />
           <span className={`text-xs text-[#64748B] font-medium hidden md:inline ${loading ? 'invisible' : ''}`}>
             · {appointments.filter(a => weekDays.some(d => toDateStr(d) === a.date)).length}{' '}
-            {txt('rendez-vous', 'appointments', 'consultas')}
+            {txt('rendez-vous', 'appointments', 'consultas', "citas")}
           </span>
         </div>
 
@@ -223,13 +225,13 @@ function WeekCalendarView({
             onClick={() => onDateChange(todayStr)}
             className="px-3 py-1.5 rounded-lg bg-[#F1F5F9] text-[#334155] text-xs font-semibold hover:bg-[#E2E8F0] transition-colors"
           >
-            {txt("Auj.", 'Today', 'Hoje')}
+            {txt("Auj.", 'Today', 'Hoje', "Hoy")}
           </button>
         </div>
       </div>
 
       {/* Calendar Grid Container */}
-      <AgendaContent loading={loading} loadingLabel={txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…')}>
+      <AgendaContent loading={loading} loadingLabel={txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…', "Cargando citas…")}>
       <div className="bg-white border border-[#E2E8F0] rounded-xl overflow-x-auto shadow-xs no-scrollbar">
         <div className="min-w-[700px]">
           {/* Day Headers */}
@@ -264,7 +266,7 @@ function WeekCalendarView({
                   </div>
                   {count > 0 && (
                     <div className="text-[10px] text-[#64748B] font-medium mt-0.5">
-                      {count} {count === 1 ? txt('rdv', 'appt', 'cons.') : txt('rdvs', 'appts', 'cons.')}
+                      {count} {count === 1 ? txt('rdv', 'appt', 'cons.', "cita") : txt('rdvs', 'appts', 'cons.', "citas")}
                     </div>
                   )}
                 </div>
@@ -289,7 +291,7 @@ function WeekCalendarView({
                   {sunday ? (
                     <div className="flex-1 flex items-center justify-center">
                       <span className="text-[11px] text-[#CBD5E1] rotate-90 whitespace-nowrap">
-                        {txt('Fermé', 'Closed', 'Fechado')}
+                        {txt('Fermé', 'Closed', 'Fechado', "Cerrado")}
                       </span>
                     </div>
                   ) : dayAppts.length === 0 ? (
@@ -316,7 +318,7 @@ function WeekCalendarView({
                             </div>
                             {isNew && (
                               <span className="bg-[#C49A3C] text-white text-[7.5px] font-bold px-1 rounded uppercase shrink-0">
-                                {txt('NOUV.', 'NEW', 'NOVO')}
+                                {txt('NOUV.', 'NEW', 'NOVO', "NUEVA")}
                               </span>
                             )}
                           </div>
@@ -397,7 +399,8 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
   recentNewIds,
 }: AppointmentsTabProps) {
   const { getServiceName, getServicePrice } = useServiceLabels();
-  const txt = (frStr: string, enStr: string, ptStr: string) => {
+  const txt = (frStr: string, enStr: string, ptStr: string, es: string) => {
+    if (lang === 'es') return es;
     if (lang === 'fr') return frStr;
     if (lang === 'en') return enStr;
     return ptStr;
@@ -553,7 +556,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
               </span>
               {isRecentNew && (
                 <span className="bg-[#C49A3C] text-white text-[9px] font-bold px-1.5 py-0.2 rounded uppercase animate-pulse">
-                  {txt('NOUV.', 'NEW', 'NOVO')}
+                  {txt('NOUV.', 'NEW', 'NOVO', "NUEVA")}
                 </span>
               )}
               <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${st.bg} ${st.color} ${st.border}`}>
@@ -562,7 +565,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
               {noShows >= 2 && (
                 <span className="bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B] text-[10px] font-medium px-2 py-0.5 rounded flex items-center gap-1">
                   <IconAlertCircle size={11} />
-                  <span>{noShows} {txt('annulations', 'cancels', 'cancelamentos')}</span>
+                  <span>{noShows} {txt('annulations', 'cancels', 'cancelamentos', "cancelaciones")}</span>
                 </span>
               )}
               {price > 0 && (
@@ -604,7 +607,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
             type="button"
             onClick={() => handleOpenWhatsAppHub(item)}
             className="p-2 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] hover:bg-[#DCFCE7] transition-colors touch-target flex items-center justify-center shadow-2xs"
-            title={txt('WhatsApp Hub (Rappels & Suivi)', 'WhatsApp Hub (Reminders & Aftercare)', 'WhatsApp Hub (Lembretes & Pós-Tratamento)')}
+            title={txt('WhatsApp Hub (Rappels & Suivi)', 'WhatsApp Hub (Reminders & Aftercare)', 'WhatsApp Hub (Lembretes & Pós-Tratamento)', "Centro de WhatsApp (recordatorios y cuidados posteriores)")}
           >
             <IconBrandWhatsapp size={15} />
           </button>
@@ -612,7 +615,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
           <button
             onClick={() => openPatientNote(item)}
             className="p-2 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] hover:bg-[#F8FAFC] transition-colors touch-target flex items-center justify-center"
-            title={txt('Dossier patient', 'Patient file', 'Ficha do doente')}
+            title={txt('Dossier patient', 'Patient file', 'Ficha do doente', "Ficha del paciente")}
           >
             <IconNotes size={15} />
           </button>
@@ -623,18 +626,18 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
               setIsInvoiceModalOpen(true);
             }}
             className="p-2 rounded-lg border border-[#CBD5E1] bg-[#FAF8F5] text-[#9A7428] hover:bg-[#F5E9C8] transition-colors touch-target flex items-center justify-center shadow-xs"
-            title={txt('Émettre une Facture', 'Issue Tax Invoice', 'Emitir Fatura-Recibo')}
+            title={txt('Émettre une Facture', 'Issue Tax Invoice', 'Emitir Fatura-Recibo', "Emitir factura fiscal")}
           >
             <IconReceiptTax size={15} />
           </button>
 
-          {item.status !== 'CONFIRMED' && item.status !== 'CANCELLED' && (
+          {item.status === 'PENDING' && (
             <button
               onClick={() => updateStatus(item.id, 'CONFIRMED')}
               className="px-3 py-2 rounded-lg bg-[#DCFCE7] text-[#166534] hover:bg-[#BBF7D0] text-xs font-semibold transition-colors touch-target flex items-center gap-1"
             >
               <IconCheck size={14} />
-              <span>{txt('Confirmer', 'Confirm', 'Confirmar')}</span>
+              <span>{txt('Confirmer', 'Confirm', 'Confirmar', "Confirmar")}</span>
             </button>
           )}
 
@@ -644,7 +647,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
               className="px-3 py-2 rounded-lg bg-[#DBEAFE] text-[#1E40AF] hover:bg-[#BFDBFE] text-xs font-semibold transition-colors touch-target flex items-center gap-1"
             >
               <IconCheck size={14} />
-              <span>{txt('Terminer', 'Complete', 'Concluir')}</span>
+              <span>{txt('Terminer', 'Complete', 'Concluir', "Completar")}</span>
             </button>
           )}
 
@@ -652,12 +655,12 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
             <button
               onClick={() =>
                 setConfirmDialog({
-                  title: txt(`Annuler ce rendez-vous pour ${item.patientName} ?`, `Cancel appointment for ${item.patientName}?`, `Cancelar consulta de ${item.patientName}?`),
+                  title: txt(`Annuler ce rendez-vous pour ${item.patientName} ?`, `Cancel appointment for ${item.patientName}?`, `Cancelar consulta de ${item.patientName}?`, `¿Cancelar la cita de ${item.patientName}?`),
                   onConfirm: () => softDeleteAppointment(item.id),
                 })
               }
               className="p-2 rounded-lg text-[#94A3B8] hover:text-[#991B1B] hover:bg-[#FEF2F2] transition-colors touch-target flex items-center justify-center"
-              title={txt('Annuler', 'Cancel', 'Cancelar')}
+              title={txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
             >
               <IconX size={15} />
             </button>
@@ -680,7 +683,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={txt('Rechercher patient, téléphone, soin...', 'Search patient, phone, service...', 'Pesquisar utente, telefone, tratamento...')}
+              placeholder={txt('Rechercher patient, téléphone, soin...', 'Search patient, phone, service...', 'Pesquisar utente, telefone, tratamento...', "Buscar paciente, teléfono, servicio...")}
               className="w-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] rounded-lg pl-10 pr-3 py-2 text-xs focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
             />
           </div>
@@ -692,7 +695,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
               className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] text-xs font-semibold touch-target"
             >
               <IconFilter size={15} className="text-[#64748B]" />
-              <span>{txt('Filtres & Recherche', 'Filters & Search', 'Filtros')}</span>
+              <span>{txt('Filtres & Recherche', 'Filters & Search', 'Filtros', "Filtros y búsqueda")}</span>
               {isAnyFilterActive && (
                 <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
               )}
@@ -702,7 +705,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
               <button
                 onClick={resetFilters}
                 className="px-2.5 py-2 rounded-lg text-xs font-semibold text-[#991B1B] bg-[#FEF2F2] border border-[#FECACA] touch-target"
-                title={txt('Réinitialiser', 'Reset', 'Repor')}
+                title={txt('Réinitialiser', 'Reset', 'Repor', "Restablecer")}
               >
                 ✕
               </button>
@@ -718,10 +721,10 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                   ? 'bg-white text-[#0F172A] shadow-xs font-semibold'
                   : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
-              title={txt('Vue Semaine', 'Week View', 'Vista Semanal')}
+              title={txt('Vue Semaine', 'Week View', 'Vista Semanal', "Vista semanal")}
             >
               <IconCalendarWeek size={15} className={viewMode === 'week' ? 'text-[#0F172A]' : ''} />
-              <span>{txt('Semaine', 'Week', 'Semana')}</span>
+              <span>{txt('Semaine', 'Week', 'Semana', "Semana")}</span>
             </button>
 
             <button
@@ -731,10 +734,10 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                   ? 'bg-white text-[#0F172A] shadow-xs font-semibold'
                   : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
-              title={txt('Vue Agenda Journalier', 'Day Agenda View', 'Vista Agenda')}
+              title={txt('Vue Agenda Journalier', 'Day Agenda View', 'Vista Agenda', "Vista de agenda diaria")}
             >
               <IconCalendarEvent size={15} className={viewMode === 'agenda' ? 'text-[#0F172A]' : ''} />
-              <span>{txt('Agenda', 'Agenda', 'Agenda')}</span>
+              <span>{txt('Agenda', 'Agenda', 'Agenda', "Agenda")}</span>
             </button>
 
             <button
@@ -744,10 +747,10 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                   ? 'bg-white text-[#0F172A] shadow-xs font-semibold'
                   : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
-              title={txt('Vue Cartes', 'Cards View', 'Vista Cartões')}
+              title={txt('Vue Cartes', 'Cards View', 'Vista Cartões', "Vista de tarjetas")}
             >
               <IconLayoutGrid size={15} className={viewMode === 'cards' ? 'text-[#0F172A]' : ''} />
-              <span className="hidden sm:inline">{txt('Cartes', 'Cards', 'Cartões')}</span>
+              <span className="hidden sm:inline">{txt('Cartes', 'Cards', 'Cartões', "Tarjetas")}</span>
             </button>
 
             <button
@@ -757,10 +760,10 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                   ? 'bg-white text-[#0F172A] shadow-xs font-semibold'
                   : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
-              title={txt('Vue Tableau', 'Table View', 'Vista Tabela')}
+              title={txt('Vue Tableau', 'Table View', 'Vista Tabela', "Vista de tabla")}
             >
               <IconTable size={15} className={viewMode === 'table' ? 'text-[#0F172A]' : ''} />
-              <span>{txt('Tableau', 'Table', 'Tabela')}</span>
+              <span>{txt('Tableau', 'Table', 'Tabela', "Tabla")}</span>
             </button>
 
             <button
@@ -770,10 +773,10 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                   ? 'bg-white text-[#0F172A] shadow-xs font-semibold'
                   : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
-              title={txt('Vue par Date', 'View by Date', 'Vista por Data')}
+              title={txt('Vue par Date', 'View by Date', 'Vista por Data', "Ver por fecha")}
             >
               <IconTimeline size={15} className={viewMode === 'grouped' ? 'text-[#0F172A]' : ''} />
-              <span>{txt('Par Date', 'By Date', 'Por Data')}</span>
+              <span>{txt('Par Date', 'By Date', 'Por Data', "Por fecha")}</span>
             </button>
           </div>
         </div>
@@ -783,11 +786,11 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
           {/* Status Pills */}
           <div className="flex flex-wrap items-center gap-1.5">
             {[
-              { id: 'all' as const, label: txt('Tous', 'All', 'Todos'), count: appointments.length },
-              { id: 'CONFIRMED' as const, label: txt('Confirmés', 'Confirmed', 'Confirmados'), count: appointments.filter(a => a.status === 'CONFIRMED').length },
-              { id: 'PENDING' as const, label: txt('En attente', 'Pending', 'Pendentes'), count: appointments.filter(a => a.status === 'PENDING').length },
-              { id: 'COMPLETED' as const, label: txt('Terminés', 'Completed', 'Concluídos'), count: appointments.filter(a => a.status === 'COMPLETED').length },
-              ...(appointments.some(a => a.status === 'CANCELLED') ? [{ id: 'CANCELLED' as const, label: txt('Annulés', 'Cancelled', 'Cancelados'), count: appointments.filter(a => a.status === 'CANCELLED').length }] : []),
+              { id: 'all' as const, label: txt('Tous', 'All', 'Todos', "Todos"), count: appointments.length },
+              { id: 'CONFIRMED' as const, label: txt('Confirmés', 'Confirmed', 'Confirmados', "Confirmadas"), count: appointments.filter(a => a.status === 'CONFIRMED').length },
+              { id: 'PENDING' as const, label: txt('En attente', 'Pending', 'Pendentes', "Pendientes"), count: appointments.filter(a => a.status === 'PENDING').length },
+              { id: 'COMPLETED' as const, label: txt('Terminés', 'Completed', 'Concluídos', "Completadas"), count: appointments.filter(a => a.status === 'COMPLETED').length },
+              ...(appointments.some(a => a.status === 'CANCELLED') ? [{ id: 'CANCELLED' as const, label: txt('Annulés', 'Cancelled', 'Cancelados', "Canceladas"), count: appointments.filter(a => a.status === 'CANCELLED').length }] : []),
             ].map(p => (
               <button
                 key={p.id}
@@ -809,10 +812,10 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
           {/* Quick Date Pills & Direct Date Jump Picker */}
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {[
-              { id: 'all', label: txt('Toutes dates', 'All dates', 'Todas as datas') },
-              { id: 'today', label: txt("Aujourd'hui", 'Today', 'Hoje') },
-              { id: 'tomorrow', label: txt('Demain', 'Tomorrow', 'Amanhã') },
-              { id: 'upcoming', label: txt('À venir', 'Upcoming', 'Próximas') },
+              { id: 'all', label: txt('Toutes dates', 'All dates', 'Todas as datas', "Todas las fechas") },
+              { id: 'today', label: txt("Aujourd'hui", 'Today', 'Hoje', "Hoy") },
+              { id: 'tomorrow', label: txt('Demain', 'Tomorrow', 'Amanhã', "Mañana") },
+              { id: 'upcoming', label: txt('À venir', 'Upcoming', 'Próximas', "Próximas") },
             ].filter(d => !isCalendarView || d.id === 'today' || d.id === 'tomorrow').map(d => (
               <button
                 key={d.id}
@@ -843,7 +846,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                 type="button"
                 onClick={() => setSpecificDateFilter(null)}
                 className="px-2 py-1 rounded-lg bg-[#FAF6EE] text-[#C49A3C] border border-[#C49A3C] text-xs font-bold flex items-center gap-1 hover:bg-[#F5E9C8] transition-colors"
-                title={txt('Effacer filtre de date', 'Clear date filter', 'Limpar filtro de data')}
+                title={txt('Effacer filtre de date', 'Clear date filter', 'Limpar filtro de data', "Borrar filtro de fecha")}
               >
                 <span>{specificDateFilter}</span>
                 <IconX size={12} />
@@ -910,10 +913,10 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
         <div className="py-16 text-center text-[#64748B] bg-white rounded-xl border border-[#E2E8F0] space-y-2">
           <IconListCheck size={36} className="mx-auto text-[#94A3B8]" />
           <h4 className="text-sm font-semibold text-[#0F172A]">
-            {txt('Aucun rendez-vous trouvé', 'No appointments found', 'Nenhuma consulta encontrada')}
+            {txt('Aucun rendez-vous trouvé', 'No appointments found', 'Nenhuma consulta encontrada', "No se han encontrado citas")}
           </h4>
           <p className="text-xs text-[#64748B]">
-            {txt('Modifiez vos filtres ou effectuez une autre recherche', 'Try changing your filters or search terms', 'Tente alterar os seus filtros')}
+            {txt('Modifiez vos filtres ou effectuez une autre recherche', 'Try changing your filters or search terms', 'Tente alterar os seus filtros', "Pruebe a cambiar los filtros o los términos de búsqueda")}
           </p>
         </div>
       ) : (
@@ -961,11 +964,11 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                 <table className="w-full text-left font-sans text-xs">
                   <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0] uppercase text-[11px] text-[#64748B] font-semibold">
                     <tr>
-                      <th className="py-3 px-4">{txt('Patient', 'Patient', 'Utente')}</th>
-                      <th className="py-3 px-4">{txt('Traitement', 'Treatment', 'Tratamento')}</th>
-                      <th className="py-3 px-4">{txt('Date & Heure', 'Date & Time', 'Data & Hora')}</th>
-                      <th className="py-3 px-4">{txt('Statut', 'Status', 'Estado')}</th>
-                      <th className="py-3 px-4 text-right">{txt('Actions', 'Actions', 'Ações')}</th>
+                      <th className="py-3 px-4">{txt('Patient', 'Patient', 'Utente', "Paciente")}</th>
+                      <th className="py-3 px-4">{txt('Traitement', 'Treatment', 'Tratamento', "Tratamiento")}</th>
+                      <th className="py-3 px-4">{txt('Date & Heure', 'Date & Time', 'Data & Hora', "Fecha y hora")}</th>
+                      <th className="py-3 px-4">{txt('Statut', 'Status', 'Estado', "Estado")}</th>
+                      <th className="py-3 px-4 text-right">{txt('Actions', 'Actions', 'Ações', "Acciones")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E2E8F0]">
@@ -995,7 +998,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                                   <span>{item.patientName}<span className="block text-[11px] text-slate-500">{item.practitionerName}</span></span>
                                   {isRecentNew && (
                                     <span className="bg-[#C49A3C] text-white text-[8px] font-bold px-1.5 py-0.2 rounded uppercase animate-pulse">
-                                      {txt('NOUV.', 'NEW', 'NOVO')}
+                                      {txt('NOUV.', 'NEW', 'NOVO', "NUEVA")}
                                     </span>
                                   )}
                                 </div>
@@ -1030,14 +1033,14 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                                 type="button"
                                 onClick={() => handleOpenWhatsAppHub(item)}
                                 className="p-1.5 rounded-lg text-[#166534] hover:bg-[#DCFCE7] transition-colors"
-                                title="WhatsApp Hub"
+                                title={legacyText("WhatsApp Hub", lang)}
                               >
                                 <IconBrandWhatsapp size={16} />
                               </button>
                               <button
                                 onClick={() => openPatientNote(item)}
                                 className="p-1.5 rounded-lg text-[#475569] hover:bg-[#F1F5F9] transition-colors"
-                                title={txt('Dossier patient', 'Patient file', 'Ficha do utente')}
+                                title={txt('Dossier patient', 'Patient file', 'Ficha do utente', "Ficha del paciente")}
                               >
                                 <IconNotes size={16} />
                               </button>
@@ -1047,13 +1050,14 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                                   setIsInvoiceModalOpen(true);
                                 }}
                                 className="p-1.5 rounded-lg text-[#9A7428] hover:bg-[#F5E9C8] transition-colors"
-                                title={txt('Émettre Fatura-Recibo', 'Issue Tax Invoice', 'Emitir Fatura-Recibo')}
+                                title={txt('Émettre Fatura-Recibo', 'Issue Tax Invoice', 'Emitir Fatura-Recibo', "Emitir factura fiscal")}
                               >
                                 <IconReceiptTax size={16} />
                               </button>
-                              {item.status !== 'CONFIRMED' && item.status !== 'CANCELLED' && (
+                              {item.status === 'PENDING' && (
                                 <button
                                   onClick={() => updateStatus(item.id, 'CONFIRMED')}
+                                  aria-label={txt('Confirmer', 'Confirm', 'Confirmar', "Confirmar")}
                                   className="px-2.5 py-1 rounded bg-[#DCFCE7] text-[#166534] hover:bg-[#BBF7D0] text-xs font-semibold transition-colors"
                                 >
                                   ✓
@@ -1062,6 +1066,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                               {item.status === 'CONFIRMED' && (
                                 <button
                                   onClick={() => updateStatus(item.id, 'COMPLETED')}
+                                  aria-label={txt('Terminer', 'Complete', 'Concluir', "Completar")}
                                   className="px-2.5 py-1 rounded bg-[#DBEAFE] text-[#1E40AF] hover:bg-[#BFDBFE] text-xs font-semibold transition-colors"
                                 >
                                   ✓
@@ -1071,12 +1076,12 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                                 <button
                                   onClick={() =>
                                     setConfirmDialog({
-                                      title: txt('Annuler ce rendez-vous ?', 'Cancel this appointment?', 'Cancelar esta consulta?'),
+                                      title: txt('Annuler ce rendez-vous ?', 'Cancel this appointment?', 'Cancelar esta consulta?', "¿Cancelar esta cita?"),
                                       onConfirm: () => softDeleteAppointment(item.id),
                                     })
                                   }
                                   className="p-1.5 rounded text-[#94A3B8] hover:text-[#991B1B] hover:bg-[#FEF2F2] transition-colors"
-                                  title={txt('Annuler', 'Cancel', 'Cancelar')}
+                                  title={txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
                                 >
                                   <IconTrash size={16} />
                                 </button>
@@ -1108,12 +1113,12 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                             ? 'bg-[#334155] text-white'
                             : 'bg-[#F1F5F9] text-[#334155] border border-[#E2E8F0]'
                         }`}>
-                          {isToday ? txt("Aujourd'hui", 'Today', 'Hoje') : isTomorrow ? txt('Demain', 'Tomorrow', 'Amanhã') : date}
+                          {isToday ? txt("Aujourd'hui", 'Today', 'Hoje', "Hoy") : isTomorrow ? txt('Demain', 'Tomorrow', 'Amanhã', "Mañana") : date}
                         </span>
                         <span className="text-[#64748B] font-semibold">{date}</span>
                       </div>
                       <span className="text-xs text-[#64748B]">
-                        {appts.length} {txt('rendez-vous', 'appointments', 'consultas')}
+                        {appts.length} {txt('rendez-vous', 'appointments', 'consultas', "citas")}
                       </span>
                     </div>
 
@@ -1134,11 +1139,11 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                   {txt(
                     `Affichage ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} sur ${totalItems}`,
                     `Showing ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} of ${totalItems}`,
-                    `A mostrar ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} de ${totalItems}`
+                    `A mostrar ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} de ${totalItems}`, `Mostrando ${totalItems > 0 ? startIndex + 1 : 0} – ${endIndex} de ${totalItems}`
                   )}
                 </span>
                 <div className="flex items-center gap-1.5 text-[11px]">
-                  <span className="hidden md:inline">{txt('Par page:', 'Per page:', 'Por página:')}</span>
+                  <span className="hidden md:inline">{txt('Par page:', 'Per page:', 'Por página:', "Por página:")}</span>
                   <select
                     value={itemsPerPage}
                     onChange={e => setItemsPerPage(Number(e.target.value))}
@@ -1157,7 +1162,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                     onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
                     disabled={currentPage === 1}
                     className="p-1.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] disabled:opacity-40 disabled:cursor-not-allowed transition-colors touch-target flex items-center justify-center"
-                    title={txt('Précédent', 'Previous', 'Anterior')}
+                    title={txt('Précédent', 'Previous', 'Anterior', "Anterior")}
                   >
                     <IconChevronLeft size={16} />
                   </button>
@@ -1196,7 +1201,7 @@ export const AppointmentsTab = React.memo(function AppointmentsTab({
                     onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
                     disabled={currentPage === totalPages}
                     className="p-1.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] disabled:opacity-40 disabled:cursor-not-allowed transition-colors touch-target flex items-center justify-center"
-                    title={txt('Suivant', 'Next', 'Seguinte')}
+                    title={txt('Suivant', 'Next', 'Seguinte', "Siguiente")}
                   >
                     <IconChevronRight size={16} />
                   </button>

@@ -1,0 +1,27 @@
+[
+  {
+    "url": "https://ryma-ten.vercel.app",
+    "status": 200,
+    "title": "Digital Clínica — Fisioterapia &amp; Estética Avançada em Lisboa",
+    "deployment": [],
+    "scripts": [
+      "/_next/static/immutable/chunks/0o5p-_7dg7o4m.js",
+      "/_next/static/immutable/chunks/11rdarm08zjiu.js",
+      "/_next/static/immutable/chunks/3gt-sk9pq6elb.js",
+      "/_next/static/immutable/chunks/turbopack-10omhal9han2a.js",
+      "/_next/static/immutable/chunks/0m3gxl6idwrl0.js"
+    ]
+  },
+  {
+    "url": "https://ryma-f8jf56z9w-gallasmahdis-projects.vercel.app",
+    "status": 302,
+    "deployment": [],
+    "scripts": []
+  },
+  {
+    "url": "https://ryma-swz4-800hqhdak-gallasmahdis-projects.vercel.app",
+    "status": 302,
+    "deployment": [],
+    "scripts": []
+  }
+]

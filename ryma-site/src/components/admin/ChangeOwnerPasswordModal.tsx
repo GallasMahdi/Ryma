@@ -34,25 +34,25 @@ export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordM
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
     if (!currentPassword) {
-      setError(txt('Veuillez entrer le mot de passe actuel.', 'Please enter current password.', 'Insira a palavra-passe atual.'));
+      setError(txt('Veuillez entrer le mot de passe actuel.', 'Please enter current password.', 'Insira a palavra-passe atual.', "Introduzca la contraseña actual."));
       return;
     }
 
     if (newPassword.length < 8) {
-      setError(txt('Le nouveau mot de passe doit comporter au moins 8 caractères.', 'New password must have at least 8 characters.', 'A nova palavra-passe deve ter pelo menos 8 caracteres.'));
+      setError(txt('Le nouveau mot de passe doit comporter au moins 8 caractères.', 'New password must have at least 8 characters.', 'A nova palavra-passe deve ter pelo menos 8 caracteres.', "La nueva contraseña debe tener al menos 8 caracteres."));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError(txt('Les nouveaux mots de passe ne correspondent pas.', 'New passwords do not match.', 'As novas palavras-passe não coincidem.'));
+      setError(txt('Les nouveaux mots de passe ne correspondent pas.', 'New passwords do not match.', 'As novas palavras-passe não coincidem.', "Las nuevas contraseñas no coinciden."));
       return;
     }
 
@@ -76,7 +76,7 @@ export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordM
         txt(
           'Mot de passe propriétaire mis à jour avec succès.',
           'Owner password successfully updated.',
-          'Palavra-passe do proprietário atualizada com sucesso.'
+          'Palavra-passe do proprietário atualizada com sucesso.', "Contraseña del propietario actualizada correctamente."
         )
       );
       setCurrentPassword('');
@@ -118,10 +118,10 @@ export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordM
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[#0F172A]">
-                    {txt('Changer Mot de Passe Propriétaire', 'Change Owner Password', 'Alterar Palavra-passe do Proprietário')}
+                    {txt('Changer Mot de Passe Propriétaire', 'Change Owner Password', 'Alterar Palavra-passe do Proprietário', "Cambiar contraseña del propietario")}
                   </h3>
                   <p className="text-[11px] text-[#64748B]">
-                    {txt('Protège l’accès aux Statistiques & Revenus', 'Protects access to Analytics & Revenue', 'Protege o acesso a Estatísticas e Receita')}
+                    {txt('Protège l’accès aux Statistiques & Revenus', 'Protects access to Analytics & Revenue', 'Protege o acesso a Estatísticas e Receita', "Protege el acceso a estadísticas e ingresos")}
                   </p>
                 </div>
               </div>
@@ -145,7 +145,7 @@ export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordM
 
               <div className="space-y-1">
                 <label className="block text-xs font-medium text-[#475569]">
-                  {txt('Mot de passe propriétaire actuel', 'Current owner password', 'Palavra-passe atual')}
+                  {txt('Mot de passe propriétaire actuel', 'Current owner password', 'Palavra-passe atual', "Contraseña actual del propietario")}
                 </label>
                 <div className="relative">
                   <input
@@ -167,7 +167,7 @@ export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordM
 
               <div className="space-y-1">
                 <label className="block text-xs font-medium text-[#475569]">
-                  {txt('Nouveau mot de passe (min 8 car.)', 'New password (min 8 chars)', 'Nova palavra-passe (mín 8 car.)')}
+                  {txt('Nouveau mot de passe (min 8 car.)', 'New password (min 8 chars)', 'Nova palavra-passe (mín 8 car.)', "Nueva contraseña (mín. 8 caracteres)")}
                 </label>
                 <div className="relative">
                   <input
@@ -190,7 +190,7 @@ export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordM
 
               <div className="space-y-1">
                 <label className="block text-xs font-medium text-[#475569]">
-                  {txt('Confirmer le nouveau mot de passe', 'Confirm new password', 'Confirmar nova palavra-passe')}
+                  {txt('Confirmer le nouveau mot de passe', 'Confirm new password', 'Confirmar nova palavra-passe', "Confirmar nueva contraseña")}
                 </label>
                 <input
                   type="password"
@@ -209,7 +209,7 @@ export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordM
                   disabled={loading}
                   className="px-3.5 py-2 rounded-xl border border-[#CBD5E1] text-xs font-medium text-[#475569] hover:bg-[#F1F5F9]"
                 >
-                  {txt('Annuler', 'Cancel', 'Cancelar')}
+                  {txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
                 </button>
                 <button
                   type="submit"
@@ -221,7 +221,7 @@ export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordM
                   ) : (
                     <IconCheck size={14} />
                   )}
-                  <span>{txt('Enregistrer', 'Save', 'Guardar')}</span>
+                  <span>{txt('Enregistrer', 'Save', 'Guardar', "Guardar")}</span>
                 </button>
               </div>
             </form>

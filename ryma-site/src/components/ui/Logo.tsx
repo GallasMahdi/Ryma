@@ -1,4 +1,6 @@
+'use client';
 import React from 'react';
+import { useLanguage } from '@/lib/i18n';
 import Image from 'next/image';
 
 export interface LogoProps {
@@ -18,13 +20,14 @@ export function LogoIcon({
   size = 48,
   className = '',
   variant = 'gold',
-  alt = 'Digital Clínica Emblem',
+  alt,
 }: {
   size?: number;
   className?: string;
   variant?: 'gold' | 'light' | 'dark' | 'monochrome';
   alt?: string;
 }) {
+  const { lang } = useLanguage();
   const isLight = variant === 'light';
   const src = isLight ? '/logo-mark-light.png' : '/logo-mark.png';
 
@@ -35,7 +38,7 @@ export function LogoIcon({
     >
       <Image
         src={src}
-        alt={alt}
+        alt={alt || (lang === 'es' ? 'Emblema de Digital Clínica' : 'Digital Clínica Emblem')}
         width={size}
         height={size}
         className="w-full h-full object-contain pointer-events-none"
@@ -56,6 +59,7 @@ export function Logo({
   subtitle,
   useFullImage = false,
 }: LogoProps) {
+  const { lang } = useLanguage();
   const isLight = variant === 'light';
 
   if (useFullImage) {
@@ -97,7 +101,7 @@ export function Logo({
               isLight ? 'text-[#C49A3C]' : 'text-[#8A6A24]'
             }`}
           >
-            {subtitle || 'Fisioterapia & Estética'}
+            {subtitle || (lang === 'es' ? 'Fisioterapia y estética' : 'Fisioterapia & Estética')}
           </span>
         </div>
       )}

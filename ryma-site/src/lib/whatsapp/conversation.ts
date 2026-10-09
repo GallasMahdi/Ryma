@@ -11,14 +11,16 @@ import { whatsappConfig } from './config';
 import type { Action, Conversation, IncomingMessage, Language, Reply } from './types';
 
 const normalize = (text: string) => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-const words = (lang: Language, pt: string, en: string, fr: string) => ({pt, en, fr})[lang];
+const words = (lang: Language, pt: string, en: string, fr: string, es: string) => lang === 'es' ? es : ({pt, en, fr})[lang];
 const addDays = (date: string, days: number) => new Date(Date.parse(`${date}T12:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
 const textReply = (body: string): Reply => ({type: 'text', text: {body}});
 const matchesPeriod = (time: string, period?: Conversation['period']) => !period || (period === 'morning' ? time < '13:00' : time >= '13:00');
-const displayDate = (date: string, lang: Language) => new Intl.DateTimeFormat({pt: 'pt-PT', en: 'en-GB', fr: 'fr-FR'}[lang], {day: '2-digit', month: 'short', weekday: 'short', timeZone: 'Europe/Lisbon'}).format(new Date(`${date}T12:00:00Z`));
+const displayDate = (date: string, lang: Language) => new Intl.DateTimeFormat({
+    es: "es-ES",pt: 'pt-PT', en: 'en-GB', fr: 'fr-FR'}[lang], {day: '2-digit', month: 'short', weekday: 'short', timeZone: 'Europe/Lisbon'}).format(new Date(`${date}T12:00:00Z`));
 
 export function detectLanguage(text: string, fallback: Language = 'pt'): Language {
   const value = normalize(text);
+  if (/\b(espanol|hola|cita|manana|reservar|disponibilidad)\b/.test(value)) return 'es';
   if (/\b(english|hello|book|appointment|tomorrow|available)\b/.test(value)) return 'en';
   if (/\b(francais|bonjour|rendez-vous|demain|reserver|disponibilites)\b/.test(value)) return 'fr';
   if (/\b(portugues|ola|marcar|consulta|amanha|horarios)\b/.test(value)) return 'pt';
@@ -29,8 +31,8 @@ function requestedDate(text: string): string | undefined {
   const value = normalize(text), today = getLisbonDateTime().todayStr;
   const iso = value.match(/\b\d{4}-\d{2}-\d{2}\b/)?.[0];
   if (iso && isCalendarDate(iso)) return iso;
-  if (/\b(tomorrow|amanha|demain)\b/.test(value)) return addDays(today, 1);
-  if (/\b(today|hoje|aujourd'hui)\b/.test(value)) return today;
+  if (/\b(tomorrow|amanha|demain|manana)\b/.test(value)) return addDays(today, 1);
+  if (/\b(today|hoje|aujourd'hui|hoy)\b/.test(value)) return today;
 }
 
 async function requestedService(text: string): Promise<string | undefined> {
@@ -46,23 +48,23 @@ function list(state: Conversation, body: string, options: {title: string; descri
   return {type: 'interactive', interactive: {type: buttons ? 'button' : 'list', body: {text: body}, action: buttons ? {
     buttons: state.choices.map(choice => ({type: 'reply', reply: {id: choice.id, title: choice.title}})),
   } : {
-    button: words(state.lang, 'Ver opções', 'View options', 'Voir les options'),
+    button: words(state.lang, 'Ver opções', 'View options', 'Voir les options', "Ver opciones"),
     sections: [{title: 'Ryma Kiné', rows: state.choices.map(({id, title, description}) => ({id, title, ...(description ? {description: description.slice(0, 72)} : {})}))}],
   }}};
 }
 
 async function services(state: Conversation, offset = 0): Promise<Reply> {
   const SERVICES=await getPublicServices();
-  if(!SERVICES.length){state.step='service';state.choices=[];return textReply(words(state.lang,'Sem tratamentos disponíveis. Contacte a clínica.','No treatments available. Please contact the clinic.','Aucun soin disponible. Contactez la clinique.'));}
+  if(!SERVICES.length){state.step='service';state.choices=[];return textReply(words(state.lang,'Sem tratamentos disponíveis. Contacte a clínica.','No treatments available. Please contact the clinic.','Aucun soin disponible. Contactez la clinique.', "No hay tratamientos disponibles. Contacte con la clínica."));}
   state.step = 'service';
   const options: Parameters<typeof list>[2] = SERVICES.slice(offset, offset + 8).map(service => ({
     title: getLocalizedText(service.name, state.lang),
     description: `${getLocalizedText(service.name, state.lang)} · ${service.duration}`,
     action: {kind: 'service', value: service.slug},
   }));
-  if (offset + 8 < SERVICES.length) options.push({title: words(state.lang, 'Mais tratamentos', 'More treatments', 'Autres soins'), action: {kind: 'services', value: String(offset + 8)}});
-  if (offset > 0) options.push({title: words(state.lang, 'Voltar', 'Back', 'Retour'), action: {kind: 'services', value: '0'}});
-  return list(state, words(state.lang, 'Olá! Sou o assistente de marcações da Ryma Kiné. Escolha o tratamento. Escreva “humano” para contactar a clínica.', 'Hello! I am Ryma Kiné’s booking assistant. Choose a treatment. Type “human” to contact the clinic.', 'Bonjour ! Je suis l’assistant de réservation de Ryma Kiné. Choisissez un soin. Écrivez « humain » pour contacter la clinique.'), options);
+  if (offset + 8 < SERVICES.length) options.push({title: words(state.lang, 'Mais tratamentos', 'More treatments', 'Autres soins', "Más tratamientos"), action: {kind: 'services', value: String(offset + 8)}});
+  if (offset > 0) options.push({title: words(state.lang, 'Voltar', 'Back', 'Retour', "Volver"), action: {kind: 'services', value: '0'}});
+  return list(state, words(state.lang, 'Olá! Sou o assistente de marcações da Ryma Kiné. Escolha o tratamento. Escreva “humano” para contactar a clínica.', 'Hello! I am Ryma Kiné’s booking assistant. Choose a treatment. Type “human” to contact the clinic.', 'Bonjour ! Je suis l’assistant de réservation de Ryma Kiné. Choisissez un soin. Écrivez « humain » pour contacter la clinique.', "¡Hola! Soy el asistente de reservas de Ryma Kiné. Elija un tratamiento. Escriba «humano» para contactar con la clínica."), options);
 }
 
 async function afterPractitioner(state: Conversation): Promise<Reply> {
@@ -75,10 +77,10 @@ async function practitioners(state: Conversation, offset=0): Promise<Reply> {
   const eligible=config.practitioners.filter(p=>p.active&&p.bookable&&config.services.some(s=>s.practitionerId===p.id&&s.service===state.service));
   if(eligible.length===1){state.practitionerId=eligible[0].id;state.practitionerName=eligible[0].name;return afterPractitioner(state);}
   state.step='practitioner';delete state.date;delete state.time;delete state.requestId;
-  const options: Parameters<typeof list>[2]=[{title:words(state.lang,'Primeira disponibilidade','Earliest available','Premier créneau'),action:{kind:'practitioner',value:''}},...eligible.slice(offset,offset+7).map(p=>({title:p.name,description:p.profession,action:{kind:'practitioner' as const,value:p.id}}))];
-  if(offset+7<eligible.length)options.push({title:words(state.lang,'Mais profissionais','More practitioners','Autres praticiens'),action:{kind:'practitioners',value:String(offset+7)}});
-  if(offset>0)options.push({title:words(state.lang,'Voltar','Back','Retour'),action:{kind:'practitioners',value:String(offset-7)}});
-  return list(state,words(state.lang,'Escolha um profissional ou a primeira disponibilidade.','Choose a practitioner or earliest availability.','Choisissez un praticien ou le premier créneau disponible.'),options);
+  const options: Parameters<typeof list>[2]=[{title:words(state.lang,'Primeira disponibilidade','Earliest available','Premier créneau', "Primera disponibilidad"),action:{kind:'practitioner',value:''}},...eligible.slice(offset,offset+7).map(p=>({title:p.name,description:p.profession,action:{kind:'practitioner' as const,value:p.id}}))];
+  if(offset+7<eligible.length)options.push({title:words(state.lang,'Mais profissionais','More practitioners','Autres praticiens', "Más profesionales"),action:{kind:'practitioners',value:String(offset+7)}});
+  if(offset>0)options.push({title:words(state.lang,'Voltar','Back','Retour', "Volver"),action:{kind:'practitioners',value:String(offset-7)}});
+  return list(state,words(state.lang,'Escolha um profissional ou a primeira disponibilidade.','Choose a practitioner or earliest availability.','Choisissez un praticien ou le premier créneau disponible.', "Elija un profesional o la primera disponibilidad."),options);
 }
 
 async function dates(state: Conversation, offset = 0, prefix = ''): Promise<Reply> {
@@ -88,11 +90,11 @@ async function dates(state: Conversation, offset = 0, prefix = ''): Promise<Repl
   const days = Array.from({length: 7}, (_, i) => addDays(today, offset + i));
   const availability = await dbCheckMultipleDatesAvailability(days, VALID_TIME_SLOTS, state.service, {practitionerId: state.practitionerId || undefined, publicOnly: true});
   const options: Parameters<typeof list>[2] = days.filter(date => availability.get(date)?.some(s => s.available && matchesPeriod(s.time, state.period))).map(date => ({title: displayDate(date, state.lang), action: {kind: 'date', value: date}}));
-  if (offset < 84) options.push({title: words(state.lang, 'Próxima semana', 'Next week', 'Semaine suivante'), action: {kind: 'dates', value: String(offset + 7)}});
-  if (offset > 0) options.push({title: words(state.lang, 'Semana anterior', 'Previous week', 'Semaine précédente'), action: {kind: 'dates', value: String(offset - 7)}});
-  options.push({title: words(state.lang, 'Outro tratamento', 'Change treatment', 'Changer de soin'), action: {kind: 'restart'}});
+  if (offset < 84) options.push({title: words(state.lang, 'Próxima semana', 'Next week', 'Semaine suivante', "Semana siguiente"), action: {kind: 'dates', value: String(offset + 7)}});
+  if (offset > 0) options.push({title: words(state.lang, 'Semana anterior', 'Previous week', 'Semaine précédente', "Semana anterior"), action: {kind: 'dates', value: String(offset - 7)}});
+  options.push({title: words(state.lang, 'Outro tratamento', 'Change treatment', 'Changer de soin', "Cambiar tratamiento"), action: {kind: 'restart'}});
   const hasSlots = days.some(date => availability.get(date)?.some(s => s.available && matchesPeriod(s.time, state.period)));
-  return list(state, prefix + words(state.lang, hasSlots ? 'Escolha um dia disponível. Horários de Lisboa.' : 'Sem vagas nesta semana. Pode consultar outras datas.', hasSlots ? 'Choose an available day. All times are Lisbon time.' : 'No slots this week. You can browse other dates.', hasSlots ? 'Choisissez une date disponible. Heure de Lisbonne.' : 'Aucun créneau cette semaine. Consultez les autres dates.'), options);
+  return list(state, prefix + words(state.lang, hasSlots ? 'Escolha um dia disponível. Horários de Lisboa.' : 'Sem vagas nesta semana. Pode consultar outras datas.', hasSlots ? 'Choose an available day. All times are Lisbon time.' : 'No slots this week. You can browse other dates.', hasSlots ? 'Choisissez une date disponible. Heure de Lisbonne.' : 'Aucun créneau cette semaine. Consultez les autres dates.', hasSlots ? "Elija un día disponible. Todas las horas corresponden a Lisboa." : "No hay horarios esta semana. Puede consultar otras fechas."), options);
 }
 
 async function times(state: Conversation, offset = 0): Promise<Reply> {
@@ -100,10 +102,10 @@ async function times(state: Conversation, offset = 0): Promise<Reply> {
   state.step = 'time'; delete state.time; delete state.requestId;
   const slots = (await dbCheckMultipleDatesAvailability([state.date], VALID_TIME_SLOTS, state.service, {practitionerId: state.practitionerId || undefined, publicOnly: true})).get(state.date)?.filter(s => s.available && matchesPeriod(s.time, state.period)) ?? [];
   const options: Parameters<typeof list>[2] = slots.slice(offset, offset + 8).map(slot => ({title: slot.time, action: {kind: 'time', value: slot.time}}));
-  if (offset + 8 < slots.length) options.push({title: words(state.lang, 'Mais horários', 'More times', 'Autres horaires'), action: {kind: 'times', value: String(offset + 8)}});
-  if (offset > 0) options.push({title: words(state.lang, 'Primeiros horários', 'Earlier times', 'Premiers horaires'), action: {kind: 'times', value: '0'}});
-  options.push({title: words(state.lang, 'Outra data', 'Another day', 'Autre date'), action: {kind: 'dates', value: '0'}});
-  return list(state, `${displayDate(state.date, state.lang)} — ${words(state.lang, slots.length ? 'Escolha um horário (Lisboa).' : 'Sem horários disponíveis. Escolha outra data.', slots.length ? 'Choose a time (Lisbon).' : 'No available times. Choose another day.', slots.length ? 'Choisissez un horaire (Lisbonne).' : 'Aucun créneau disponible. Choisissez une autre date.')}`, options);
+  if (offset + 8 < slots.length) options.push({title: words(state.lang, 'Mais horários', 'More times', 'Autres horaires', "Más horarios"), action: {kind: 'times', value: String(offset + 8)}});
+  if (offset > 0) options.push({title: words(state.lang, 'Primeiros horários', 'Earlier times', 'Premiers horaires', "Horarios anteriores"), action: {kind: 'times', value: '0'}});
+  options.push({title: words(state.lang, 'Outra data', 'Another day', 'Autre date', "Otro día"), action: {kind: 'dates', value: '0'}});
+  return list(state, `${displayDate(state.date, state.lang)} — ${words(state.lang, slots.length ? 'Escolha um horário (Lisboa).' : 'Sem horários disponíveis. Escolha outra data.', slots.length ? 'Choose a time (Lisbon).' : 'No available times. Choose another day.', slots.length ? 'Choisissez un horaire (Lisbonne).' : 'Aucun créneau disponible. Choisissez une autre date.', slots.length ? "Elija una hora (Lisboa)." : "No hay horarios disponibles. Elija otro día.")}`, options);
 }
 
 async function confirmation(state: Conversation): Promise<Reply> {
@@ -113,22 +115,22 @@ async function confirmation(state: Conversation): Promise<Reply> {
   const service = SERVICES.find(s => s.slug === state.service);
   if(!service)return services(state);
   const auto = whatsappConfig().autoConfirm;
-  const description = `${state.name}\n${state.practitionerName || words(state.lang, 'Primeira disponibilidade', 'Earliest available', 'Premier créneau')}\n${getLocalizedText(service.name, state.lang)} · ${service.duration}\n${state.date} · ${state.time} (Europe/Lisbon)`;
-  const notice = auto ? words(state.lang, 'Confirmar a marcação?', 'Confirm this appointment?', 'Confirmer ce rendez-vous ?') : words(state.lang, 'Enviar pedido? A clínica terá de aprovar a marcação.', 'Submit this request? The clinic will need to approve the appointment.', 'Envoyer la demande ? La clinique devra approuver le rendez-vous.');
+  const description = `${state.name}\n${state.practitionerName || words(state.lang, 'Primeira disponibilidade', 'Earliest available', 'Premier créneau', "Primera disponibilidad")}\n${getLocalizedText(service.name, state.lang)} · ${service.duration}\n${state.date} · ${state.time} (Europe/Lisbon)`;
+  const notice = auto ? words(state.lang, 'Confirmar a marcação?', 'Confirm this appointment?', 'Confirmer ce rendez-vous ?', "¿Confirmar esta cita?") : words(state.lang, 'Enviar pedido? A clínica terá de aprovar a marcação.', 'Submit this request? The clinic will need to approve the appointment.', 'Envoyer la demande ? La clinique devra approuver le rendez-vous.', "¿Enviar esta solicitud? La clínica tendrá que aprobar la cita.");
   return list(state, `${description}\n\n${notice}`, [
-    {title: words(state.lang, 'Confirmar', 'Confirm', 'Confirmer'), action: {kind: 'confirm'}},
-    {title: words(state.lang, 'Alterar', 'Change', 'Modifier'), action: {kind: 'dates', value: '0'}},
-    {title: words(state.lang, 'Recomeçar', 'Start over', 'Recommencer'), action: {kind: 'restart'}},
+    {title: words(state.lang, 'Confirmar', 'Confirm', 'Confirmer', "Confirmar"), action: {kind: 'confirm'}},
+    {title: words(state.lang, 'Alterar', 'Change', 'Modifier', "Cambiar"), action: {kind: 'dates', value: '0'}},
+    {title: words(state.lang, 'Recomeçar', 'Start over', 'Recommencer', "Empezar de nuevo"), action: {kind: 'restart'}},
   ], true);
 }
 
 function receipt(state: Conversation, appointment: Appointment): Reply {
   state.step = 'done'; state.choices = [];
   const lang = state.lang;
-  const message = appointment.status === 'CONFIRMED' ? words(lang, 'Marcação confirmada.', 'Appointment confirmed.', 'Rendez-vous confirmé.')
-    : appointment.status === 'PENDING' ? words(lang, 'Pedido recebido — aguarda aprovação da clínica.', 'Request received — awaiting clinic approval.', 'Demande reçue — en attente de validation par la clinique.')
-    : words(lang, 'Esta marcação já foi atualizada pela clínica. Contacte-nos para detalhes.', 'This appointment has already been updated by the clinic. Contact us for details.', 'Ce rendez-vous a déjà été mis à jour par la clinique. Contactez-nous pour les détails.');
-  return textReply(`${message}\n${appointment.practitionerName} · ${appointment.durationMinutes} min\n${appointment.date} · ${appointment.startTime} (Europe/Lisbon)\n${words(lang, 'Referência', 'Reference', 'Référence')}: ${appointment.id}\n${words(lang, 'Para alterações, contacte a clínica:', 'For changes, contact the clinic:', 'Pour modifier, contactez la clinique :')} ${SITE.whatsappDisplay}`);
+  const message = appointment.status === 'CONFIRMED' ? words(lang, 'Marcação confirmada.', 'Appointment confirmed.', 'Rendez-vous confirmé.', "Cita confirmada.")
+    : appointment.status === 'PENDING' ? words(lang, 'Pedido recebido — aguarda aprovação da clínica.', 'Request received — awaiting clinic approval.', 'Demande reçue — en attente de validation par la clinique.', "Solicitud recibida — pendiente de aprobación de la clínica.")
+    : words(lang, 'Esta marcação já foi atualizada pela clínica. Contacte-nos para detalhes.', 'This appointment has already been updated by the clinic. Contact us for details.', 'Ce rendez-vous a déjà été mis à jour par la clinique. Contactez-nous pour les détails.', "La clínica ya ha actualizado esta cita. Contacte con nosotros para más información.");
+  return textReply(`${message}\n${appointment.practitionerName} · ${appointment.durationMinutes} min\n${appointment.date} · ${appointment.startTime} (Europe/Lisbon)\n${words(lang, 'Referência', 'Reference', 'Référence', "Referencia")}: ${appointment.id}\n${words(lang, 'Para alterações, contacte a clínica:', 'For changes, contact the clinic:', 'Pour modifier, contactez la clinique :', "Para realizar cambios, contacte con la clínica:")} ${SITE.whatsappDisplay}`);
 }
 
 export async function advanceConversation(previous: Conversation | null, incoming: IncomingMessage): Promise<{state: Conversation; replies: Reply[]}> {
@@ -145,13 +147,13 @@ export async function advanceConversation(previous: Conversation | null, incomin
   }
   if (/^(stop|parar|sair|arreter)$/i.test(normalize(text))) {
     state = {...state, choices: [], step: 'done', expiresAt: 0};
-    return reply(textReply(words(lang, 'Conversa encerrada. Nenhuma marcação existente foi cancelada. Envie “marcar” para recomeçar.', 'Conversation closed. Existing appointments have not been cancelled. Send “book” to start again.', 'Conversation terminée. Les rendez-vous existants ne sont pas annulés. Envoyez « réserver » pour recommencer.')));
+    return reply(textReply(words(lang, 'Conversa encerrada. Nenhuma marcação existente foi cancelada. Envie “marcar” para recomeçar.', 'Conversation closed. Existing appointments have not been cancelled. Send “book” to start again.', 'Conversation terminée. Les rendez-vous existants ne sont pas annulés. Envoyez « réserver » pour recommencer.', "Conversación cerrada. Las citas existentes no se han cancelado. Envíe «reservar» para empezar de nuevo.")));
   }
   if (/\b(human|humano|humain|reception|rececao|recepcao)\b/.test(normalize(text))) {
     state.choices = []; state.step = 'done'; state.expiresAt = 0;
-    return reply(textReply(words(lang, `Para falar com a clínica, ligue ${SITE.whatsappDisplay}. Este assistente não encaminha mensagens para uma pessoa.`, `To speak with the clinic, call ${SITE.whatsappDisplay}. This assistant does not transfer messages to a person.`, `Pour joindre la clinique, appelez le ${SITE.whatsappDisplay}. Cet assistant ne transfère pas les messages à une personne.`)));
+    return reply(textReply(words(lang, `Para falar com a clínica, ligue ${SITE.whatsappDisplay}. Este assistente não encaminha mensagens para uma pessoa.`, `To speak with the clinic, call ${SITE.whatsappDisplay}. This assistant does not transfer messages to a person.`, `Pour joindre la clinique, appelez le ${SITE.whatsappDisplay}. Cet assistant ne transfère pas les messages à une personne.`, `Para hablar con la clínica, llame al ${SITE.whatsappDisplay}. Este asistente no transfiere mensajes a una persona.`)));
   }
-  if (/^(menu|start|restart|book|marcar|reserver|english|francais|portugues)$/i.test(normalize(text))) {
+  if (/^(menu|start|restart|book|marcar|reserver|reservar|reiniciar|english|francais|portugues|espanol)$/i.test(normalize(text))) {
     state = {lang: detectLanguage(text, lang), step: 'service', choices: [], expiresAt: state.expiresAt};
     return reply(await services(state));
   }
@@ -186,23 +188,23 @@ export async function advanceConversation(previous: Conversation | null, incomin
   if (action?.kind === 'times') return reply(await times(state, Number(action.value)));
   if (action?.kind === 'time') {
     state.time = action.value; state.choices = []; state.step = 'name';
-    return reply(textReply(words(lang, 'Qual é o nome completo do paciente? Envie apenas o nome, sem informação clínica. Este horário ainda não está reservado.', 'What is the patient’s full name? Send only the name, without medical details. This time is not reserved yet.', 'Quel est le nom complet du patient ? Envoyez uniquement le nom, sans information médicale. Ce créneau n’est pas encore réservé.')));
+    return reply(textReply(words(lang, 'Qual é o nome completo do paciente? Envie apenas o nome, sem informação clínica. Este horário ainda não está reservado.', 'What is the patient’s full name? Send only the name, without medical details. This time is not reserved yet.', 'Quel est le nom complet du patient ? Envoyez uniquement le nom, sans information médicale. Ce créneau n’est pas encore réservé.', "¿Cuál es el nombre completo del paciente? Envíe solo el nombre, sin datos médicos. Este horario aún no está reservado.")));
   }
   if (state.step === 'name' && text && !incoming.choice) {
     const validation = validateAppointmentInput({patientName: text, phone: `+${incoming.from}`, service: state.service, date: state.date, startTime: state.time, lang});
     if (!validation.ok && ['PAST_DATE', 'PAST_TIME'].includes(validation.errorCode ?? '')) return reply(await dates(state));
-    if (!validation.ok || text.length > 100) return reply(textReply(words(lang, 'Verifique o nome e tente novamente, ou escreva “menu”.', 'Check the name and try again, or type “menu”.', 'Vérifiez le nom et réessayez, ou écrivez « menu ».')));
+    if (!validation.ok || text.length > 100) return reply(textReply(words(lang, 'Verifique o nome e tente novamente, ou escreva “menu”.', 'Check the name and try again, or type “menu”.', 'Vérifiez le nom et réessayez, ou écrivez « menu ».', "Revise el nombre y vuelva a intentarlo, o escriba «menú».")));
     state.name = text;
     return reply(await confirmation(state));
   }
   if (action?.kind === 'confirm' && state.step === 'confirm' && state.requestId) {
     const input = {practitionerId: state.practitionerId || undefined, patientName: state.name!, phone: `+${incoming.from}`, service: state.service!, date: state.date!, startTime: state.time!};
     const validation = validateAppointmentInput({...input, lang});
-    if (!validation.ok) return reply(await dates(state, 0, words(lang, 'A seleção expirou. ', 'Your selection expired. ', 'Votre sélection a expiré. ')));
+    if (!validation.ok) return reply(await dates(state, 0, words(lang, 'A seleção expirou. ', 'Your selection expired. ', 'Votre sélection a expiré. ', "Su selección ha caducado. ")));
     const previousBookings = await executeQuery<{count: number}>("SELECT COUNT(*) AS count FROM appointments WHERE phone = ? AND createdAt >= ? AND (bookingRequestId IS NULL OR bookingRequestId != ?)", [input.phone, new Date(Date.now() - 3600000).toISOString(), `wa:${state.requestId}`]);
-    if (Number(previousBookings[0]?.count) >= 3) return reply(textReply(words(lang, 'Limite de marcações atingido. Contacte a clínica ou tente mais tarde.', 'Booking limit reached. Contact the clinic or try later.', 'Limite de réservation atteinte. Contactez la clinique ou réessayez plus tard.')));
+    if (Number(previousBookings[0]?.count) >= 3) return reply(textReply(words(lang, 'Limite de marcações atingido. Contacte a clínica ou tente mais tarde.', 'Booking limit reached. Contact the clinic or try later.', 'Limite de réservation atteinte. Contactez la clinique ou réessayez plus tard.', "Se ha alcanzado el límite de reservas. Contacte con la clínica o inténtelo más tarde.")));
     const result = await dbCreateAppointment({...input, source: 'whatsapp', bookingRequestId: `wa:${state.requestId}`, status: whatsappConfig().autoConfirm ? 'CONFIRMED' : 'PENDING'});
-    if (!result.success) return reply(await dates(state, 0, words(lang, 'Este horário já não está disponível. ', 'That time is no longer available. ', 'Ce créneau n’est plus disponible. ')));
+    if (!result.success) return reply(await dates(state, 0, words(lang, 'Este horário já não está disponível. ', 'That time is no longer available. ', 'Ce créneau n’est plus disponible. ', "Ese horario ya no está disponible. ")));
     broadcastAppointmentCreated(result.appointment);
     return reply(receipt(state, result.appointment));
   }
@@ -215,7 +217,7 @@ export async function advanceConversation(previous: Conversation | null, incomin
     if (date) { state.date = date; return reply(await times(state)); }
     return reply(await dates(state));
   }
-  if (state.step === 'name') return reply(textReply(words(lang, 'Envie o nome completo do paciente ou escreva “menu”.', 'Send the patient’s full name or type “menu”.', 'Envoyez le nom complet du patient ou écrivez « menu ».')));
+  if (state.step === 'name') return reply(textReply(words(lang, 'Envie o nome completo do paciente ou escreva “menu”.', 'Send the patient’s full name or type “menu”.', 'Envoyez le nom complet du patient ou écrivez « menu ».', "Envíe el nombre completo del paciente o escriba «menú».")));
   const service = await requestedService(text);
   if (service) { state.service = service; delete state.practitionerId; delete state.practitionerName; return reply(await practitioners(state)); }
   return reply(await services(state));

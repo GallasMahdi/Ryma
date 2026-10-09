@@ -8,7 +8,7 @@ const net = require('node:net');
 const {demoEnvironment, createAppLoader, ROOT} = require('./demo/runtime.cjs');
 const directory=fs.mkdtempSync(path.join(os.tmpdir(),'ryma-http-audit-'));
 const fixture=path.join(directory,'fixture.db');
-const env={...demoEnvironment(fixture,'test'),RYMA_PREVIEW_DB:fixture,RYMA_PREVIEW_PORT:'3008'};
+const env={...demoEnvironment(fixture,'test'),RYMA_PREVIEW_DB:fixture,RYMA_PREVIEW_PORT:'3008',RECAPTCHA_SECRET_KEY:'isolated-http-secret'};
 Object.assign(process.env,env);
 let server;
 (async()=>{
@@ -23,7 +23,7 @@ let server;
   db.getDb().close();
   const bcrypt=require('bcryptjs');
   const log=fs.openSync(path.join(directory,'server.log'),'w');
-  server=spawn(process.execPath,[require.resolve('next/dist/bin/next'),'start','--hostname','127.0.0.1','--port','3008'],{cwd:ROOT,env:{...env,NODE_ENV:'production',ADMIN_PASSWORD_HASH:bcrypt.hashSync('team-preview-only',4),OWNER_ANALYTICS_PASSWORD_HASH:bcrypt.hashSync('owner-preview-only',4)},stdio:['ignore',log,log],windowsHide:true});
+  server=spawn(process.execPath,['--require',path.join(__dirname,'fixtures/recaptcha-preload.cjs'),require.resolve('next/dist/bin/next'),'start','--hostname','127.0.0.1','--port','3008'],{cwd:ROOT,env:{...env,NODE_ENV:'production',ADMIN_PASSWORD_HASH:bcrypt.hashSync('team-preview-only',4),OWNER_ANALYTICS_PASSWORD_HASH:bcrypt.hashSync('owner-preview-only',4)},stdio:['ignore',log,log],windowsHide:true});
   fs.closeSync(log);
   let ready=false;
   for(let attempt=0;attempt<40;attempt++) {
@@ -33,8 +33,8 @@ let server;
     await new Promise(resolve=>setTimeout(resolve,250));
   }
   assert(ready,'Isolated HTTP server did not start');
-  for(const script of ['test-running-preview.cjs','test-running-adversarial.cjs']) {
-    const result=spawnSync(process.execPath,[path.join(__dirname,script)],{cwd:ROOT,env,stdio:'inherit',windowsHide:true,timeout:120000});
+  for(const script of ['test-running-preview.cjs','test-running-adversarial.cjs','audit-api-routes.cjs']) {
+    const result=spawnSync(process.execPath,[path.join(__dirname,script),...(script==='audit-api-routes.cjs'?['--probe']:[])],{cwd:ROOT,env,stdio:'inherit',windowsHide:true,timeout:120000});
     assert.equal(result.status,0,`${script} failed`);
   }
   console.log('Both live HTTP suites passed on an isolated fixture.');

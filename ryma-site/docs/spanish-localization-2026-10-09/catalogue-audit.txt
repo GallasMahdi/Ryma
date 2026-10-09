@@ -1,0 +1,7 @@
+
+> ryma-site@0.1.0 audit:i18n
+> node scripts/audit-i18n-completeness.mjs
+
+PT / EN / FR / ES: 8 complete articles; 171 localized records checked.
+Administrator-managed catalogue: 13 treatments checked.
+0 localization issues.

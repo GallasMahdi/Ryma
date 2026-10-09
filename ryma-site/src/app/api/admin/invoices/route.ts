@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { getLocalizedText } from '@/data/services';
 import type { CoverageType } from '@/types/admin';
 import { isJsonObject, pageNumber, COVERAGE_TYPES, invoiceFilters } from '@/lib/admin-validation';
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
   let filters;
-  try { filters=invoiceFilters(searchParams); } catch { return NextResponse.json({error:'Invalid invoice filters'},{status:422}); }
+  try { filters=invoiceFilters(searchParams); } catch { return NextResponse.json({error:localizeApiError('Invalid invoice filters', request)},{status:422}); }
   const pageParam     = searchParams.get('page');
   const limitParam    = searchParams.get('limit');
 
@@ -79,24 +80,24 @@ export async function POST(request: NextRequest) {
   let body: Record<string, any>;
   try {
     body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Invalid JSON body', request) }, { status: 400 });
   }
 
   if (!body.patientName || !body.patientPhone || !body.serviceSlug) {
     return NextResponse.json(
-      { error: 'Nome do paciente, contacto telefónico e serviço são obrigatórios.' },
+      { error: localizeApiError('Nome do paciente, contacto telefónico e serviço são obrigatórios.', request) },
       { status: 422 }
     );
   }
 
   const phoneValidation = validateAndNormalizePhone(body.patientPhone);
   if (!phoneValidation.isValid) {
-    return NextResponse.json({ error: phoneValidation.error, errorCode: phoneValidation.errorCode }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError(phoneValidation.error, request), errorCode: phoneValidation.errorCode }, { status: 422 });
   }
 
-  if (body.coverageType !== undefined && !COVERAGE_TYPES.includes(String(body.coverageType))) return NextResponse.json({ error: 'Invalid coverage type' }, { status: 422 });
+  if (body.coverageType !== undefined && !COVERAGE_TYPES.includes(String(body.coverageType))) return NextResponse.json({ error: localizeApiError('Invalid coverage type', request) }, { status: 422 });
   const currentService = (await getTreatments()).find(s => s.slug === body.serviceSlug);
   const appointment = typeof body.appointmentId==='string' ? await dbGetAppointmentById(body.appointmentId) : null;
   const service = appointment?.serviceNameJson && appointment.service===body.serviceSlug ? {name:JSON.parse(appointment.serviceNameJson),price:appointment.servicePriceCents!=null?appointment.servicePriceCents/100:currentService?.price} : currentService;
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
   const rawAmount = body.amount !== undefined ? Number(body.amount) : (service?.price || 0);
   if (isNaN(rawAmount) || rawAmount <= 0 || rawAmount > 50000) {
     return NextResponse.json(
-      { error: 'O montante da fatura deve ser um valor válido (> 0 € e ≤ 50.000 €).' },
+      { error: localizeApiError('O montante da fatura deve ser um valor válido (> 0 € e ≤ 50.000 €).', request) },
       { status: 422 }
     );
   }
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
     const parsedVat = Number(body.vatRate);
     if (![0, 6, 13, 23].includes(parsedVat)) {
       return NextResponse.json(
-        { error: 'Taxa de IVA inválida. As taxas autorizadas são 0%, 6%, 13% ou 23%.' },
+        { error: localizeApiError('Taxa de IVA inválida. As taxas autorizadas são 0%, 6%, 13% ou 23%.', request) },
         { status: 422 }
       );
     }
@@ -129,14 +130,14 @@ export async function POST(request: NextRequest) {
   const validMethods = ['MULTIBANCO', 'MBWAY', 'CASH', 'CARD', 'TRANSFER'];
   const paymentMethod = body.paymentMethod ? String(body.paymentMethod).toUpperCase().trim() : 'MULTIBANCO';
   if (!validMethods.includes(paymentMethod)) {
-    return NextResponse.json({ error: 'Método de pagamento inválido.' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Método de pagamento inválido.', request) }, { status: 422 });
   }
 
   // Validate Payment Status
   const validStatuses = ['PAID', 'PENDING'];
   const paymentStatus = body.paymentStatus ? String(body.paymentStatus).toUpperCase().trim() : 'PAID';
   if (!validStatuses.includes(paymentStatus)) {
-    return NextResponse.json({ error: 'Estado de pagamento inválido.' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Estado de pagamento inválido.', request) }, { status: 422 });
   }
 
   // Validate NIF (9 digits or fallback 999999990)
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
     const candidate = String(body.patientNif).replace(/\s/g, '').trim();
     if (!/^\d{9}$/.test(candidate)) {
       return NextResponse.json(
-        { error: 'NIF inválido. O NIF deve conter exatamente 9 dígitos numéricos.' },
+        { error: localizeApiError('NIF inválido. O NIF deve conter exatamente 9 dígitos numéricos.', request) },
         { status: 422 }
       );
     }
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
                          request.headers.get('x-idempotency-key') ||
                          (body.clientRequestId as string | undefined);
 
-  if (!idempotencyKey || typeof idempotencyKey !== 'string' || !idempotencyKey.trim() || idempotencyKey.length > 200) return NextResponse.json({error: 'A stable idempotency key is required to issue an invoice'}, {status: 422});
+  if (!idempotencyKey || typeof idempotencyKey !== 'string' || !idempotencyKey.trim() || idempotencyKey.length > 200) return NextResponse.json({error: localizeApiError('A stable idempotency key is required to issue an invoice', request)}, {status: 422});
 
   try {
     const invoice = await dbCreateInvoice({
@@ -187,9 +188,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(responsePayload, { status: 201 });
   } catch (err: any) {
-    if (err instanceof DocumentError) return NextResponse.json({error:err.message},{status:422});
-    if (err.message === 'idempotency_conflict') return NextResponse.json({error: 'Idempotency key already used for a different invoice'}, {status: 409});
+    if (/session_already_invoiced/.test(String(err))) return NextResponse.json({error:localizeApiError('This appointment has already been invoiced.', request),code:'ALREADY_INVOICED'},{status:409});
+    if (err instanceof DocumentError) return NextResponse.json({error:localizeApiError(err.message, request)},{status:422});
+    if (err.message === 'idempotency_conflict') return NextResponse.json({error: localizeApiError('Idempotency key already used for a different invoice', request)}, {status: 409});
     console.error('[API Create Invoice Error]');
-    return NextResponse.json({ error: 'Erro ao criar fatura/recibo' }, { status: 500 });
+    return NextResponse.json({ error: localizeApiError('Erro ao criar fatura/recibo', request) }, { status: 500 });
   }
 }

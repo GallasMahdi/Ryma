@@ -46,25 +46,25 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
   const [moreOpen, setMoreOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const sheetId = useId();
-  const txt = (pt: string, en: string, fr: string) => lang === 'pt' ? pt : lang === 'fr' ? fr : en;
+  const txt = (pt: string, en: string, fr: string, es: string) => lang === 'es' ? es : lang === 'pt' ? pt : lang === 'fr' ? fr : en;
   const primaryTabs = [
-    { id: 'appointments' as const, label: txt('Consultas', 'Visits', 'RDV'), name: txt('Consultas', 'Appointments', 'Rendez-vous'), icon: IconListCheck, count: totalAppointments },
-    { id: 'slots' as const, label: txt('Agenda', 'Schedule', 'Agenda'), name: txt('Agenda', 'Schedule', 'Agenda'), icon: IconCalendarEvent, count: 0 },
-    { id: 'patients' as const, label: txt('Utentes', 'Patients', 'Patients'), name: txt('Utentes', 'Patients', 'Patients'), icon: IconUsers, count: totalNotes },
-    { id: 'invoices' as const, label: txt('Recibos', 'Invoices', 'Factures'), name: txt('Recibos', 'Invoices', 'Factures'), icon: IconReceiptTax, count: totalInvoices },
+    { id: 'appointments' as const, label: txt('Consultas', 'Visits', 'RDV', "Visitas"), name: txt('Consultas', 'Appointments', 'Rendez-vous', "Citas"), icon: IconListCheck, count: totalAppointments },
+    { id: 'slots' as const, label: txt('Agenda', 'Schedule', 'Agenda', "Agenda"), name: txt('Agenda', 'Schedule', 'Agenda', "Agenda"), icon: IconCalendarEvent, count: 0 },
+    { id: 'patients' as const, label: txt('Utentes', 'Patients', 'Patients', "Pacientes"), name: txt('Utentes', 'Patients', 'Patients', "Pacientes"), icon: IconUsers, count: totalNotes },
+    { id: 'invoices' as const, label: txt('Recibos', 'Invoices', 'Factures', "Facturas"), name: txt('Recibos', 'Invoices', 'Factures', "Facturas"), icon: IconReceiptTax, count: totalInvoices },
   ];
   const secondaryTabs = [
-    { id: 'reviews' as const, label: txt('Avaliações', 'Reviews', 'Avis'), description: txt('Opiniões dos utentes', 'Patient feedback', 'Retours des patients'), icon: IconMessageHeart, count: totalReviews },
-    { id: 'treatments' as const, label: txt('Tratamentos', 'Treatments', 'Soins'), description: txt('Catálogo de cuidados', 'Your care catalogue', 'Catalogue de soins'), icon: IconStethoscope, count: 0 },
-    { id: 'team' as const, label: txt('Equipa', 'Team', 'Équipe'), description: txt('Profissionais e horários', 'People and working hours', 'Praticiens et horaires'), icon: IconUsersGroup, count: 0 },
-    { id: 'analytics' as const, label: txt('Estatísticas', 'Analytics', 'Statistiques'), description: txt('Relatórios e receitas', 'Reports and revenue', 'Rapports et revenus'), icon: IconChartBar, count: 0 },
+    { id: 'reviews' as const, label: txt('Avaliações', 'Reviews', 'Avis', "Opiniones"), description: txt('Opiniões dos utentes', 'Patient feedback', 'Retours des patients', "Opiniones de pacientes"), icon: IconMessageHeart, count: totalReviews },
+    { id: 'treatments' as const, label: txt('Tratamentos', 'Treatments', 'Soins', "Tratamientos"), description: txt('Catálogo de cuidados', 'Your care catalogue', 'Catalogue de soins', "Su catálogo de tratamientos"), icon: IconStethoscope, count: 0 },
+    { id: 'team' as const, label: txt('Equipa', 'Team', 'Équipe', "Equipo"), description: txt('Profissionais e horários', 'People and working hours', 'Praticiens et horaires', "Profesionales y horarios"), icon: IconUsersGroup, count: 0 },
+    { id: 'analytics' as const, label: txt('Estatísticas', 'Analytics', 'Statistiques', "Estadísticas"), description: txt('Relatórios e receitas', 'Reports and revenue', 'Rapports et revenus', "Informes e ingresos"), icon: IconChartBar, count: 0 },
   ];
   const activeSecondary = secondaryTabs.find(tab => tab.id === activeTab);
   const MoreIcon = activeSecondary?.icon ?? IconLayoutGrid;
-  const moreLabel = txt('Mais', 'More', 'Plus');
-  const selectedLabel = txt('Selecionado', 'Selected', 'Sélectionné');
-  const lockLabel = isAnalyticsUnlocked ? txt('Desbloqueado', 'Unlocked', 'Déverrouillé') : txt('Protegido', 'Locked', 'Verrouillé');
-  const countLabel = (count: number) => txt(`${count} registos`, `${count} records`, `${count} éléments`);
+  const moreLabel = txt('Mais', 'More', 'Plus', "Más");
+  const selectedLabel = txt('Selecionado', 'Selected', 'Sélectionné', "Seleccionado");
+  const lockLabel = isAnalyticsUnlocked ? txt('Desbloqueado', 'Unlocked', 'Déverrouillé', "Desbloqueado") : txt('Protegido', 'Locked', 'Verrouillé', "Bloqueado");
+  const countLabel = (count: number) => txt(`${count} registos`, `${count} records`, `${count} éléments`, `${count} registros`);
 
   const closeMore = () => {
     dialogRef.current?.close();
@@ -100,7 +100,7 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
 
   return (
     <>
-      <nav className={styles.nav} aria-label={txt('Navegação do painel', 'Dashboard navigation', 'Navigation du tableau de bord')}>
+      <nav className={styles.nav} aria-label={txt('Navegação do painel', 'Dashboard navigation', 'Navigation du tableau de bord', "Navegación del panel")}>
         <div className={styles.bar}>
           {primaryTabs.map(({ id, label, name, icon: Icon, count }) => (
             <button
@@ -151,9 +151,9 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
         <div className={styles.sheetHeader}>
           <div>
             <p className={styles.eyebrow}>Digital Clínica</p>
-            <h2 id={`${sheetId}-title`}>{txt('O seu espaço', 'Your workspace', 'Votre espace')}</h2>
+            <h2 id={`${sheetId}-title`}>{txt('O seu espaço', 'Your workspace', 'Votre espace', "Su espacio de trabajo")}</h2>
           </div>
-          <button type="button" className={styles.close} onClick={closeMore} aria-label={txt('Fechar menu', 'Close menu', 'Fermer le menu')} autoFocus><IconX size={20} /></button>
+          <button type="button" className={styles.close} onClick={closeMore} aria-label={txt('Fechar menu', 'Close menu', 'Fermer le menu', "Cerrar menú")} autoFocus><IconX size={20} /></button>
         </div>
 
         <div className={styles.destinations}>
@@ -179,13 +179,13 @@ export const AdminMobileNav = React.memo(function AdminMobileNav({
         </div>
 
         <button type="button" className={styles.newAppointment} onClick={() => runAction(onOpenAddModal)}>
-          <IconPlus size={19} aria-hidden="true" />{txt('Nova consulta', 'New appointment', 'Nouveau rendez-vous')}
+          <IconPlus size={19} aria-hidden="true" />{txt('Nova consulta', 'New appointment', 'Nouveau rendez-vous', "Nueva cita")}
         </button>
         <div className={styles.utilities}>
-          <button type="button" onClick={onToggleLang} aria-label={txt('Mudar idioma', 'Switch language', 'Changer de langue')}><IconLanguage size={19} aria-hidden="true" /><span>{lang.toUpperCase()}</span></button>
-          <button type="button" onClick={() => runAction(onRefresh)} disabled={isRefreshing}><IconRefresh size={19} aria-hidden="true" /><span>{txt('Atualizar', 'Refresh', 'Actualiser')}</span></button>
-          <button type="button" onClick={() => runAction(onOpenHelpdesk)}><IconLifebuoy size={19} aria-hidden="true" /><span>{txt('Ajuda', 'Help', 'Aide')}</span></button>
-          <button type="button" onClick={() => runAction(onLogout)}><IconLogout size={19} aria-hidden="true" /><span>{txt('Sair', 'Sign out', 'Quitter')}</span></button>
+          <button type="button" onClick={onToggleLang} aria-label={txt('Mudar idioma', 'Switch language', 'Changer de langue', "Cambiar idioma")}><IconLanguage size={19} aria-hidden="true" /><span>{lang.toUpperCase()}</span></button>
+          <button type="button" onClick={() => runAction(onRefresh)} disabled={isRefreshing}><IconRefresh size={19} aria-hidden="true" /><span>{txt('Atualizar', 'Refresh', 'Actualiser', "Actualizar")}</span></button>
+          <button type="button" onClick={() => runAction(onOpenHelpdesk)}><IconLifebuoy size={19} aria-hidden="true" /><span>{txt('Ajuda', 'Help', 'Aide', "Ayuda")}</span></button>
+          <button type="button" onClick={() => runAction(onLogout)}><IconLogout size={19} aria-hidden="true" /><span>{txt('Sair', 'Sign out', 'Quitter', "Cerrar sesión")}</span></button>
         </div>
       </dialog>
     </>

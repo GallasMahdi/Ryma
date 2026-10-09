@@ -4,8 +4,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { pt } from '@/data/translations/pt';
 import { en } from '@/data/translations/en';
 import { fr } from '@/data/translations/fr';
+import { es } from '@/data/translations/es';
+import { isLanguage, SUPPORTED_LANGUAGES, type Lang } from '@/lib/locales';
 
-export type Lang = 'pt' | 'en' | 'fr';
+export type { Lang } from './locales';
 export type Translations = typeof pt;
 
 interface LanguageContextType {
@@ -29,7 +31,7 @@ export function LanguageProvider({
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('ryma_lang') as Lang;
-        if (saved === 'pt' || saved === 'en' || saved === 'fr') {
+        if (isLanguage(saved)) {
           return saved;
         }
       } catch {}
@@ -40,6 +42,15 @@ export function LanguageProvider({
   useEffect(() => {
     document.documentElement.setAttribute('dir', 'ltr');
     document.documentElement.setAttribute('lang', lang);
+    const titles = [
+      ['Digital Clínica — Fisioterapia & Estética Avançada em Lisboa', 'Digital Clínica — Fisioterapia y estética avanzada en Lisboa'],
+      ['Acesso Admin — Digital Clínica', 'Acceso de administración — Digital Clínica'],
+    ];
+    for (const [ptTitle, esTitle] of titles) {
+      if (document.title.includes(ptTitle) || document.title.includes(esTitle)) {
+        document.title = document.title.replace(lang === 'es' ? ptTitle : esTitle, lang === 'es' ? esTitle : ptTitle);
+      }
+    }
   }, [lang]);
 
   const setLang = (newLang: Lang) => {
@@ -51,13 +62,15 @@ export function LanguageProvider({
   };
 
   const toggleLang = () => {
-    const order: Lang[] = ['pt', 'en', 'fr'];
+    const order = SUPPORTED_LANGUAGES;
     const nextIdx = (order.indexOf(lang) + 1) % order.length;
     setLang(order[nextIdx]);
   };
 
   const getTranslations = (currentLang: Lang): Translations => {
     switch (currentLang) {
+      case 'es':
+        return es;
       case 'en':
         return en;
       case 'fr':

@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -7,7 +9,6 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
 import { Button } from '@/components/ui/Button';
-import { CounterAnimation } from '@/components/animation/CounterAnimation';
 import { playSoftClick, playSlideChange } from '@/lib/sound';
 import {
   IconChevronLeft,
@@ -25,25 +26,28 @@ import {
 
 interface Slide {
   src: string;
-  tag: { pt: string; en: string; fr: string };
-  title: { pt: string; en: string; fr: string };
-  subtitle: { pt: string; en: string; fr: string };
+  tag: { pt: string; en: string; es: string; fr: string };
+  title: { pt: string; en: string; es: string; fr: string };
+  subtitle: { pt: string; en: string; es: string; fr: string };
 }
 
 const HERO_SLIDES: Slide[] = [
   {
     src: '/hero/therapy.jpg',
     tag: {
+    es: "Fisioterapia y biomecánica clínica",
       pt: 'Fisioterapia & Biomecânica Clínica',
       en: 'Physiotherapy & Clinical Biomechanics',
       fr: 'Kinésithérapie & Biomécanique Clinique',
     },
     title: {
+    es: "Cuidado y movimiento",
       pt: 'Cuidado & Movimento',
       en: 'Care & Movement',
       fr: 'Soin & Mouvement',
     },
     subtitle: {
+    es: "Descubra los tratamientos disponibles y encuentre el apoyo adecuado para sus objetivos.",
       pt: 'Conheça os cuidados disponíveis e encontre o acompanhamento adequado aos seus objetivos.',
       en: 'Explore available care and find support suited to your goals.',
       fr: 'Découvrez les soins disponibles et un accompagnement adapté à vos objectifs.',
@@ -52,16 +56,19 @@ const HERO_SLIDES: Slide[] = [
   {
     src: '/hero/slimming.jpg',
     tag: {
+    es: "Tecnología no invasiva de alta gama",
       pt: 'Alta Tecnologia Não Invasiva',
       en: 'High-End Non-Invasive Technology',
       fr: 'Haute Technologie Non-Invasive',
     },
     title: {
+    es: "Remodelado corporal y reafirmación de la piel",
       pt: 'Remodelação Corporal & Firmeza',
       en: 'Body Contouring & Skin Tightening',
       fr: 'Remodelage Corporel & Fermeté',
     },
     subtitle: {
+    es: "Consulte el catálogo actual de cuidados corporales, con sus precios y duraciones.",
       pt: 'Consulte o catálogo atualizado de cuidados corporais, com preços e durações.',
       en: 'Browse the current body-care catalogue, including prices and durations.',
       fr: 'Consultez le catalogue actuel des soins corporels, avec leurs tarifs et durées.',
@@ -70,16 +77,19 @@ const HERO_SLIDES: Slide[] = [
   {
     src: '/hero/consultation.jpg',
     tag: {
+    es: "Evaluación clínica personalizada",
       pt: 'Diagnóstico Sob Medida',
       en: 'Tailored Clinical Assessment',
       fr: 'Bilan Sur-Mesure',
     },
     title: {
+    es: "Consulta personal integral",
       pt: 'Avaliação & Plano Individualizado',
       en: 'Comprehensive Personal Consultation',
       fr: 'Consultation & Protocole Personnalisé',
     },
     subtitle: {
+    es: "Evaluación diagnóstica exhaustiva para diseñar un plan terapéutico personalizado orientado a resultados.",
       pt: 'Análise clínica detalhada para desenhar um protocolo seguro, adaptado e focado nos seus objetivos.',
       en: 'In-depth diagnostic evaluation to curate a bespoke, outcome-driven therapeutic roadmap.',
       fr: 'Analyse clinique approfondie pour concevoir un programme sur-mesure, sécurisé et performant.',
@@ -88,16 +98,19 @@ const HERO_SLIDES: Slide[] = [
   {
     src: '/hero/clinic.jpg',
     tag: {
+    es: "Un espacio de excelencia",
       pt: 'Ambiente de Excelência',
       en: 'Sanctuary of Excellence',
       fr: 'Espace d\'Exception',
     },
     title: {
+    es: "Privacidad, comodidad y tranquilidad",
       pt: 'Privacidade, Conforto & Serenidade',
       en: 'Privacy, Comfort & Peace of Mind',
       fr: 'Confidentialité & Sérénité',
     },
     subtitle: {
+    es: "Un entorno clínico de vanguardia en Lisboa, diseñado para su comodidad y bienestar.",
       pt: 'Instalações modernas em Lisboa concebidas para proporcionar uma experiência clínica exclusiva.',
       en: 'State-of-the-art practice environment in Lisbon curated for your supreme comfort and well-being.',
       fr: 'Un sanctuaire apaisant et moderne à Lisbonne, pensé pour votre bien-être et votre santé.',
@@ -145,10 +158,7 @@ export function Hero() {
   const currentSlide = HERO_SLIDES[currentIndex];
 
   const stats = [
-    { end: 420, suffix: '+', label: t.hero.stat1Label },
-    { end: 8, suffix: '+', label: t.hero.stat2Label },
-    { end: SERVICES.length, suffix: '', label: lang === 'pt' ? 'Protocolos Clínicos' : lang === 'en' ? 'Clinical Protocols' : 'Protocoles Dédiés' },
-    { end: 99, suffix: '%', label: t.hero.stat4Label },
+    { end: SERVICES.length, suffix: '', label: lang === 'es' ? "Protocolos clínicos" : lang === 'pt' ? 'Protocolos Clínicos' : lang === 'en' ? 'Clinical Protocols' : 'Protocoles Dédiés' },
   ];
 
   return (
@@ -238,7 +248,7 @@ export function Hero() {
           </span>
 
           <span className="font-sans text-[11px] sm:text-xs tracking-[0.22em] text-[#8A6A24] uppercase font-bold">
-            {lang === 'pt'
+            {lang === 'es' ? "Digital Clínica • Lisboa" : lang === 'pt'
               ? 'Digital Clínica • Lisboa'
               : lang === 'en'
                 ? 'Digital Clinic • Lisbon'
@@ -249,7 +259,7 @@ export function Hero() {
 
           <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#554C42] font-medium">
             <IconAward size={14} className="text-[#C49A3C]" />
-            {lang === 'pt'
+            {lang === 'es' ? "Excelencia en fisioterapia y estética médica" : lang === 'pt'
               ? 'Excelência em Fisioterapia & Estética Médica'
               : lang === 'en'
                 ? 'Excellence in Physiotherapy & Medical Aesthetics'
@@ -288,7 +298,11 @@ export function Hero() {
           className="mx-auto max-w-3xl mb-4 sm:mb-6"
         >
           <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-normal leading-[1.08] text-white tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
-            {lang === 'pt' ? (
+            {lang === 'es' ? (
+              <>{legacyText("The Art of Physiotherapy &", lang)}{" "}<br />
+                <span className="italic font-medium bg-gradient-to-r from-[#F5E9C8] via-[#E8C97A] to-[#C49A3C] bg-clip-text text-transparent">{legacyText("Advanced Aesthetics", lang)}</span>
+              </>
+            ) : lang === 'pt' ? (
               <>
                 A Arte da Fisioterapia & <br />
                 <span className="italic font-medium bg-gradient-to-r from-[#F5E9C8] via-[#E8C97A] to-[#C49A3C] bg-clip-text text-transparent">
@@ -296,11 +310,8 @@ export function Hero() {
                 </span>
               </>
             ) : lang === 'en' ? (
-              <>
-                The Art of Physiotherapy & <br />
-                <span className="italic font-medium bg-gradient-to-r from-[#F5E9C8] via-[#E8C97A] to-[#C49A3C] bg-clip-text text-transparent">
-                  Advanced Aesthetics
-                </span>
+              <>{legacyText("The Art of Physiotherapy &", lang)}{" "}<br />
+                <span className="italic font-medium bg-gradient-to-r from-[#F5E9C8] via-[#E8C97A] to-[#C49A3C] bg-clip-text text-transparent">{legacyText("Advanced Aesthetics", lang)}</span>
               </>
             ) : (
               <>
@@ -362,7 +373,7 @@ export function Hero() {
           {/* WhatsApp Direct Concierge */}
           <a
             href={`https://wa.me/${t.common.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-              lang === 'pt'
+              lang === 'es' ? "¡Hola, Digital Clínica! Me gustaría informarme sobre cómo reservar una cita." : lang === 'pt'
                 ? 'Olá Digital Clínica! Gostaria de informações sobre marcação de consulta.'
                 : lang === 'en'
                   ? 'Hello Digital Clinic! I would like to inquire about booking an appointment.'
@@ -375,7 +386,7 @@ export function Hero() {
           >
             <span className="h-2 w-2 rounded-full bg-[#25D366] animate-pulse" />
             <IconBrandWhatsapp size={16} className="text-[#25D366]" />
-            <span>WhatsApp Concierge</span>
+            <span>{legacyText("WhatsApp Concierge", lang)}</span>
           </a>
         </motion.div>
 
@@ -389,17 +400,7 @@ export function Hero() {
         >
           <span className="flex items-center gap-1.5 drop-shadow-sm">
             <IconCheck size={15} className="text-[#E8C97A]" />
-            {lang === 'pt' ? 'Atendimento Personalizado 1-a-1' : lang === 'en' ? 'Tailored 1-on-1 Care' : 'Soins Personnalisés 1-à-1'}
-          </span>
-          <span className="text-white/30 hidden sm:inline">•</span>
-          <span className="flex items-center gap-1.5 drop-shadow-sm">
-            <IconShieldCheck size={15} className="text-[#E8C97A]" />
-            {lang === 'pt' ? 'Equipamentos Médicos Certificados' : lang === 'en' ? 'Certified Medical Grade' : 'Équipements Médicaux Certifiés'}
-          </span>
-          <span className="text-white/30 hidden sm:inline">•</span>
-          <span className="flex items-center gap-1.5 drop-shadow-sm">
-            <IconAward size={15} className="text-[#E8C97A]" />
-            {lang === 'pt' ? 'Comparticipação p/ Seguros' : lang === 'en' ? 'Insurance Approved' : 'Reçus Mutuelle & Assurances'}
+            {lang === 'es' ? "Atención individual personalizada" : lang === 'pt' ? 'Atendimento Personalizado 1-a-1' : lang === 'en' ? 'Tailored 1-on-1 Care' : 'Soins Personnalisés 1-à-1'}
           </span>
         </motion.div>
       </div>
@@ -422,7 +423,7 @@ export function Hero() {
                     ? 'bg-[#F5E9C8] text-[#8A6A24] ring-1 ring-[#C49A3C]/60 shadow-xs'
                     : 'text-[#8A8078] hover:text-[#1A1412] hover:bg-[#FAF6EE]'
                     }`}
-                  aria-label={`Go to slide ${i + 1}`}
+                  aria-label={lang === 'es' ? `Ir a la diapositiva ${i + 1}` : `Go to slide ${i + 1}`}
                 >
                   <span className="font-mono text-[11px] sm:text-xs">0{i + 1}</span>
                   <span className="hidden md:inline-block font-sans text-xs font-medium text-[#554C42]">
@@ -447,7 +448,7 @@ export function Hero() {
             <button
               onClick={() => { setIsPlaying((p) => !p); playSoftClick(); }}
               className="p-1.5 rounded-full text-[#8A8078] hover:text-[#9A7428] hover:bg-[#FAF6EE] transition-colors"
-              aria-label={isPlaying ? 'Pause slideshow' : 'Play slideshow'}
+              aria-label={lang === 'es' ? (isPlaying ? 'Pausar presentación' : 'Reproducir presentación') : (isPlaying ? 'Pause slideshow' : 'Play slideshow')}
             >
               {isPlaying ? <IconPlayerPause size={15} /> : <IconPlayerPlay size={15} />}
             </button>
@@ -455,14 +456,14 @@ export function Hero() {
             <button
               onClick={prevSlide}
               className="p-1.5 rounded-full text-[#8A8078] hover:text-[#9A7428] hover:bg-[#FAF6EE] transition-colors"
-              aria-label="Previous slide"
+              aria-label={legacyText("Previous slide", lang)}
             >
               <IconChevronLeft size={16} />
             </button>
             <button
               onClick={nextSlide}
               className="p-1.5 rounded-full text-[#8A8078] hover:text-[#9A7428] hover:bg-[#FAF6EE] transition-colors"
-              aria-label="Next slide"
+              aria-label={legacyText("Next slide", lang)}
             >
               <IconChevronRight size={16} />
             </button>
@@ -471,11 +472,11 @@ export function Hero() {
 
         {/* ── Luxury Stats Ribbon ── */}
         <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-[#C49A3C]/25 bg-white/95 backdrop-blur-xl p-3 sm:p-5 shadow-[0_10px_35px_rgba(196,154,60,0.08)]">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-3 sm:gap-y-0 sm:divide-x sm:divide-[#C49A3C]/20 text-center">
+          <div className="grid grid-cols-1 gap-y-3 sm:gap-y-0 sm:divide-x sm:divide-[#C49A3C]/20 text-center">
             {stats.map((stat, i) => (
               <div key={i} className="px-2 py-0.5">
                 <div className="font-serif text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent leading-none mb-1">
-                  <CounterAnimation end={stat.end} suffix={stat.suffix} />
+                  {stat.end}{stat.suffix}
                 </div>
                 <div className="font-sans text-[10px] sm:text-xs font-semibold text-[#8A8078] tracking-wider uppercase truncate">
                   {stat.label}

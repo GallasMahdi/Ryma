@@ -1,42 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Digital Clínica
 
-## Populated platform demo
+Next.js clinic website and administration application. Business records and the treatment catalogue come from the database.
 
-Run `npm run demo:seed`, then `npm run demo:dev` to explore the full website and dashboard with 100 fictional patients and linked appointments, clinical histories, invoices, team schedules and treatment data. Open http://127.0.0.1:3007/admin.
+Read the [production audit](docs/production-audit-2026-10-09/REPORT.md), [complete API report](docs/production-audit-2026-10-09/API-ROUTES.md) and [deployment runbook](docs/production-audit-2026-10-09/DEPLOYMENT-RUNBOOK.md) before releasing.
 
-See [the demo guide](docs/DEMO-DATA.md) for credentials, test scenarios, reset instructions and production-mode checks. Local demo files are isolated under `.demo/`. The optional `demo:publish` command previews an explicit import into an empty hosted demo; deployment alone never seeds Vercel.
+Configure the target environment using `.env.example`, then:
 
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```sh
+npm ci
+npm run check:production -- --database
+npm run test:regression
+npm run test:production
+npm run build
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The production check must pass against the actual deployment configuration. It does not send email or modify database records. A successful build alone does not mean the configuration is ready. Public `NEXT_PUBLIC_*` values are compiled at build time.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Use Turso on Vercel. A single self-hosted instance can use SQLite with an explicit absolute persistent `DATABASE_PATH` and `ALLOW_SQLITE_FALLBACK=true`. Never deploy a database in the source checkout. Multiple instances require shared durable storage.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`npm run build:audit` creates an isolated production build with external credentials disabled and a temporary database. `node scripts/test-http-workflows.cjs` tests it on port 3008 with disposable data and synthetic Google verification. Rebuild with the real public configuration for release afterward.
 
-## Learn More
+`node scripts/audit-production-readonly.mjs` performs bounded anonymous GET probes and reads GitHub deployment records. Set `AUDIT_BASE_URL` for the intended deployment. `node scripts/audit-api-routes.cjs --probe` enumerates handlers and checks anonymous rejection on an isolated loopback server; it refuses remote targets.
 
-To learn more about Next.js, take a look at the following resources:
+Development fixtures remain isolated under `.demo` and are excluded from Vercel upload; see [the fixture guide](docs/DEMO-DATA.md). Do not run the hosted demo publisher against a launch database. Existing hosted data was preserved at the user's request; see [the cleanup inventory](docs/production-audit-2026-10-09/HOSTED-DATA-CLEANUP.md).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For interactive local booking tests without Google credentials, run `npm run demo:dev -- --name production-audit --port 3009` and open http://localhost:3009. This preserves that fixture's existing test records and disables external delivery. `demo:start` uses production security checks and rejects public bookings while reCAPTCHA is unconfigured; use it for production rendering checks, not credential-free booking walkthroughs.

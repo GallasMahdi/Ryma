@@ -1,3 +1,6 @@
+import { exportLabel, exportHeader } from '@/lib/export-i18n';
+import { requestLanguage } from '@/lib/api-i18n';
+import { localizeApiError } from '@/lib/api-i18n';
 import { getTreatments, validateTreatment, treatmentFromRow } from '@/lib/treatments';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOwnerAnalytics } from '@/lib/requireAdmin';
@@ -19,21 +22,22 @@ function sanitizeCsvField(val: unknown): string {
 }
 
 export async function GET(request: NextRequest) {
-  const catalogue=await getTreatments();
+  const lang = requestLanguage(request);
   // Block top-level cross-site GET link hijacking for database/CSV downloads
   const secFetchSite = request.headers.get('sec-fetch-site');
   if (secFetchSite === 'cross-site') {
-    return NextResponse.json({ error: 'Cross-site request forbidden' }, { status: 403 });
+    return NextResponse.json({ error: localizeApiError('Cross-site request forbidden', request) }, { status: 403 });
   }
 
   const auth = await requireOwnerAnalytics(request);
   if ('status' in auth) return auth;
+  const catalogue=await getTreatments();
 
   const { searchParams } = request.nextUrl;
   const type = searchParams.get('type') ?? 'appointments';
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
-  if ((startDate && !isCalendarDate(startDate)) || (endDate && !isCalendarDate(endDate)) || (startDate && endDate && startDate>endDate)) return NextResponse.json({error:'Invalid export dates'},{status:422});
+  if ((startDate && !isCalendarDate(startDate)) || (endDate && !isCalendarDate(endDate)) || (startDate && endDate && startDate>endDate)) return NextResponse.json({error:localizeApiError('Invalid export dates', request)},{status:422});
 
   if (type === 'backup' || type === 'json') {
     const backupData = await dbExportFullDatabaseBackup();
@@ -50,7 +54,7 @@ export async function GET(request: NextRequest) {
   if (type === 'patients') {
     const patients = await dbGetAllPatients();
     
-    let csv = 'ID;Nome Utente;Telefone;Email;Regime Cobertura;Prestador Seguro;Numero Beneficiario;Medico Assistente;Sessoes Prescritas;Sessoes Concluidas;Patologias;Data Criacao\n';
+    let csv = exportHeader('ID;Nome Utente;Telefone;Email;Regime Cobertura;Prestador Seguro;Numero Beneficiario;Medico Assistente;Sessoes Prescritas;Sessoes Concluidas;Patologias;Data Criacao\n', lang);
     
     patients.forEach(p => {
       const completed = completedSessions(p.sessions).length;
@@ -59,7 +63,7 @@ export async function GET(request: NextRequest) {
         sanitizeCsvField(p.patientName),
         sanitizeCsvField(p.phone),
         sanitizeCsvField(p.email ?? ''),
-        sanitizeCsvField(p.coverageType ?? 'PARTICULAR'),
+        sanitizeCsvField(exportLabel(p.coverageType ?? 'PARTICULAR', lang)),
         sanitizeCsvField(p.coverageProvider ?? ''),
         sanitizeCsvField(p.coverageNumber ?? ''),
         sanitizeCsvField(p.referringDoctor ?? ''),
@@ -82,10 +86,10 @@ export async function GET(request: NextRequest) {
 
   if (type === 'invoices') {
     let filters;
-    try {filters=invoiceFilters(searchParams);}catch{return NextResponse.json({error:'Invalid invoice filters'},{status:422});}
-    try {await dbAssertInvoiceAmountsReviewed();}catch(error){if(error instanceof DocumentError)return NextResponse.json({error:error.message},{status:409});throw error;}
+    try {filters=invoiceFilters(searchParams);}catch{return NextResponse.json({error:localizeApiError('Invalid invoice filters', request)},{status:422});}
+    try {await dbAssertInvoiceAmountsReviewed();}catch(error){if(error instanceof DocumentError)return NextResponse.json({error:localizeApiError(error.message, request)},{status:409});throw error;}
     const invoices = await dbGetInvoices(filters);
-    let csv = 'Numero Fatura;Data;Nome Utente;NIF;Telefone;Servico;Profissional;Valor EUR;Metodo Pagamento;Estado;Data Pagamento\n';
+    let csv = exportHeader('Numero Fatura;Data;Nome Utente;NIF;Telefone;Servico;Profissional;Valor EUR;Metodo Pagamento;Estado;Data Pagamento\n', lang);
     invoices.forEach(inv => {
       const row = [
         sanitizeCsvField(inv.invoiceNumber),
@@ -96,8 +100,8 @@ export async function GET(request: NextRequest) {
         sanitizeCsvField(inv.serviceName),
         sanitizeCsvField(inv.practitioner),
         sanitizeCsvField(inv.amount.toFixed(2)),
-        sanitizeCsvField(inv.paymentMethod),
-        sanitizeCsvField(inv.paymentStatus),
+        sanitizeCsvField(exportLabel(inv.paymentMethod, lang)),
+        sanitizeCsvField(exportLabel(inv.paymentStatus, lang)),
         sanitizeCsvField(inv.paidAt ?? ''),
       ];
       csv += row.join(';') + '\n';
@@ -124,7 +128,7 @@ export async function GET(request: NextRequest) {
     appointments = appointments.filter(a => a.date <= endDate);
   }
 
-  let csv = 'ID;Data;Hora;Nome Utente;Telefone;Tratamento;Profissional;Duracao Min;Regime Cobertura;Prestador;Numero;Estado;Valor EUR;Notas\n';
+  let csv = exportHeader('ID;Data;Hora;Nome Utente;Telefone;Tratamento;Profissional;Duracao Min;Regime Cobertura;Prestador;Numero;Estado;Valor EUR;Notas\n', lang);
 
   appointments.forEach(a => {
     const price = (a.servicePriceCents!=null?a.servicePriceCents/100:getServicePrice(a.service, catalogue));
@@ -137,10 +141,10 @@ export async function GET(request: NextRequest) {
       sanitizeCsvField(a.service),
       sanitizeCsvField(a.practitionerName),
       sanitizeCsvField(a.durationMinutes),
-      sanitizeCsvField(a.coverageType ?? 'PARTICULAR'),
+      sanitizeCsvField(exportLabel(a.coverageType ?? 'PARTICULAR', lang)),
       sanitizeCsvField(a.coverageProvider ?? ''),
       sanitizeCsvField(a.coverageNumber ?? ''),
-      sanitizeCsvField(a.status),
+      sanitizeCsvField(exportLabel(a.status, lang)),
       sanitizeCsvField(price),
       sanitizeCsvField(a.notes ?? ''),
     ];

@@ -85,6 +85,8 @@ npm run demo:start
 
 `test:demo` creates and removes its own named fixture, checks clinical/document links, money, scheduling, analytics, reset behavior and isolation from real configuration. `demo:build` and `demo:start` run with the same isolated database and disabled integrations. They use the normal `.next` build output; run a normal production build again before manually deploying that output elsewhere.
 
+Use `demo:dev` for the interactive booking walkthrough. `demo:start` enables production security checks while the launcher deliberately removes Google credentials, so public bookings are rejected with a security validation error. This is a preview configuration mismatch, not evidence that the visitor is automated. Production booking checks remain enabled; automated production HTTP tests use the separate isolated test runner described in the deployment runbook.
+
 GitHub/Vercel deployment delivers the generator code only. It does **not** automatically add fake patients or reviews to the live clinic.
 
 ## Explicitly populate a hosted demo

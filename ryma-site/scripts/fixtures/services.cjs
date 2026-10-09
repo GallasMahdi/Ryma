@@ -7,7 +7,7 @@ const records=[
   ['pressotherapie',50,45,'minceur'],['cryolipolyse',120,60,'minceur'],['massage-amincissant',65,45,'minceur'],['bilan-minceur',50,60,'bilan'],
 ];
 const SERVICES=records.map(([slug,price,minutes,pole])=>({slug,price,duration:`${minutes} min`,pole,
-  name:slug==='massage-therapeutique'?{pt:'Massagem terapêutica',fr:'Massage thérapeutique',en:'Therapeutic massage'}:{fr:'Fixture '+slug,pt:'Fixture '+slug,en:'Fixture '+slug},
+  name:slug==='massage-therapeutique'?{pt:'Massagem terapêutica',fr:'Massage thérapeutique',en:'Therapeutic massage',es:'Masaje terapéutico'}:{fr:'Fixture '+slug,pt:'Fixture '+slug,en:'Fixture '+slug,es:'Tratamiento de prueba '+slug},
   shortDesc:{fr:'Synthetic test care'},longDesc:{fr:''},icon:'hands',bodyMapPoint:{x:50,y:50,view:'both'},
   sessionFlow:{fr:[]},indications:{fr:[]},contraindications:{fr:[]},faq:[],hasBeforeAfter:false,keywords:[],careGoals:[],bodyZones:[],
 }));

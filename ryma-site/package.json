@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "check:production": "node scripts/check-production.mjs",
+    "test:production": "node --test scripts/test-production-readiness.cjs",
+    "build:audit": "node scripts/build-isolated.cjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -21,10 +24,12 @@
     "test:whatsapp": "node --test scripts/test-whatsapp-booking.cjs",
     "test:scheduling": "node --test scripts/test-scheduling.cjs",
     "test:patient-integrity": "node --test scripts/test-patient-integrity.cjs",
-    "test:regression": "node --test scripts/test-phone-validation.cjs scripts/test-review-submission.cjs scripts/test-whatsapp-booking.cjs scripts/test-scheduling.cjs scripts/test-patient-integrity.cjs scripts/test-audit-remediation.cjs scripts/test-modal.cjs scripts/test-treatments.cjs scripts/test-treatments-ui.cjs scripts/test-admin-kpis.cjs scripts/test-admin-reads.cjs",
+    "test:regression": "node --test scripts/test-phone-validation.cjs scripts/test-review-submission.cjs scripts/test-whatsapp-booking.cjs scripts/test-scheduling.cjs scripts/test-patient-integrity.cjs scripts/test-audit-remediation.cjs scripts/test-modal.cjs scripts/test-treatments.cjs scripts/test-treatments-ui.cjs scripts/test-admin-kpis.cjs scripts/test-admin-reads.cjs scripts/test-appointment-actions.cjs scripts/test-session-invoices.cjs scripts/test-spanish.cjs",
     "test:audit-remediation": "node --test scripts/test-audit-remediation.cjs",
     "test:modal": "node --test scripts/test-modal.cjs",
-    "test:treatments": "node --test scripts/test-treatments.cjs scripts/test-treatments-ui.cjs"
+    "test:treatments": "node --test scripts/test-treatments.cjs scripts/test-treatments-ui.cjs",
+    "test:i18n": "node --test scripts/test-spanish.cjs scripts/test-treatments-ui.cjs",
+    "audit:i18n": "node scripts/audit-i18n-completeness.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -39,7 +44,7 @@
     "framer-motion": "^12.43.0",
     "iron-session": "^8.0.4",
     "libphonenumber-js": "^1.13.14",
-    "next": "16.3.6",
+    "next": "16.3.8",
     "nodemailer": "10.0.16",
     "postcss": "^8.5.25",
     "react": "19.2.8",

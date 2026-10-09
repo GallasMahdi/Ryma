@@ -50,9 +50,12 @@ export default function ServiceDetailPage({ slug }: Props) {
       : '/hero/consultation.jpg';
 
   const poleBadge = {
-    kinesitherapie: { label: { fr: 'Kinésithérapie', pt: 'Fisioterapia', en: 'Physiotherapy' }, variant: 'teal' as const },
-    minceur:        { label: { fr: 'Minceur High-Tech', pt: 'Emagrecimento High-Tech', en: 'High-Tech Slimming' }, variant: 'bronze' as const },
-    bilan:          { label: { fr: 'Bilan Expert', pt: 'Avaliação Especializada', en: 'Expert Assessment' }, variant: 'rose' as const },
+    kinesitherapie: { label: {
+    es: "Fisioterapia", fr: 'Kinésithérapie', pt: 'Fisioterapia', en: 'Physiotherapy' }, variant: 'teal' as const },
+    minceur:        { label: {
+    es: "Tratamientos reductores de alta tecnología", fr: 'Minceur High-Tech', pt: 'Emagrecimento High-Tech', en: 'High-Tech Slimming' }, variant: 'bronze' as const },
+    bilan:          { label: {
+    es: "Evaluación especializada", fr: 'Bilan Expert', pt: 'Avaliação Especializada', en: 'Expert Assessment' }, variant: 'rose' as const },
   }[service.pole];
 
   const faqItems = service.faq.map((f) => ({
@@ -174,7 +177,7 @@ export default function ServiceDetailPage({ slug }: Props) {
               </Button>
               <a
                 href={`https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(
-                  lang === 'pt'
+                  lang === 'es' ? `¡Hola! Me gustaría saber más sobre: ${getLocalizedText(service.name, lang)}` : lang === 'pt'
                     ? `Olá! Gostaria de saber mais sobre o tratamento: ${getLocalizedText(service.name, lang)}`
                     : `Hello! I would like to know more about: ${getLocalizedText(service.name, lang)}`
                 )}`}
@@ -201,7 +204,7 @@ export default function ServiceDetailPage({ slug }: Props) {
               {/* About */}
               <ScrollReveal>
                 <h2 className="font-serif text-2xl md:text-3xl font-bold text-[#1A1412] mb-6">
-                  {lang === 'pt' ? 'Sobre Este Tratamento' : lang === 'en' ? 'About This Treatment' : 'À propos de ce soin'}
+                  {lang === 'es' ? "Acerca de este tratamiento" : lang === 'pt' ? 'Sobre Este Tratamento' : lang === 'en' ? 'About This Treatment' : 'À propos de ce soin'}
                 </h2>
                 <div className="space-y-4 text-[#6B6058] leading-relaxed text-[15px]">
                   {paragraphs.map((p, i) => <p key={i}>{p}</p>)}
@@ -299,7 +302,7 @@ export default function ServiceDetailPage({ slug }: Props) {
                   </div>
                   <div className="text-sm text-[#8A8078] mb-6 flex items-center gap-2 font-mono">
                     <IconClock size={14} className="text-[#C49A3C]" />
-                    {lang === 'pt' ? 'Duração :' : lang === 'en' ? 'Duration :' : 'Durée :'} {service.duration}
+                    {lang === 'es' ? "Duración:" : lang === 'pt' ? 'Duração :' : lang === 'en' ? 'Duration :' : 'Durée :'} {service.duration}
                   </div>
 
                   <div className="space-y-3">
@@ -309,7 +312,7 @@ export default function ServiceDetailPage({ slug }: Props) {
                     </Button>
                     <Button
                       href={`https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(
-                        lang === 'pt'
+                        lang === 'es' ? `Hola, me gustaría reservar una sesión de ${getLocalizedText(service.name,'en')}` : lang === 'pt'
                           ? `Olá, gostaria de agendar uma sessão de ${getLocalizedText(service.name,'pt')}`
                           : lang === 'en'
                           ? `Hello, I would like to book a session of ${getLocalizedText(service.name,'en')}`
@@ -326,7 +329,7 @@ export default function ServiceDetailPage({ slug }: Props) {
                   {/* Insurance note */}
                   {service.pole === 'kinesitherapie' && (
                     <p className="mt-4 text-[11px] text-[#8A8078] text-center leading-relaxed bg-[#F5E9C8] rounded-xl px-3 py-2">
-                      ✓ {lang === 'pt' ? 'Possibilidade de comparticipação mediante prescrição médica' : lang === 'en' ? 'Insurance coverage & receipts provided with prescription' : 'Prise en charge mutuelle / assurance possible sur prescription médicale'}
+                      ✓ {lang === 'es' ? "Cobertura del seguro y recibos con prescripción médica" : lang === 'pt' ? 'Possibilidade de comparticipação mediante prescrição médica' : lang === 'en' ? 'Insurance coverage & receipts provided with prescription' : 'Prise en charge mutuelle / assurance possible sur prescription médicale'}
                     </p>
                   )}
                 </div>
@@ -341,7 +344,7 @@ export default function ServiceDetailPage({ slug }: Props) {
                           <IconSparkles size={13} />
                         </div>
                         <h4 className="font-mono text-xs font-bold text-[#1A1412] uppercase tracking-wider">
-                          {lang === 'pt' ? 'Tratamentos Semelhantes' : lang === 'en' ? 'Similar Treatments' : 'Soins similaires'}
+                          {lang === 'es' ? "Tratamientos similares" : lang === 'pt' ? 'Tratamentos Semelhantes' : lang === 'en' ? 'Similar Treatments' : 'Soins similaires'}
                         </h4>
                       </div>
                       <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FAF5EA] text-[#8A6A24] border border-[#C49A3C]/20">
@@ -350,7 +353,7 @@ export default function ServiceDetailPage({ slug }: Props) {
                     </div>
 
                     <p className="text-[11px] text-[#8A8078] mb-3 leading-snug">
-                      {lang === 'pt'
+                      {lang === 'es' ? "Pulse para elegir y descubrir otro tratamiento:" : lang === 'pt'
                         ? 'Toque para selecionar e consultar outro protocolo:'
                         : lang === 'en'
                         ? 'Tap to select and explore another treatment:'
@@ -423,20 +426,20 @@ export default function ServiceDetailPage({ slug }: Props) {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#C49A3C]/30 text-[10px] font-mono font-bold text-[#8A6A24] uppercase tracking-wider mb-2.5 shadow-2xs">
                   <IconSparkles size={12} className="text-[#C49A3C]" />
                   <span>
-                    {service.pole === 'bilan' ? (lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : service.pole === 'kinesitherapie'
-                      ? lang === 'pt' ? 'Polo Fisioterapia & Reabilitação' : lang === 'en' ? 'Physiotherapy Department' : 'Pôle Kinésithérapie & Rééducation'
-                      : lang === 'pt' ? 'Polo Minceur & Estética' : lang === 'en' ? 'Slimming & Body Care' : 'Pôle Minceur & Esthétique'}
+                    {service.pole === 'bilan' ? (lang === 'es' ? "Evaluación" : lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : service.pole === 'kinesitherapie'
+                      ? lang === 'es' ? "Área de fisioterapia" : lang === 'pt' ? 'Polo Fisioterapia & Reabilitação' : lang === 'en' ? 'Physiotherapy Department' : 'Pôle Kinésithérapie & Rééducation'
+                      : lang === 'es' ? "Reducción y cuidados corporales" : lang === 'pt' ? 'Polo Minceur & Estética' : lang === 'en' ? 'Slimming & Body Care' : 'Pôle Minceur & Esthétique'}
                   </span>
                 </div>
                 <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1412]">
-                  {lang === 'pt'
+                  {lang === 'es' ? "Tratamientos similares y protocolos alternativos" : lang === 'pt'
                     ? 'Tratamentos Semelhantes & Protocolos Alternativos'
                     : lang === 'en'
                     ? 'Similar Treatments & Alternative Protocols'
                     : 'Soins similaires & protocoles alternatifs'}
                 </h2>
                 <p className="text-sm text-[#6B6058] mt-1.5 max-w-2xl">
-                  {lang === 'pt'
+                  {lang === 'es' ? "Descubra otros tratamientos especializados que complementan su plan de recuperación clínica." : lang === 'pt'
                     ? 'Selecione e explore outros tratamentos especializados concebidos para complementar o seu plano clínico.'
                     : lang === 'en'
                     ? 'Select and explore other specialized treatments tailored to complement your clinical recovery plan.'
@@ -448,7 +451,7 @@ export default function ServiceDetailPage({ slug }: Props) {
                 href="/services"
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-[#9A7428] hover:text-[#C49A3C] transition-colors group shrink-0"
               >
-                <span>{lang === 'pt' ? 'Ver todos os tratamentos' : lang === 'en' ? 'View all treatments' : 'Voir tous les soins'}</span>
+                <span>{lang === 'es' ? "Ver todos los tratamientos" : lang === 'pt' ? 'Ver todos os tratamentos' : lang === 'en' ? 'View all treatments' : 'Voir tous les soins'}</span>
                 <IconArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -525,7 +528,7 @@ export default function ServiceDetailPage({ slug }: Props) {
                         href={`/services/${rel.slug}`}
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-white border border-[#C49A3C]/30 text-xs font-bold transition-all shadow-2xs group/btn"
                       >
-                        <span>{lang === 'pt' ? 'Selecionar' : lang === 'en' ? 'Select' : 'Sélectionner'}</span>
+                        <span>{lang === 'es' ? "Seleccionar" : lang === 'pt' ? 'Selecionar' : lang === 'en' ? 'Select' : 'Sélectionner'}</span>
                         <IconChevronRight size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
                       </Link>
 

@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState } from 'react';
@@ -54,7 +56,7 @@ export default function ServicesPage() {
         <div className="absolute inset-0 z-0">
           <Image
             src="/hero/therapy.jpg"
-            alt="Tratamentos de Fisioterapia e Estética Digital Clínica"
+            alt={legacyText("Tratamentos de Fisioterapia e Estética Digital Clínica", lang)}
             fill
             priority
             className="object-cover object-center opacity-30 scale-105 transform transition-transform duration-1000"
@@ -109,12 +111,12 @@ export default function ServicesPage() {
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-[#C49A3C]/40 px-4 py-1.5 rounded-full mb-4 sm:mb-5 shadow-[0_2px_12px_rgba(196,154,60,0.25)]">
               <IconSparkles size={14} className="text-[#E8C97A]" />
               <span className="font-mono text-[11px] tracking-[0.24em] text-[#F5E9C8] uppercase font-bold">
-                {lang === 'pt' ? 'Catálogo Clínico & Estético' : lang === 'en' ? 'Clinical & Aesthetic Catalog' : 'Catalogue Médical & Minceur'}
+                {lang === 'es' ? "Catálogo clínico y estético" : lang === 'pt' ? 'Catálogo Clínico & Estético' : lang === 'en' ? 'Clinical & Aesthetic Catalog' : 'Catalogue Médical & Minceur'}
               </span>
             </div>
 
             <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-3 sm:mb-4 tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.6)]">
-              {lang === 'pt'
+              {lang === 'es' ? `${SERVICES.length} tratamientos de vanguardia` : lang === 'pt'
                 ? `${SERVICES.length} Tratamentos de Vanguarda`
                 : lang === 'en'
                 ? `${SERVICES.length} Cutting-Edge Treatments`
@@ -122,7 +124,7 @@ export default function ServicesPage() {
             </h1>
 
             <p className="text-[#E8E2D8] text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-normal mb-8">
-              {lang === 'pt'
+              {lang === 'es' ? "Desde la fisioterapia especializada en RPG hasta el remodelado corporal no invasivo avanzado, descubra todos los protocolos médicos de Digital Clínica." : lang === 'pt'
                 ? 'Da fisioterapia avançada e RPG ao emagrecimento com criolipólise e radiofrequência multipolar, explore todos os protocolos certificados da Digital Clínica.'
                 : lang === 'en'
                 ? 'From specialized GPR physiotherapy to advanced non-invasive body contouring, explore all medical protocols offered by Digital Clinic.'
@@ -142,7 +144,7 @@ export default function ServicesPage() {
                       : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                   }`}
                 >
-                  {lang === 'pt' ? `Todos (${SERVICES.length})` : lang === 'en' ? `All (${SERVICES.length})` : `Tous (${SERVICES.length})`}
+                  {lang === 'es' ? `Todos (${SERVICES.length})` : lang === 'pt' ? `Todos (${SERVICES.length})` : lang === 'en' ? `All (${SERVICES.length})` : `Tous (${SERVICES.length})`}
                 </button>
                 <button
                   onClick={() => { setActivePole('kinesitherapie'); playSoftClick(); }}
@@ -152,7 +154,7 @@ export default function ServicesPage() {
                       : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                   }`}
                 >
-                  {lang === 'pt' ? `Fisioterapia (${kineCount})` : lang === 'en' ? `Physio (${kineCount})` : `Kiné (${kineCount})`}
+                  {lang === 'es' ? `Fisioterapia (${kineCount})` : lang === 'pt' ? `Fisioterapia (${kineCount})` : lang === 'en' ? `Physio (${kineCount})` : `Kiné (${kineCount})`}
                 </button>
                 <button
                   onClick={() => { setActivePole('minceur'); playSoftClick(); }}
@@ -162,7 +164,7 @@ export default function ServicesPage() {
                       : 'text-[#F5E9C8] hover:text-[#E8C97A]'
                   }`}
                 >
-                  {lang === 'pt' ? `Minceur (${minceurCount})` : lang === 'en' ? `Slimming (${minceurCount})` : `Minceur (${minceurCount})`}
+                  {lang === 'es' ? `Reducción corporal (${minceurCount})` : lang === 'pt' ? `Minceur (${minceurCount})` : lang === 'en' ? `Slimming (${minceurCount})` : `Minceur (${minceurCount})`}
                 </button>
               </div>
 
@@ -173,7 +175,7 @@ export default function ServicesPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={lang === 'pt' ? 'Pesquisar cuidado...' : lang === 'en' ? 'Search care...' : 'Rechercher un soin...'}
+                  placeholder={lang === 'es' ? "Buscar tratamientos..." : lang === 'pt' ? 'Pesquisar cuidado...' : lang === 'en' ? 'Search care...' : 'Rechercher un soin...'}
                   className="w-full pl-9 pr-4 py-2 text-xs bg-[#241C19]/90 backdrop-blur-xl border border-[#C49A3C]/40 rounded-full focus:outline-none focus:border-[#E8C97A] focus:ring-1 focus:ring-[#E8C97A] text-white placeholder-[#8A8078] transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
                 />
               </div>
@@ -182,11 +184,16 @@ export default function ServicesPage() {
             {/* Quick Goal Tag Filter */}
             <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-4 max-w-2xl mx-auto">
               {[
-                { id: 'all', label: { pt: 'Todos', en: 'All', fr: 'Tous' } },
-                { id: 'posture', label: { pt: 'Postura & Coluna', en: 'Posture & Spine', fr: 'Posture & Dos' } },
-                { id: 'slimming', label: { pt: 'Gordura & Celulite', en: 'Fat & Cellulite', fr: 'Graisse & Cellulite' } },
-                { id: 'drainage', label: { pt: 'Drenagem Linfática', en: 'Lymphatic Drainage', fr: 'Drainage' } },
-                { id: 'postpartum', label: { pt: 'Saúde Pós-Parto', en: 'Postpartum Care', fr: 'Soins Post-Partum' } },
+                { id: 'all', label: {
+    es: "Todos", pt: 'Todos', en: 'All', fr: 'Tous' } },
+                { id: 'posture', label: {
+    es: "Postura y columna", pt: 'Postura & Coluna', en: 'Posture & Spine', fr: 'Posture & Dos' } },
+                { id: 'slimming', label: {
+    es: "Grasa y celulitis", pt: 'Gordura & Celulite', en: 'Fat & Cellulite', fr: 'Graisse & Cellulite' } },
+                { id: 'drainage', label: {
+    es: "Drenaje linfático", pt: 'Drenagem Linfática', en: 'Lymphatic Drainage', fr: 'Drainage' } },
+                { id: 'postpartum', label: {
+    es: "Cuidados posparto", pt: 'Saúde Pós-Parto', en: 'Postpartum Care', fr: 'Soins Post-Partum' } },
               ].map((goal) => (
                 <button
                   key={goal.id}
@@ -229,13 +236,13 @@ export default function ServicesPage() {
           ) : (
             <div className="text-center py-16 bg-white border border-[#E8E2D8] rounded-3xl p-8 max-w-md mx-auto shadow-xs">
               <p className="text-sm text-[#8A8078] mb-3">
-                {lang === 'pt' ? 'Nenhum tratamento encontrado para a pesquisa.' : lang === 'en' ? 'No treatments found matching your criteria.' : 'Aucun soin trouvé.'}
+                {lang === 'es' ? "No se han encontrado tratamientos que coincidan con sus criterios." : lang === 'pt' ? 'Nenhum tratamento encontrado para a pesquisa.' : lang === 'en' ? 'No treatments found matching your criteria.' : 'Aucun soin trouvé.'}
               </p>
               <button
                 onClick={() => { setSearchQuery(''); setActivePole('all'); setActiveGoal('all'); }}
                 className="text-xs font-bold text-[#C49A3C] hover:underline"
               >
-                {lang === 'pt' ? 'Limpar filtros' : lang === 'en' ? 'Clear filters' : 'Effacer les filtres'}
+                {lang === 'es' ? "Borrar filtros" : lang === 'pt' ? 'Limpar filtros' : lang === 'en' ? 'Clear filters' : 'Effacer les filtres'}
               </button>
             </div>
           )}
@@ -254,11 +261,11 @@ export default function ServicesPage() {
               </div>
 
               <span className="font-mono text-xs font-bold tracking-widest text-[#9A7428] uppercase block mb-2">
-                {lang === 'pt' ? 'Comparticipações & Seguros de Saúde' : lang === 'en' ? 'Health Insurance & Reimbursement' : 'Mutuelles & Assurances Santé'}
+                {lang === 'es' ? "Seguro médico y reembolso" : lang === 'pt' ? 'Comparticipações & Seguros de Saúde' : lang === 'en' ? 'Health Insurance & Reimbursement' : 'Mutuelles & Assurances Santé'}
               </span>
 
               <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1A1412] mb-3">
-                {lang === 'pt'
+                {lang === 'es' ? "Facturas médicas oficiales certificadas" : lang === 'pt'
                   ? 'Faturas com Cédula Profissional Oficial'
                   : lang === 'en'
                   ? 'Official Certified Medical Invoices'
@@ -266,7 +273,7 @@ export default function ServicesPage() {
               </h3>
 
               <p className="text-xs sm:text-sm text-[#554C42] leading-relaxed max-w-2xl mx-auto mb-6">
-                {lang === 'pt'
+                {lang === 'es' ? "Todas las sesiones de fisioterapia y rehabilitación pueden optar al reembolso mediante seguros médicos privados en Portugal (ADSE, Médis, Multicare, AdvanceCare, etc.)." : lang === 'pt'
                   ? 'Todos os tratamentos de fisioterapia e reabilitação são elegíveis para reembolso no regime livre dos principais seguros e subsistemas de saúde em Portugal (ADSE, Médis, Multicare, AdvanceCare, etc.).'
                   : lang === 'en'
                   ? 'All physiotherapy and rehabilitation sessions are eligible for reimbursement under private health insurance coverage in Portugal (ADSE, Médis, Multicare, AdvanceCare, etc.).'
@@ -288,7 +295,7 @@ export default function ServicesPage() {
                   onClick={playSoftClick}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#FAF8F5] hover:bg-[#F3EFE6] text-[#1A1412] font-bold px-7 py-3 rounded-full text-xs sm:text-sm border border-[#E8E2D8] transition-all"
                 >
-                  <span>{lang === 'pt' ? 'Consultar Preços & Pacotes' : lang === 'en' ? 'View Rates & Packages' : 'Consulter les Tarifs'}</span>
+                  <span>{lang === 'es' ? "Ver tarifas y bonos" : lang === 'pt' ? 'Consultar Preços & Pacotes' : lang === 'en' ? 'View Rates & Packages' : 'Consulter les Tarifs'}</span>
                 </Link>
               </div>
             </div>

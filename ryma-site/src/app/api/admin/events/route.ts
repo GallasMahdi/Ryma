@@ -26,8 +26,10 @@ export async function GET(request: NextRequest) {
         try { controller.enqueue(encoder.encode(message)); } catch { cleanup(); }
       };
       const onEvent = async (payload: AdminEventPayload) => {
-        if (!(await authorized())) { cleanup(); return; }
-        send(`event: ${payload.type}\ndata: ${JSON.stringify(payload)}\n\n`);
+        try {
+          if (!(await authorized())) { cleanup(); return; }
+          send(`event: ${payload.type}\ndata: ${JSON.stringify(payload)}\n\n`);
+        } catch { cleanup(); }
       };
       cleanup = () => {
         if (closed) return;
@@ -56,8 +58,10 @@ export async function GET(request: NextRequest) {
         finally { syncing = false; }
       }, 3000);
       ping = setInterval(async () => {
-        if (!(await authorized())) { cleanup(); return; }
-        send(': ping\n\n');
+        try {
+          if (!(await authorized())) { cleanup(); return; }
+          send(': ping\n\n');
+        } catch { cleanup(); }
       }, 20000);
     },
     cancel() { cleanup(); },

@@ -33,7 +33,7 @@ interface AdminKpiCardsProps {
 /**
  * Animated luxury counter that smoothly transitions values on arrival
  */
-function AnimatedCounter({ value, isCurrency = false }: { value: number | string; isCurrency?: boolean }) {
+function AnimatedCounter({ value, isCurrency = false, lang }: { value: number | string; isCurrency?: boolean; lang: Lang }) {
   if (typeof value === 'string') {
     return <span>{value}</span>;
   }
@@ -46,7 +46,7 @@ function AnimatedCounter({ value, isCurrency = false }: { value: number | string
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className="inline-block"
     >
-      {isCurrency ? `${value.toLocaleString('pt-PT')} €` : value.toLocaleString('pt-PT')}
+      {isCurrency ? `${value.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €` : value.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')}
     </motion.span>
   );
 }
@@ -58,8 +58,8 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
   isAnalyticsUnlocked = false,
   onUnlockClick,
 }: AdminKpiCardsProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   // Render refined luxury skeleton state during initial mount / fetch
   if (isLoading && stats.total === 0) {
@@ -96,7 +96,7 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
   const items = [
     {
       id: 'total',
-      label: txt('Total Rendez-vous', 'Total Appts', 'Total Consultas'),
+      label: txt('Total Rendez-vous', 'Total Appts', 'Total Consultas', "Total de citas"),
       value: stats.total,
       badge: null,
       badgeColor: '',
@@ -107,7 +107,7 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
     },
     {
       id: 'confirmed',
-      label: txt('Confirmés', 'Confirmed', 'Confirmados'),
+      label: txt('Confirmés', 'Confirmed', 'Confirmados', "Confirmadas"),
       value: stats.confirmed,
       badge: stats.total > 0 ? `${Math.round((stats.confirmed / stats.total) * 100)}%` : null,
       badgeColor: 'bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]',
@@ -118,9 +118,9 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
     },
     {
       id: 'pending',
-      label: txt('En Attente', 'Pending', 'Pendentes'),
+      label: txt('En Attente', 'Pending', 'Pendentes', "Pendientes"),
       value: stats.pending,
-      badge: stats.pending > 0 ? txt('À valider', 'Review', 'Rever') : null,
+      badge: stats.pending > 0 ? txt('À valider', 'Review', 'Rever', "Revisar") : null,
       badgeColor: 'bg-[#FEF9C3] text-[#854D0E] border border-[#FEF08A]',
       icon: IconClock,
       iconBg: 'bg-[#FEF9C3] text-[#854D0E] border-[#FEF08A]',
@@ -129,7 +129,7 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
     },
     {
       id: 'completed',
-      label: txt('Terminés', 'Completed', 'Concluídos'),
+      label: txt('Terminés', 'Completed', 'Concluídos', "Completadas"),
       value: stats.completed,
       badge: null,
       badgeColor: '',
@@ -141,13 +141,13 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
     {
       id: 'revenue',
       label: isAnalyticsUnlocked
-        ? txt('Revenu Estimé', 'Est. Revenue', 'Receita Estimada')
-        : txt('Revenu (Propriétaire)', 'Revenue (Owner)', 'Receita (Proprietário)'),
+        ? txt('Revenu Estimé', 'Est. Revenue', 'Receita Estimada', "Ingresos estimados")
+        : txt('Revenu (Propriétaire)', 'Revenue (Owner)', 'Receita (Proprietário)', "Ingresos (propietario)"),
       // The cached admin response omits revenue until an owner-authorized refresh.
       value: isAnalyticsUnlocked ? (stats.revenue ?? '—') : '•••• €',
       badge: isAnalyticsUnlocked
-        ? txt('Déverrouillé', 'Unlocked', 'Desbloqueado')
-        : txt('Verrouillé', 'Locked', 'Bloqueado'),
+        ? txt('Déverrouillé', 'Unlocked', 'Desbloqueado', "Desbloqueado")
+        : txt('Verrouillé', 'Locked', 'Bloqueado', "Bloqueado"),
       badgeColor: isAnalyticsUnlocked
         ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
         : 'bg-purple-100 text-purple-800 border border-purple-300',
@@ -186,7 +186,7 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
                   ? txt(
                       'Cliquez pour déverrouiller l’accès propriétaire',
                       'Click to unlock owner access',
-                      'Clique para desbloquear o acesso de proprietário'
+                      'Clique para desbloquear o acesso de proprietário', "Pulse para desbloquear el acceso del propietario"
                     )
                   : undefined
               }
@@ -222,12 +222,12 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
 
               <div className="flex items-baseline justify-between gap-2">
                 <div className={`text-2xl font-bold tracking-tight ${it.valColor}`}>
-                  <AnimatedCounter value={it.value} isCurrency={isAnalyticsUnlocked} />
+                  <AnimatedCounter lang={lang} value={it.value} isCurrency={isAnalyticsUnlocked} />
                 </div>
 
                 {!isAnalyticsUnlocked && (
                   <span className="text-[11px] font-semibold text-[#7C3AED] group-hover:underline flex items-center gap-0.5">
-                    <span>{txt('Déverrouiller', 'Unlock', 'Desbloquear')}</span>
+                    <span>{txt('Déverrouiller', 'Unlock', 'Desbloquear', "Desbloquear")}</span>
                     <span>→</span>
                   </span>
                 )}
@@ -265,7 +265,7 @@ export const AdminKpiCards = React.memo(function AdminKpiCards({
             </div>
 
             <div className={`text-2xl font-bold tracking-tight ${it.valColor}`}>
-              <AnimatedCounter value={it.value} />
+              <AnimatedCounter lang={lang} value={it.value} />
             </div>
           </motion.div>
         );

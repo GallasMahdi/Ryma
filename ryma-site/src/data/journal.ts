@@ -5,6 +5,24 @@ export const JOURNAL_CATEGORIES = ['all', 'Kinésithérapie', 'Minceur', 'Consei
 export type JournalCategory = (typeof JOURNAL_CATEGORIES)[number];
 
 export const JOURNAL_COPY = {
+    es: {
+    eyebrow: "Salud, movimiento y bienestar", title: "El", emphasis: "Diario",
+    intro: "Un espacio para conocer mejor su cuerpo. Perspectivas sobre fisioterapia, cuidados estéticos y bienestar cotidiano.",
+    featured: "Destacado", read: "Leer el artículo", minutes: "min de lectura",
+    explore: "Explore el diario", collection: "Comprender. Cuidar. Vivir mejor.",
+    all: "Todos los temas", search: "Buscar artículos", placeholder: "¿Qué le gustaría descubrir?", clear: "Borrar búsqueda",
+    sort: "Ordenar por", newest: "Más recientes primero", shortest: "Lectura más breve",
+    result: "artículo", results: "artículos", empty: "Aún no hemos encontrado ese tema.",
+    emptyText: "Pruebe otra palabra o explore nuestra colección completa.", reset: "Ver todos los artículos",
+    allArticles: "Todos los artículos", previewTitle: "Un mejor cuidado empieza", previewEmphasis: "por comprender.",
+    previewIntro: "Nuevas perspectivas para cuidarse, dentro y fuera de la clínica.",
+    back: "Volver al diario", contents: "En este artículo", author: "Equipo de Digital Clínica",
+    authorRole: "Fisioterapia y cuidados estéticos · Lisboa", related: "Siga descubriendo",
+    service: "Descubra este tratamiento", serviceLink: "Explorar tratamiento",
+    closing: "Su próximo paso empieza por usted.", closingText: "Descubra nuestros tratamientos y haga espacio para su bienestar.",
+    treatments: "Descubra nuestros cuidados", book: "Reservar una cita", table: "Comparación de tratamientos",
+    categories: { 'Kinésithérapie': "Fisioterapia", Minceur: "Cuidados corporales", Conseils: "Bienestar" },
+  },
   pt: {
     eyebrow: 'Saúde, movimento & bem-estar', title: 'O', emphasis: 'Jornal',
     intro: 'Um espaço para conhecer melhor o seu corpo. Perspetivas sobre fisioterapia, cuidados estéticos e o bem-estar de todos os dias.',
@@ -67,7 +85,8 @@ export function journalCategoryLabel(category: string, lang: Lang) {
 }
 
 export function journalDate(date: string, lang: Lang) {
-  return new Intl.DateTimeFormat({ pt: 'pt-PT', en: 'en-GB', fr: 'fr-FR' }[lang], {
+  return new Intl.DateTimeFormat({
+    es: "es-ES", pt: 'pt-PT', en: 'en-GB', fr: 'fr-FR' }[lang], {
     day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
   }).format(new Date(date));
 }

@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { ServiceCatalogProvider } from '@/components/ServiceCatalogProvider';
 import { useServices, useServiceLabels } from '@/components/ServiceCatalogProvider';
 import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
@@ -28,19 +30,19 @@ import { LuxuryToastContainer, LuxuryProgressBar, LuxuryToast } from '@/componen
 
 // Code-split secondary tabs and heavy dialogs for fast initial dashboard charging
 const SlotsTab = dynamic(() => import('@/components/admin/SlotsTab').then(m => m.SlotsTab), {
-  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar horários...</div>,
+  loading: () => <AdminLoading message="A carregar horários..." />,
 });
 const PatientNotesTab = dynamic(() => import('@/components/admin/PatientNotesTab').then(m => m.PatientNotesTab), {
-  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar pacientes...</div>,
+  loading: () => <AdminLoading message="A carregar pacientes..." />,
 });
 const InvoicesTab = dynamic(() => import('@/components/admin/InvoicesTab').then(m => m.InvoicesTab), {
-  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar faturação...</div>,
+  loading: () => <AdminLoading message="A carregar faturação..." />,
 });
 const ReviewsTab = dynamic(() => import('@/components/admin/ReviewsTab').then(m => m.ReviewsTab), {
-  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar avaliações...</div>,
+  loading: () => <AdminLoading message="A carregar avaliações..." />,
 });
 const AnalyticsTab = dynamic(() => import('@/components/admin/AnalyticsTab').then(m => m.AnalyticsTab), {
-  loading: () => <div className="p-8 text-center text-xs text-[#8A8078] animate-pulse">A carregar métricas...</div>,
+  loading: () => <AdminLoading message="A carregar métricas..." />,
 });
 
 const AddAppointmentModal = dynamic(() => import('@/components/admin/AddAppointmentModal').then(m => m.AddAppointmentModal));
@@ -50,6 +52,11 @@ const AdminCommandPalette = dynamic(() => import('@/components/admin/AdminComman
 const ClinicHelpdeskDrawer = dynamic(() => import('@/components/admin/ClinicHelpdeskDrawer').then(m => m.ClinicHelpdeskDrawer));
 const OwnerAuthModal = dynamic(() => import('@/components/admin/OwnerAuthModal').then(m => m.OwnerAuthModal));
 const ChangeOwnerPasswordModal = dynamic(() => import('@/components/admin/ChangeOwnerPasswordModal').then(m => m.ChangeOwnerPasswordModal));
+
+function AdminLoading({ message }: { message: string }) {
+  const { lang } = useLanguage();
+  return <div role="status" className="p-8 text-center text-xs text-[#8A8078] animate-pulse">{legacyText(message, lang)}</div>;
+}
 
 async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
   if (!opts || !opts.method || opts.method.toUpperCase() === 'GET') return readAdminJson<T>(url);
@@ -222,13 +229,13 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 
         const svcName = getServiceName(appt.service, lang, appt);
         const toastTitle =
-          lang === 'fr'
+          lang === 'es' ? "¡Nueva cita reservada!" : lang === 'fr'
             ? 'Nouveau Rendez-vous !'
             : lang === 'en'
             ? 'New Appointment Booked!'
             : 'Nova Consulta Agendada!';
         const toastMsg =
-          lang === 'fr'
+          lang === 'es' ? `${appt.patientName} — ${svcName} el ${appt.date} a las ${appt.startTime}` : lang === 'fr'
             ? `${appt.patientName} — ${svcName} le ${appt.date} à ${appt.startTime}`
             : lang === 'en'
             ? `${appt.patientName} — ${svcName} on ${appt.date} at ${appt.startTime}`
@@ -365,8 +372,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     fetchInvoices();
     addToast({
       type: 'success',
-      title: lang === 'pt' ? 'Autorização Confirmada' : lang === 'en' ? 'Owner Authorization Confirmed' : 'Autorisation Propriétaire Confirmée',
-      message: lang === 'pt' ? 'Estatísticas desbloqueadas durante 15 minutos.' : lang === 'en' ? 'Analytics unlocked for 15 minutes.' : 'Statistiques déverrouillées pendant 15 minutes.',
+      title: lang === 'es' ? "Autorización del propietario confirmada" : lang === 'pt' ? 'Autorização Confirmada' : lang === 'en' ? 'Owner Authorization Confirmed' : 'Autorisation Propriétaire Confirmée',
+      message: lang === 'es' ? "Estadísticas desbloqueadas durante 15 minutos." : lang === 'pt' ? 'Estatísticas desbloqueadas durante 15 minutos.' : lang === 'en' ? 'Analytics unlocked for 15 minutes.' : 'Statistiques déverrouillées pendant 15 minutes.',
     });
   };
 
@@ -382,8 +389,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     setServerAnalytics(null);
     addToast({
       type: 'info',
-      title: lang === 'pt' ? 'Estatísticas Bloqueadas' : lang === 'en' ? 'Analytics Locked' : 'Statistiques Verrouillées',
-      message: lang === 'pt' ? 'Acesso restrito ao proprietário.' : lang === 'en' ? 'Restricted to clinic owner.' : 'Accès réservé au propriétaire.',
+      title: lang === 'es' ? "Estadísticas bloqueadas" : lang === 'pt' ? 'Estatísticas Bloqueadas' : lang === 'en' ? 'Analytics Locked' : 'Statistiques Verrouillées',
+      message: lang === 'es' ? "Acceso restringido al propietario de la clínica." : lang === 'pt' ? 'Acesso restrito ao proprietário.' : lang === 'en' ? 'Restricted to clinic owner.' : 'Accès réservé au propriétaire.',
     });
   };
 
@@ -490,7 +497,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
               const patientName = newIncoming[0].patientName;
               addToast({
                 type: 'success',
-                title: lang === 'pt' ? 'Plano de Sessões Agendado' : lang === 'en' ? 'Sessions Scheduled' : 'Plan de Séances Planifié',
+                title: lang === 'es' ? "Sesiones programadas" : lang === 'pt' ? 'Plano de Sessões Agendado' : lang === 'en' ? 'Sessions Scheduled' : 'Plan de Séances Planifié',
                 message: `${patientName} • ${newIncoming.length} sessões agendadas com sucesso.`,
                 duration: 7000,
               });
@@ -504,7 +511,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       if ((err as Error).message !== 'Session expirée' && (err as Error).message !== 'Sessão expirada. A redirecionar...') {
         if (!isSilent || showLoading)
           setAppointmentsError(
-            lang === 'fr'
+            lang === 'es' ? "Error al cargar las citas" : lang === 'fr'
               ? 'Erreur de chargement des rendez-vous'
               : lang === 'en'
               ? 'Error loading appointments'
@@ -590,7 +597,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
     void fetchAdminMetadata();
     addToast({
       type: 'success',
-      title: lang === 'pt' ? 'Fatura-Recibo Emitida' : 'Invoice Created',
+      title: lang === 'es' ? "Factura creada" : lang === 'pt' ? 'Fatura-Recibo Emitida' : 'Invoice Created',
       message: `${newInv.invoiceNumber} — ${newInv.patientName} (${newInv.amount.toFixed(2)} €)`,
     });
   }, [addToast, fetchInvoices, lang]);
@@ -624,15 +631,15 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         type: 'success',
         title:
           newStatus === 'PAID'
-            ? (lang === 'pt' ? 'Recibo Liquidado (PAGO)' : lang === 'fr' ? 'Reçu Encaissé (PAYÉ)' : 'Receipt Settled (PAID)')
-            : (lang === 'pt' ? 'Marcado como Em Aberto' : lang === 'fr' ? 'Marqué En Attente' : 'Marked as Pending'),
+            ? (lang === 'es' ? "Recibo pagado" : lang === 'pt' ? 'Recibo Liquidado (PAGO)' : lang === 'fr' ? 'Reçu Encaissé (PAYÉ)' : 'Receipt Settled (PAID)')
+            : (lang === 'es' ? "Marcado como pendiente" : lang === 'pt' ? 'Marcado como Em Aberto' : lang === 'fr' ? 'Marqué En Attente' : 'Marked as Pending'),
         message: `${res.invoice.invoiceNumber} • ${res.invoice.patientName} (${res.invoice.amount.toFixed(2)} € • ${res.invoice.paymentMethod})`,
       });
     } catch (err: any) {
       fetchInvoices(); // rollback
       addToast({
         type: 'error',
-        title: lang === 'pt' ? 'Erro ao atualizar estado' : lang === 'fr' ? 'Erreur de mise à jour' : 'Error updating status',
+        title: lang === 'es' ? "Error al actualizar el estado" : lang === 'pt' ? 'Erro ao atualizar estado' : lang === 'fr' ? 'Erreur de mise à jour' : 'Error updating status',
         message: err.message,
       });
     }
@@ -646,8 +653,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       void fetchAdminMetadata();
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Recibo Anulado' : 'Invoice Voided',
-        message: lang === 'pt' ? 'O documento foi anulado com sucesso.' : 'Invoice voided.',
+        title: lang === 'es' ? "Factura anulada" : lang === 'pt' ? 'Recibo Anulado' : 'Invoice Voided',
+        message: lang === 'es' ? "Factura anulada." : lang === 'pt' ? 'O documento foi anulado com sucesso.' : 'Invoice voided.',
       });
     } catch (err: any) {
       addToast({
@@ -721,13 +728,13 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                 const {getServiceName, lang} = liveContext.current;
                 const svcName = getServiceName(service || newAppts[0].service, lang);
                 const toastTitle =
-                  lang === 'fr'
+                  lang === 'es' ? "¡Plan de tratamiento creado!" : lang === 'fr'
                     ? 'Plan de Séances Créé !'
                     : lang === 'en'
                     ? 'Treatment Plan Created!'
                     : 'Plano de Sessões Criado!';
                 const toastMsg =
-                  lang === 'fr'
+                  lang === 'es' ? `${patientName || newAppts[0].patientName} — ${count || newAppts.length} sesiones programadas (${svcName})` : lang === 'fr'
                     ? `${patientName || newAppts[0].patientName} — ${count || newAppts.length} séances planifiées (${svcName})`
                     : lang === 'en'
                     ? `${patientName || newAppts[0].patientName} — ${count || newAppts.length} sessions scheduled (${svcName})`
@@ -971,14 +978,14 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       slotCacheRef.current = {};
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Estado Atualizado' : lang === 'en' ? 'Status Updated' : 'Statut Mis à Jour',
-        message: lang === 'pt' ? `A consulta foi marcada como ${status}.` : lang === 'en' ? `Appointment marked as ${status}.` : `Rendez-vous marqué comme ${status}.`,
+        title: lang === 'es' ? "Estado actualizado" : lang === 'pt' ? 'Estado Atualizado' : lang === 'en' ? 'Status Updated' : 'Statut Mis à Jour',
+        message: lang === 'es' ? `Cita marcada como ${status}.` : lang === 'pt' ? `A consulta foi marcada como ${status}.` : lang === 'en' ? `Appointment marked as ${status}.` : `Rendez-vous marqué comme ${status}.`,
       });
     } catch (err) {
       setAppointments(prevList);
       addToast({
         type: 'error',
-        title: lang === 'pt' ? 'Erro na Atualização' : lang === 'en' ? 'Update Error' : 'Erreur de Mise à Jour',
+        title: lang === 'es' ? "Error de actualización" : lang === 'pt' ? 'Erro na Atualização' : lang === 'en' ? 'Update Error' : 'Erreur de Mise à Jour',
         message: (err as Error).message,
       });
     } finally {
@@ -1025,8 +1032,8 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       addToast({
         type: 'success',
         title: res.blocked
-          ? (lang === 'pt' ? 'Horário Bloqueado' : lang === 'fr' ? 'Créneau Bloqué' : 'Slot Blocked')
-          : (lang === 'pt' ? 'Horário Desbloqueado' : lang === 'fr' ? 'Créneau Débloqué' : 'Slot Unblocked'),
+          ? (lang === 'es' ? "Horario bloqueado" : lang === 'pt' ? 'Horário Bloqueado' : lang === 'fr' ? 'Créneau Bloqué' : 'Slot Blocked')
+          : (lang === 'es' ? "Horario desbloqueado" : lang === 'pt' ? 'Horário Desbloqueado' : lang === 'fr' ? 'Créneau Débloqué' : 'Slot Unblocked'),
         message: `${selectedDateForSlots} • ${time}`,
       });
       return res.blocked;
@@ -1034,7 +1041,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       setSlotList(prevList);
       addToast({
         type: 'error',
-        title: lang === 'pt' ? 'Erro ao Alterar Horário' : lang === 'fr' ? 'Erreur Créneau' : 'Slot Error',
+        title: lang === 'es' ? "Error en el horario" : lang === 'pt' ? 'Erro ao Alterar Horário' : lang === 'fr' ? 'Erreur Créneau' : 'Slot Error',
         message: (err as Error).message,
       });
       return undefined;
@@ -1077,7 +1084,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       });
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Consulta Criada' : lang === 'en' ? 'Appointment Created' : 'Rendez-vous Créé',
+        title: lang === 'es' ? "Cita creada" : lang === 'pt' ? 'Consulta Criada' : lang === 'en' ? 'Appointment Created' : 'Rendez-vous Créé',
         message: `${data.appointment.patientName} — ${data.appointment.date} ${data.appointment.startTime}`,
       });
     } catch (err) {
@@ -1085,7 +1092,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       setAddingError(msg);
       addToast({
         type: 'error',
-        title: lang === 'pt' ? 'Erro ao Criar Consulta' : lang === 'en' ? 'Creation Error' : 'Erreur de Création',
+        title: lang === 'es' ? "Error de creación" : lang === 'pt' ? 'Erro ao Criar Consulta' : lang === 'en' ? 'Creation Error' : 'Erreur de Création',
         message: msg,
       });
     } finally {
@@ -1119,14 +1126,14 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       });
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Ficha Criada' : lang === 'en' ? 'File Created' : 'Dossier Créé',
+        title: lang === 'es' ? "Ficha creada" : lang === 'pt' ? 'Ficha Criada' : lang === 'en' ? 'File Created' : 'Dossier Créé',
         message: patientName,
       });
       return data.note;
     } catch (err) {
       addToast({
         type: 'error',
-        title: lang === 'pt' ? 'Erro ao Criar Ficha' : lang === 'en' ? 'Creation Error' : 'Erreur Création Fiche',
+        title: lang === 'es' ? "Error de creación" : lang === 'pt' ? 'Erro ao Criar Ficha' : lang === 'en' ? 'Creation Error' : 'Erreur Création Fiche',
         message: (err as Error).message,
       });
       return null;
@@ -1161,13 +1168,13 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       fetchPatientNotes();
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Ficha Guardada' : lang === 'en' ? 'File Saved' : 'Dossier Enregistré',
+        title: lang === 'es' ? "Ficha guardada" : lang === 'pt' ? 'Ficha Guardada' : lang === 'en' ? 'File Saved' : 'Dossier Enregistré',
         message: selectedNote.patientName,
       });
     } catch (err) {
       addToast({
         type: 'error',
-        title: lang === 'pt' ? 'Erro ao Guardar Ficha' : lang === 'en' ? 'Save Error' : 'Erreur d\'Enregistrement',
+        title: lang === 'es' ? "Error al guardar" : lang === 'pt' ? 'Erro ao Guardar Ficha' : lang === 'en' ? 'Save Error' : 'Erreur d\'Enregistrement',
         message: (err as Error).message,
       });
     } finally {
@@ -1185,13 +1192,13 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
       if (selectedNote && phonesMatch(selectedNote.phone, phone)) setSelectedNote(null);
       addToast({
         type: 'success',
-        title: lang === 'pt' ? 'Ficha Eliminada' : lang === 'en' ? 'File Deleted' : 'Dossier Supprimé',
-        message: lang === 'pt' ? 'O processo clínico foi removido.' : lang === 'en' ? 'Patient file deleted.' : 'Dossier patient supprimé.',
+        title: lang === 'es' ? "Ficha eliminada" : lang === 'pt' ? 'Ficha Eliminada' : lang === 'en' ? 'File Deleted' : 'Dossier Supprimé',
+        message: lang === 'es' ? "Ficha del paciente eliminada." : lang === 'pt' ? 'O processo clínico foi removido.' : lang === 'en' ? 'Patient file deleted.' : 'Dossier patient supprimé.',
       });
     } catch (err) {
       addToast({
         type: 'error',
-        title: lang === 'pt' ? 'Erro ao Eliminar' : lang === 'en' ? 'Delete Error' : 'Erreur de Suppression',
+        title: lang === 'es' ? "Error al eliminar" : lang === 'pt' ? 'Erro ao Eliminar' : lang === 'en' ? 'Delete Error' : 'Erreur de Suppression',
         message: (err as Error).message,
       });
     } finally {
@@ -1263,7 +1270,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                   onClick={() => setConfirmDialog(null)}
                   className="px-4 py-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-semibold text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target"
                 >
-                  {confirmDialog.cancelText || (lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar')}
+                  {confirmDialog.cancelText || (lang === 'es' ? "Cancelar" : lang === 'fr' ? 'Annuler' : lang === 'en' ? 'Cancel' : 'Cancelar')}
                 </button>
                 <button
                   type="button"
@@ -1274,7 +1281,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                   }}
                   className="px-4 py-2 rounded-xl bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-semibold shadow-xs transition-colors touch-target"
                 >
-                  {confirmDialog.confirmText || (lang === 'fr' ? 'Confirmer' : lang === 'en' ? 'Confirm' : 'Confirmar')}
+                  {confirmDialog.confirmText || (lang === 'es' ? "Confirmar" : lang === 'fr' ? 'Confirmer' : lang === 'en' ? 'Confirm' : 'Confirmar')}
                 </button>
               </div>
             </motion.div>
@@ -1467,10 +1474,10 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-[#0F172A]">
-                        {lang === 'pt' ? 'Autorização de Proprietário Necessária' : lang === 'en' ? 'Owner Authorization Required' : 'Autorisation Propriétaire Requise'}
+                        {lang === 'es' ? "Se requiere autorización del propietario" : lang === 'pt' ? 'Autorização de Proprietário Necessária' : lang === 'en' ? 'Owner Authorization Required' : 'Autorisation Propriétaire Requise'}
                       </h3>
                       <p className="text-xs text-[#64748B] mt-1.5 max-w-sm leading-relaxed">
-                        {lang === 'pt' ? 'Esta secção contém métricas de faturação e relatórios confidenciais.' : lang === 'en' ? 'This section contains restricted financial performance and business metrics.' : 'Cette section contient des indicateurs financiers et de chiffre d’affaires confidentiels.'}
+                        {lang === 'es' ? "Esta sección contiene información restringida sobre resultados financieros e indicadores de actividad." : lang === 'pt' ? 'Esta secção contém métricas de faturação e relatórios confidenciais.' : lang === 'en' ? 'This section contains restricted financial performance and business metrics.' : 'Cette section contient des indicateurs financiers et de chiffre d’affaires confidentiels.'}
                       </p>
                     </div>
                     <button
@@ -1479,7 +1486,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
                       className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] hover:from-[#6D28D9] hover:to-[#4C1D95] text-white text-xs font-bold shadow-md shadow-[#7C3AED]/25 transition-all cursor-pointer"
                     >
                       <IconLock size={16} />
-                      <span>{lang === 'pt' ? 'Desbloquear Estatísticas' : lang === 'en' ? 'Unlock Analytics' : 'Déverrouiller les Statistiques'}</span>
+                      <span>{lang === 'es' ? "Desbloquear estadísticas" : lang === 'pt' ? 'Desbloquear Estatísticas' : lang === 'en' ? 'Unlock Analytics' : 'Déverrouiller les Statistiques'}</span>
                     </button>
                   </div>
                 )}
@@ -1626,7 +1633,7 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
         onSuccessToast={(msg) => {
           addToast({
             type: 'success',
-            title: lang === 'pt' ? 'Palavra-passe Alterada' : lang === 'en' ? 'Password Changed' : 'Mot de Passe Modifié',
+            title: lang === 'es' ? "Contraseña cambiada" : lang === 'pt' ? 'Palavra-passe Alterada' : lang === 'en' ? 'Password Changed' : 'Mot de Passe Modifié',
             message: msg,
           });
         }}
@@ -1640,24 +1647,26 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
 // never suspended mid-render. Suspense resolves here, then the dashboard mounts
 // exactly once with a stable initialTab prop.
 function AdminPageShell() {
+  const { lang } = useLanguage();
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => { setHydrated(true); }, []);
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as AdminTab | null;
   const initialTab =
     tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl) ? tabFromUrl : null;
-  if (!hydrated) return <div role="status" className="min-h-screen grid place-items-center">A carregar painel...</div>;
+  if (!hydrated) return <div role="status" className="min-h-screen grid place-items-center">{legacyText("A carregar painel...", lang)}</div>;
   return <ServiceCatalogProvider admin><AdminDashboardContent initialTab={initialTab} /></ServiceCatalogProvider>;
 }
 
 export default function AdminPage() {
+  const { lang } = useLanguage();
   return (
     <Suspense
       fallback={
         <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-sans">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 rounded-full border-2 border-[#0F172A] border-t-transparent animate-spin" />
-            <span className="text-xs text-[#64748B] font-medium">A carregar painel...</span>
+            <span className="text-xs text-[#64748B] font-medium">{legacyText("A carregar painel...", lang)}</span>
           </div>
         </div>
       }

@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error('[GET /api/admin/reviews Error]:');
     return NextResponse.json(
-      { error: 'Falha ao carregar as avaliações de administração.' },
+      { error: localizeApiError('Falha ao carregar as avaliações de administração.', request) },
       { status: 500 }
     );
   }
@@ -45,15 +46,15 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
     const { id, status, verified, isFeatured } = body;
 
     if (!id || typeof id !== 'string') {
-      return NextResponse.json({ error: 'ID da avaliação obrigatório.' }, { status: 400 });
+      return NextResponse.json({ error: localizeApiError('ID da avaliação obrigatório.', request) }, { status: 400 });
     }
 
-    if (status !== undefined && !['PENDING', 'APPROVED', 'REJECTED'].includes(String(status))) return NextResponse.json({ error: 'Invalid review status' }, { status: 422 });
-    if ((verified !== undefined && typeof verified !== 'boolean') || (isFeatured !== undefined && typeof isFeatured !== 'boolean')) return NextResponse.json({ error: 'Invalid review flags' }, { status: 422 });
+    if (status !== undefined && !['PENDING', 'APPROVED', 'REJECTED'].includes(String(status))) return NextResponse.json({ error: localizeApiError('Invalid review status', request) }, { status: 422 });
+    if ((verified !== undefined && typeof verified !== 'boolean') || (isFeatured !== undefined && typeof isFeatured !== 'boolean')) return NextResponse.json({ error: localizeApiError('Invalid review flags', request) }, { status: 422 });
     const updated = await dbUpdateReviewStatus(id, {
       status: status as ReviewStatus | undefined,
       verified,
@@ -61,14 +62,14 @@ export async function PATCH(request: NextRequest) {
     });
 
     if (!updated) {
-      return NextResponse.json({ error: 'Avaliação não encontrada.' }, { status: 404 });
+      return NextResponse.json({ error: localizeApiError('Avaliação não encontrada.', request) }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, review: updated });
   } catch (err) {
     console.error('[PATCH /api/admin/reviews Error]:');
     return NextResponse.json(
-      { error: 'Erro ao atualizar a avaliação.' },
+      { error: localizeApiError('Erro ao atualizar a avaliação.', request) },
       { status: 500 }
     );
   }
@@ -86,7 +87,7 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       try {
         const body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
         id = typeof body.id === 'string' ? body.id : null;
       } catch {
         /* ignore json parse error if empty */
@@ -94,7 +95,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (!id) {
-      return NextResponse.json({ error: 'ID da avaliação obrigatório.' }, { status: 400 });
+      return NextResponse.json({ error: localizeApiError('ID da avaliação obrigatório.', request) }, { status: 400 });
     }
 
     await dbDeleteReview(id);
@@ -102,7 +103,7 @@ export async function DELETE(request: NextRequest) {
   } catch (err) {
     console.error('[DELETE /api/admin/reviews Error]:');
     return NextResponse.json(
-      { error: 'Erro ao remover a avaliação.' },
+      { error: localizeApiError('Erro ao remover a avaliação.', request) },
       { status: 500 }
     );
   }

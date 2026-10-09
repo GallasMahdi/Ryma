@@ -1,4 +1,5 @@
 import { TREATMENT_SCHEMA, TREATMENT_TABLES } from '@/lib/treatment-schema';
+import { INVOICE_COLUMNS, INVOICE_TABLES, INVOICE_GUARDS } from './invoice-schema';
 import { DEFAULT_HOURS } from '@/types/scheduling';
 import { SITE } from '@/lib/site';
 import type { Client } from '@libsql/client';
@@ -144,29 +145,32 @@ const CATALOGUE_DURATION_GUARDS = ['scheduling_appointment_guard_0','scheduling_
 export async function migrateSchedulingDatabase(client: Client): Promise<void> {
   const tx = await client.transaction('write');
   try {
-    for (const sql of [...SCHEDULING_TABLES,...TREATMENT_TABLES]) await tx.execute(sql);
+    await tx.batch([...SCHEDULING_TABLES,...TREATMENT_TABLES]);
     if (!(await tx.execute('SELECT version FROM schema_migrations WHERE version=1')).rows.length) {
       for (const [table, columns] of Object.entries(SCHEDULING_COLUMNS)) {
         const names = new Set((await tx.execute(`PRAGMA table_info(${table})`)).rows.map(row => String(row.name)));
         for (const [name, definition] of Object.entries(columns)) if (!names.has(name)) await tx.execute(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
       }
-      for (const sql of SCHEDULING_MIGRATION) await tx.execute(sql);
+      await tx.batch(SCHEDULING_MIGRATION);
     }
     if (!(await tx.execute('SELECT version FROM schema_migrations WHERE version=2')).rows.length) {
-      for (const sql of CATALOGUE_DURATION_GUARDS) await tx.execute(sql);
+      await tx.batch(CATALOGUE_DURATION_GUARDS);
       await tx.execute("INSERT INTO schema_migrations(version,appliedAt) VALUES(2,datetime('now'))");
     }
     const appointmentColumns = new Set((await tx.execute('PRAGMA table_info(appointments)')).rows.map(row => String(row.name)));
     for (const [name, definition] of Object.entries(ARCHIVE_COLUMNS)) if (!appointmentColumns.has(name)) await tx.execute(`ALTER TABLE appointments ADD COLUMN ${name} ${definition}`);
     if (!(await tx.execute('PRAGMA table_info(patient_sessions)')).rows.some(row => row.name === 'clinicalStatus')) {
-      for (const sql of CLINICAL_MIGRATION) await tx.execute(sql);
+      await tx.batch(CLINICAL_MIGRATION);
     }
     const invoiceColumns=new Set((await tx.execute('PRAGMA table_info(invoices)')).rows.map(row=>String(row.name)));
     for (const [name,definition] of Object.entries(MONEY_COLUMNS)) if (!invoiceColumns.has(name)) await tx.execute(`ALTER TABLE invoices ADD COLUMN ${name} ${definition}`);
     if (!invoiceColumns.has('amountCents')) await tx.execute(MONEY_MIGRATION);
+    for (const [name, definition] of Object.entries(INVOICE_COLUMNS)) if (!invoiceColumns.has(name)) await tx.execute(`ALTER TABLE invoices ADD COLUMN ${name} ${definition}`);
+    await tx.batch(INVOICE_TABLES);
+    if (invoiceColumns.has('appointmentId')) await tx.batch(INVOICE_GUARDS);
     // Minimal legacy scheduling databases can predate invoice treatment identifiers.
     const catalogueSchema=TREATMENT_SCHEMA.filter(sql=>!sql.startsWith('UPDATE invoices')||invoiceColumns.has('serviceSlug'));
-    for (const sql of [...SCHEDULING_GUARDS, ...ARCHIVE_GUARDS, ...CLINICAL_GUARDS, ...MONEY_GUARDS, ...catalogueSchema]) await tx.execute(sql);
+    await tx.batch([...SCHEDULING_GUARDS, ...ARCHIVE_GUARDS, ...CLINICAL_GUARDS, ...MONEY_GUARDS, ...catalogueSchema]);
     await tx.commit();
   } catch (error) { await tx.rollback(); throw error; }
   finally { tx.close(); }
@@ -194,6 +198,9 @@ export function migrateSchedulingSqlite(db: Database): void {
     const invoiceColumns=new Set((db.pragma('table_info(invoices)') as {name:string}[]).map(row=>row.name));
     for (const [name,definition] of Object.entries(MONEY_COLUMNS)) if (!invoiceColumns.has(name)) db.exec(`ALTER TABLE invoices ADD COLUMN ${name} ${definition}`);
     if (!invoiceColumns.has('amountCents')) db.exec(MONEY_MIGRATION);
+    for (const [name, definition] of Object.entries(INVOICE_COLUMNS)) if (!invoiceColumns.has(name)) db.exec(`ALTER TABLE invoices ADD COLUMN ${name} ${definition}`);
+    for (const sql of INVOICE_TABLES) db.exec(sql);
+    if (invoiceColumns.has('appointmentId')) for (const sql of INVOICE_GUARDS) db.exec(sql);
     const catalogueSchema=TREATMENT_SCHEMA.filter(sql=>!sql.startsWith('UPDATE invoices')||invoiceColumns.has('serviceSlug'));
     for (const sql of [...SCHEDULING_GUARDS, ...ARCHIVE_GUARDS, ...CLINICAL_GUARDS, ...MONEY_GUARDS, ...catalogueSchema]) db.exec(sql);
   })();

@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React from 'react';
 import Link from 'next/link';
@@ -26,15 +28,15 @@ export default function MentionsLegalesPage() {
               <IconScale size={24} />
             </div>
             <span className="font-mono text-xs font-bold text-[#9A7428] tracking-widest uppercase">
-              {lang === 'pt' ? 'Informação Regulamentar' : lang === 'en' ? 'Regulatory Compliance' : 'Information Réglementaire'}
+              {lang === 'es' ? "Cumplimiento normativo" : lang === 'pt' ? 'Informação Regulamentar' : lang === 'en' ? 'Regulatory Compliance' : 'Information Réglementaire'}
             </span>
           </div>
 
           <h1 className="font-serif text-3xl md:text-5xl font-bold text-[#1A1412] mb-6">
-            {lang === 'pt' ? 'Aviso Legal' : lang === 'en' ? 'Legal Notice' : 'Mentions Légales'}
+            {lang === 'es' ? "Aviso legal" : lang === 'pt' ? 'Aviso Legal' : lang === 'en' ? 'Legal Notice' : 'Mentions Légales'}
           </h1>
           <p className="text-[#6B6058] text-lg mb-10 leading-relaxed border-b border-[#E8E2D8] pb-6">
-            {lang === 'pt'
+            {lang === 'es' ? "Conforme a la normativa vigente, a continuación se presenta la información legal relativa a la publicación y al uso del sitio web oficial de Digital Clínica." : lang === 'pt'
               ? 'Em conformidade com a legislação aplicável, encontra abaixo todas as informações legais relativas à utilização do website oficial da Digital Clínica.'
               : lang === 'en'
               ? 'In accordance with current regulations, below is the legal information regarding the publication and use of Digital Clinic official website.'
@@ -47,15 +49,15 @@ export default function MentionsLegalesPage() {
           <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-xs">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-2">
               <IconFileText className="text-[#9A7428]" size={20} />
-              {lang === 'pt' ? '1. Identificação e Entidade' : lang === 'en' ? '1. Website Publisher' : '1. Éditeur du site'}
+              {lang === 'es' ? "1. Titular del sitio web" : lang === 'pt' ? '1. Identificação e Entidade' : lang === 'en' ? '1. Website Publisher' : '1. Éditeur du site'}
             </h2>
             <div className="space-y-2 text-sm md:text-base">
-              <p><strong>{lang === 'pt' ? 'Nome da Clínica :' : lang === 'en' ? 'Practice Name :' : 'Nom du cabinet :'}</strong> Digital Clínica — Fisioterapia & Estética Avançada</p>
-              <p><strong>{lang === 'pt' ? 'Profissional Responsável :' : lang === 'en' ? 'Licensed Practitioner :' : 'Praticienne responsable :'}</strong> Digital Clínica (Equipa de Fisioterapeutas Licenciados)</p>
-              <p><strong>{lang === 'pt' ? 'Morada da Clínica :' : lang === 'en' ? 'Clinic Address :' : 'Adresse du cabinet :'}</strong> Lisboa, Portugal</p>
-              <p><strong>{lang === 'pt' ? 'Telefone :' : lang === 'en' ? 'Phone :' : 'Téléphone :'}</strong> {t.common.phone}</p>
-              <p><strong>{lang === 'pt' ? 'E-mail :' : lang === 'en' ? 'Email :' : 'Email de contact :'}</strong> {t.common.email}</p>
-              <p><strong>{lang === 'pt' ? 'Estatuto & Recibos :' : lang === 'en' ? 'Licensing & Insurance :' : 'Agrément & Statut :'}</strong> Exercício profissional licenciado pelas autoridades de saúde competentes. Recibos elegíveis para comparticipação e seguros de saúde.</p>
+              <p><strong>{lang === 'es' ? "Nombre de la clínica:" : lang === 'pt' ? 'Nome da Clínica :' : lang === 'en' ? 'Practice Name :' : 'Nom du cabinet :'}</strong>{" "}{legacyText("Digital Clínica — Fisioterapia & Estética Avançada", lang)}</p>
+              <p><strong>{lang === 'es' ? "Profesional colegiado:" : lang === 'pt' ? 'Profissional Responsável :' : lang === 'en' ? 'Licensed Practitioner :' : 'Praticienne responsable :'}</strong>{" "}{legacyText("Digital Clínica (Equipa de Fisioterapeutas Licenciados)", lang)}</p>
+              <p><strong>{lang === 'es' ? "Dirección de la clínica:" : lang === 'pt' ? 'Morada da Clínica :' : lang === 'en' ? 'Clinic Address :' : 'Adresse du cabinet :'}</strong> Lisboa, Portugal</p>
+              <p><strong>{lang === 'es' ? "Teléfono:" : lang === 'pt' ? 'Telefone :' : lang === 'en' ? 'Phone :' : 'Téléphone :'}</strong> {t.common.phone}</p>
+              <p><strong>{lang === 'es' ? "Correo electrónico:" : lang === 'pt' ? 'E-mail :' : lang === 'en' ? 'Email :' : 'Email de contact :'}</strong> {t.common.email}</p>
+              <p><strong>{lang === 'es' ? "Colegiación y seguro:" : lang === 'pt' ? 'Estatuto & Recibos :' : lang === 'en' ? 'Licensing & Insurance :' : 'Agrément & Statut :'}</strong>{" "}{legacyText("Exercício profissional licenciado pelas autoridades de saúde competentes. Recibos elegíveis para comparticipação e seguros de saúde.", lang)}</p>
             </div>
           </div>
 
@@ -63,10 +65,10 @@ export default function MentionsLegalesPage() {
           <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-xs">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4 flex items-center gap-2">
               <IconShieldCheck className="text-[#9A7428]" size={20} />
-              {lang === 'pt' ? '2. Alojamento e Segurança' : lang === 'en' ? '2. Hosting & Security' : '2. Hébergement du site'}
+              {lang === 'es' ? "2. Alojamiento y seguridad" : lang === 'pt' ? '2. Alojamento e Segurança' : lang === 'en' ? '2. Hosting & Security' : '2. Hébergement du site'}
             </h2>
             <p className="text-sm md:text-base">
-              {lang === 'pt'
+              {lang === 'es' ? "Este sitio está alojado en servidores seguros de alta disponibilidad con estándares de seguridad avanzados y cifrado SSL/TLS." : lang === 'pt'
                 ? 'Este website encontra-se alojado em servidores seguros de alta disponibilidade com certificação avançada de proteção de dados e encriptação SSL / TLS.'
                 : lang === 'en'
                 ? 'This site is hosted on high-availability secure servers featuring advanced security standards and SSL/TLS encryption.'
@@ -77,17 +79,17 @@ export default function MentionsLegalesPage() {
           {/* 3. Propriété Intellectuelle */}
           <div className="bg-white border border-[#E8E2D8] rounded-2xl p-6 md:p-8 shadow-xs">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4">
-              {lang === 'pt' ? '3. Propriedade Intelectual' : lang === 'en' ? '3. Intellectual Property' : '3. Propriété intellectuelle'}
+              {lang === 'es' ? "3. Propiedad intelectual" : lang === 'pt' ? '3. Propriedade Intelectual' : lang === 'en' ? '3. Intellectual Property' : '3. Propriété intellectuelle'}
             </h2>
             <p className="text-sm md:text-base mb-4">
-              {lang === 'pt'
+              {lang === 'es' ? "Todos los materiales de este sitio web (textos, fotografías, logotipos, gráficos y motor del visor anatómico) están protegidos por la legislación aplicable sobre propiedad intelectual y derechos de autor." : lang === 'pt'
                 ? 'Todos os elementos integrados neste website (textos, imagens, grafismos, logotipo, estrutura do visualizador anatómico) estão protegidos pela legislação de direitos de autor e propriedade intelectual.'
                 : lang === 'en'
                 ? 'All materials on this website (text, photos, logos, graphics, anatomical viewer engine) are protected by applicable intellectual property and copyright laws.'
                 : 'L\'ensemble des éléments figurant sur ce site (textes, visuels, photographies, logos, graphismes, structure de l\'outil d\'anatomie 2D) est protégé par les dispositions du Code du droit d\'auteur et de la propriété intellectuelle internationale.'}
             </p>
             <p className="text-sm md:text-base text-[#6B6058]">
-              {lang === 'pt'
+              {lang === 'es' ? "Queda estrictamente prohibida cualquier reproducción o distribución sin el consentimiento previo por escrito de Digital Clínica." : lang === 'pt'
                 ? 'Qualquer reprodução, adaptação ou utilização não autorizada por escrito é estritamente proibida.'
                 : lang === 'en'
                 ? 'Any reproduction or distribution without prior written consent from Digital Clinic is strictly prohibited.'
@@ -98,17 +100,17 @@ export default function MentionsLegalesPage() {
           {/* 4. Avertissement Médical */}
           <div className="bg-white border border-[#C49A3C]/40 rounded-2xl p-6 md:p-8 shadow-xs bg-gradient-to-br from-white to-[#FDF9F2]">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-[#1A1412] mb-4 text-[#9A7428]">
-              {lang === 'pt' ? '4. Aviso Médico & Responsabilidade' : lang === 'en' ? '4. Medical Disclaimer' : '4. Avertissement médical & Responsabilité'}
+              {lang === 'es' ? "4. Información médica" : lang === 'pt' ? '4. Aviso Médico & Responsabilidade' : lang === 'en' ? '4. Medical Disclaimer' : '4. Avertissement médical & Responsabilité'}
             </h2>
             <p className="text-sm md:text-base mb-3">
-              {lang === 'pt'
+              {lang === 'es' ? "La información sobre salud y tratamientos de este sitio web tiene únicamente una finalidad informativa y educativa general." : lang === 'pt'
                 ? 'As informações e orientações prestadas neste website têm caráter puramente informativo e pedagógico.'
                 : lang === 'en'
                 ? 'The health and treatment details provided on this website are for general informational and educational purposes only.'
                 : 'Les informations et conseils publiés sur ce site (articles de blog, descriptions de soins, bilans posturaux) sont fournis à titre informatif et éducatif.'}
             </p>
             <p className="text-sm md:text-base font-medium text-[#1A1412]">
-              {lang === 'pt'
+              {lang === 'es' ? "No constituye asesoramiento médico ni sustituye una evaluación clínica formal realizada por un médico cualificado." : lang === 'pt'
                 ? 'Não substituem, em caso algum, um diagnóstico ou consulta médica presencial. Todos os tratamentos dependem de uma avaliação prévia em clínica.'
                 : lang === 'en'
                 ? 'They do not constitute medical advice or replace a formal clinical evaluation by a qualified doctor.'

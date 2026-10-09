@@ -1,0 +1,1386 @@
+{
+  "observedAt": "2026-10-09T08:51:49.643Z",
+  "base": "https://ryma-ten.vercel.app",
+  "localSha": "c843de55e69f9fbc29944cde36a4ff65f70f76f8",
+  "deployments": [
+    {
+      "environment": "Production – ryma",
+      "sha": "c843de55e69f9fbc29944cde36a4ff65f70f76f8",
+      "createdAt": "2026-10-08T16:40:08Z",
+      "statuses": [
+        {
+          "state": "success",
+          "url": "https://ryma-f8jf56z9w-gallasmahdis-projects.vercel.app",
+          "logUrl": "https://ryma-f8jf56z9w-gallasmahdis-projects.vercel.app",
+          "updatedAt": "2026-10-08T16:40:08Z"
+        }
+      ]
+    },
+    {
+      "environment": "Production – ryma-swz4",
+      "sha": "c843de55e69f9fbc29944cde36a4ff65f70f76f8",
+      "createdAt": "2026-10-08T16:39:30Z",
+      "statuses": [
+        {
+          "state": "success",
+          "url": "https://ryma-swz4-800hqhdak-gallasmahdis-projects.vercel.app",
+          "logUrl": "https://ryma-swz4-800hqhdak-gallasmahdis-projects.vercel.app",
+          "updatedAt": "2026-10-08T16:39:31Z"
+        }
+      ]
+    },
+    {
+      "environment": "Production – ryma",
+      "sha": "655d6f04d1dab3aca7a9fed5d1b2e24c0f9823b4",
+      "createdAt": "2026-10-08T15:58:00Z",
+      "statuses": [
+        {
+          "state": "success",
+          "url": "https://ryma-j4py99v7t-gallasmahdis-projects.vercel.app",
+          "logUrl": "https://ryma-j4py99v7t-gallasmahdis-projects.vercel.app",
+          "updatedAt": "2026-10-08T15:58:00Z"
+        }
+      ]
+    },
+    {
+      "environment": "Production – ryma-swz4",
+      "sha": "655d6f04d1dab3aca7a9fed5d1b2e24c0f9823b4",
+      "createdAt": "2026-10-08T15:57:21Z",
+      "statuses": [
+        {
+          "state": "success",
+          "url": "https://ryma-swz4-prkm24im8-gallasmahdis-projects.vercel.app",
+          "logUrl": "https://ryma-swz4-prkm24im8-gallasmahdis-projects.vercel.app",
+          "updatedAt": "2026-10-08T15:57:22Z"
+        }
+      ]
+    }
+  ],
+  "endpoints": [
+    {
+      "route": "/",
+      "samples": [
+        {
+          "status": 200,
+          "ttfbMs": 796.4895000000001,
+          "fullMs": 957.5029999999997,
+          "bytes": 235287,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::9h5t7-1791535910334-1415dc9d12c9",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 270.46039999999994,
+          "fullMs": 441.28849999999966,
+          "bytes": 235287,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::7f7tv-1791535911238-0826f8e08c73",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 291.0796,
+          "fullMs": 459.05269999999973,
+          "bytes": 235287,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::qxltw-1791535911664-f0624ea5e2c5",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 252.23500000000013,
+          "fullMs": 257.8247000000001,
+          "bytes": 235287,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::256m6-1791535912131-78679d6e2094",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 267.60599999999977,
+          "fullMs": 273.22019999999975,
+          "bytes": 235287,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::9xtm9-1791535912388-56c66d63b8d1",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 246.40850000000046,
+          "fullMs": 329.84820000000036,
+          "bytes": 235287,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::256m6-1791535912664-82d2eca3aa43",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 250.73480000000018,
+          "fullMs": 334.89050000000043,
+          "bytes": 235287,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::rm6w4-1791535912982-ad88cf78ff48",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 257.57930000000033,
+          "fullMs": 422.5607,
+          "bytes": 235287,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::256m6-1791535913331-8d75b94f92e9",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        }
+      ],
+      "medianMs": 422.5607,
+      "maxMs": 957.5029999999997
+    },
+    {
+      "route": "/rendez-vous",
+      "samples": [
+        {
+          "status": 200,
+          "ttfbMs": 289.42369999999937,
+          "fullMs": 373.6720999999998,
+          "bytes": 152316,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::lnxcb-1791535913748-e437df383fc4",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 255.45380000000023,
+          "fullMs": 337.66939999999977,
+          "bytes": 152316,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::lnxcb-1791535914114-ead7c83a68e0",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 422.5535,
+          "fullMs": 427.77720000000045,
+          "bytes": 152316,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::s9rzl-1791535914501-9e52560da051",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 242.09349999999995,
+          "fullMs": 243.79960000000028,
+          "bytes": 152316,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::s9rzl-1791535914880-c6d84ca2eb4b",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 250.1323000000002,
+          "fullMs": 256.3762999999999,
+          "bytes": 152316,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::vql9d-1791535915134-312ceda25b8f",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 261.0560000000005,
+          "fullMs": 345.45480000000043,
+          "bytes": 152316,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::nt9kw-1791535915379-33d40b4796c5",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 236.47109999999975,
+          "fullMs": 333.97609999999986,
+          "bytes": 152316,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::vql9d-1791535915729-c437722c21bc",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 226.7461999999996,
+          "fullMs": 325.0726999999997,
+          "bytes": 152316,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::rm6w4-1791535916059-cf65c1b2d2cb",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        }
+      ],
+      "medianMs": 337.66939999999977,
+      "maxMs": 427.77720000000045
+    },
+    {
+      "route": "/services",
+      "samples": [
+        {
+          "status": 200,
+          "ttfbMs": 249.3077999999996,
+          "fullMs": 335.1100999999999,
+          "bytes": 164948,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::rnwvm-1791535916397-ebf707483a77",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 247.59789999999975,
+          "fullMs": 331.8953999999994,
+          "bytes": 164948,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4k5rf-1791535916731-dc0eeb94c767",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 257.92029999999977,
+          "fullMs": 260.02899999999863,
+          "bytes": 164948,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4x98j-1791535917062-dcb3108f64d6",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 241.7948000000015,
+          "fullMs": 246.22940000000017,
+          "bytes": 164948,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::vql9d-1791535917315-c5a4bda9005f",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 355.29589999999916,
+          "fullMs": 441.5530999999992,
+          "bytes": 164948,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::rnwvm-1791535917564-393cdd3f667e",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 242.4823000000015,
+          "fullMs": 329.7626,
+          "bytes": 164948,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::nt9kw-1791535918014-fd080b8322ce",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 240.02740000000085,
+          "fullMs": 326.02349999999933,
+          "bytes": 164948,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::vql9d-1791535918329-f43c24199ae0",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 245.0655000000006,
+          "fullMs": 335.4121000000014,
+          "bytes": 164948,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::lnxcb-1791535918662-5859f01b4bb2",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        }
+      ],
+      "medianMs": 331.8953999999994,
+      "maxMs": 441.5530999999992
+    },
+    {
+      "route": "/admin/login",
+      "samples": [
+        {
+          "status": 200,
+          "ttfbMs": 915.5655999999999,
+          "fullMs": 1000.9377999999997,
+          "bytes": 74603,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4x98j-1791535918996-ec2b22a3276f",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 272.1755000000012,
+          "fullMs": 273.8870000000006,
+          "bytes": 74603,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::9xtm9-1791535919998-180a30a6cada",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 315.82130000000143,
+          "fullMs": 320.76500000000124,
+          "bytes": 74603,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::skdqp-1791535920280-880ba543a301",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 279.6973999999991,
+          "fullMs": 284.0209999999988,
+          "bytes": 74603,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::hx77p-1791535920598-0ee296c6c01d",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 269.64890000000014,
+          "fullMs": 272.84200000000055,
+          "bytes": 74603,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::nt9kw-1791535920881-8c06025e4575",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 255.61999999999898,
+          "fullMs": 340.1245999999992,
+          "bytes": 74603,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::skdqp-1791535921151-e13769122da3",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 261.58969999999863,
+          "fullMs": 262.8122999999996,
+          "bytes": 74603,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::hx77p-1791535921498-cc35eeda2ccd",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 250.68139999999948,
+          "fullMs": 253.52279999999882,
+          "bytes": 74603,
+          "headers": {
+            "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::s9blr-1791535921747-2cebfa74ac45",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "text/html; charset=utf-8"
+          }
+        }
+      ],
+      "medianMs": 284.0209999999988,
+      "maxMs": 1000.9377999999997
+    },
+    {
+      "route": "/api/health",
+      "samples": [
+        {
+          "status": 200,
+          "ttfbMs": 841.2289999999994,
+          "fullMs": 841.7358000000004,
+          "bytes": 238,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::hbbpd-1791535922000-66ed35b78742",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 464.59790000000066,
+          "fullMs": 465.1733000000004,
+          "bytes": 237,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::s9blr-1791535922847-4915d7a7e13f",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 488.14490000000114,
+          "fullMs": 488.95120000000134,
+          "bytes": 237,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::skdqp-1791535923314-55809c3ebbdb",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 425.0059000000001,
+          "fullMs": 425.7479000000003,
+          "bytes": 236,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::wvrp4-1791535923797-53e13911afac",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 458.47469999999885,
+          "fullMs": 459.1299999999992,
+          "bytes": 237,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::lnxcb-1791535924230-85bc0d788bfe",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 444.8628000000008,
+          "fullMs": 445.5478999999996,
+          "bytes": 237,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4x98j-1791535924682-db4be4dafb69",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 479.8269,
+          "fullMs": 480.33899999999994,
+          "bytes": 237,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::vql9d-1791535925135-eff57f1f3467",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 453.0567999999985,
+          "fullMs": 453.709899999998,
+          "bytes": 237,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::vql9d-1791535925624-227a492f6c26",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "medianMs": 465.1733000000004,
+      "maxMs": 841.7358000000004
+    },
+    {
+      "route": "/api/treatments",
+      "samples": [
+        {
+          "status": 200,
+          "ttfbMs": 330.4328999999998,
+          "fullMs": 331.46900000000096,
+          "bytes": 31028,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4k5rf-1791535926063-e30a01d3f418",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 243.47609999999986,
+          "fullMs": 244.02899999999863,
+          "bytes": 31028,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::m7xsq-1791535926397-e4399d920904",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 225.4478999999992,
+          "fullMs": 226.98489999999947,
+          "bytes": 31028,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::s9rzl-1791535926651-edd453f28806",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 241.15759999999864,
+          "fullMs": 242.91019999999844,
+          "bytes": 31028,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::nt9kw-1791535926881-2a912b3e0fe4",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 237.41669999999795,
+          "fullMs": 238.1322,
+          "bytes": 31028,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4x98j-1791535927119-a72b34ccd369",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 219.97399999999834,
+          "fullMs": 220.9588999999978,
+          "bytes": 31028,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::lnxcb-1791535927347-1dc2188217b9",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 235.71700000000055,
+          "fullMs": 236.3100000000013,
+          "bytes": 31028,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::9xtm9-1791535927582-3ad685b95b59",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 221.3659000000007,
+          "fullMs": 223.3581000000013,
+          "bytes": 31028,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::nt9kw-1791535927815-43d92e94b3fc",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "medianMs": 238.1322,
+      "maxMs": 331.46900000000096
+    },
+    {
+      "route": "/api/practitioners",
+      "samples": [
+        {
+          "status": 200,
+          "ttfbMs": 601.1308000000026,
+          "fullMs": 601.6959999999999,
+          "bytes": 569,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::rnwvm-1791535928028-7af8ab890100",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 297.3019999999997,
+          "fullMs": 297.6916000000019,
+          "bytes": 569,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4k5rf-1791535928630-f07a49f0f232",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 298.318299999999,
+          "fullMs": 299.01000000000204,
+          "bytes": 569,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::s9rzl-1791535928933-6f116ebfc40b",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 322.8675000000003,
+          "fullMs": 323.7072999999982,
+          "bytes": 569,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::sr45d-1791535929228-a87e6c643f8f",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 309.645199999999,
+          "fullMs": 310.4547999999995,
+          "bytes": 569,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::sr45d-1791535929564-726a7d08db99",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 296.3257999999987,
+          "fullMs": 296.82860000000073,
+          "bytes": 569,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4np5l-1791535929862-31be03174ff7",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 306.9945999999982,
+          "fullMs": 307.60259999999835,
+          "bytes": 569,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4k5rf-1791535930165-6bb38959e16e",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 307.6193999999996,
+          "fullMs": 308.2029000000002,
+          "bytes": 569,
+          "headers": {
+            "cache-control": "no-store",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4np5l-1791535930466-9582dce16f6f",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "medianMs": 308.2029000000002,
+      "maxMs": 601.6959999999999
+    },
+    {
+      "route": "/api/reviews?limit=12",
+      "samples": [
+        {
+          "status": 200,
+          "ttfbMs": 222.53979999999865,
+          "fullMs": 223.10770000000048,
+          "bytes": 5100,
+          "headers": {
+            "cache-control": "no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4k5rf-1791535930779-0b9e4adc1dc8",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 225.86679999999978,
+          "fullMs": 226.42429999999877,
+          "bytes": 5100,
+          "headers": {
+            "cache-control": "no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::9xtm9-1791535931005-79dcef9fc7a0",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 222.01309999999648,
+          "fullMs": 222.6333999999988,
+          "bytes": 5100,
+          "headers": {
+            "cache-control": "no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::skdqp-1791535931229-aa69a8c4d0b4",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 216.21749999999884,
+          "fullMs": 216.79239999999845,
+          "bytes": 5100,
+          "headers": {
+            "cache-control": "no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::qxltw-1791535931447-af3bd299686b",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 213.0105999999978,
+          "fullMs": 214.40039999999863,
+          "bytes": 5100,
+          "headers": {
+            "cache-control": "no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4k5rf-1791535931663-1bbcc52aa27d",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 220.13050000000294,
+          "fullMs": 220.8129000000008,
+          "bytes": 5100,
+          "headers": {
+            "cache-control": "no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::wvrp4-1791535931881-1a8b9e592201",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 208.38160000000062,
+          "fullMs": 209.1936999999998,
+          "bytes": 5100,
+          "headers": {
+            "cache-control": "no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::skdqp-1791535932099-4b9dd986284d",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 226.3963999999978,
+          "fullMs": 227.12579999999798,
+          "bytes": 5100,
+          "headers": {
+            "cache-control": "no-store, max-age=0, must-revalidate",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::npr68-1791535932313-a344f8d8277d",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "medianMs": 222.6333999999988,
+      "maxMs": 227.12579999999798
+    },
+    {
+      "route": "/api/slots?date=2026-10-16",
+      "samples": [
+        {
+          "status": 200,
+          "ttfbMs": 394.5429000000004,
+          "fullMs": 395.2933000000012,
+          "bytes": 3488,
+          "headers": {
+            "cache-control": "no-store, max-age=0",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::rnwvm-1791535932547-e1a38e1587d0",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 437.7436000000016,
+          "fullMs": 438.2610999999997,
+          "bytes": 3488,
+          "headers": {
+            "cache-control": "no-store, max-age=0",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::npr68-1791535932949-5970e034c5c7",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 403.899599999997,
+          "fullMs": 405.10559999999896,
+          "bytes": 3488,
+          "headers": {
+            "cache-control": "no-store, max-age=0",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::4x98j-1791535933382-e26e348ca191",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 406.8089,
+          "fullMs": 407.72329999999783,
+          "bytes": 3488,
+          "headers": {
+            "cache-control": "no-store, max-age=0",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::nt9kw-1791535933781-db9e7af80ce4",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 407.0345000000016,
+          "fullMs": 407.58759999999893,
+          "bytes": 3488,
+          "headers": {
+            "cache-control": "no-store, max-age=0",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::nt9kw-1791535934196-9a141fa74d18",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 389.704099999999,
+          "fullMs": 390.254399999998,
+          "bytes": 3488,
+          "headers": {
+            "cache-control": "no-store, max-age=0",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::csq5r-1791535934597-2f62c01ba6f4",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 373.91249999999854,
+          "fullMs": 374.41409999999814,
+          "bytes": 3488,
+          "headers": {
+            "cache-control": "no-store, max-age=0",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::qxltw-1791535934982-75cde7c6880b",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 200,
+          "ttfbMs": 387.4467999999979,
+          "fullMs": 387.96259999999893,
+          "bytes": 3488,
+          "headers": {
+            "cache-control": "no-store, max-age=0",
+            "content-encoding": "br",
+            "x-vercel-id": "cdg1::iad1::csq5r-1791535935363-81438c862d23",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "medianMs": 405.10559999999896,
+      "maxMs": 438.2610999999997
+    },
+    {
+      "route": "/api/admin/me",
+      "samples": [
+        {
+          "status": 401,
+          "ttfbMs": 165.18369999999777,
+          "fullMs": 165.4431999999979,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::75hsl-1791535935747-cc218ac22783",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 211.09340000000157,
+          "fullMs": 211.33140000000276,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::7cr6l-1791535935976-c3c5473247d2",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 152.21919999999955,
+          "fullMs": 152.65039999999863,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::n9fqx-1791535936131-9885cd9a4d03",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 147.71500000000015,
+          "fullMs": 148.08719999999812,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::cnzkb-1791535936280-a52a92cf2a08",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 150.73319999999876,
+          "fullMs": 151.1203999999998,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::skdqp-1791535936429-34e9507dc2bb",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 153.0590000000011,
+          "fullMs": 153.29780000000028,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::88qbl-1791535936582-32b5ff5672a9",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 138.78080000000045,
+          "fullMs": 138.94330000000264,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::wvrp4-1791535936731-704537832d2c",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 139.66619999999966,
+          "fullMs": 139.8322999999982,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::jn4cr-1791535936864-0efa1065164f",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "medianMs": 152.65039999999863,
+      "maxMs": 211.33140000000276
+    },
+    {
+      "route": "/api/admin/appointments",
+      "samples": [
+        {
+          "status": 401,
+          "ttfbMs": 173.18639999999868,
+          "fullMs": 173.38190000000031,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::m7xsq-1791535937014-a908735bef7b",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 176.1974999999984,
+          "fullMs": 176.39159999999902,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::rpbtq-1791535937179-64df576fa45e",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 142.57500000000073,
+          "fullMs": 142.8104999999996,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::m7xsq-1791535937362-fc98c5402fb6",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 142.19490000000224,
+          "fullMs": 142.4328999999998,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::79p59-1791535937498-2cb95c73b737",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 145.04650000000038,
+          "fullMs": 145.21210000000065,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::9xtm9-1791535937650-f77fb91aa2e1",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 155.0080999999991,
+          "fullMs": 155.33299999999872,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::gwchm-1791535937797-2fd91cf5d8ce",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 137.94989999999962,
+          "fullMs": 138.1211000000003,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::skdqp-1791535937940-5d5c3bf2e7e1",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        },
+        {
+          "status": 401,
+          "ttfbMs": 155.27059999999983,
+          "fullMs": 155.4601999999977,
+          "bytes": 35,
+          "headers": {
+            "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "content-encoding": null,
+            "x-vercel-id": "cdg1::iad1::882v8-1791535938077-d4e252d2bee8",
+            "x-vercel-cache": "MISS",
+            "age": "0",
+            "content-type": "application/json"
+          }
+        }
+      ],
+      "medianMs": 155.33299999999872,
+      "maxMs": 176.39159999999902
+    }
+  ],
+  "health": {
+    "status": "healthy",
+    "timestamp": "2026-10-09T08:52:02.766Z",
+    "uptimeSeconds": 2550,
+    "database": {
+      "status": "connected",
+      "engine": "turso_cloud",
+      "latencyMs": 285,
+      "writable": true
+    },
+    "memory": {
+      "heapUsedMb": 24.88,
+      "rssMb": 132
+    },
+    "environment": "production"
+  }
+}

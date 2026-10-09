@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isJsonObject, pageNumber, patientProfileError } from '@/lib/admin-validation';
 import { getLisbonDateTime } from '@/lib/validation';
 import { NextRequest, NextResponse } from 'next/server';
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
   const id = url.searchParams.get('id');
   if (id) {
     const patient = await dbGetPatientById(id);
-    if (!patient) return NextResponse.json({error:'Patient not found'}, {status:404});
+    if (!patient) return NextResponse.json({error:localizeApiError('Patient not found', request)}, {status:404});
     return NextResponse.json({patient, note:{patientId:patient.id,phone:patient.phone,patientName:patient.patientName,content:patient.medicalHistory,tags:patient.pathologyTags,updatedAt:patient.updatedAt}}, {headers:{'Cache-Control':'no-store'}});
   }
   const phone = url.searchParams.get('phone');
@@ -102,36 +103,36 @@ export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
   try {
     body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Invalid JSON body', request) }, { status: 400 });
   }
 
   const rawPhone = body.phone;
   const profileError=patientProfileError(body,getLisbonDateTime().todayStr);
-  if (profileError) return NextResponse.json({error:profileError},{status:422});
+  if (profileError) return NextResponse.json({error:localizeApiError(profileError, request)},{status:422});
   const patientName = String(body.patientName ?? '').trim().slice(0, 100);
 
   if (!rawPhone || !patientName) {
-    return NextResponse.json({ error: 'Nome e telefone são obrigatórios' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Nome e telefone são obrigatórios', request) }, { status: 422 });
   }
 
   if (/[<>]|javascript:|data:/i.test(patientName)) {
-    return NextResponse.json({ error: 'O nome do utente contém caracteres ou formatação inválida.' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('O nome do utente contém caracteres ou formatação inválida.', request) }, { status: 422 });
   }
   if (/^[=\+\-@\t\r]/.test(patientName.trim())) {
-    return NextResponse.json({ error: 'O nome do utente não pode iniciar com símbolos de fórmula (=, @, +, -).' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('O nome do utente não pode iniciar com símbolos de fórmula (=, @, +, -).', request) }, { status: 422 });
   }
 
   const phoneValidation = validateAndNormalizePhone(rawPhone);
   if (!phoneValidation.isValid) {
-    return NextResponse.json({ error: phoneValidation.error, errorCode: phoneValidation.errorCode }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError(phoneValidation.error, request), errorCode: phoneValidation.errorCode }, { status: 422 });
   }
   const phone = phoneValidation.normalized;
   let legacyPhone: string | undefined;
   if (body.legacyPhone) {
     const validation = validateAndNormalizePhone(body.legacyPhone);
-    if (!validation.isValid) return NextResponse.json({error:validation.error}, {status:422});
+    if (!validation.isValid) return NextResponse.json({error:localizeApiError(validation.error, request)}, {status:422});
     legacyPhone = validation.normalized;
   }
 
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest) {
     if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       email = trimmedEmail;
     } else {
-      return NextResponse.json({ error: 'Endereço de email inválido.' }, { status: 422 });
+      return NextResponse.json({ error: localizeApiError('Endereço de email inválido.', request) }, { status: 422 });
     }
   }
 
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
     medicalHistory: body.medicalHistory === undefined && body.content === undefined ? undefined : String(body.medicalHistory ?? body.content ?? ''),
     totalPrescribedSessions,
   }); } catch (error) {
-    if (error instanceof PatientWriteError) return NextResponse.json({error:error.message,code:error.code}, {status:error.code==='PATIENT_NOT_FOUND'?404:409});
+    if (error instanceof PatientWriteError) return NextResponse.json({error:localizeApiError(error.message, request),code:error.code}, {status:error.code==='PATIENT_NOT_FOUND'?404:409});
     throw error;
   }
 
@@ -185,11 +186,11 @@ export async function DELETE(request: NextRequest) {
   const target = id || phone;
 
   if (!target) {
-    return NextResponse.json({ error: 'ID ou téléphone requises' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('ID ou téléphone requises', request) }, { status: 422 });
   }
 
   try { await dbDeletePatientRecord(target); } catch (error) {
-    if (error instanceof PatientWriteError) return NextResponse.json({error:error.message,code:error.code},{status:409});
+    if (error instanceof PatientWriteError) return NextResponse.json({error:localizeApiError(error.message, request),code:error.code},{status:409});
     throw error;
   }
   return NextResponse.json({ ok: true });

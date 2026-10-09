@@ -10,6 +10,12 @@ export interface PhoneValidationResult {
 }
 
 const messages = {
+    es: {
+    required: "El número de teléfono es obligatorio.",
+    characters: "Use solo números y espacios, con + o 00 al principio para números internacionales. No use puntos, paréntesis ni letras.",
+    invalid: "Introduzca un teléfono completo y válido. P. ej., 912 345 678 o +351 912 345 678. Incluya el prefijo internacional para otros países.",
+    hint: "Portugal: 912 345 678. Otros países: + prefijo del país y número. Solo números y espacios.",
+  },
   pt: {
     required: 'O número de telefone é obrigatório.',
     characters: 'Use apenas algarismos e espaços, com + ou 00 no início para números internacionais. Não use pontos, parênteses ou letras.',

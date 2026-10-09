@@ -1,4 +1,7 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+import { useLanguage } from '@/lib/i18n';
+
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +15,7 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  const { lang } = useLanguage();
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -53,7 +57,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
               <button
                 onClick={onClose}
                 className="p-2 rounded-full text-[#8eaba7] hover:text-[#f7f3ed] hover:bg-white/10 transition-colors"
-                aria-label="Fermer"
+                aria-label={legacyText("Fermer", lang)}
               >
                 <IconX size={20} />
               </button>

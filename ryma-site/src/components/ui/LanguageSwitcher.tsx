@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,10 +28,11 @@ export function PortugalFlag({ className = 'w-5 h-3.5' }: { className?: string }
 }
 
 export function UKFlag({ className = 'w-5 h-3.5' }: { className?: string }) {
+  const { lang } = useLanguage();
   return (
     <span
       className={`inline-flex items-center justify-center overflow-hidden rounded-[3px] shadow-[0_1px_2px_rgba(0,0,0,0.18)] border border-[#C49A3C]/30 shrink-0 ${className}`}
-      title="United Kingdom"
+      title={legacyText("United Kingdom", lang)}
     >
       <svg viewBox="0 0 60 30" className="w-full h-full block" preserveAspectRatio="none">
         <rect width="60" height="30" fill="#012169" />
@@ -43,10 +46,11 @@ export function UKFlag({ className = 'w-5 h-3.5' }: { className?: string }) {
 }
 
 export function FranceFlag({ className = 'w-5 h-3.5' }: { className?: string }) {
+  const { lang } = useLanguage();
   return (
     <span
       className={`inline-flex items-center justify-center overflow-hidden rounded-[3px] shadow-[0_1px_2px_rgba(0,0,0,0.18)] border border-[#C49A3C]/30 shrink-0 ${className}`}
-      title="France"
+      title={legacyText("France", lang)}
     >
       <svg viewBox="0 0 900 600" className="w-full h-full block" preserveAspectRatio="none">
         <rect width="300" height="600" fill="#002654" />
@@ -64,10 +68,20 @@ export interface LanguageItem {
   FlagComponent: React.ComponentType<{ className?: string }>;
 }
 
+export function SpainFlag({ className = 'w-5 h-3.5' }: { className?: string }) {
+  return <span className={`inline-flex overflow-hidden rounded-[3px] border border-[#C49A3C]/30 shrink-0 ${className}`} aria-hidden="true">
+    <svg viewBox="0 0 60 40" className="w-full h-full block" preserveAspectRatio="none">
+      <rect width="60" height="40" fill="#AA151B" />
+      <rect y="10" width="60" height="20" fill="#F1BF00" />
+    </svg>
+  </span>;
+}
+
 export const LANGUAGES: LanguageItem[] = [
   { code: 'pt', label: 'Português', country: 'Portugal', FlagComponent: PortugalFlag },
   { code: 'en', label: 'English', country: 'United Kingdom', FlagComponent: UKFlag },
   { code: 'fr', label: 'Français', country: 'France', FlagComponent: FranceFlag },
+  { code: 'es', label: 'Español', country: 'España', FlagComponent: SpainFlag },
 ];
 
 interface LanguageSwitcherProps {
@@ -114,9 +128,9 @@ export function LanguageSwitcher({ variant = 'dropdown', className = '' }: Langu
     return (
       <div className={`w-full ${className}`}>
         <div className="text-[10px] font-bold uppercase tracking-widest text-[#8A6A24] px-1 mb-2">
-          {lang === 'pt' ? 'Idioma / Language' : lang === 'en' ? 'Language / Idioma' : 'Langue / Language'}
+          {lang === 'es' ? "Idioma" : lang === 'pt' ? 'Idioma / Language' : lang === 'en' ? 'Language / Idioma' : 'Langue / Language'}
         </div>
-        <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#F4EFE6] rounded-2xl border border-[#C49A3C]/30 shadow-2xs">
+        <div className="grid grid-cols-4 gap-1.5 p-1 bg-[#F4EFE6] rounded-2xl border border-[#C49A3C]/30 shadow-2xs">
           {LANGUAGES.map((l) => {
             const isSelected = lang === l.code;
             const Flag = l.FlagComponent;
@@ -154,7 +168,7 @@ export function LanguageSwitcher({ variant = 'dropdown', className = '' }: Langu
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label={
-          lang === 'pt'
+          lang === 'es' ? `Idioma seleccionado: ${currentLang.label}. Pulse para cambiar.` : lang === 'pt'
             ? `Idioma selecionado: ${currentLang.label}. Clique para alterar.`
             : lang === 'en'
             ? `Selected language: ${currentLang.label}. Click to change.`
@@ -187,7 +201,7 @@ export function LanguageSwitcher({ variant = 'dropdown', className = '' }: Langu
             exit={{ opacity: 0, y: 4, scale: 0.96 }}
             transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
             role="listbox"
-            aria-label="Idiomas disponíveis"
+            aria-label={legacyText("Idiomas disponíveis", lang)}
             className="absolute right-0 top-full mt-2 w-52 rounded-2xl bg-white/98 backdrop-blur-xl border border-[#C49A3C]/35 shadow-[0_12px_36px_rgba(26,20,18,0.12)] p-1.5 z-50 overflow-hidden"
           >
             {/* Subtle luxury gold accent top line */}

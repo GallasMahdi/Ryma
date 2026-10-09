@@ -13,6 +13,7 @@ const base = 'http://127.0.0.1:' + port;
 let cookie = '', count = 0, sequence = 963100000;
 const result = [];
 async function call(url, { method = 'GET', body, auth = true, raw, headers = {} } = {}) {
+  if(url==='/api/appointments' && body)body={...body,recaptchaToken:'isolated-http-token'};
   const res = await fetch(base + url, { method, redirect: 'manual', headers: { Origin: base, ...(auth && cookie ? { Cookie: cookie } : {}), ...(body !== undefined || raw !== undefined ? { 'Content-Type': 'application/json' } : {}), ...headers }, ...(body !== undefined || raw !== undefined ? { body: raw ?? JSON.stringify(body) } : {}) });
   if (auth && res.headers.get('set-cookie')) cookie = res.headers.get('set-cookie').split(';')[0];
   return res;

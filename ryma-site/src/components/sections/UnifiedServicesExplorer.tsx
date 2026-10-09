@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState } from 'react';
@@ -19,7 +21,7 @@ const BodyMap = dynamic(() => import('./BodyMap').then((module) => module.BodyMa
     const { lang } = useLanguage();
     return (
       <div role="status" className="min-h-96 grid place-items-center rounded-3xl bg-white/60 text-sm text-[#6B6058]">
-        {lang === 'pt' ? 'A carregar o mapa…' : lang === 'en' ? 'Loading the care map…' : 'Chargement de la carte…'}
+        {lang === 'es' ? "Cargando el mapa de tratamientos…" : lang === 'pt' ? 'A carregar o mapa…' : lang === 'en' ? 'Loading the care map…' : 'Chargement de la carte…'}
       </div>
     );
   },
@@ -91,7 +93,7 @@ export function UnifiedServicesExplorer() {
           <div className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md border border-[#C49A3C]/40 px-4 py-1.5 rounded-full mb-3.5 shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-[#C49A3C] animate-pulse" />
             <span className="font-sans text-[11px] sm:text-xs tracking-[0.2em] text-[#9A7428] uppercase font-bold">
-              {lang === 'pt'
+              {lang === 'es' ? "Cuidados clínicos y evaluación integral" : lang === 'pt'
                 ? 'Polos Clínicos & Diagnóstico Integrado'
                 : lang === 'en'
                 ? 'Clinical Care & Integrated Assessment'
@@ -101,7 +103,11 @@ export function UnifiedServicesExplorer() {
 
           {/* Master Title */}
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#1A1412] mb-3.5 tracking-tight leading-tight">
-            {lang === 'pt' ? (
+            {lang === 'es' ? (
+              <>{legacyText("Clinical Care &", lang)}{" "}
+                <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">{legacyText("Specialized Protocols", lang)}</span>
+              </>
+            ) : lang === 'pt' ? (
               <>
                 Cuidados Clínicos &{' '}
                 <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">
@@ -109,11 +115,8 @@ export function UnifiedServicesExplorer() {
                 </span>
               </>
             ) : lang === 'en' ? (
-              <>
-                Clinical Care &{' '}
-                <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">
-                  Specialized Protocols
-                </span>
+              <>{legacyText("Clinical Care &", lang)}{' '}
+                <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">{legacyText("Specialized Protocols", lang)}</span>
               </>
             ) : (
               <>
@@ -126,7 +129,7 @@ export function UnifiedServicesExplorer() {
           </h2>
 
           <p className="text-[#6B6058] text-xs sm:text-sm md:text-base leading-relaxed font-normal max-w-2xl mx-auto">
-            {lang === 'pt'
+            {lang === 'es' ? `${SERVICES.length} protocolos clínicos personalizados. Recorra el carrusel de tratamientos o explore el mapa anatómico interactivo.` : lang === 'pt'
               ? `${SERVICES.length} protocolos clínicos estruturados. Navegue pelo catálogo em carrossel ou explore o mapa anatómico interativo.`
               : lang === 'en'
               ? `${SERVICES.length} tailored clinical protocols. Browse the treatment carousel or explore the interactive anatomical map.`
@@ -138,7 +141,7 @@ export function UnifiedServicesExplorer() {
             <div
               className="inline-flex max-w-full items-center p-1.5 rounded-full bg-white/95 backdrop-blur-md border border-[#C49A3C]/35 shadow-sm"
               role="tablist"
-              aria-label={lang === 'pt' ? 'Modo de visualização' : lang === 'en' ? 'View mode' : "Mode d'affichage"}
+              aria-label={lang === 'es' ? "Modo de visualización" : lang === 'pt' ? 'Modo de visualização' : lang === 'en' ? 'View mode' : "Mode d'affichage"}
             >
               {VIEW_MODES.map((mode) => {
                 const isSelected = viewMode === mode;
@@ -170,15 +173,15 @@ export function UnifiedServicesExplorer() {
                       <Icon size={16} aria-hidden="true" className={`shrink-0 ${isSelected ? 'text-[#E8C97A]' : 'text-[#C49A3C]'}`} />
                       <span>
                         {isCarousel
-                          ? lang === 'pt' ? 'Catálogo em Carrossel' : lang === 'en' ? 'Treatment Carousel' : 'Catalogue en Carrousel'
-                          : lang === 'pt' ? 'Mapa de Cuidados' : lang === 'en' ? '3D Anatomical Explorer' : 'Carte des soins'}
+                          ? lang === 'es' ? "Carrusel de tratamientos" : lang === 'pt' ? 'Catálogo em Carrossel' : lang === 'en' ? 'Treatment Carousel' : 'Catalogue en Carrousel'
+                          : lang === 'es' ? "Explorador anatómico 3D" : lang === 'pt' ? 'Mapa de Cuidados' : lang === 'en' ? '3D Anatomical Explorer' : 'Carte des soins'}
                       </span>
                       <span className={`hidden sm:inline-block whitespace-nowrap text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
                         isSelected ? 'bg-white/20 text-[#F5E9C8]' : 'bg-[#FAF5EA] text-[#9A7428] border border-[#C49A3C]/20'
                       }`}>
                         {isCarousel
-                          ? lang === 'pt' ? `${SERVICES.length} Cuidados` : lang === 'en' ? `${SERVICES.length} Treatments` : `${SERVICES.length} Soins`
-                          : lang === 'pt' ? 'Zonas' : 'Zones'}
+                          ? lang === 'es' ? `${SERVICES.length} tratamientos` : lang === 'pt' ? `${SERVICES.length} Cuidados` : lang === 'en' ? `${SERVICES.length} Treatments` : `${SERVICES.length} Soins`
+                          : lang === 'es' ? "Zonas" : lang === 'pt' ? 'Zonas' : 'Zones'}
                       </span>
                     </span>
                   </button>

@@ -1,4 +1,7 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+import { spanishInvoiceMessage } from '@/lib/invoice-message';
+
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,9 +19,10 @@ import {
   IconLoader2,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
-import { Invoice, InvoicePaymentStatus, PaymentMethod, calculateVatBreakdown } from '@/types/admin';
+import { Invoice, InvoicePaymentStatus, PaymentMethod } from '@/types/admin';
 import { SITE } from '@/lib/site';
 import { printInvoicePdf } from '@/lib/invoicePdf';
+import { invoiceDisplayTotals } from '@/lib/invoice-display';
 
 interface InvoiceDetailModalProps {
   invoice: Invoice | null;
@@ -45,7 +49,8 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
   lang,
   setConfirmDialog,
 }: InvoiceDetailModalProps) {
-  const txt = (frStr: string, enStr: string, ptStr: string) => {
+  const txt = (frStr: string, enStr: string, ptStr: string, es: string) => {
+    if (lang === 'es') return es;
     if (lang === 'fr') return frStr;
     if (lang === 'en') return enStr;
     return ptStr;
@@ -56,17 +61,18 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
 
   if (!invoice) return null;
 
-  if (invoice.moneyReview) return isOpen ? <div role="dialog" aria-modal="true" aria-label={txt('Facture à vérifier','Invoice needs review','Fatura a verificar')} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="bg-white rounded-xl p-6 max-w-lg space-y-3">
+  if (invoice.moneyReview) return isOpen ? <div role="dialog" aria-modal="true" aria-label={txt('Facture à vérifier','Invoice needs review','Fatura a verificar', "La factura necesita revisión")} className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"><div className="bg-white rounded-xl p-6 max-w-lg space-y-3">
     <h2 className="font-bold">{invoice.invoiceNumber}</h2>
-    <p>{txt('Ce montant historique nécessite un rapprochement. Impression et totaux suspendus.','This historical amount needs reconciliation. Printing and totals are suspended.','Este valor histórico requer reconciliação. Impressão e totais suspensos.')}</p>
+    <p>{txt('Ce montant historique nécessite un rapprochement. Impression et totaux suspendus.','This historical amount needs reconciliation. Printing and totals are suspended.','Este valor histórico requer reconciliação. Impressão e totais suspensos.', "Este importe histórico necesita conciliación. La impresión y los totales están suspendidos.")}</p>
     <p>{invoice.patientName} · {String(invoice.amount)} EUR</p>
-    <button type="button" onClick={onClose} className="border rounded-lg px-3 py-2">{txt('Fermer','Close','Fechar')}</button>
+    <button type="button" onClick={onClose} className="border rounded-lg px-3 py-2">{txt('Fermer','Close','Fechar', "Cerrar")}</button>
   </div></div> : null;
 
-  const { vatRate, vatAmount, incidence, isExempt } = calculateVatBreakdown(invoice.amount, invoice.vatRate);
+  const { lines, quantity, vatAmount, incidence, vatRates } = invoiceDisplayTotals(invoice);
+  const closed = invoice.paymentStatus === 'CANCELLED' || invoice.paymentStatus === 'REFUNDED';
 
   const handlePrint = () => {
-    printInvoicePdf(invoice);
+    printInvoicePdf(invoice, lang);
   };
 
   const handleWhatsAppSend = () => {
@@ -74,16 +80,17 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
     const cleanPhone = invoice.patientPhone.replace(/[^0-9]/g, '');
 
     const message = encodeURIComponent(
+      lang === 'es' ? spanishInvoiceMessage(invoice) :
       `Olá ${invoice.patientName}! 👋\n\n` +
-      `Enviamos o comprovativo do seu recibo clínico da *Digital Clínica*:\n\n` +
+      `Documento de faturação interno da *Digital Clínica*:\n\n` +
       `🧾 *Documento:* ${invoice.invoiceNumber}\n` +
       `🩺 *Tratamento:* ${invoice.serviceName}\n` +
       `💰 *Valor:* ${invoice.amount.toFixed(2)} €\n` +
       `📌 *NIF:* ${invoice.patientNif}\n` +
       (invoice.coverageProvider ? `🏥 *Seguro / Subsistema:* ${invoice.coverageProvider} (${invoice.coverageNumber || 'N/A'})\n` : '') +
       `✅ *Estado:* ${isPaid ? 'PAGO / Quitado' : 'Pendente'}\n` +
-      `⚖️ *Enquadramento Fiscal:* ${invoice.vatExemptionReason || 'Isento Art. 9º CIVA'}\n\n` +
-      `Este documento é válido para dedução em IRS e reembolso junto do seu seguro de saúde/ADSE.\n\n` +
+      `*Sessões:* ${quantity}\n\n` +
+      `Documento interno, sem valor fiscal. A fatura fiscal é emitida separadamente.\n\n` +
       `Obrigado pela sua confiança!\n` +
       `*Digital Clínica — Lisboa* 🇵🇹`
     );
@@ -93,7 +100,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
 
   const isPaid = invoice.paymentStatus === 'PAID';
   const issueDate = invoice.createdAt.split('T')[0];
-  const paidDate = invoice.paidAt ? invoice.paidAt.split('T')[0] : issueDate;
+  const paidDate = invoice.paidAt ? invoice.paidAt.split('T')[0] : '—';
 
   return (
     <AnimatePresence>
@@ -123,7 +130,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                     isPaid ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                   }`}
                 >
-                  {isPaid ? txt('● Payé / Quittancé', '● Paid / Settled', '● Pago / Quitado') : txt('○ En Attente', '○ Pending', '○ Pendente')}
+                  {closed ? txt('Document clôturé','Closed document','Documento encerrado', "Documento cerrado") : isPaid ? txt('● Payé / Quittancé', '● Paid / Settled', '● Pago / Quitado', "● Pagada / liquidada") : txt('○ En Attente', '○ Pending', '○ Pendente', "○ Pendiente")}
                 </span>
               </div>
 
@@ -132,7 +139,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                   type="button"
                   onClick={handleWhatsAppSend}
                   className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
-                  title={txt('Envoyer par WhatsApp', 'Send via WhatsApp', 'Enviar por WhatsApp')}
+                  title={txt('Envoyer par WhatsApp', 'Send via WhatsApp', 'Enviar por WhatsApp', "Enviar por WhatsApp")}
                 >
                   <IconBrandWhatsapp size={15} />
                   <span className="inline sm:inline">WhatsApp</span>
@@ -142,17 +149,17 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                   type="button"
                   onClick={handlePrint}
                   className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#C49A3C] hover:bg-[#D4AA4C] text-[#1A1412] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm touch-target"
-                  title={txt('Imprimer ou Enregistrer en PDF', 'Print or Save as PDF', 'Imprimir ou Salvar em PDF')}
+                  title={txt('Imprimer ou Enregistrer en PDF', 'Print or Save as PDF', 'Imprimir ou Salvar em PDF', "Imprimir o guardar como PDF")}
                 >
                   <IconPrinter size={15} />
-                  <span className="hidden sm:inline">{txt('Imprimer / PDF', 'Print / PDF', 'Imprimir / PDF')}</span>
+                  <span className="hidden sm:inline">{txt('Imprimer / PDF', 'Print / PDF', 'Imprimir / PDF', "Imprimir / PDF")}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={onClose}
                   className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors ms-1 touch-target"
-                  title={txt('Fermer', 'Close', 'Fechar')}
+                  title={txt('Fermer', 'Close', 'Fechar', "Cerrar")}
                 >
                   <IconX size={20} />
                 </button>
@@ -160,12 +167,12 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
             </div>
 
             {/* ── ADVANCED INTERACTIVE STATUS & PAYMENT CONTROL PANEL ── */}
-            {onUpdateStatus && (
+            {onUpdateStatus && !closed && (
               <div className="px-4 sm:px-6 py-3 bg-[#F8FAFC] border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 text-xs print:hidden">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-[#475569] text-[11px] uppercase tracking-wider">
-                      {txt('État :', 'Status:', 'Estado:')}
+                      {txt('État :', 'Status:', 'Estado:', "Estado:")}
                     </span>
                     {/* Segmented Switch */}
                     <div className="inline-flex rounded-xl p-0.5 bg-[#E2E8F0] border border-[#CBD5E1] shadow-2xs">
@@ -193,7 +200,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                         ) : (
                           <IconCheck size={13} />
                         )}
-                        <span>{txt('Payé / Réglé', 'Paid / Settled', 'Pago / Quitado')}</span>
+                        <span>{txt('Payé / Réglé', 'Paid / Settled', 'Pago / Quitado', "Pagada / liquidada")}</span>
                       </button>
 
                       <button
@@ -220,7 +227,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                         ) : (
                           <IconClock size={13} />
                         )}
-                        <span>{txt('En Attente', 'Pending', 'Pendente')}</span>
+                        <span>{txt('En Attente', 'Pending', 'Pendente', "Pendientes")}</span>
                       </button>
                     </div>
                   </div>
@@ -230,9 +237,9 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                     <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                       <IconCheck size={11} className="text-emerald-600" />
                       <span>
-                        {txt('Liquidado em', 'Settled on', 'Liquidado em')}{' '}
-                        {new Date(invoice.paidAt).toLocaleDateString(lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'pt-PT')}{' '}
-                        {new Date(invoice.paidAt).toLocaleTimeString(lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                        {txt('Liquidado em', 'Settled on', 'Liquidado em', "Liquidada el")}{' '}
+                        {new Date(invoice.paidAt).toLocaleDateString(lang === 'es' ? "es-ES" : lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'pt-PT')}{' '}
+                        {new Date(invoice.paidAt).toLocaleTimeString(lang === 'es' ? "es-ES" : lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'pt-PT', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </span>
                   )}
@@ -241,7 +248,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                 {/* Quick Payment Method Selector */}
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] text-[#64748B] font-medium">
-                    {txt('Mode de règlement :', 'Payment method:', 'Meio de pagamento:')}
+                    {txt('Mode de règlement :', 'Payment method:', 'Meio de pagamento:', "Método de pago:")}
                   </span>
                   <select
                     value={invoice.paymentMethod}
@@ -258,9 +265,9 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                   >
                     <option value="MULTIBANCO">Multibanco (TPA)</option>
                     <option value="MBWAY">MB Way</option>
-                    <option value="CASH">{txt('Espèces', 'Cash', 'Numerário')}</option>
-                    <option value="CARD">{txt('Carte', 'Card', 'Cartão')}</option>
-                    <option value="TRANSFER">{txt('Virement', 'Transfer', 'Transferência')}</option>
+                    <option value="CASH">{txt('Espèces', 'Cash', 'Numerário', "Efectivo")}</option>
+                    <option value="CARD">{txt('Carte', 'Card', 'Cartão', "Tarjeta")}</option>
+                    <option value="TRANSFER">{txt('Virement', 'Transfer', 'Transferência', "Transferencia")}</option>
                   </select>
                 </div>
               </div>
@@ -282,16 +289,14 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                       {SITE.name}
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#475569] font-medium">
-                    Clínica de Fisioterapia & Estética Médica Avançada
-                  </p>
+                  <p className="text-[11px] text-[#475569] font-medium">{legacyText("Clínica de Fisioterapia & Estética Médica Avançada", lang)}</p>
                   <p className="text-[11px] text-[#64748B]">
-                    Avenida da Liberdade 120, 1250-146 Lisboa, Portugal
+                    {SITE.address.pt}
                   </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[10px] text-[#475569] font-mono">
-                    <span><strong>NIF:</strong> {SITE.clinicNif || '518 923 456'}</span>
-                    <span><strong>Registo ERS:</strong> {SITE.ersRegistration || 'E164321'}</span>
-                    <span><strong>Ordem Fisioterapeutas:</strong> {SITE.professionalLicense || 'C-054321'}</span>
+                    {SITE.clinicNif && <span><strong>NIF:</strong> {SITE.clinicNif}</span>}
+                    {SITE.ersRegistration && <span><strong>{legacyText("Registo ERS:", lang)}</strong> {SITE.ersRegistration}</span>}
+                    {SITE.professionalLicense && <span><strong>{legacyText("Ordem Fisioterapeutas:", lang)}</strong> {SITE.professionalLicense}</span>}
                   </div>
                 </div>
 
@@ -300,12 +305,12 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                     {invoice.invoiceNumber}
                   </div>
                   <h2 className="font-serif text-sm font-bold uppercase tracking-wider text-[#0F172A]">
-                    {isPaid ? 'Fatura-Recibo de Quitação' : 'Fatura / Aviso de Cobrança'}
+                    {txt('Document de facturation interne','Internal billing document','Documento de faturação interno', "Documento interno de facturación")}
                   </h2>
                   <div className="space-y-0.5 mt-1.5 text-[11px] text-[#64748B]">
-                    <p><strong>Data de Emissão:</strong> {issueDate}</p>
-                    <p><strong>Data de Liquidação:</strong> {paidDate}</p>
-                    <p><strong>Forma de Pagamento:</strong> {invoice.paymentMethod}</p>
+                    <p><strong>{legacyText("Data de Emissão:", lang)}</strong> {issueDate}</p>
+                    <p><strong>{legacyText("Data de Liquidação:", lang)}</strong> {paidDate}</p>
+                    <p><strong>{legacyText("Forma de Pagamento:", lang)}</strong> {invoice.paymentMethod}</p>
                   </div>
                 </div>
               </div>
@@ -313,23 +318,20 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
               {/* Patient & Fiscal Recipient Box */}
               <div className="my-6 p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#94A3B8] block mb-1">
-                    Exmo.(a) Senhor(a) (Destinatário):
-                  </span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#94A3B8] block mb-1">{legacyText("Exmo.(a) Senhor(a) (Destinatário):", lang)}</span>
                   <p className="font-bold text-sm text-[#0F172A]">{invoice.patientName}</p>
-                  <p className="text-xs text-[#475569] mt-0.5">{invoice.patientAddress || 'Lisboa, Portugal'}</p>
+                  {invoice.patientAddress && <p className="text-xs text-[#475569] mt-0.5">{invoice.patientAddress}</p>}
                   <p className="text-xs text-[#64748B] font-mono mt-0.5">Tel: {invoice.patientPhone}</p>
                 </div>
 
                 <div className="sm:text-right">
                   <div className="inline-block sm:ms-auto text-left">
-                    <p className="text-xs font-mono font-bold text-[#0F172A]">
-                      NIF Utente: <span className="bg-white border border-[#CBD5E1] px-2 py-0.5 rounded">{invoice.patientNif}</span>
+                    <p className="text-xs font-mono font-bold text-[#0F172A]">{legacyText("NIF Utente:", lang)}{" "}<span className="bg-white border border-[#CBD5E1] px-2 py-0.5 rounded">{invoice.patientNif}</span>
                     </p>
                     {invoice.coverageProvider && (
                       <div className="mt-2 text-[11px] text-[#475569]">
-                        <p><strong>Seguro / Subsistema:</strong> {invoice.coverageProvider}</p>
-                        {invoice.coverageNumber && <p className="font-mono"><strong>Nº Beneficiário:</strong> {invoice.coverageNumber}</p>}
+                        <p><strong>{legacyText("Seguro / Subsistema:", lang)}</strong> {invoice.coverageProvider}</p>
+                        {invoice.coverageNumber && <p className="font-mono"><strong>{legacyText("Nº Beneficiário:", lang)}</strong> {invoice.coverageNumber}</p>}
                       </div>
                     )}
                   </div>
@@ -337,82 +339,56 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
               </div>
 
               {/* Services & Line Items Table */}
-              <div className="my-6 overflow-hidden rounded-2xl border border-[#E2E8F0]">
+              <div className="my-6 overflow-x-auto rounded-2xl border border-[#E2E8F0]">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-[#0F172A] text-white text-[10px] uppercase tracking-wider font-semibold">
-                      <th className="py-2.5 px-4">Descrição do Ato Clínico / Tratamento</th>
-                      <th className="py-2.5 px-3 text-center">Qtd</th>
-                      <th className="py-2.5 px-3 text-right">{txt('Prix HT', 'Net Price', 'Preço s/ IVA')}</th>
+                      <th className="py-2.5 px-4">{legacyText("Descrição do Ato Clínico / Tratamento", lang)}</th>
+                      <th className="py-2.5 px-3 text-center">{legacyText("Qtd", lang)}</th>
+                      <th className="py-2.5 px-3 text-right">{txt('Prix HT', 'Net Price', 'Preço s/ IVA', "Precio neto")}</th>
                       <th className="py-2.5 px-3 text-center">IVA</th>
-                      <th className="py-2.5 px-4 text-right">{txt('Total c/ IVA', 'Total (inc. VAT)', 'Total c/ IVA')}</th>
+                      <th className="py-2.5 px-4 text-right">{txt('Total c/ IVA', 'Total (inc. VAT)', 'Total c/ IVA', "Total (IVA incluido)")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E2E8F0] text-xs">
-                    <tr className="hover:bg-[#F8FAFC]">
-                      <td className="py-3.5 px-4">
-                        <p className="font-bold text-[#0F172A]">{invoice.serviceName}</p>
-                        <p className="text-[11px] text-[#64748B] mt-0.5">
-                          Praticante: {invoice.practitioner || SITE.professionalName}
-                        </p>
-                        {invoice.vatExemptionReason && (
-                          <p className="text-[10px] text-[#C49A3C] font-semibold mt-1">
-                            * {invoice.vatExemptionReason}
-                          </p>
-                        )}
+                    {lines.map((line,index)=><tr key={index}>
+                      <td className="py-3 px-4"><p className="font-bold">{line.serviceName}</p><p className="text-xs text-slate-500">{line.practitioner}</p>
+                        {line.dates.length>0&&<p className="mt-1 text-xs text-slate-500">{line.dates.join('; ')}</p>}
+                        {line.vatExemptionReason&&<p className="mt-1 text-xs text-slate-500">{line.vatExemptionReason}</p>}
+                        {line.priceAdjustmentReason&&<p className="mt-1 text-xs text-slate-500">{line.priceAdjustmentReason}</p>}
                       </td>
-                      <td className="py-3.5 px-3 text-center font-mono font-medium">1</td>
-                      <td className="py-3.5 px-3 text-right font-mono">{incidence.toFixed(2)} €</td>
-                      <td className="py-3.5 px-3 text-center font-mono font-medium">{vatRate}%</td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-[#0F172A]">
-                        {invoice.amount.toFixed(2)} €
-                      </td>
-                    </tr>
+                      <td className="py-3 px-3 text-center font-mono">{line.quantity}</td>
+                      <td className="py-3 px-3 text-right font-mono">{(line.netUnitCents/100).toFixed(2)} €</td>
+                      <td className="py-3 px-3 text-center font-mono">{line.vatRate}%</td>
+                      <td className="py-3 px-4 text-right font-mono font-bold">{(line.totalCents/100).toFixed(2)} €</td>
+                    </tr>)}
                   </tbody>
                 </table>
               </div>
 
               {/* Total Calculation & Tax Breakdown */}
               <div className="flex flex-col sm:flex-row items-start justify-between gap-6 my-6 pt-4 border-t border-[#E2E8F0]">
-                <div className="max-w-md space-y-1 text-[11px] text-[#64748B]">
-                  <p className="font-bold text-[#0F172A] uppercase tracking-wider text-[10px]">
-                    {txt('Cadre Légal & Fiscal', 'Legal & Tax Framework', 'Enquadramento Legal & Fiscal')}
-                  </p>
-                  <p className="leading-relaxed">
-                    {isExempt
-                      ? txt(
-                          'Service de santé et kinésithérapie exonéré de TVA en vertu de l’art. 9 du CIVA.',
-                          'Medical and physiotherapy service exempt from VAT under Article 9 of CIVA.',
-                          'Serviço de saúde e fisioterapia isento de IVA nos termos do Artigo 9.º do Código do IVA (CIVA).'
-                        )
-                      : txt(
-                          `Taux normal de TVA à ${vatRate}% inclus (${vatAmount.toFixed(2)} € de taxe sur une base imposable de ${incidence.toFixed(2)} €).`,
-                          `Standard VAT rate of ${vatRate}% included (${vatAmount.toFixed(2)} € tax on ${incidence.toFixed(2)} € net base).`,
-                          `Taxa normal de IVA a ${vatRate}% incluída (${vatAmount.toFixed(2)} € de imposto sobre incidência tributável de ${incidence.toFixed(2)} €).`
-                        )}
-                  </p>
-                  <p className="text-[10px] text-[#94A3B8]">
-                    {txt(
-                      'Document certifié. Valable pour déduction fiscale et remboursement auprès des mutuelles et assurances.',
-                      'Certified invoice receipt. Valid for tax deduction and private health insurance reimbursement.',
-                      'Documento processado por programa certificado. Válido para efeitos de dedução em IRS e reembolso junto de seguradoras de saúde e subsistemas (ADSE, Médis, Multicare, AdvanceCare).'
-                    )}
-                  </p>
+                <div className="max-w-md space-y-2 text-xs text-slate-500">
+                  <p className="font-semibold text-slate-700">{txt('Document interne — sans valeur fiscale','Internal document — not a fiscal invoice','Documento interno — sem valor fiscal', "Documento interno — sin validez fiscal")}</p>
+                  <p>{txt('La facture fiscale officielle est émise dans le système choisi par la clinique.','The official fiscal invoice is issued through the clinic’s chosen system.','A fatura fiscal é emitida no sistema escolhido pela clínica.', "La factura fiscal oficial se emite a través del sistema elegido por la clínica.")}</p>
+                  <p>{quantity} {txt('séance(s)','session(s)','sessão(ões)', "sesión(es)")}</p>
+                  {invoice.externalReference&&<p>{txt('Référence officielle','Official reference','Referência fiscal', "Referencia oficial")}: {invoice.externalReference}</p>}
+                  {invoice.notes&&<p>{invoice.notes}</p>}
                 </div>
 
                 <div className="w-full sm:w-72 space-y-2 text-xs">
                   <div className="flex justify-between text-[#64748B]">
-                    <span>{txt('Incidence (Base Imposable) :', 'Incidence (Tax Base) :', 'Incidência (Base Tributável) :')}</span>
+                    <span>{txt('Incidence (Base Imposable) :', 'Incidence (Tax Base) :', 'Incidência (Base Tributável) :', "Base imponible:")}</span>
                     <span className="font-mono font-medium">{incidence.toFixed(2)} €</span>
                   </div>
                   <div className="flex justify-between text-[#64748B]">
-                    <span>{txt(`Total TVA (${vatRate}%) :`, `Total VAT (${vatRate}%) :`, `Total IVA (${vatRate}%) :`)}</span>
+                    <span>{txt(`Total TVA (${vatRates}%) :`, `Total VAT (${vatRates}%) :`, `Total IVA (${vatRates}%) :`, `IVA total (${vatRates} %):`)}</span>
                     <span className={`font-mono font-medium ${vatAmount > 0 ? 'text-[#0F172A]' : 'text-[#64748B]'}`}>
                       {vatAmount.toFixed(2)} €
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t-2 border-[#0F172A] text-sm sm:text-base font-bold text-[#0F172A]">
-                    <span>{txt('TOTAL LIQUIDÉ :', 'TOTAL SETTLED :', 'TOTAL LIQUIDADO :')}</span>
+                    <span>{txt('TOTAL :', 'TOTAL:', 'TOTAL:', "TOTAL:")}</span>
                     <span className="font-mono text-[#0F172A]">{invoice.amount.toFixed(2)} €</span>
                   </div>
                 </div>
@@ -425,27 +401,27 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                   {isPaid ? (
                     <button
                       type="button"
-                      disabled={updating || !onUpdateStatus}
+                      disabled={updating || !onUpdateStatus || closed}
                       onClick={() => onUpdateStatus && onUpdateStatus(invoice.id, 'PENDING')}
                       className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 font-bold uppercase tracking-wider text-xs hover:bg-emerald-100 hover:scale-102 active:scale-98 transition-all cursor-pointer shadow-xs text-left"
-                      title={txt('Clique para alterar para Pendente', 'Click to switch to Pending', 'Clique para alterar para Pendente')}
+                      title={txt('Clique para alterar para Pendente', 'Click to switch to Pending', 'Clique para alterar para Pendente', "Pulse para cambiar a pendiente")}
                     >
                       <IconCheck size={18} className="text-emerald-600 shrink-0" />
                       <div>
-                        <p className="leading-none text-[11px]">QUITADO / PAGO</p>
+                        <p className="leading-none text-[11px]">{legacyText("QUITADO / PAGO", lang)}</p>
                         <p className="text-[9px] font-mono text-emerald-700 mt-0.5">{paidDate} • {invoice.paymentMethod}</p>
                       </div>
                     </button>
                   ) : (
                     <button
                       type="button"
-                      disabled={updating || !onUpdateStatus}
+                      disabled={updating || !onUpdateStatus || closed}
                       onClick={() => onUpdateStatus && onUpdateStatus(invoice.id, 'PAID', invoice.paymentMethod)}
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-amber-500 bg-amber-50 text-amber-800 font-bold uppercase tracking-wider text-xs hover:bg-amber-100 hover:scale-102 active:scale-98 transition-all cursor-pointer shadow-xs"
-                      title={txt('Clique para liquidar / marcar como Pago', 'Click to settle / mark as Paid', 'Clique para liquidar / marcar como Pago')}
+                      title={txt('Clique para liquidar / marcar como Pago', 'Click to settle / mark as Paid', 'Clique para liquidar / marcar como Pago', "Pulse para liquidar / marcar como pagada")}
                     >
                       <IconAlertCircle size={18} className="text-amber-600 shrink-0" />
-                      <span>AGUARDA LIQUIDAÇÃO</span>
+                      <span>{closed ? invoice.paymentStatus==='CANCELLED'?'ANULADO':'REEMBOLSADO' : legacyText('AGUARDA LIQUIDAÇÃO', lang)}</span>
                     </button>
                   )}
                 </div>
@@ -454,7 +430,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                 <div className="text-center sm:text-right">
                   <div className="inline-block w-56 text-center border-t border-[#475569] pt-1">
                     <p className="font-serif italic text-xs text-[#0F172A]">{SITE.professionalName}</p>
-                    <p className="text-[9px] text-[#64748B]">Fisioterapeuta Licenciado / Assinatura</p>
+                    <p className="text-[9px] text-[#64748B]">{legacyText("Fisioterapeuta Licenciado / Assinatura", lang)}</p>
                   </div>
                 </div>
               </div>
@@ -469,12 +445,12 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                     const title = txt(
                       'Êtes-vous sûr de vouloir annuler ce reçu ?',
                       'Are you sure you want to void this invoice?',
-                      'Tem a certeza que deseja anular esta fatura/recibo?'
+                      'Tem a certeza que deseja anular esta fatura/recibo?', "¿Seguro que desea anular esta factura?"
                     );
                     const desc = txt(
                       'Cette action marquera définitivement ce reçu comme annulé.',
                       'This action will permanently mark this invoice as voided.',
-                      'Esta ação irá anular permanentemente este documento.'
+                      'Esta ação irá anular permanentemente este documento.', "Esta acción marcará la factura como anulada de forma permanente."
                     );
                     const doVoid = () => {
                       onDelete(invoice.id);
@@ -484,8 +460,8 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                       setConfirmDialog({
                         title,
                         description: desc,
-                        confirmText: txt('Annuler le Reçu', 'Void Invoice', 'Anular'),
-                        cancelText: txt('Fermer', 'Cancel', 'Cancelar'),
+                        confirmText: txt('Annuler le Reçu', 'Void Invoice', 'Anular', "Anular factura"),
+                        cancelText: txt('Fermer', 'Cancel', 'Cancelar', "Cancelar"),
                         onConfirm: doVoid,
                       });
                     } else {
@@ -495,7 +471,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                   className="text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 transition-colors"
                 >
                   <IconTrash size={14} />
-                  <span>{txt('Annuler le Reçu', 'Void Invoice', 'Anular Documento')}</span>
+                  <span>{txt('Annuler le Reçu', 'Void Invoice', 'Anular Documento', "Anular factura")}</span>
                 </button>
                 <span className="text-[11px] text-[#94A3B8]">
                   ID: {invoice.id}

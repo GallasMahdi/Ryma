@@ -5,14 +5,14 @@ export type TreatmentBodyZone = 'torso' | 'legs' | 'arms' | 'back';
 export type LocalizedString = {
   fr: string;
   pt?: string;
-  en?: string;
+  en?: string; es?: string;
   ar?: string;
 };
 
 export type LocalizedList = {
   fr: string[];
   pt?: string[];
-  en?: string[];
+  en?: string[]; es?: string[];
   ar?: string[];
 };
 
@@ -43,6 +43,7 @@ export interface Service {
 
 export function getLocalizedText(obj: LocalizedString | undefined, lang: string): string {
   if (!obj) return '';
+  if (lang === 'es' && obj.es) return obj.es;
   if (lang === 'pt' && obj.pt) return obj.pt;
   if (lang === 'en' && obj.en) return obj.en;
   return obj.fr || obj.pt || obj.en || '';
@@ -50,6 +51,7 @@ export function getLocalizedText(obj: LocalizedString | undefined, lang: string)
 
 export function getLocalizedList(obj: LocalizedList | undefined, lang: string): string[] {
   if (!obj) return [];
+  if (lang === 'es' && obj.es?.length) return obj.es;
   if (lang === 'pt' && obj.pt?.length) return obj.pt;
   if (lang === 'en' && obj.en?.length) return obj.en;
   return obj.fr?.length ? obj.fr : obj.pt?.length ? obj.pt : obj.en || [];

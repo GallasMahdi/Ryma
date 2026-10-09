@@ -1,7 +1,9 @@
+import { localizeApiError } from '@/lib/api-i18n';
+import { isLanguage } from '@/lib/locales';
 import { isJsonObject } from '@/lib/admin-validation';
 import { findBookingReplay } from '@/lib/booking-service';
 import type { CreateAppointmentInput } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import {
   dbCreateAppointment,
   dbConsumeRateLimit,
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
     const ipAllowed = await dbConsumeRateLimit(ip, 'booking_ip', 100, 60 * 60);
     if (!ipAllowed) {
       return NextResponse.json(
-        { error: 'Trop de demandes. Veuillez réessayer plus tard.' },
+        { error: localizeApiError('Trop de demandes. Veuillez réessayer plus tard.', request) },
         { status: 429 }
       );
     }
@@ -42,9 +44,9 @@ export async function POST(request: NextRequest) {
     let body: Record<string, unknown>;
     try {
       body = await request.json();
-      if (!isJsonObject(body)) return NextResponse.json({error:"JSON object required"},{status:400});
+      if (!isJsonObject(body)) return NextResponse.json({error:localizeApiError("JSON object required", request)},{status:400});
     } catch {
-      return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
+      return NextResponse.json({ error: localizeApiError('Corps de requête invalide', request) }, { status: 400 });
     }
 
     // Bot defense: Google reCAPTCHA v3 with human fallback for adblockers / slow networks
@@ -56,16 +58,16 @@ export async function POST(request: NextRequest) {
     // Honeypot check: If an automated bot filled the invisible field, strictly reject
     if (honeypot.trim().length > 0) {
       return NextResponse.json(
-        { error: 'Validation de sécurité échouée (activité automatisée détectée).' },
+        { error: localizeApiError('Validation de sécurité échouée (activité automatisée détectée).', request) },
         { status: 403 }
       );
     }
 
-    if (recaptchaToken) {
-      const recaptchaResult = await verifyRecaptchaToken(recaptchaToken);
+    if (recaptchaToken || process.env.NODE_ENV === 'production') {
+      const recaptchaResult = await verifyRecaptchaToken(recaptchaToken, 'booking');
       if (!recaptchaResult.valid) {
         return NextResponse.json(
-          { error: 'Validation de sécurité échouée (activité automatisée détectée). Veuillez rafraîchir la page.' },
+          { error: localizeApiError('Validation de sécurité échouée (activité automatisée détectée). Veuillez rafraîchir la page.', request) },
           { status: 403 }
         );
       }
@@ -73,17 +75,17 @@ export async function POST(request: NextRequest) {
       // Human fallback for ad blockers (uBlock/Brave) or slow 3G/4G connections where reCAPTCHA CDN was blocked/delayed
       if (formTimestamp > 0 && elapsedMs < 1200) {
         return NextResponse.json(
-          { error: 'Soumission trop rapide. Veuillez réessayer.' },
+          { error: localizeApiError('Soumission trop rapide. Veuillez réessayer.', request) },
           { status: 403 }
         );
       }
-      console.warn('[reCAPTCHA Fallback]: Permitted legitimate booking submission without reCAPTCHA token (adblock/slow network fallback verified).');
+      // Token-free requests are supported only by local development/test fixtures.
     }
 
     // Server-side validation — never trust client values
     const validation = validateAppointmentInput(body);
     if (!validation.ok) {
-      return NextResponse.json({ error: validation.error, errorCode: validation.errorCode }, { status: 422 });
+      return NextResponse.json({ error: localizeApiError(validation.error, request), errorCode: validation.errorCode }, { status: 422 });
     }
 
     // Per-phone rate limit: 3 bookings per normalized phone number per hour
@@ -126,45 +128,42 @@ export async function POST(request: NextRequest) {
     const result = replay ?? await dbCreateAppointment(bookingInput);
     if (!result.success && result.error === 'rate_limited') {
       return NextResponse.json(
-        { error: 'Vous avez déjà effectué plusieurs réservations. Veuillez patienter avant d\'en faire une nouvelle.' },
+        { error: localizeApiError('Vous avez déjà effectué plusieurs réservations. Veuillez patienter avant d\'en faire une nouvelle.', request) },
         { status: 429 }
       );
     }
 
     if (!result.success) {
-      if (result.error === 'schedule_changed') return NextResponse.json({error:'Schedule temporarily busy. Please retry.',errorCode:'SCHEDULE_BUSY'}, {status:503,headers:{'Retry-After':'1'}});
+      if (result.error === 'schedule_changed') return NextResponse.json({error:localizeApiError('Schedule temporarily busy. Please retry.', request),errorCode:'SCHEDULE_BUSY'}, {status:503,headers:{'Retry-After':'1'}});
       if (result.error === 'slot_taken') {
         return NextResponse.json(
-          { error: 'slot_taken', message: 'Ce créneau vient d\'être réservé. Veuillez choisir un autre horaire.' },
+          { error: localizeApiError('slot_taken', request), message: 'Ce créneau vient d\'être réservé. Veuillez choisir un autre horaire.' },
           { status: 409 }
         );
       }
       if (result.error === 'slot_blocked') {
         return NextResponse.json(
-          { error: 'slot_taken', message: 'Ce créneau n\'est pas disponible.' },
+          { error: localizeApiError('slot_taken', request), message: 'Ce créneau n\'est pas disponible.' },
           { status: 409 }
         );
       }
-      return NextResponse.json({ error: 'Données invalides' }, { status: 422 });
+      return NextResponse.json({ error: localizeApiError('Données invalides', request) }, { status: 422 });
     }
 
     // Broadcast the new appointment in real-time to active admin calendar dashboards
     if (!result.replayed) broadcastAppointmentCreated(result.appointment);
 
-    // Reliably dispatch confirmation emails before serverless execution freeze
-    const clientLang = typeof body.lang === 'string' ? body.lang : 'fr';
-    if (!result.replayed) try {
-      const emailPromise = Promise.all([
-        sendAppointmentConfirmationEmail(result.appointment, clientLang),
-        sendAdminNewBookingNotification(result.appointment),
-      ]);
-      const timeoutPromise = new Promise<{ timeout: true }>((resolve) =>
-        setTimeout(() => resolve({ timeout: true }), 2500)
-      );
-      await Promise.race([emailPromise, timeoutPromise]);
-    } catch (emailErr) {
-      console.error('[Booking Email Dispatch Warning]:');
-    }
+    // Next.js keeps this task alive after the response on supported hosts.
+    // Delivery retries still require a durable mail queue (see deployment report).
+    const clientLang = isLanguage(body.lang) ? body.lang : 'fr';
+    if (!result.replayed) after(async () => {
+      try {
+        await Promise.all([
+          sendAppointmentConfirmationEmail(result.appointment, clientLang),
+          sendAdminNewBookingNotification(result.appointment, clientLang),
+        ]);
+      } catch { console.error('[Booking Email Dispatch Warning]'); }
+    });
 
     const confirmationPayload = {
       success: true,
@@ -186,7 +185,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('[API /api/appointments Error]:');
     return NextResponse.json(
-      { error: 'Erreur lors de l\'enregistrement de la réservation. Veuillez réessayer.' },
+      { error: localizeApiError('Erreur lors de l\'enregistrement de la réservation. Veuillez réessayer.', request) },
       { status: 500 }
     );
   }

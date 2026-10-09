@@ -57,8 +57,8 @@ export const SlotsTab = React.memo(function SlotsTab({
   onActionToast,
 }: SlotsTabProps) {
   const { getServiceName } = useServiceLabels();
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const [slotFilter, setSlotFilter] = useState<'all' | 'available' | 'booked' | 'blocked'>('all');
   const [batchLoadingAction, setBatchLoadingAction] = useState<BatchActionType>(null);
@@ -142,24 +142,24 @@ export const SlotsTab = React.memo(function SlotsTab({
 
       // Show user feedback toast
       const actionLabels = {
-        block_morning: txt('Matinée Bloquée', 'Morning Blocked', 'Manhã Bloqueada'),
-        block_afternoon: txt('Après-midi Bloqué', 'Afternoon Blocked', 'Tarde Bloqueada'),
-        block_all: txt('Journée Entière Bloquée', 'Full Day Blocked', 'Dia Inteiro Bloqueado'),
-        unblock_all: txt('Journée Débloquée', 'Day Unblocked', 'Dia Desbloqueado'),
+        block_morning: txt('Matinée Bloquée', 'Morning Blocked', 'Manhã Bloqueada', "Mañana bloqueada"),
+        block_afternoon: txt('Après-midi Bloqué', 'Afternoon Blocked', 'Tarde Bloqueada', "Tarde bloqueada"),
+        block_all: txt('Journée Entière Bloquée', 'Full Day Blocked', 'Dia Inteiro Bloqueado', "Día completo bloqueado"),
+        unblock_all: txt('Journée Débloquée', 'Day Unblocked', 'Dia Desbloqueado', "Día desbloqueado"),
       };
 
       if (onActionToast) {
         onActionToast({
           type: 'success',
           title: actionLabels[action],
-          message: `${selectedDateForSlots} • ${data.processedSlots ?? 0} ${txt('créneaux mis à jour', 'slots updated', 'horários atualizados')}`,
+          message: `${selectedDateForSlots} • ${data.processedSlots ?? 0} ${txt('créneaux mis à jour', 'slots updated', 'horários atualizados', "horarios actualizados")}`,
         });
       }
     } catch (err: any) {
       if (onActionToast) {
         onActionToast({
           type: 'error',
-          title: txt('Erreur de Modification', 'Modification Error', 'Erro na Alteração'),
+          title: txt('Erreur de Modification', 'Modification Error', 'Erro na Alteração', "Error de modificación"),
           message: err.message || 'Impossible de mettre à jour les créneaux',
         });
       }
@@ -203,16 +203,16 @@ export const SlotsTab = React.memo(function SlotsTab({
           type: 'success',
           title:
             action === 'block'
-              ? txt('Période Bloquée avec Succès', 'Period Blocked Successfully', 'Período Bloqueado com Sucesso')
-              : txt('Période Débloquée', 'Period Unblocked', 'Período Desbloqueado'),
-          message: `${rangeStartDate} → ${rangeEndDate} (${data.totalDays ?? 0} ${txt('jours', 'days', 'dias')}, ${data.processedSlots ?? 0} ${txt('créneaux', 'slots', 'vagas')})`,
+              ? txt('Période Bloquée avec Succès', 'Period Blocked Successfully', 'Período Bloqueado com Sucesso', "Periodo bloqueado correctamente")
+              : txt('Période Débloquée', 'Period Unblocked', 'Período Desbloqueado', "Periodo desbloqueado"),
+          message: `${rangeStartDate} → ${rangeEndDate} (${data.totalDays ?? 0} ${txt('jours', 'days', 'dias', "días")}, ${data.processedSlots ?? 0} ${txt('créneaux', 'slots', 'vagas', "horarios")})`,
         });
       }
     } catch (err: any) {
       if (onActionToast) {
         onActionToast({
           type: 'error',
-          title: txt('Erreur', 'Error', 'Erro'),
+          title: txt('Erreur', 'Error', 'Erro', "Error"),
           message: err.message,
         });
       }
@@ -287,12 +287,12 @@ export const SlotsTab = React.memo(function SlotsTab({
             }`}
           >
             {isBlocked
-              ? txt('Bloqué', 'Blocked', 'Bloqueado')
+              ? txt('Bloqué', 'Blocked', 'Bloqueado', "Bloqueado")
               : isBooked
-              ? txt('Réservé', 'Booked', 'Ocupado')
+              ? txt('Réservé', 'Booked', 'Ocupado', "Reservado")
               : isSunday
-              ? txt('Fermé', 'Closed', 'Fechado')
-              : txt('Libre', 'Open', 'Livre')}
+              ? txt('Fermé', 'Closed', 'Fechado', "Cerrado")
+              : txt('Libre', 'Open', 'Livre', "Abierto")}
           </span>
         </div>
 
@@ -300,7 +300,7 @@ export const SlotsTab = React.memo(function SlotsTab({
         {isBooked ? (
           <div className="bg-white p-2 rounded-lg border border-[#E2E8F0] mb-2 space-y-0.5">
             <div className="font-semibold text-xs text-[#0F172A] truncate">
-              {bookedAppt?.patientName ?? txt('Patient réservé', 'Patient booked', 'Utente registado')}
+              {bookedAppt?.patientName ?? txt('Patient réservé', 'Patient booked', 'Utente registado', "Reservado por un paciente")}
             </div>
             {bookedAppt && (
               <div className="text-[11px] text-[#64748B] truncate">
@@ -311,10 +311,10 @@ export const SlotsTab = React.memo(function SlotsTab({
         ) : (
           <div className="text-xs text-[#64748B] mb-2">
             {isBlocked
-              ? (st.inheritedBlock ? txt('Fermeture de la clinique — modifier dans Tous les praticiens.', 'Clinic block — edit under All practitioners.', 'Bloqueio da clínica — editar em Todos os profissionais.') : txt('Indisponible aux réservations', 'Unavailable for booking', 'Indisponível para marcações'))
+              ? (st.inheritedBlock ? txt('Fermeture de la clinique — modifier dans Tous les praticiens.', 'Clinic block — edit under All practitioners.', 'Bloqueio da clínica — editar em Todos os profissionais.', "Bloqueo de la clínica: edítelo en Todos los profesionales.") : txt('Indisponible aux réservations', 'Unavailable for booking', 'Indisponível para marcações', "No disponible para reserva"))
               : isSunday
-              ? txt('Indisponible à cet horaire', 'Unavailable at this time', 'Indisponível neste horário')
-              : txt('Disponible à la réservation', 'Available for booking', 'Livre para marcação')}
+              ? txt('Indisponible à cet horaire', 'Unavailable at this time', 'Indisponível neste horário', "No disponible a esta hora")
+              : txt('Disponible à la réservation', 'Available for booking', 'Livre para marcação', "Disponible para reserva")}
           </div>
         )}
 
@@ -342,19 +342,19 @@ export const SlotsTab = React.memo(function SlotsTab({
             {isThisSlotToggling ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-[#0F172A] border-t-transparent rounded-full animate-spin shrink-0" />
-                <span>{txt('En cours...', 'Updating...', 'A atualizar...')}</span>
+                <span>{txt('En cours...', 'Updating...', 'A atualizar...', "Actualizando...")}</span>
               </>
             ) : isBlocked ? (
               <>
                 <IconCheck size={13} className="text-[#991B1B]" />
-                <span>{txt('Débloquer', 'Unblock', 'Desbloquear')}</span>
+                <span>{txt('Débloquer', 'Unblock', 'Desbloquear', "Desbloquear")}</span>
               </>
             ) : isBooked ? (
-              <span>{txt('Occupé', 'Booked', 'Ocupado')}</span>
+              <span>{txt('Occupé', 'Booked', 'Ocupado', "Reservado")}</span>
             ) : (
               <>
                 <IconBan size={13} className="text-[#64748B]" />
-                <span>{txt('Bloquer', 'Block', 'Bloquear')}</span>
+                <span>{txt('Bloquer', 'Block', 'Bloquear', "Bloquear")}</span>
               </>
             )}
           </button>
@@ -377,10 +377,10 @@ export const SlotsTab = React.memo(function SlotsTab({
             <div className="flex items-center gap-2.5">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
               <span>
-                {batchLoadingAction === 'block_morning' && txt('Blocage des créneaux du matin en cours...', 'Blocking morning slots in progress...', 'A bloquear horários da manhã...')}
-                {batchLoadingAction === 'block_afternoon' && txt('Blocage des créneaux de l’après-midi en cours...', 'Blocking afternoon slots in progress...', 'A bloquear horários da tarde...')}
-                {batchLoadingAction === 'block_all' && txt('Blocage de toute la journée en cours...', 'Blocking full day in progress...', 'A bloquear o dia inteiro...')}
-                {batchLoadingAction === 'unblock_all' && txt('Déblocage de tous les créneaux en cours...', 'Unblocking all slots in progress...', 'A desbloquear todos os horários...')}
+                {batchLoadingAction === 'block_morning' && txt('Blocage des créneaux du matin en cours...', 'Blocking morning slots in progress...', 'A bloquear horários da manhã...', "Bloqueando horarios de mañana...")}
+                {batchLoadingAction === 'block_afternoon' && txt('Blocage des créneaux de l’après-midi en cours...', 'Blocking afternoon slots in progress...', 'A bloquear horários da tarde...', "Bloqueando horarios de tarde...")}
+                {batchLoadingAction === 'block_all' && txt('Blocage de toute la journée en cours...', 'Blocking full day in progress...', 'A bloquear o dia inteiro...', "Bloqueando el día completo...")}
+                {batchLoadingAction === 'unblock_all' && txt('Déblocage de tous les créneaux en cours...', 'Unblocking all slots in progress...', 'A desbloquear todos os horários...', "Desbloqueando todos los horarios...")}
               </span>
             </div>
             <span className="font-mono text-[11px] text-white/70">{selectedDateForSlots}</span>
@@ -394,15 +394,15 @@ export const SlotsTab = React.memo(function SlotsTab({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-bold text-base sm:text-lg text-[#0F172A] tracking-tight">
-                {txt('Créneaux & Horaires', 'Schedule & Slot Management', 'Gestão de Horários & Agenda')}
+                {txt('Créneaux & Horaires', 'Schedule & Slot Management', 'Gestão de Horários & Agenda', "Gestión de agenda y horarios")}
               </h3>
               {false ? (
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B]">
-                  {txt('Dimanche fermé', 'Sunday closed', 'Domingo fechado')}
+                  {txt('Dimanche fermé', 'Sunday closed', 'Domingo fechado', "Domingo cerrado")}
                 </span>
               ) : slotStats.blocked === slotStats.total && slotStats.total > 0 ? (
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B]">
-                  {txt('Journée Fermée / Bloquée', 'Day Fully Blocked', 'Dia Bloqueado')}
+                  {txt('Journée Fermée / Bloquée', 'Day Fully Blocked', 'Dia Bloqueado', "Día completamente bloqueado")}
                 </span>
               ) : null}
             </div>
@@ -423,14 +423,14 @@ export const SlotsTab = React.memo(function SlotsTab({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] text-xs font-semibold text-[#334155] transition-colors touch-target shadow-2xs"
             >
               <IconCalendarOff size={15} className="text-[#64748B]" />
-              <span>{txt('Bloquer une période / Vacances', 'Block Period / Vacations', 'Bloquear Período / Férias')}</span>
+              <span>{txt('Bloquer une période / Vacances', 'Block Period / Vacations', 'Bloquear Período / Férias', "Bloquear periodo / vacaciones")}</span>
             </button>
 
             <div className="flex items-center bg-[#F1F5F9] p-0.5 rounded-lg border border-[#E2E8F0]">
               <button
                 onClick={() => setSelectedDateForSlots((prev) => shiftDateString(prev, -1))}
                 className="p-1.5 rounded-md text-[#64748B] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
-                title={txt('Jour précédent', 'Previous day', 'Dia anterior')}
+                title={txt('Jour précédent', 'Previous day', 'Dia anterior', "Día anterior")}
               >
                 <IconChevronLeft size={16} />
               </button>
@@ -443,13 +443,13 @@ export const SlotsTab = React.memo(function SlotsTab({
                     : 'text-[#64748B] hover:text-[#0F172A]'
                 }`}
               >
-                {txt('Auj.', 'Today', 'Hoje')}
+                {txt('Auj.', 'Today', 'Hoje', "Hoy")}
               </button>
 
               <button
                 onClick={() => setSelectedDateForSlots((prev) => shiftDateString(prev, 1))}
                 className="p-1.5 rounded-md text-[#64748B] hover:text-[#0F172A] transition-colors touch-target flex items-center justify-center"
-                title={txt('Jour suivant', 'Next day', 'Dia seguinte')}
+                title={txt('Jour suivant', 'Next day', 'Dia seguinte', "Día siguiente")}
               >
                 <IconChevronRight size={16} />
               </button>
@@ -467,7 +467,7 @@ export const SlotsTab = React.memo(function SlotsTab({
         {/* 7-Day Quick Strip */}
         <div className="space-y-1.5">
           <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-semibold">
-            {txt('7 Prochains Jours', 'Next 7 Days', 'Próximos 7 Dias')}
+            {txt('7 Prochains Jours', 'Next 7 Days', 'Próximos 7 Dias', "Próximos 7 días")}
           </div>
           <div className="grid grid-cols-2 xs:grid-cols-4 sm:grid-cols-4 lg:grid-cols-7 gap-2">
             {next7Days.map((dateStr) => {
@@ -494,7 +494,7 @@ export const SlotsTab = React.memo(function SlotsTab({
                   </span>
                   {false ? (
                     <span className="text-[9px] font-medium text-rose-500/80 mt-0.5">
-                      {txt('Fermé', 'Closed', 'Fechado')}
+                      {txt('Fermé', 'Closed', 'Fechado', "Cerrado")}
                     </span>
                   ) : null}
                 </button>
@@ -508,7 +508,7 @@ export const SlotsTab = React.memo(function SlotsTab({
           <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
-                {txt('Total', 'Total', 'Total')}
+                {txt('Total', 'Total', 'Total', "Total")}
               </div>
               <div className="text-xl font-bold text-[#0F172A]">{slotStats.total}</div>
             </div>
@@ -518,7 +518,7 @@ export const SlotsTab = React.memo(function SlotsTab({
           <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-[#166534]">
-                {txt('Libres', 'Available', 'Livres')}
+                {txt('Libres', 'Available', 'Livres', "Disponible")}
               </div>
               <div className="text-xl font-bold text-[#166534]">{slotStats.available}</div>
             </div>
@@ -528,7 +528,7 @@ export const SlotsTab = React.memo(function SlotsTab({
           <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-[#334155]">
-                {txt('Réservés', 'Booked', 'Ocupados')}
+                {txt('Réservés', 'Booked', 'Ocupados', "Reservado")}
               </div>
               <div className="text-xl font-bold text-[#334155]">{slotStats.booked}</div>
             </div>
@@ -538,7 +538,7 @@ export const SlotsTab = React.memo(function SlotsTab({
           <div className="p-3.5 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-between">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-[#991B1B]">
-                {txt('Bloqués', 'Blocked', 'Bloqueados')}
+                {txt('Bloqués', 'Blocked', 'Bloqueados', "Bloqueado")}
               </div>
               <div className="text-xl font-bold text-[#991B1B]">{slotStats.blocked}</div>
             </div>
@@ -551,10 +551,10 @@ export const SlotsTab = React.memo(function SlotsTab({
           {/* Quick Filter Pills */}
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar text-xs">
             {[
-              { id: 'all', label: txt(`Tous (${slotList.length})`, `All (${slotList.length})`, `Todos (${slotList.length})`) },
-              { id: 'available', label: txt(`Libres (${slotStats.available})`, `Open (${slotStats.available})`, `Livres (${slotStats.available})`) },
-              { id: 'booked', label: txt(`Réservés (${slotStats.booked})`, `Booked (${slotStats.booked})`, `Ocupados (${slotStats.booked})`) },
-              { id: 'blocked', label: txt(`Bloqués (${slotStats.blocked})`, `Blocked (${slotStats.blocked})`, `Bloqueados (${slotStats.blocked})`) },
+              { id: 'all', label: txt(`Tous (${slotList.length})`, `All (${slotList.length})`, `Todos (${slotList.length})`, `Todos (${slotList.length})`) },
+              { id: 'available', label: txt(`Libres (${slotStats.available})`, `Open (${slotStats.available})`, `Livres (${slotStats.available})`, `Abiertos (${slotStats.available})`) },
+              { id: 'booked', label: txt(`Réservés (${slotStats.booked})`, `Booked (${slotStats.booked})`, `Ocupados (${slotStats.booked})`, `Reservados (${slotStats.booked})`) },
+              { id: 'blocked', label: txt(`Bloqués (${slotStats.blocked})`, `Blocked (${slotStats.blocked})`, `Bloqueados (${slotStats.blocked})`, `Bloqueados (${slotStats.blocked})`) },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -585,8 +585,8 @@ export const SlotsTab = React.memo(function SlotsTab({
                 )}
                 <span>
                   {batchLoadingAction === 'block_morning'
-                    ? txt('Blocage...', 'Blocking...', 'A bloquear...')
-                    : txt('Bloquer Matin', 'Block Morning', 'Bloquear Manhã')}
+                    ? txt('Blocage...', 'Blocking...', 'A bloquear...', "Bloqueando...")
+                    : txt('Bloquer Matin', 'Block Morning', 'Bloquear Manhã', "Bloquear mañana")}
                 </span>
               </button>
 
@@ -602,8 +602,8 @@ export const SlotsTab = React.memo(function SlotsTab({
                 )}
                 <span>
                   {batchLoadingAction === 'block_afternoon'
-                    ? txt('Blocage...', 'Blocking...', 'A bloquear...')
-                    : txt('Bloquer Après-midi', 'Block Afternoon', 'Bloquear Tarde')}
+                    ? txt('Blocage...', 'Blocking...', 'A bloquear...', "Bloqueando...")
+                    : txt('Bloquer Après-midi', 'Block Afternoon', 'Bloquear Tarde', "Bloquear tarde")}
                 </span>
               </button>
 
@@ -619,8 +619,8 @@ export const SlotsTab = React.memo(function SlotsTab({
                 )}
                 <span>
                   {batchLoadingAction === 'block_all'
-                    ? txt('Fermeture...', 'Blocking...', 'A fechar...')
-                    : txt('Bloquer Jour', 'Block Day', 'Bloquear Dia')}
+                    ? txt('Fermeture...', 'Blocking...', 'A fechar...', "Bloqueando...")
+                    : txt('Bloquer Jour', 'Block Day', 'Bloquear Dia', "Bloquear día")}
                 </span>
               </button>
 
@@ -636,8 +636,8 @@ export const SlotsTab = React.memo(function SlotsTab({
                 )}
                 <span>
                   {batchLoadingAction === 'unblock_all'
-                    ? txt('Ouverture...', 'Unblocking...', 'A reabrir...')
-                    : txt('Débloquer Tout', 'Unblock All', 'Desbloquear Tudo')}
+                    ? txt('Ouverture...', 'Unblocking...', 'A reabrir...', "Desbloqueando...")
+                    : txt('Débloquer Tout', 'Unblock All', 'Desbloquear Tudo', "Desbloquear todo")}
                 </span>
               </button>
             </div>
@@ -649,7 +649,7 @@ export const SlotsTab = React.memo(function SlotsTab({
           {loadingSlots && slotList.length === 0 ? (
             <div className="py-16 text-center text-[#64748B] text-xs flex items-center justify-center gap-2">
               <div className="w-4 h-4 border-2 border-[#0F172A] border-t-transparent rounded-full animate-spin" />
-              <span>{txt('Chargement des créneaux...', 'Loading slots...', 'A carregar horários...')}</span>
+              <span>{txt('Chargement des créneaux...', 'Loading slots...', 'A carregar horários...', "Cargando horarios...")}</span>
             </div>
           ) : (
             <>
@@ -659,12 +659,12 @@ export const SlotsTab = React.memo(function SlotsTab({
                   <div className="flex items-center gap-2">
                     <IconSun size={17} className="text-[#F59E0B]" />
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
-                      {txt('Matinée (08:00 – 12:30)', 'Morning (08:00 – 12:30)', 'Manhã (08:00 – 12:30)')}
+                      {txt('Matinée (08:00 – 12:30)', 'Morning (08:00 – 12:30)', 'Manhã (08:00 – 12:30)', "Mañana (08:00 – 12:30)")}
                     </h4>
                   </div>
                   <span className="text-[11px] font-semibold text-[#64748B]">
                     {morningSlots.filter((s) => s.available && s.reason !== 'blocked').length}{' '}
-                    {txt('libres', 'open', 'livres')}
+                    {txt('libres', 'open', 'livres', "abiertos")}
                   </span>
                 </div>
 
@@ -679,12 +679,12 @@ export const SlotsTab = React.memo(function SlotsTab({
                   <div className="flex items-center gap-2">
                     <IconSunset size={17} className="text-[#D97706]" />
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
-                      {txt('Après-midi (14:00 – 18:30)', 'Afternoon (14:00 – 18:30)', 'Tarde (14:00 – 18:30)')}
+                      {txt('Après-midi (14:00 – 18:30)', 'Afternoon (14:00 – 18:30)', 'Tarde (14:00 – 18:30)', "Tarde (14:00 – 18:30)")}
                     </h4>
                   </div>
                   <span className="text-[11px] font-semibold text-[#64748B]">
                     {afternoonSlots.filter((s) => s.available && s.reason !== 'blocked').length}{' '}
-                    {txt('libres', 'open', 'livres')}
+                    {txt('libres', 'open', 'livres', "abiertos")}
                   </span>
                 </div>
 
@@ -703,11 +703,11 @@ export const SlotsTab = React.memo(function SlotsTab({
         onClose={() => {
           if (!rangeSubmitting) setIsRangeModalOpen(false);
         }}
-        title={txt('Fermeture Exceptionnelle / Période', 'Block Period / Vacation Days', 'Bloquear Período / Férias')}
+        title={txt('Fermeture Exceptionnelle / Période', 'Block Period / Vacation Days', 'Bloquear Período / Férias', "Bloquear periodo / días de vacaciones")}
         subtitle={txt(
           'Bloquer ou débloquer une plage de dates (congés, vacances, jours fériés)',
           'Block or unblock date range for vacations and clinic closure',
-          'Bloquear ou reabrir múltiplos dias para férias e encerramentos'
+          'Bloquear ou reabrir múltiplos dias para férias e encerramentos', "Bloquear o desbloquear un intervalo de fechas por vacaciones o cierre de la clínica"
         )}
         maxWidth="md"
       >
@@ -715,13 +715,13 @@ export const SlotsTab = React.memo(function SlotsTab({
           <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-3.5 rounded-xl space-y-1.5">
             <div className="flex items-center gap-2 text-[#0F172A] font-semibold">
               <IconAlertCircle size={16} className="text-[#2563EB]" />
-              <span>{txt('Gestion multi-jours sécurisée', 'Safe multi-day management', 'Gestão segura de múltiplos dias')}</span>
+              <span>{txt('Gestion multi-jours sécurisée', 'Safe multi-day management', 'Gestão segura de múltiplos dias', "Gestión segura de varios días")}</span>
             </div>
             <p className="text-[#64748B] text-[11px]">
               {txt(
                 'Les rendez-vous patients existants sont automatiquement protégés et ne seront pas écrasés.',
                 'Existing booked appointments are automatically protected and will not be overwritten.',
-                'As consultas já marcadas por utentes são protegidas e não serão canceladas.'
+                'As consultas já marcadas por utentes são protegidas e não serão canceladas.', "Las citas existentes están protegidas automáticamente y no se sobrescribirán."
               )}
             </p>
           </div>
@@ -729,7 +729,7 @@ export const SlotsTab = React.memo(function SlotsTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[11px] font-semibold uppercase text-[#475569]">
-                {txt('Date de début', 'Start Date', 'Data de Início')}
+                {txt('Date de début', 'Start Date', 'Data de Início', "Fecha de inicio")}
               </label>
               <input
                 type="date"
@@ -741,7 +741,7 @@ export const SlotsTab = React.memo(function SlotsTab({
 
             <div className="space-y-1">
               <label className="text-[11px] font-semibold uppercase text-[#475569]">
-                {txt('Date de fin', 'End Date', 'Data de Fim')}
+                {txt('Date de fin', 'End Date', 'Data de Fim', "Fecha de fin")}
               </label>
               <input
                 type="date"
@@ -755,13 +755,13 @@ export const SlotsTab = React.memo(function SlotsTab({
 
           <div className="space-y-1">
             <label className="text-[11px] font-semibold uppercase text-[#475569]">
-              {txt('Créneaux concernés', 'Slot Scope', 'Horários Abrangidos')}
+              {txt('Créneaux concernés', 'Slot Scope', 'Horários Abrangidos', "Horarios afectados")}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { id: 'day' as const, label: txt('Journée entière', 'Full Day', 'Dia Inteiro') },
-                { id: 'morning' as const, label: txt('Matin uniquement', 'Morning Only', 'Apenas Manhã') },
-                { id: 'afternoon' as const, label: txt('Après-midi uniquem.', 'Afternoon Only', 'Apenas Tarde') },
+                { id: 'day' as const, label: txt('Journée entière', 'Full Day', 'Dia Inteiro', "Día completo") },
+                { id: 'morning' as const, label: txt('Matin uniquement', 'Morning Only', 'Apenas Manhã', "Solo mañana") },
+                { id: 'afternoon' as const, label: txt('Après-midi uniquem.', 'Afternoon Only', 'Apenas Tarde', "Solo tarde") },
               ].map((sc) => (
                 <button
                   key={sc.id}
@@ -792,7 +792,7 @@ export const SlotsTab = React.memo(function SlotsTab({
               ) : (
                 <IconCheck size={15} />
               )}
-              <span>{txt('Débloquer la période', 'Unblock Period', 'Desbloquear Período')}</span>
+              <span>{txt('Débloquer la période', 'Unblock Period', 'Desbloquear Período', "Desbloquear periodo")}</span>
             </button>
 
             <button
@@ -806,7 +806,7 @@ export const SlotsTab = React.memo(function SlotsTab({
               ) : (
                 <IconBan size={15} />
               )}
-              <span>{txt('Bloquer la période', 'Block Period', 'Bloquear Período')}</span>
+              <span>{txt('Bloquer la période', 'Block Period', 'Bloquear Período', "Bloquear periodo")}</span>
             </button>
           </div>
         </div>

@@ -4,6 +4,18 @@ import { dbHealthCheck } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// Coalesce probes per process for five seconds; monitoring must not become a
+// source of continuous writes and lock contention itself.
+let probe: ReturnType<typeof dbHealthCheck> | undefined;
+let checkedAt = 0;
+function readiness() {
+  if (!probe || Date.now() - checkedAt > 5000) {
+    checkedAt = Date.now();
+    probe = dbHealthCheck().catch(error => { probe = undefined; throw error; });
+  }
+  return probe;
+}
+
 /**
  * GET /api/health
  * Public healthcheck endpoint for 24/7 uptime monitors (e.g. UptimeRobot, BetterStack).
@@ -13,7 +25,7 @@ export async function GET() {
   const startTime = Date.now();
 
   try {
-    const dbStatus = await dbHealthCheck();
+    const dbStatus = await readiness();
     const memory = process.memoryUsage();
 
     return NextResponse.json(
@@ -29,7 +41,7 @@ export async function GET() {
         environment: process.env.NODE_ENV || 'development',
       },
       {
-        status: 200,
+        status: dbStatus.writable ? 200 : 503,
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         },
@@ -47,7 +59,7 @@ export async function GET() {
         database: {
           status: 'disconnected',
           latencyMs,
-          error: error instanceof Error ? error.message : 'Database query failed',
+          error: 'Database unavailable',
         },
         environment: process.env.NODE_ENV || 'development',
       },

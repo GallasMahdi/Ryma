@@ -2,6 +2,7 @@ import { isCalendarDate, isJsonObject } from './admin-validation';
 import { TIME_GRID } from '@/types/scheduling';
 import { validateAndNormalizePhone } from '@/lib/phone';
 import type { Lang } from '@/lib/i18n';
+import { isLanguage } from '@/lib/locales';
 
 // Shared server-side validation utilities.
 // These are the ONLY valid values — they are enforced here, not in frontend code.
@@ -30,7 +31,7 @@ export function validateAppointmentInput(
   preferredLang?: Lang
 ): ValidationResult | ValidationError {
   if (!isJsonObject(body)) return { ok: false, error: 'JSON object required' };
-  const lang: Lang = (body.lang as Lang) || preferredLang || 'pt';
+  const lang: Lang = isLanguage(body.lang) ? body.lang : preferredLang || 'pt';
   const { patientName, phone, service, date, startTime } = body;
 
   if (body.clientRequestId !== undefined && (typeof body.clientRequestId !== 'string' || !body.clientRequestId.trim() || body.clientRequestId.length > 160)) {
@@ -47,7 +48,7 @@ export function validateAppointmentInput(
       ok: false,
       errorCode: 'PATIENT_NAME_REQUIRED',
       error:
-        lang === 'fr'
+        lang === 'es' ? "El nombre del paciente es obligatorio (mínimo 2 caracteres)." : lang === 'fr'
           ? 'Le nom du patient est obligatoire (minimum 2 caractères).'
           : lang === 'en'
           ? 'Patient name is required (minimum 2 characters).'
@@ -61,7 +62,7 @@ export function validateAppointmentInput(
       ok: false,
       errorCode: 'PATIENT_NAME_INVALID',
       error:
-        lang === 'fr'
+        lang === 'es' ? "El nombre del paciente contiene caracteres o formato no válidos." : lang === 'fr'
           ? 'Le nom du patient contient des caractères non autorisés.'
           : lang === 'en'
           ? 'Patient name contains invalid characters or formatting.'
@@ -73,7 +74,7 @@ export function validateAppointmentInput(
       ok: false,
       errorCode: 'PATIENT_NAME_FORMULA',
       error:
-        lang === 'fr'
+        lang === 'es' ? "El nombre del paciente no puede empezar con símbolos de fórmula (=, @, +, -)." : lang === 'fr'
           ? 'Le nom du patient ne peut pas commencer par un symbole de formule (=, @, +, -).'
           : lang === 'en'
           ? 'Patient name cannot start with formula symbols (=, @, +, -).'
@@ -86,7 +87,7 @@ export function validateAppointmentInput(
       ok: false,
       errorCode: 'PHONE_REQUIRED',
       error:
-        lang === 'fr'
+        lang === 'es' ? "El número de teléfono es obligatorio." : lang === 'fr'
           ? 'Le numéro de téléphone est obligatoire.'
           : lang === 'en'
           ? 'Phone number is required.'
@@ -101,7 +102,7 @@ export function validateAppointmentInput(
       errorCode: phoneValidation.errorCode || 'INVALID_PHONE',
       error:
         phoneValidation.error ||
-        (lang === 'fr'
+        (lang === 'es' ? "Introduzca un número de teléfono válido (p. ej., 912 345 678 o +351 912 345 678)." : lang === 'fr'
           ? 'Veuillez entrer un numéro de téléphone valide (ex: 912 345 678 ou +351 912 345 678).'
           : lang === 'en'
           ? 'Please enter a valid phone number (e.g. 912 345 678 or +351 912 345 678).'
@@ -115,7 +116,7 @@ export function validateAppointmentInput(
       ok: false,
       errorCode: 'INVALID_SERVICE',
       error:
-        lang === 'fr'
+        lang === 'es' ? "Tratamiento / servicio no reconocido." : lang === 'fr'
           ? 'Soin / prestation non reconnu.'
           : lang === 'en'
           ? 'Unrecognized treatment / service.'
@@ -129,7 +130,7 @@ export function validateAppointmentInput(
       ok: false,
       errorCode: 'INVALID_DATE_FORMAT',
       error:
-        lang === 'fr'
+        lang === 'es' ? "Formato de fecha no válido (AAAA-MM-DD)." : lang === 'fr'
           ? 'Format de date invalide (AAAA-MM-JJ).'
           : lang === 'en'
           ? 'Invalid date format (YYYY-MM-DD).'
@@ -144,7 +145,7 @@ export function validateAppointmentInput(
       ok: false,
       errorCode: 'PAST_DATE',
       error:
-        lang === 'fr'
+        lang === 'es' ? "La fecha de la cita no puede estar en el pasado." : lang === 'fr'
           ? 'La date du rendez-vous ne peut pas être dans le passé.'
           : lang === 'en'
           ? 'The appointment date cannot be in the past.'
@@ -158,7 +159,7 @@ export function validateAppointmentInput(
       ok: false,
       errorCode: 'INVALID_SLOT',
       error:
-        lang === 'fr'
+        lang === 'es' ? "El horario seleccionado no es válido." : lang === 'fr'
           ? 'Créneau horaire sélectionné invalide.'
           : lang === 'en'
           ? 'Selected time slot is invalid.'
@@ -173,7 +174,7 @@ export function validateAppointmentInput(
         ok: false,
         errorCode: 'PAST_TIME',
         error:
-          lang === 'fr'
+          lang === 'es' ? "Este horario ya ha pasado para hoy." : lang === 'fr'
             ? 'Ce créneau est déjà passé pour aujourd’hui.'
             : lang === 'en'
             ? 'This time slot has already passed for today.'
@@ -190,7 +191,7 @@ export function validateAppointmentInput(
         ok: false,
         errorCode: 'INVALID_EMAIL',
         error:
-          lang === 'fr'
+          lang === 'es' ? "Dirección de correo electrónico no válida." : lang === 'fr'
             ? 'Adresse e-mail invalide.'
             : lang === 'en'
             ? 'Invalid email address.'
@@ -205,7 +206,7 @@ export function validateAppointmentInput(
       ok: false,
       errorCode: 'NOTES_TOO_LONG',
       error:
-        lang === 'fr'
+        lang === 'es' ? "Las notas clínicas no pueden superar los 1000 caracteres." : lang === 'fr'
           ? 'Les notes ne peuvent pas dépasser 1000 caractères.'
           : lang === 'en'
           ? 'Clinical notes cannot exceed 1000 characters.'
@@ -248,11 +249,10 @@ export function getClientIp(request: { headers: { get: (name: string) => string 
   const IP_REGEX = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^[a-fA-F0-9:]{2,45}$/;
 
   // Edge-verified proxy headers (Cloudflare, Vercel) are authoritative
-  const cfIp = request.headers.get('cf-connecting-ip');
+  // Trust CDN-specific headers only when that ingress is explicitly selected.
+  // A public client can otherwise forge cf-connecting-ip on a Vercel/VPS origin.
+  const cfIp = process.env.TRUSTED_PROXY === 'cloudflare' ? request.headers.get('cf-connecting-ip') : null;
   if (cfIp && IP_REGEX.test(cfIp.trim())) return cfIp.trim();
-
-  const vercelIp = request.headers.get('x-vercel-ip');
-  if (vercelIp && IP_REGEX.test(vercelIp.trim())) return vercelIp.trim();
 
   const isDev = process.env.NODE_ENV !== 'production';
 

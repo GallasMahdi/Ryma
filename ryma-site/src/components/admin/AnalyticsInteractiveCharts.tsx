@@ -1,4 +1,7 @@
 'use client';
+import { exportLabel } from '@/lib/export-i18n';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,8 +38,8 @@ interface TimelineSplineChartProps {
 }
 
 export const TimelineSplineChart = React.memo(function TimelineSplineChart({ points, lang, granularity }: TimelineSplineChartProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const [metric, setMetric] = useState<'revenue' | 'appointments'>('revenue');
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -145,22 +148,22 @@ export const TimelineSplineChart = React.memo(function TimelineSplineChart({ poi
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F1F5F9]">
         <div>
           <h4 className="font-bold text-sm sm:text-base text-[#0F172A] flex items-center gap-2">
-            <span>{txt('Évolution de l’Activité & Revenus', 'Revenue & Activity Timeline', 'Evolução da Atividade & Faturação')}</span>
+            <span>{txt('Évolution de l’Activité & Revenus', 'Revenue & Activity Timeline', 'Evolução da Atividade & Faturação', "Evolución de ingresos y actividad")}</span>
             <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-[#F1F5F9] text-[#64748B]">
               {granularity === 'hour'
-                ? txt('Par heure', 'Hourly', 'Por hora')
+                ? txt('Par heure', 'Hourly', 'Por hora', "Por hora")
                 : granularity === 'day'
-                ? txt('Quotidien', 'Daily', 'Diário')
+                ? txt('Quotidien', 'Daily', 'Diário', "Diaria")
                 : granularity === 'week'
-                ? txt('Hebdomadaire', 'Weekly', 'Semanal')
-                : txt('Mensuel', 'Monthly', 'Mensal')}
+                ? txt('Hebdomadaire', 'Weekly', 'Semanal', "Semanal")
+                : txt('Mensuel', 'Monthly', 'Mensal', "Mensual")}
             </span>
           </h4>
           <p className="text-xs text-[#64748B] mt-0.5">
             {txt(
               'Survolez la courbe pour inspecter chaque période en détail',
               'Hover over the curve to inspect each period in detail',
-              'Passe o cursor sobre a curva para inspecionar cada período'
+              'Passe o cursor sobre a curva para inspecionar cada período', "Pase el cursor por la curva para ver cada periodo en detalle"
             )}
           </p>
         </div>
@@ -176,7 +179,7 @@ export const TimelineSplineChart = React.memo(function TimelineSplineChart({ poi
                 : 'text-[#64748B] hover:text-[#0F172A]'
             }`}
           >
-            {txt('Chiffre d’Affaires (€)', 'Revenue (€)', 'Faturação (€)')}
+            {txt('Chiffre d’Affaires (€)', 'Revenue (€)', 'Faturação (€)', "Ingresos (€)")}
           </button>
           <button
             type="button"
@@ -187,7 +190,7 @@ export const TimelineSplineChart = React.memo(function TimelineSplineChart({ poi
                 : 'text-[#64748B] hover:text-[#0F172A]'
             }`}
           >
-            {txt('Consultations (Nbr)', 'Appointments (Qty)', 'Consultas (Qtd)')}
+            {txt('Consultations (Nbr)', 'Appointments (Qty)', 'Consultas (Qtd)', "Citas (cantidad)")}
           </button>
         </div>
       </div>
@@ -219,7 +222,7 @@ export const TimelineSplineChart = React.memo(function TimelineSplineChart({ poi
             const gridVal = Math.round(minVal + ratio * (maxVal - minVal));
             const formatted =
               metric === 'revenue'
-                ? `${gridVal.toLocaleString('pt-PT')} €`
+                ? `${gridVal.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €`
                 : `${gridVal}`;
 
             return (
@@ -346,12 +349,12 @@ export const TimelineSplineChart = React.memo(function TimelineSplineChart({ poi
               </div>
               <div className="text-base font-bold text-white tracking-tight pt-0.5">
                 {metric === 'revenue'
-                  ? `${activePoint.revenue.toLocaleString('pt-PT')} €`
-                  : `${activePoint.appointments} ${txt('rendez-vous', 'appts', 'consultas')}`}
+                  ? `${activePoint.revenue.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €`
+                  : `${activePoint.appointments} ${txt('rendez-vous', 'appts', 'consultas', "citas")}`}
               </div>
               <div className="flex items-center justify-between text-[11px] text-[#CBD5E1] pt-0.5 gap-3">
-                <span>{txt('Honorés', 'Completed', 'Concluídos')}: <strong className="text-emerald-300">{activePoint.completed}</strong></span>
-                <span>{txt('Annulés', 'Cancelled', 'Cancelados')}: <strong className="text-rose-300">{activePoint.cancelled}</strong></span>
+                <span>{txt('Honorés', 'Completed', 'Concluídos', "Completadas")}: <strong className="text-emerald-300">{activePoint.completed}</strong></span>
+                <span>{txt('Annulés', 'Cancelled', 'Cancelados', "Canceladas")}: <strong className="text-rose-300">{activePoint.cancelled}</strong></span>
               </div>
             </motion.div>
           )}
@@ -361,25 +364,25 @@ export const TimelineSplineChart = React.memo(function TimelineSplineChart({ poi
       {/* Footer Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-[#F1F5F9] text-xs">
         <div className="p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]/60">
-          <div className="text-[#64748B] text-[11px] font-medium">{txt('Moyenne par tranche', 'Period Average', 'Média do Período')}</div>
+          <div className="text-[#64748B] text-[11px] font-medium">{txt('Moyenne par tranche', 'Period Average', 'Média do Período', "Media del periodo")}</div>
           <div className="font-bold text-[#0F172A] text-sm mt-0.5">
-            {metric === 'revenue' ? `${avgVal.toLocaleString('pt-PT')} €` : `${avgVal} rdv`}
+            {metric === 'revenue' ? `${avgVal.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €` : `${avgVal} ${lang === 'es' ? 'citas' : 'rdv'}`}
           </div>
         </div>
         <div className="p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]/60">
           <div className="text-[#64748B] text-[11px] font-medium flex items-center gap-1">
             <IconFlame size={13} className="text-[#C49A3C]" />
-            <span>{txt('Pic d’activité', 'Peak Activity', 'Pico de Atividade')}</span>
+            <span>{txt('Pic d’activité', 'Peak Activity', 'Pico de Atividade', "Máxima actividad")}</span>
           </div>
           <div className="font-bold text-[#0F172A] text-sm mt-0.5">
-            {metric === 'revenue' ? `${peakVal.toLocaleString('pt-PT')} €` : `${peakVal} rdv`}
+            {metric === 'revenue' ? `${peakVal.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €` : `${peakVal} ${lang === 'es' ? 'citas' : 'rdv'}`}
             <span className="text-[11px] font-normal text-[#64748B] ml-1.5">({peakLabel})</span>
           </div>
         </div>
         <div className="col-span-2 sm:col-span-1 p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]/60">
-          <div className="text-[#64748B] text-[11px] font-medium">{txt('Total Cumulé', 'Cumulative Total', 'Total Acumulado')}</div>
+          <div className="text-[#64748B] text-[11px] font-medium">{txt('Total Cumulé', 'Cumulative Total', 'Total Acumulado', "Total acumulado")}</div>
           <div className="font-bold text-[#0F172A] text-sm mt-0.5">
-            {metric === 'revenue' ? `${totalVal.toLocaleString('pt-PT')} €` : `${totalVal} rdv`}
+            {metric === 'revenue' ? `${totalVal.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €` : `${totalVal} ${lang === 'es' ? 'citas' : 'rdv'}`}
           </div>
         </div>
       </div>
@@ -415,8 +418,8 @@ interface DepartmentDonutChartProps {
 }
 
 export const DepartmentDonutChart = React.memo(function DepartmentDonutChart({ poles, topServices, lang, totalRevenue }: DepartmentDonutChartProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const [activePole, setActivePole] = useState<DepartmentPole | null>(null);
 
@@ -441,10 +444,10 @@ export const DepartmentDonutChart = React.memo(function DepartmentDonutChart({ p
         <div className="pb-2 border-b border-[#F1F5F9]">
           <h4 className="font-bold text-sm sm:text-base text-[#0F172A] flex items-center gap-2">
             <IconBuildingHospital size={18} className="text-[#C49A3C]" />
-            <span>{txt('Répartition par Pôle Médical', 'Department Distribution', 'Distribuição por Polo')}</span>
+            <span>{txt('Répartition par Pôle Médical', 'Department Distribution', 'Distribuição por Polo', "Distribución por área")}</span>
           </h4>
           <p className="text-xs text-[#64748B] mt-0.5">
-            {txt('Chiffre d’affaires et volume d’actes par spécialité', 'Revenue and care volume by specialty', 'Receita e atos por especialidade')}
+            {txt('Chiffre d’affaires et volume d’actes par spécialité', 'Revenue and care volume by specialty', 'Receita e atos por especialidade', "Ingresos y volumen de atención por especialidad")}
           </p>
         </div>
 
@@ -491,15 +494,15 @@ export const DepartmentDonutChart = React.memo(function DepartmentDonutChart({ p
             {/* Donut Center Readout */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-4">
               <span className="text-[11px] font-medium text-[#64748B] truncate max-w-[130px]">
-                {activePole ? activePole.name : txt('Total Recettes', 'Total Revenue', 'Total Receita')}
+                {activePole ? activePole.name : txt('Total Recettes', 'Total Revenue', 'Total Receita', "Ingresos totales")}
               </span>
               <span className="text-lg font-extrabold text-[#0F172A] tracking-tight mt-0.5">
                 {activePole
-                  ? `${activePole.revenue.toLocaleString('pt-PT')} €`
-                  : `${totalRevenue.toLocaleString('pt-PT')} €`}
+                  ? `${activePole.revenue.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €`
+                  : `${totalRevenue.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €`}
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#F1F5F9] text-[#64748B] mt-1">
-                {activePole ? `${activePole.percentage}% du CA` : `${totalCount} séances`}
+                {lang === 'es' ? (activePole ? `${activePole.percentage}% de los ingresos` : `${totalCount} sesiones`) : (activePole ? `${activePole.percentage}% du CA` : `${totalCount} séances`)}
               </span>
             </div>
           </div>
@@ -524,8 +527,8 @@ export const DepartmentDonutChart = React.memo(function DepartmentDonutChart({ p
                     <span className="text-xs font-bold text-[#0F172A] truncate">{p.name}</span>
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-[#64748B] mt-1 pl-5 gap-3">
-                    <span>{p.revenue.toLocaleString('pt-PT')} €</span>
-                    <span className="font-semibold text-[#0F172A]">{p.count} rdv ({p.percentage}%)</span>
+                    <span>{p.revenue.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €</span>
+                    <span className="font-semibold text-[#0F172A]">{p.count}{" "}{legacyText("rdv (", lang)}{p.percentage}%)</span>
                   </div>
                 </div>
               );
@@ -540,17 +543,17 @@ export const DepartmentDonutChart = React.memo(function DepartmentDonutChart({ p
           <div>
             <h4 className="font-bold text-sm sm:text-base text-[#0F172A] flex items-center gap-2">
               <IconFlame size={18} className="text-amber-500" />
-              <span>{txt('Top Soins & Prestations Phares', 'Top Performing Treatments', 'Tratamentos de Maior Sucesso')}</span>
+              <span>{txt('Top Soins & Prestations Phares', 'Top Performing Treatments', 'Tratamentos de Maior Sucesso', "Tratamientos con mayor actividad")}</span>
             </h4>
             <p className="text-xs text-[#64748B] mt-0.5">
-              {txt('Classement par volume de consultations', 'Ranked by consultation volume', 'Ordenados por volume')}
+              {txt('Classement par volume de consultations', 'Ranked by consultation volume', 'Ordenados por volume', "Ordenados por número de consultas")}
             </p>
           </div>
         </div>
 
         {topServices.length === 0 ? (
           <div className="text-center text-[#64748B] text-xs py-8">
-            {txt('Aucune prestation sur cette période', 'No treatments recorded in this period', 'Sem registos neste período')}
+            {txt('Aucune prestation sur cette période', 'No treatments recorded in this period', 'Sem registos neste período', "No hay tratamientos registrados en este periodo")}
           </div>
         ) : (
           <div className="space-y-2.5">
@@ -574,8 +577,8 @@ export const DepartmentDonutChart = React.memo(function DepartmentDonutChart({ p
                       <span className="font-semibold text-[#0F172A] truncate">{svc.name}</span>
                     </div>
                     <div className="text-right shrink-0">
-                      <span className="font-bold text-[#0F172A]">{svc.count} {txt('rdv', 'appts', 'cons.')}</span>
-                      <span className="text-[11px] text-[#64748B] ml-1.5">({svc.revenue.toLocaleString('pt-PT')} €)</span>
+                      <span className="font-bold text-[#0F172A]">{svc.count} {txt('rdv', 'appts', 'cons.', "citas")}</span>
+                      <span className="text-[11px] text-[#64748B] ml-1.5">({svc.revenue.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €)</span>
                     </div>
                   </div>
 
@@ -617,8 +620,8 @@ export const OccupancyHeatmap = React.memo(function OccupancyHeatmap({
   peakSlot,
   lang,
 }: OccupancyHeatmapProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const [hoveredCell, setHoveredCell] = useState<{ dow: string; hour: string; count: number } | null>(null);
 
@@ -638,13 +641,13 @@ export const OccupancyHeatmap = React.memo(function OccupancyHeatmap({
         <div>
           <h4 className="font-bold text-sm sm:text-base text-[#0F172A] flex items-center gap-2">
             <IconClock size={18} className="text-[#C49A3C]" />
-            <span>{txt('Matrice d’Occupation & Heures d’Affluence', 'Clinic Occupancy & Peak Hours Heatmap', 'Matriz de Ocupação & Horários de Ponta')}</span>
+            <span>{txt('Matrice d’Occupation & Heures d’Affluence', 'Clinic Occupancy & Peak Hours Heatmap', 'Matriz de Ocupação & Horários de Ponta', "Mapa de ocupación de la clínica y horas punta")}</span>
           </h4>
           <p className="text-xs text-[#64748B] mt-0.5">
             {txt(
               'Densité de fréquentation par tranche horaire pour optimiser les plannings praticiens',
               'Attendance density per slot to optimize room and staffing allocation',
-              'Densidade por horário para otimizar marcações e salas'
+              'Densidade por horário para otimizar marcações e salas', "Densidad de asistencia por horario para optimizar salas y personal"
             )}
           </p>
         </div>
@@ -653,7 +656,7 @@ export const OccupancyHeatmap = React.memo(function OccupancyHeatmap({
         {peakSlot.count > 0 && (
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs font-bold">
             <IconFlame size={15} className="text-amber-600" />
-            <span>{txt('Créneau d’Or', 'Golden Slot', 'Horário de Ouro')}: {peakSlot.dow} {peakSlot.hour} ({peakSlot.count} rdv)</span>
+            <span>{txt('Créneau d’Or', 'Golden Slot', 'Horário de Ouro', "Horario de máxima demanda")}: {peakSlot.dow} {peakSlot.hour} ({peakSlot.count}{" "}{legacyText("rdv)", lang)}</span>
           </div>
         )}
       </div>
@@ -663,7 +666,7 @@ export const OccupancyHeatmap = React.memo(function OccupancyHeatmap({
         <div className="min-w-[560px]">
           {/* Header Row: Hours */}
           <div className="grid grid-cols-13 gap-1 mb-1.5 text-center text-[10px] font-mono text-[#64748B]">
-            <div className="text-left pl-2 font-sans font-bold">{txt('Jour', 'Day', 'Dia')}</div>
+            <div className="text-left pl-2 font-sans font-bold">{txt('Jour', 'Day', 'Dia', "Día")}</div>
             {hours.map(h => (
               <div key={h}>{h.slice(0, 2)}h</div>
             ))}
@@ -698,17 +701,17 @@ export const OccupancyHeatmap = React.memo(function OccupancyHeatmap({
       {/* Legend & Active Cell Inspector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-[#F1F5F9] text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-[#64748B] font-medium">{txt('Intensité', 'Intensity', 'Intensidade')}:</span>
+          <span className="text-[11px] text-[#64748B] font-medium">{txt('Intensité', 'Intensity', 'Intensidade', "Intensidad")}:</span>
           <span className="px-2 py-0.5 rounded bg-[#F8FAFC] border border-[#E2E8F0] text-[10px] text-[#64748B]">0</span>
-          <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">Faible</span>
-          <span className="px-2 py-0.5 rounded bg-amber-300 text-amber-950 text-[10px] font-bold">Moyen</span>
-          <span className="px-2 py-0.5 rounded bg-[#C49A3C] text-white text-[10px] font-bold">Élevé</span>
-          <span className="px-2 py-0.5 rounded bg-[#0F172A] text-amber-300 text-[10px] font-extrabold">Pic</span>
+          <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">{legacyText("Faible", lang)}</span>
+          <span className="px-2 py-0.5 rounded bg-amber-300 text-amber-950 text-[10px] font-bold">{legacyText("Moyen", lang)}</span>
+          <span className="px-2 py-0.5 rounded bg-[#C49A3C] text-white text-[10px] font-bold">{legacyText("Élevé", lang)}</span>
+          <span className="px-2 py-0.5 rounded bg-[#0F172A] text-amber-300 text-[10px] font-extrabold">{legacyText("Pic", lang)}</span>
         </div>
 
         {hoveredCell && (
           <div className="text-xs font-bold text-[#0F172A] bg-[#F1F5F9] px-3 py-1 rounded-lg">
-            {hoveredCell.dow} {hoveredCell.hour} — <span className="text-[#C49A3C]">{hoveredCell.count} {txt('rendez-vous', 'appointments', 'consultas')}</span>
+            {hoveredCell.dow} {hoveredCell.hour} — <span className="text-[#C49A3C]">{hoveredCell.count} {txt('rendez-vous', 'appointments', 'consultas', "citas")}</span>
           </div>
         )}
       </div>
@@ -742,8 +745,8 @@ export const AttendanceFunnel = React.memo(function AttendanceFunnel({
   retentionRate,
   lang,
 }: AttendanceFunnelProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 font-sans">
@@ -752,10 +755,10 @@ export const AttendanceFunnel = React.memo(function AttendanceFunnel({
         <div className="pb-2 border-b border-[#F1F5F9]">
           <h4 className="font-bold text-sm sm:text-base text-[#0F172A] flex items-center gap-2">
             <IconUserCheck size={18} className="text-[#10B981]" />
-            <span>{txt('Entonnoir de Présence & Fidélisation', 'Attendance & Retention Funnel', 'Funil de Presença & Retenção')}</span>
+            <span>{txt('Entonnoir de Présence & Fidélisation', 'Attendance & Retention Funnel', 'Funil de Presença & Retenção', "Proceso de asistencia y continuidad")}</span>
           </h4>
           <p className="text-xs text-[#64748B] mt-0.5">
-            {txt('Parcours de concrétisation du rendez-vous à la fidélisation multi-séances', 'Conversion from appointment booked to completed treatment plans', 'Conversão de consultas agendadas em planos concluídos')}
+            {txt('Parcours de concrétisation du rendez-vous à la fidélisation multi-séances', 'Conversion from appointment booked to completed treatment plans', 'Conversão de consultas agendadas em planos concluídos', "Conversión de citas reservadas en planes de tratamiento completados")}
           </p>
         </div>
 
@@ -801,39 +804,39 @@ export const AttendanceFunnel = React.memo(function AttendanceFunnel({
         <div>
           <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
             <IconAlertCircle size={18} className="text-amber-700" />
-            <span>{txt('Manque à Gagner & Défections', 'Missed Revenue & Leakage', 'Perdas por Faltas & Desmarcações')}</span>
+            <span>{txt('Manque à Gagner & Défections', 'Missed Revenue & Leakage', 'Perdas por Faltas & Desmarcações', "Ingresos perdidos")}</span>
           </div>
           <p className="text-xs text-amber-800 mt-1 leading-relaxed">
             {txt(
               'Impact financier des annulations et absences non prévenues sur cette période.',
               'Financial impact of late cancellations and no-shows during this period.',
-              'Impacto financeiro de cancelamentos tardios e faltas nesta seleção.'
+              'Impacto financeiro de cancelamentos tardios e faltas nesta seleção.', "Impacto económico de las cancelaciones tardías y las ausencias durante este periodo."
             )}
           </p>
         </div>
 
         <div className="p-4 rounded-xl bg-white/80 backdrop-blur-xs border border-amber-300/50 space-y-3">
           <div className="flex items-baseline justify-between">
-            <span className="text-xs font-semibold text-amber-900">{txt('Total Opportunités Perdues', 'Total Lost Opportunities', 'Total Oportunidades Perdidas')}:</span>
+            <span className="text-xs font-semibold text-amber-900">{txt('Total Opportunités Perdues', 'Total Lost Opportunities', 'Total Oportunidades Perdidas', "Total de oportunidades perdidas")}:</span>
             <span className="text-xl font-extrabold text-rose-700">
-              - {lostRevenue.toLocaleString('pt-PT')} €
+              - {lostRevenue.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-amber-200">
             <div>
-              <span className="text-[11px] text-amber-800">{txt('Annulations', 'Cancellations', 'Cancelamentos')}</span>
-              <div className="font-bold text-[#0F172A] mt-0.5">{cancellationsCount} {txt('rdv', 'appts', 'cons.')}</div>
+              <span className="text-[11px] text-amber-800">{txt('Annulations', 'Cancellations', 'Cancelamentos', "Cancelaciones")}</span>
+              <div className="font-bold text-[#0F172A] mt-0.5">{cancellationsCount} {txt('rdv', 'appts', 'cons.', "citas")}</div>
             </div>
             <div>
-              <span className="text-[11px] text-amber-800">{txt('Absences (No-Show)', 'No-Shows', 'Faltas')}</span>
-              <div className="font-bold text-[#0F172A] mt-0.5">{noShowsCount} {txt('rdv', 'appts', 'cons.')}</div>
+              <span className="text-[11px] text-amber-800">{txt('Absences (No-Show)', 'No-Shows', 'Faltas', "Ausencias")}</span>
+              <div className="font-bold text-[#0F172A] mt-0.5">{noShowsCount} {txt('rdv', 'appts', 'cons.', "citas")}</div>
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-between text-xs text-amber-900 font-medium px-1">
-          <span>{txt('Taux de fidélisation multi-séances', 'Multi-session retention rate', 'Taxa de retenção multi-sessões')}:</span>
+          <span>{txt('Taux de fidélisation multi-séances', 'Multi-session retention rate', 'Taxa de retenção multi-sessões', "Tasa de continuidad entre sesiones")}:</span>
           <span className="font-extrabold text-[#0F172A] bg-white px-2 py-0.5 rounded-md border border-amber-300">
             {retentionRate}%
           </span>
@@ -873,8 +876,8 @@ export const PaymentDistributionVisualizer = React.memo(function PaymentDistribu
   unpaidAmount,
   lang,
 }: PaymentDistributionProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 font-sans">
@@ -884,17 +887,17 @@ export const PaymentDistributionVisualizer = React.memo(function PaymentDistribu
           <div>
             <h4 className="font-bold text-sm sm:text-base text-[#0F172A] flex items-center gap-2">
               <IconCreditCard size={18} className="text-[#C49A3C]" />
-              <span>{txt('Canaux d’Encaissement & Moyens de Paiement', 'Payment Methods Breakdown', 'Métodos de Pagamento')}</span>
+              <span>{txt('Canaux d’Encaissement & Moyens de Paiement', 'Payment Methods Breakdown', 'Métodos de Pagamento', "Distribución de métodos de pago")}</span>
             </h4>
             <p className="text-xs text-[#64748B] mt-0.5">
-              {txt('Répartition des factures réglées par modalité', 'Paid invoices breakdown by payment channel', 'Faturação por forma de pagamento')}
+              {txt('Répartition des factures réglées par modalité', 'Paid invoices breakdown by payment channel', 'Faturação por forma de pagamento', "Facturas pagadas por medio de pago")}
             </p>
           </div>
 
           {unpaidCount > 0 && (
             <div className="text-right">
               <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                {unpaidCount} {txt('en attente', 'pending', 'pendentes')} ({unpaidAmount.toLocaleString('pt-PT')} €)
+                {unpaidCount} {txt('en attente', 'pending', 'pendentes', "pendientes")} ({unpaidAmount.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €)
               </span>
             </div>
           )}
@@ -902,7 +905,7 @@ export const PaymentDistributionVisualizer = React.memo(function PaymentDistribu
 
         {byMethod.length === 0 ? (
           <div className="text-center text-[#64748B] text-xs py-6">
-            {txt('Aucun encaissement sur cette période', 'No payments recorded in this period', 'Sem pagamentos neste período')}
+            {txt('Aucun encaissement sur cette période', 'No payments recorded in this period', 'Sem pagamentos neste período', "No hay pagos registrados en este periodo")}
           </div>
         ) : (
           <div className="space-y-3">
@@ -915,7 +918,7 @@ export const PaymentDistributionVisualizer = React.memo(function PaymentDistribu
                   <div
                     key={item.method}
                     style={{ width: `${item.percentage}%` }}
-                    title={`${item.method}: ${item.percentage}%`}
+                    title={`${exportLabel(item.method, lang)}: ${item.percentage}%`}
                     className={`${c} h-full transition-all`}
                   />
                 );
@@ -931,13 +934,13 @@ export const PaymentDistributionVisualizer = React.memo(function PaymentDistribu
                   <div key={item.method} className="p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
                     <div className="flex items-center gap-1.5">
                       <span className={`w-2.5 h-2.5 rounded-full ${dot}`} />
-                      <span className="text-xs font-bold text-[#0F172A] truncate">{item.method}</span>
+                      <span className="text-xs font-bold text-[#0F172A] truncate">{exportLabel(item.method, lang)}</span>
                     </div>
                     <div className="font-extrabold text-[#0F172A] text-sm mt-1">
-                      {item.amount.toLocaleString('pt-PT')} €
+                      {item.amount.toLocaleString(lang === 'es' ? 'es-ES' : 'pt-PT')} €
                     </div>
                     <div className="text-[11px] text-[#64748B]">
-                      {item.count} factures ({item.percentage}%)
+                      {item.count}{" "}{legacyText("factures (", lang)}{item.percentage}%)
                     </div>
                   </div>
                 );
@@ -951,16 +954,16 @@ export const PaymentDistributionVisualizer = React.memo(function PaymentDistribu
       <div className="lg:col-span-5 bg-white rounded-2xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">
         <div className="pb-2 border-b border-[#F1F5F9]">
           <h4 className="font-bold text-sm sm:text-base text-[#0F172A]">
-            {txt('Régimes de Couverture Santé', 'Insurance & Health Coverage', 'Regimes de Cobertura')}
+            {txt('Régimes de Couverture Santé', 'Insurance & Health Coverage', 'Regimes de Cobertura', "Seguros y cobertura sanitaria")}
           </h4>
           <p className="text-xs text-[#64748B] mt-0.5">
-            {txt('Assurances privées vs Régime général', 'Private insurance vs Private out-of-pocket', 'Seguradoras vs Particular')}
+            {txt('Assurances privées vs Régime général', 'Private insurance vs Private out-of-pocket', 'Seguradoras vs Particular', "Seguro privado frente a pago particular")}
           </p>
         </div>
 
         {byCoverage.length === 0 ? (
           <div className="text-center text-[#64748B] text-xs py-6">
-            {txt('Aucune donnée', 'No data', 'Sem dados')}
+            {txt('Aucune donnée', 'No data', 'Sem dados', "Sin datos")}
           </div>
         ) : (
           <div className="space-y-2.5">

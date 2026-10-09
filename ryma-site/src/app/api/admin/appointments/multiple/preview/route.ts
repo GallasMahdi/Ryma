@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isKnownTreatment, getTreatments } from '@/lib/treatments';
 import { loadScheduleState, evaluateSlot } from '@/lib/scheduling';
 import { dbGetPatientByPhone } from '@/lib/db';
@@ -18,6 +19,7 @@ interface ScheduleSlotConfig {
 const DAY_NAMES_PT = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 const DAY_NAMES_FR = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 const DAY_NAMES_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_NAMES_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 function formatDate(d: Date): string {
   const y = d.getFullYear();
@@ -38,18 +40,18 @@ export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
   try {
     body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
   } catch {
-    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('JSON inválido', request) }, { status: 400 });
   }
 
   if (body.totalSessions !== undefined && (typeof body.totalSessions !== 'number' || !Number.isInteger(body.totalSessions) || body.totalSessions < 1 || body.totalSessions > 50)) {
-    return NextResponse.json({ error: 'Session count must be an integer between 1 and 50' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Session count must be an integer between 1 and 50', request) }, { status: 422 });
   }
-  if(body.practitionerId!==undefined&&(typeof body.practitionerId!=='string'||body.practitionerId.length>160||body.practitionerId!==body.practitionerId.trim()))return NextResponse.json({error:'Invalid practitioner preference'},{status:422});
+  if(body.practitionerId!==undefined&&(typeof body.practitionerId!=='string'||body.practitionerId.length>160||body.practitionerId!==body.practitionerId.trim()))return NextResponse.json({error:localizeApiError('Invalid practitioner preference', request)},{status:422});
   const totalSessions = typeof body.totalSessions === 'number' ? body.totalSessions : 10;
   const service = typeof body.serviceSlug === 'string' ? body.serviceSlug : (await getTreatments(true))[0]?.slug;
-  if (!service || !(await isKnownTreatment(service))) return NextResponse.json({error: 'Invalid service'}, {status: 422});
+  if (!service || !(await isKnownTreatment(service))) return NextResponse.json({error: localizeApiError('Invalid service', request)}, {status: 422});
   const startDateStr = isCalendarDate(body.startDate)
     ? body.startDate
     : new Date().toISOString().split('T')[0];
@@ -74,10 +76,10 @@ export async function POST(request: NextRequest) {
     : [];
 
   if (body.scheduleSlots !== undefined && (!Array.isArray(body.scheduleSlots) || body.scheduleSlots.length > 50 || scheduleSlots.length !== body.scheduleSlots.length)) {
-    return NextResponse.json({ error: 'Invalid recurrence pattern' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Invalid recurrence pattern', request) }, { status: 422 });
   }
 
-  if ((Array.isArray(body.explicitSessions) && (body.explicitSessions.length > 50 || explicitSessions.length !== body.explicitSessions.length)) || (body.startDate !== undefined && !isCalendarDate(body.startDate))) return NextResponse.json({ error: 'Invalid schedule dates or time slots' }, { status: 422 });
+  if ((Array.isArray(body.explicitSessions) && (body.explicitSessions.length > 50 || explicitSessions.length !== body.explicitSessions.length)) || (body.startDate !== undefined && !isCalendarDate(body.startDate))) return NextResponse.json({ error: localizeApiError('Invalid schedule dates or time slots', request) }, { status: 422 });
   const candidateSlots: { date: string; startTime: string; dayOfWeek: number }[] = [];
 
   if (explicitSessions.length > 0) {
@@ -118,13 +120,13 @@ export async function POST(request: NextRequest) {
     }
   } else {
     return NextResponse.json(
-      { error: 'Especifique os dias e horários de recorrência para calcular o plano de sessões.' },
+      { error: localizeApiError('Especifique os dias e horários de recorrência para calcular o plano de sessões.', request) },
       { status: 422 }
     );
   }
 
   if (new Set(candidateSlots.map(slot => `${slot.date}:${slot.startTime}`)).size !== candidateSlots.length) {
-    return NextResponse.json({ error: 'Duplicate session slots are not allowed.' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Duplicate session slots are not allowed.', request) }, { status: 422 });
   }
 
   // High-performance single-pass batched availability across all candidate dates
@@ -171,6 +173,7 @@ export async function POST(request: NextRequest) {
       dayNamePt: DAY_NAMES_PT[slot.dayOfWeek],
       dayNameFr: DAY_NAMES_FR[slot.dayOfWeek],
       dayNameEn: DAY_NAMES_EN[slot.dayOfWeek],
+      dayNameEs: DAY_NAMES_ES[slot.dayOfWeek],
       available: isAvailable,
       conflictReason: isAvailable ? null : (reason || 'booked'),
       availableFreeSlots,

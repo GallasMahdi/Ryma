@@ -9,14 +9,27 @@ import { getLocalizedText } from '@/data/services';
 
 // Editorial photo gallery only. Bookable treatments come from the dashboard catalogue.
 const PHOTOS = [
-  { id: 'cellulite', src: '/results/before_after_cellulite.png', title: { pt: 'Pele & textura', en: 'Skin & texture', fr: 'Peau & texture' } },
-  { id: 'contour', src: '/results/before_after_cryolipolyse.png', title: { pt: 'Contorno corporal', en: 'Body contour', fr: 'Silhouette' } },
-  { id: 'abdomen', src: '/results/before_after_postpartum.png', title: { pt: 'Abdómen', en: 'Abdomen', fr: 'Abdomen' } },
-  { id: 'face', src: '/results/before_after_radiofrequence.png', title: { pt: 'Rosto & firmeza', en: 'Face & firmness', fr: 'Visage & fermeté' } },
-  { id: 'legs', src: '/results/before_after_drainage.png', title: { pt: 'Pernas', en: 'Legs', fr: 'Jambes' } },
+  { id: 'cellulite', src: '/results/before_after_cellulite.png', title: {
+    es: "Piel y textura", pt: 'Pele & textura', en: 'Skin & texture', fr: 'Peau & texture' } },
+  { id: 'contour', src: '/results/before_after_cryolipolyse.png', title: {
+    es: "Contorno corporal", pt: 'Contorno corporal', en: 'Body contour', fr: 'Silhouette' } },
+  { id: 'abdomen', src: '/results/before_after_postpartum.png', title: {
+    es: "Abdomen", pt: 'Abdómen', en: 'Abdomen', fr: 'Abdomen' } },
+  { id: 'face', src: '/results/before_after_radiofrequence.png', title: {
+    es: "Rostro y firmeza", pt: 'Rosto & firmeza', en: 'Face & firmness', fr: 'Visage & fermeté' } },
+  { id: 'legs', src: '/results/before_after_drainage.png', title: {
+    es: "Piernas", pt: 'Pernas', en: 'Legs', fr: 'Jambes' } },
 ] as const;
 
 const COPY = {
+    es: {
+    eyebrow: "Cuidados en imágenes", title: "Antes y después", before: "Antes", after: "Después",
+    intro: "Explore la galería comparativa y descubra un enfoque personalizado para su cuidado.",
+    detail: "Cada persona tiene su propio recorrido. Hable con nuestro equipo sobre los cuidados adecuados para sus objetivos.",
+    note: "Los resultados varían de una persona a otra. Su plan se define durante una evaluación individual.",
+    catalogue: "Explorar tratamientos", contact: "Hablar con el equipo", group: "Elija una comparación",
+    previous: "Foto anterior", next: "Foto siguiente", gallery: "Galería de antes y después",
+  },
   pt: {
     eyebrow: 'O cuidado em imagens', title: 'Antes e Depois', before: 'Antes', after: 'Depois',
     intro: 'Explore a galeria de comparações e descubra uma abordagem personalizada ao seu cuidado.',

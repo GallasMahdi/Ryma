@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React from 'react';
 import {
@@ -45,63 +47,63 @@ export const AdminSidebar = React.memo(function AdminSidebar({
   onToggleCollapse,
   onOpenHelpdesk,
 }: AdminSidebarProps) {
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const navItems = [
     {
       id: 'appointments' as const,
-      label: txt('Rendez-vous', 'Appointments', 'Consultas'),
-      sublabel: txt('Planning & Liste', 'List & Schedule', 'Lista e Agenda'),
+      label: txt('Rendez-vous', 'Appointments', 'Consultas', "Citas"),
+      sublabel: txt('Planning & Liste', 'List & Schedule', 'Lista e Agenda', "Lista y agenda"),
       icon: IconListCheck,
       badge: totalAppointments,
     },
     {
       id: 'slots' as const,
-      label: txt('Créneaux & Horaires', 'Slots & Hours', 'Horários & Vagas'),
-      sublabel: txt('Disponibilités', 'Availability', 'Disponibilidades'),
+      label: txt('Créneaux & Horaires', 'Slots & Hours', 'Horários & Vagas', "Citas y horarios"),
+      sublabel: txt('Disponibilités', 'Availability', 'Disponibilidades', "Disponibilidad"),
       icon: IconCalendarEvent,
       badge: null,
     },
     {
       id: 'patients' as const,
-      label: txt('Dossiers Patients', 'Patient Records', 'Fichas de Utentes'),
-      sublabel: txt('EMR & Suivi EVA', 'EMR & Pain Scale', 'Processos & EVA'),
+      label: txt('Dossiers Patients', 'Patient Records', 'Fichas de Utentes', "Historias clínicas"),
+      sublabel: txt('EMR & Suivi EVA', 'EMR & Pain Scale', 'Processos & EVA', "Historia clínica y escala del dolor"),
       icon: IconNotes,
       badge: totalNotes,
     },
     {
       id: 'invoices' as const,
-      label: txt('Facturation & Recibos', 'Invoicing & Receipts', 'Faturação & Recibos'),
-      sublabel: txt('NIF & Reçus Fiscaux', 'NIF & Tax Receipts', 'Recibos Fiscais & NIF'),
+      label: txt('Facturation & Recibos', 'Invoicing & Receipts', 'Faturação & Recibos', "Facturación y recibos"),
+      sublabel: txt('NIF & Reçus Fiscaux', 'NIF & Tax Receipts', 'Recibos Fiscais & NIF', "NIF y recibos fiscales"),
       icon: IconReceiptTax,
       badge: totalInvoices && totalInvoices > 0 ? totalInvoices : null,
     },
     {
       id: 'reviews' as const,
-      label: txt('Avis & Témoignages', 'Reviews & Feedback', 'Avaliações & Opiniões'),
-      sublabel: txt('Modération & Site', 'Site Testimonials', 'Testemunhos no Site'),
+      label: txt('Avis & Témoignages', 'Reviews & Feedback', 'Avaliações & Opiniões', "Opiniones y comentarios"),
+      sublabel: txt('Modération & Site', 'Site Testimonials', 'Testemunhos no Site', "Testimonios del sitio"),
       icon: IconMessageHeart,
       badge: totalReviews && totalReviews > 0 ? totalReviews : null,
     },
     {
       id: 'treatments' as const,
-      label: lang==='pt'?'Tratamentos':lang==='fr'?'Soins':'Treatments',
+      label: lang === 'es' ? "Tratamientos" : lang==='pt'?'Tratamentos':lang==='fr'?'Soins':'Treatments',
       sublabel: 'Catalogue',
       icon: IconStethoscope,
       badge: null,
     },
     {
       id: 'team' as const,
-      label: lang === 'pt' ? 'Equipa' : lang === 'fr' ? 'Équipe' : 'Team',
-      sublabel: lang === 'pt' ? 'Profissionais e horários' : lang === 'fr' ? 'Praticiens et horaires' : 'Practitioners and hours',
+      label: lang === 'es' ? "Equipo" : lang === 'pt' ? 'Equipa' : lang === 'fr' ? 'Équipe' : 'Team',
+      sublabel: lang === 'es' ? "Profesionales y horarios" : lang === 'pt' ? 'Profissionais e horários' : lang === 'fr' ? 'Praticiens et horaires' : 'Practitioners and hours',
       icon: IconCalendarEvent,
       badge: null,
     },
     {
       id: 'analytics' as const,
-      label: txt('Statistiques', 'Analytics & Reports', 'Estatísticas'),
-      sublabel: txt('Rapports & Revenus', 'Reports & Revenue', 'Relatórios & Receita'),
+      label: txt('Statistiques', 'Analytics & Reports', 'Estatísticas', "Estadísticas e informes"),
+      sublabel: txt('Rapports & Revenus', 'Reports & Revenue', 'Relatórios & Receita', "Informes e ingresos"),
       icon: IconChartBar,
       badge: isAnalyticsUnlocked ? '🔓' : '🔒',
     },
@@ -125,7 +127,7 @@ export const AdminSidebar = React.memo(function AdminSidebar({
         <div className="flex items-center justify-between px-2 pt-1 min-h-[22px]">
           {!isCollapsed && (
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] px-1 truncate">
-              {txt('Navigation', 'Navigation', 'Navegação')}
+              {txt('Navigation', 'Navigation', 'Navegação', "Navegación")}
             </span>
           )}
           {onToggleCollapse && (
@@ -134,13 +136,13 @@ export const AdminSidebar = React.memo(function AdminSidebar({
               onClick={onToggleCollapse}
               title={
                 isCollapsed
-                  ? txt('Agrandir le menu (Ctrl+B)', 'Expand sidebar (Ctrl+B)', 'Expandir menu (Ctrl+B)')
-                  : txt('Réduire le menu (Ctrl+B)', 'Collapse sidebar (Ctrl+B)', 'Recolher menu (Ctrl+B)')
+                  ? txt('Agrandir le menu (Ctrl+B)', 'Expand sidebar (Ctrl+B)', 'Expandir menu (Ctrl+B)', "Expandir barra lateral (Ctrl+B)")
+                  : txt('Réduire le menu (Ctrl+B)', 'Collapse sidebar (Ctrl+B)', 'Recolher menu (Ctrl+B)', "Contraer barra lateral (Ctrl+B)")
               }
               className={`p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#E2E8F0]/70 transition-colors flex items-center justify-center ${
                 isCollapsed ? 'w-full' : 'shrink-0'
               }`}
-              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={lang === 'es' ? (isCollapsed ? 'Expandir barra lateral' : 'Contraer barra lateral') : (isCollapsed ? 'Expand sidebar' : 'Collapse sidebar')}
             >
               {isCollapsed ? (
                 <IconLayoutSidebarLeftExpand size={18} />
@@ -151,7 +153,7 @@ export const AdminSidebar = React.memo(function AdminSidebar({
           )}
         </div>
 
-        <nav className="space-y-1" aria-label="Menu latéral">
+        <nav className="space-y-1" aria-label={legacyText("Menu latéral", lang)}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -228,10 +230,10 @@ export const AdminSidebar = React.memo(function AdminSidebar({
             className={`w-full flex items-center ${
               isCollapsed ? 'justify-center p-2' : 'gap-2.5 px-3 py-2'
             } rounded-xl text-xs font-medium text-[#9A7428] hover:text-[#1A1412] bg-[#FAFAF8] hover:bg-[#C49A3C]/10 border border-[#C49A3C]/30 transition-colors shadow-2xs`}
-            title={txt('Support Technique & Helpdesk', 'Clinic Support & Helpdesk', 'Suporte Técnico & Ajuda')}
+            title={txt('Support Technique & Helpdesk', 'Clinic Support & Helpdesk', 'Suporte Técnico & Ajuda', "Asistencia de la clínica")}
           >
             <IconLifebuoy size={18} className="text-[#C49A3C] shrink-0" />
-            {!isCollapsed && <span>{txt('Support & Aide', 'Support & Help', 'Suporte & Ajuda')}</span>}
+            {!isCollapsed && <span>{txt('Support & Aide', 'Support & Help', 'Suporte & Ajuda', "Asistencia y ayuda")}</span>}
           </button>
         )}
 
@@ -239,7 +241,7 @@ export const AdminSidebar = React.memo(function AdminSidebar({
         {isCollapsed ? (
           <div
             className="p-2 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-center shadow-xs"
-            title={txt('Système Prêt (v2.4)', 'System Ready (v2.4)', 'Sistema Ativo (v2.4)')}
+            title={txt('Système Prêt (v2.4)', 'System Ready (v2.4)', 'Sistema Ativo (v2.4)', "Sistema listo (v2.4)")}
           >
             <span className="w-2.5 h-2.5 rounded-full bg-[#166534] animate-pulse" />
           </div>
@@ -247,7 +249,7 @@ export const AdminSidebar = React.memo(function AdminSidebar({
           <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] text-xs text-[#64748B] flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-2 text-[#166534] font-medium text-[11px]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#166534]" />
-              <span>{txt('Système Prêt', 'System Ready', 'Sistema Ativo')}</span>
+              <span>{txt('Système Prêt', 'System Ready', 'Sistema Ativo', "Sistema listo")}</span>
             </div>
             <span className="font-mono text-[10px] text-[#94A3B8]">
               v2.4

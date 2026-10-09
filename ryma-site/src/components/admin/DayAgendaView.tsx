@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { useServiceLabels } from '@/components/ServiceCatalogProvider';
 import { TeamDayAgenda } from './TeamDayAgenda';
 import { AgendaContent } from './AgendaContent';
@@ -63,8 +65,8 @@ export const DayAgendaView = React.memo(function DayAgendaView({
   openWhatsAppModal,
 }: DayAgendaViewProps) {
   const { getServiceName, getServicePrice } = useServiceLabels();
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const todayStr = useMemo(() => formatLocalDate(new Date()), []);
   const [teamView,setTeamView] = useState(true);
@@ -109,7 +111,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
             <button
               onClick={() => onDateChange(shiftDateString(selectedDate, -1))}
               className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
-              title={txt('Jour précédent', 'Previous day', 'Dia anterior')}
+              title={txt('Jour précédent', 'Previous day', 'Dia anterior', "Día anterior")}
             >
               <IconChevronLeft size={18} />
             </button>
@@ -117,7 +119,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
             <button
               onClick={() => onDateChange(shiftDateString(selectedDate, 1))}
               className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
-              title={txt('Jour suivant', 'Next day', 'Dia seguinte')}
+              title={txt('Jour suivant', 'Next day', 'Dia seguinte', "Día siguiente")}
             >
               <IconChevronRight size={18} />
             </button>
@@ -135,8 +137,8 @@ export const DayAgendaView = React.memo(function DayAgendaView({
             <span className={`text-xs text-[#64748B] font-medium hidden sm:inline ${loading ? 'invisible' : ''}`}>
               · {dayAppointments.length}{' '}
               {dayAppointments.length === 1
-                ? txt('rendez-vous', 'appointment', 'consulta')
-                : txt('rendez-vous', 'appointments', 'consultas')}
+                ? txt('rendez-vous', 'appointment', 'consulta', "cita")
+                : txt('rendez-vous', 'appointments', 'consultas', "citas")}
             </span>
           </div>
 
@@ -149,12 +151,12 @@ export const DayAgendaView = React.memo(function DayAgendaView({
                   : 'bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0]'
               }`}
             >
-              {txt("Auj.", 'Today', 'Hoje')}
+              {txt("Auj.", 'Today', 'Hoje', "Hoy")}
             </button>
             <button
               onClick={() => onDateChange(shiftDateString(selectedDate, 7))}
               className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] transition-colors hidden sm:inline-block"
-              title={txt('+7 jours', '+7 days', '+7 dias')}
+              title={txt('+7 jours', '+7 days', '+7 dias', "+7 días")}
             >
               +7d
             </button>
@@ -200,8 +202,8 @@ export const DayAgendaView = React.memo(function DayAgendaView({
         </div>
       </div>
 
-      <div className="flex gap-2"><button type="button" onClick={()=>setTeamView(true)} className={'rounded-lg border px-3 py-2 text-sm '+(teamView?'bg-slate-900 text-white':'bg-white')}>{txt('Équipe','Team view','Equipa')}</button><button type="button" onClick={()=>setTeamView(false)} className={'rounded-lg border px-3 py-2 text-sm '+(!teamView?'bg-slate-900 text-white':'bg-white')}>{txt('Liste','List','Lista')}</button></div>
-      <AgendaContent loading={loading} loadingLabel={txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…')}>
+      <div className="flex gap-2"><button type="button" onClick={()=>setTeamView(true)} className={'rounded-lg border px-3 py-2 text-sm '+(teamView?'bg-slate-900 text-white':'bg-white')}>{txt('Équipe','Team view','Equipa', "Vista del equipo")}</button><button type="button" onClick={()=>setTeamView(false)} className={'rounded-lg border px-3 py-2 text-sm '+(!teamView?'bg-slate-900 text-white':'bg-white')}>{txt('Liste','List','Lista', "Lista")}</button></div>
+      <AgendaContent loading={loading} loadingLabel={txt('Chargement des rendez-vous…', 'Loading appointments…', 'A carregar consultas…', "Cargando citas…")}>
       {teamView && <TeamDayAgenda date={selectedDate} appointments={appointments} practitionerId={practitionerId} lang={lang} onSelect={setSelectedDetailAppt} />}
       {/* Day Timeline List */}
       {teamView ? null : dayAppointments.length === 0 ? (
@@ -210,13 +212,13 @@ export const DayAgendaView = React.memo(function DayAgendaView({
             <IconCalendar size={24} />
           </div>
           <h4 className="font-semibold text-sm text-[#0F172A]">
-            {txt('Aucun rendez-vous pour ce jour', 'No appointments for this day', 'Nenhuma consulta para este dia')}
+            {txt('Aucun rendez-vous pour ce jour', 'No appointments for this day', 'Nenhuma consulta para este dia', "No hay citas para este día")}
           </h4>
           <p className="text-xs text-[#64748B] max-w-sm mx-auto">
             {txt(
               'Aucun soin n’est programmé à cette date. Utilisez le bouton "Nouveau RDV" pour planifier une séance.',
               'No appointments are scheduled on this date. Click "New Appt" to book a patient.',
-              'Não existem consultas agendadas nesta data. Clique em "Nova Consulta" para agendar.'
+              'Não existem consultas agendadas nesta data. Clique em "Nova Consulta" para agendar.', "No hay citas programadas en esta fecha. Pulse «Nueva cita» para reservar para un paciente."
             )}
           </p>
         </div>
@@ -271,7 +273,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
                         </span>
                         {isNew && (
                           <span className="bg-[#C49A3C] text-white text-[9px] font-bold px-1.5 py-0.2 rounded uppercase animate-pulse">
-                            {txt('NOUV.', 'NEW', 'NOVO')}
+                            {txt('NOUV.', 'NEW', 'NOVO', "NUEVA")}
                           </span>
                         )}
                         <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${st.bg} ${st.color} ${st.border}`}>
@@ -280,7 +282,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
                         {noShows >= 2 && (
                           <span className="bg-[#FEF2F2] border border-[#FEE2E2] text-[#991B1B] text-[10px] font-medium px-1.5 py-0.2 rounded flex items-center gap-1">
                             <IconAlertCircle size={11} />
-                            <span>{noShows} {txt('annulations', 'cancels', 'cancelamentos')}</span>
+                            <span>{noShows} {txt('annulations', 'cancels', 'cancelamentos', "cancelaciones")}</span>
                           </span>
                         )}
                       </div>
@@ -316,7 +318,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
                         type="button"
                         onClick={() => openWhatsAppModal(appt)}
                         className="p-2 rounded-lg bg-[#F0FDF4] border border-[#DCFCE7] text-[#166534] hover:bg-[#DCFCE7] transition-colors touch-target flex items-center justify-center"
-                        title="WhatsApp Hub"
+                        title={legacyText("WhatsApp Hub", lang)}
                       >
                         <IconBrandWhatsapp size={16} />
                       </button>
@@ -335,18 +337,18 @@ export const DayAgendaView = React.memo(function DayAgendaView({
                     <button
                       onClick={() => openPatientNote(appt)}
                       className="p-2 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] hover:bg-[#F8FAFC] transition-colors touch-target flex items-center justify-center"
-                      title={txt('Dossier patient', 'Patient file', 'Ficha do doente')}
+                      title={txt('Dossier patient', 'Patient file', 'Ficha do doente', "Ficha del paciente")}
                     >
                       <IconNotes size={16} />
                     </button>
 
-                    {appt.status !== 'CONFIRMED' && appt.status !== 'CANCELLED' && (
+                    {appt.status === 'PENDING' && (
                       <button
                         onClick={() => updateStatus(appt.id, 'CONFIRMED')}
                         className="px-3 py-2 rounded-lg bg-[#DCFCE7] text-[#166534] hover:bg-[#BBF7D0] text-xs font-semibold transition-colors touch-target flex items-center gap-1"
                       >
                         <IconCheck size={14} />
-                        <span>{txt('Confirmer', 'Confirm', 'Confirmar')}</span>
+                        <span>{txt('Confirmer', 'Confirm', 'Confirmar', "Confirmar")}</span>
                       </button>
                     )}
 
@@ -356,7 +358,7 @@ export const DayAgendaView = React.memo(function DayAgendaView({
                         className="px-3 py-2 rounded-lg bg-[#DBEAFE] text-[#1E40AF] hover:bg-[#BFDBFE] text-xs font-semibold transition-colors touch-target flex items-center gap-1"
                       >
                         <IconCheck size={14} />
-                        <span>{txt('Terminer', 'Complete', 'Concluir')}</span>
+                        <span>{txt('Terminer', 'Complete', 'Concluir', "Completar")}</span>
                       </button>
                     )}
 
@@ -364,12 +366,12 @@ export const DayAgendaView = React.memo(function DayAgendaView({
                       <button
                         onClick={() =>
                           setConfirmDialog({
-                            title: txt('Annuler ce rendez-vous ?', 'Cancel this appointment?', 'Cancelar esta consulta?'),
+                            title: txt('Annuler ce rendez-vous ?', 'Cancel this appointment?', 'Cancelar esta consulta?', "¿Cancelar esta cita?"),
                             onConfirm: () => softDeleteAppointment(appt.id),
                           })
                         }
                         className="p-2 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] hover:bg-[#FEE2E2] transition-colors touch-target flex items-center justify-center"
-                        title={txt('Annuler', 'Cancel', 'Cancelar')}
+                        title={txt('Annuler', 'Cancel', 'Cancelar', "Cancelar")}
                       >
                         <IconX size={16} />
                       </button>

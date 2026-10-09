@@ -1,32 +1,32 @@
 // Fictional fixtures only. No patient records, credentials, or production exports.
-const tr = (pt, en, fr) => ({ pt, en, fr });
+const tr = (pt, en, fr, es) => ({ pt, en, fr, es });
 const definitions = [
-  ['reeducation-posturale', 'Reeducação postural', 'Postural rehabilitation', 'Rééducation posturale', 50, 6500, 'kinesitherapie', 'posture', 'back'],
-  ['reeducation-post-partum', 'Reabilitação pós-parto', 'Postpartum rehabilitation', 'Rééducation post-partum', 45, 6000, 'kinesitherapie', 'postpartum', 'torso'],
-  ['massage-therapeutique', 'Massagem terapêutica', 'Therapeutic massage', 'Massage thérapeutique', 45, 5500, 'kinesitherapie', 'posture', 'back'],
-  ['drainage-lymphatique', 'Drenagem linfática', 'Lymphatic drainage', 'Drainage lymphatique', 50, 6500, 'kinesitherapie', 'drainage', 'legs'],
-  ['electrotherapie', 'Eletroterapia', 'Electrotherapy', 'Électrothérapie', 30, 4000, 'kinesitherapie', 'posture', 'arms'],
-  ['ultrasons', 'Ultrassons terapêuticos', 'Therapeutic ultrasound', 'Ultrasons thérapeutiques', 20, 3500, 'kinesitherapie', 'posture', 'arms'],
-  ['cavitation', 'Cavitação', 'Cavitation', 'Cavitation', 45, 8000, 'minceur', 'slimming', 'torso'],
-  ['radiofrequence', 'Radiofrequência', 'Radiofrequency', 'Radiofréquence', 60, 9000, 'minceur', 'slimming', 'legs'],
-  ['laser-lipo', 'Laser lipolítico', 'Lipo laser', 'Laser lipo', 30, 7000, 'minceur', 'slimming', 'torso'],
-  ['pressotherapie', 'Pressoterapia', 'Pressotherapy', 'Pressothérapie', 45, 5000, 'minceur', 'drainage', 'legs'],
-  ['cryolipolyse', 'Criolipólise', 'Cryolipolysis', 'Cryolipolyse', 60, 12000, 'minceur', 'slimming', 'torso'],
-  ['massage-amincissant', 'Massagem modeladora', 'Body contour massage', 'Massage amincissant', 45, 6500, 'minceur', 'slimming', 'legs'],
-  ['bilan-minceur', 'Avaliação corporal', 'Body assessment', 'Bilan corporel', 60, 5000, 'bilan', 'slimming', 'torso'],
-  ['avaliacao-desportiva', 'Avaliação desportiva — rascunho', 'Sports assessment — draft', 'Bilan sportif — brouillon', 60, 7500, 'bilan', 'posture', 'legs'],
-  ['mobilidade-funcional', 'Mobilidade funcional — arquivo', 'Functional mobility — archived', 'Mobilité fonctionnelle — archive', 45, 5500, 'kinesitherapie', 'posture', 'back'],
+  ['reeducation-posturale', 'Reeducação postural', 'Postural rehabilitation', 'Rééducation posturale', 50, 6500, 'kinesitherapie', 'posture', 'back', "Reeducación postural"],
+  ['reeducation-post-partum', 'Reabilitação pós-parto', 'Postpartum rehabilitation', 'Rééducation post-partum', 45, 6000, 'kinesitherapie', 'postpartum', 'torso', "Rehabilitación posparto"],
+  ['massage-therapeutique', 'Massagem terapêutica', 'Therapeutic massage', 'Massage thérapeutique', 45, 5500, 'kinesitherapie', 'posture', 'back', "Masaje terapéutico"],
+  ['drainage-lymphatique', 'Drenagem linfática', 'Lymphatic drainage', 'Drainage lymphatique', 50, 6500, 'kinesitherapie', 'drainage', 'legs', "Drenaje linfático"],
+  ['electrotherapie', 'Eletroterapia', 'Electrotherapy', 'Électrothérapie', 30, 4000, 'kinesitherapie', 'posture', 'arms', "Electroterapia"],
+  ['ultrasons', 'Ultrassons terapêuticos', 'Therapeutic ultrasound', 'Ultrasons thérapeutiques', 20, 3500, 'kinesitherapie', 'posture', 'arms', "Ultrasonidos terapéuticos"],
+  ['cavitation', 'Cavitação', 'Cavitation', 'Cavitation', 45, 8000, 'minceur', 'slimming', 'torso', "Cavitación"],
+  ['radiofrequence', 'Radiofrequência', 'Radiofrequency', 'Radiofréquence', 60, 9000, 'minceur', 'slimming', 'legs', "Radiofrecuencia"],
+  ['laser-lipo', 'Laser lipolítico', 'Lipo laser', 'Laser lipo', 30, 7000, 'minceur', 'slimming', 'torso', "Láser lipolítico"],
+  ['pressotherapie', 'Pressoterapia', 'Pressotherapy', 'Pressothérapie', 45, 5000, 'minceur', 'drainage', 'legs', "Presoterapia"],
+  ['cryolipolyse', 'Criolipólise', 'Cryolipolysis', 'Cryolipolyse', 60, 12000, 'minceur', 'slimming', 'torso', "Criolipólisis"],
+  ['massage-amincissant', 'Massagem modeladora', 'Body contour massage', 'Massage amincissant', 45, 6500, 'minceur', 'slimming', 'legs', "Masaje modelador"],
+  ['bilan-minceur', 'Avaliação corporal', 'Body assessment', 'Bilan corporel', 60, 5000, 'bilan', 'slimming', 'torso', "Evaluación corporal"],
+  ['avaliacao-desportiva', 'Avaliação desportiva — rascunho', 'Sports assessment — draft', 'Bilan sportif — brouillon', 60, 7500, 'bilan', 'posture', 'legs', "Evaluación deportiva — borrador"],
+  ['mobilidade-funcional', 'Mobilidade funcional — arquivo', 'Functional mobility — archived', 'Mobilité fonctionnelle — archive', 45, 5500, 'kinesitherapie', 'posture', 'back', "Movilidad funcional — archivado"],
 ];
-const treatments = definitions.map(([slug, pt, en, fr, durationMinutes, priceCents, pole, goal, zone], index) => ({
-  slug, name: tr(pt, en, fr), durationMinutes, priceCents, pole,
+const treatments = definitions.map(([slug, pt, en, fr, durationMinutes, priceCents, pole, goal, zone, es], index) => ({
+  slug, name: tr(pt, en, fr, es), durationMinutes, priceCents, pole,
   status: index === 13 ? 'DRAFT' : index === 14 ? 'ARCHIVED' : 'PUBLISHED',
-  shortDesc: tr(`${pt}: acompanhamento individual, com avaliação inicial e objetivos acordados.`, `${en}: individual care with an initial assessment and agreed goals.`, `${fr} : prise en charge individuelle, avec bilan initial et objectifs partagés.`),
-  longDesc: tr(`Catálogo de demonstração. ${pt} integra uma avaliação individual, registo de evolução e revisão do plano em cada visita. A indicação e a adequação são avaliadas pelo profissional.`, `Demo catalogue. ${en} includes an individual assessment, progress records and review of the plan at each visit. Suitability is assessed by the practitioner.`, `Catalogue de démonstration. ${fr} comprend un bilan individuel, un suivi de progression et une révision du programme à chaque visite. Le professionnel évalue la pertinence du soin.`),
-  careGoals: [goal], bodyZones: [zone], keywords: [pt, en, fr],
-  sessionFlow: tr(['Acolhimento e avaliação', 'Intervenção individualizada', 'Registo e planeamento da próxima visita'], ['Welcome and assessment', 'Individual session', 'Documentation and next visit planning'], ['Accueil et bilan', 'Séance individuelle', 'Documentation et prochaine visite']),
-  indications: tr(['Objetivos definidos na avaliação individual.'], ['Goals identified during the individual assessment.'], ['Objectifs définis pendant le bilan individuel.']),
-  contraindications: tr(['Requer avaliação prévia do profissional.'], ['Prior practitioner assessment required.'], ['Évaluation préalable du professionnel requise.']),
-  faq: [{ q: tr('Como é preparada a primeira visita?', 'How is the first visit prepared?', 'Comment préparer la première visite ?'), a: tr('Reúna as informações relevantes para a avaliação. Este conteúdo é uma demonstração.', 'Bring relevant information for the assessment. This is demonstration content.', 'Préparez les informations utiles au bilan. Ce contenu est une démonstration.') }],
+  shortDesc: tr(`${pt}: acompanhamento individual, com avaliação inicial e objetivos acordados.`, `${en}: individual care with an initial assessment and agreed goals.`, `${fr} : prise en charge individuelle, avec bilan initial et objectifs partagés.`, `${es}: atención individual, con evaluación inicial y objetivos acordados.`),
+  longDesc: tr(`Catálogo de demonstração. ${pt} integra uma avaliação individual, registo de evolução e revisão do plano em cada visita. A indicação e a adequação são avaliadas pelo profissional.`, `Demo catalogue. ${en} includes an individual assessment, progress records and review of the plan at each visit. Suitability is assessed by the practitioner.`, `Catalogue de démonstration. ${fr} comprend un bilan individuel, un suivi de progression et une révision du programme à chaque visite. Le professionnel évalue la pertinence du soin.`, `Catálogo de demostración. ${es} incluye una evaluación individual, seguimiento de la evolución y revisión del plan en cada visita. El profesional evalúa la idoneidad del tratamiento.`),
+  careGoals: [goal], bodyZones: [zone], keywords: [pt, en, fr, es],
+  sessionFlow: tr(['Acolhimento e avaliação', 'Intervenção individualizada', 'Registo e planeamento da próxima visita'], ['Welcome and assessment', 'Individual session', 'Documentation and next visit planning'], ['Accueil et bilan', 'Séance individuelle', 'Documentation et prochaine visite'], ['Acogida y evaluación', 'Sesión individual', 'Registro y planificación de la próxima visita']),
+  indications: tr(['Objetivos definidos na avaliação individual.'], ['Goals identified during the individual assessment.'], ['Objectifs définis pendant le bilan individuel.'], ['Objetivos definidos durante la evaluación individual.']),
+  contraindications: tr(['Requer avaliação prévia do profissional.'], ['Prior practitioner assessment required.'], ['Évaluation préalable du professionnel requise.'], ['Se requiere una evaluación previa del profesional.']),
+  faq: [{ q: tr('Como é preparada a primeira visita?', 'How is the first visit prepared?', 'Comment préparer la première visite ?', '¿Cómo se prepara la primera visita?'), a: tr('Reúna as informações relevantes para a avaliação. Este conteúdo é uma demonstração.', 'Bring relevant information for the assessment. This is demonstration content.', 'Préparez les informations utiles au bilan. Ce contenu est une démonstration.', 'Reúna la información relevante para la evaluación. Este contenido es una demostración.') }],
 }));
 
 const firstNames = ['Ana', 'Miguel', 'Inês', 'João', 'Beatriz', 'Pedro', 'Mariana', 'Tiago', 'Sofia', 'Diogo', 'Catarina', 'Rui', 'Leonor', 'André', 'Rita', 'Tomás', 'Clara', 'Duarte', 'Marta', 'Bruno'];

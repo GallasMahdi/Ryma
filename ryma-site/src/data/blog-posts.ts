@@ -1,33 +1,36 @@
-export type Lang = 'pt' | 'en' | 'fr';
+export type Lang = 'pt' | 'en' | 'fr' | 'es';
 
 export interface BlogPost {
   slug: string;
-  title: { fr: string; pt: string; en: string; ar?: string };
-  excerpt: { fr: string; pt: string; en: string; ar?: string };
-  content: { fr: string; pt: string; en: string; ar?: string };
+  title: { fr: string; pt: string; en: string; es: string; ar?: string };
+  excerpt: { fr: string; pt: string; en: string; es: string; ar?: string };
+  content: { fr: string; pt: string; en: string; es: string; ar?: string };
   category: string;
   relatedServiceSlug?: string;
   readingTime: number; // minutes
   publishedAt: string; // ISO date
   coverImage: string;
   tags: string[];
-  seoDescription: { fr: string; pt: string; en: string; ar?: string };
+  seoDescription: { fr: string; pt: string; en: string; es: string; ar?: string };
 }
 
 export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'cellulite-mythes-realites',
     title: {
+    es: "Celulitis: mitos y realidades — lo que revela la ciencia clínica",
       pt: 'Celulite: mitos e realidades — o que a ciência realmente diz',
       en: 'Cellulite: myths vs. realities — what clinical science really reveals',
       fr: 'Cellulite : mythes et réalités — ce que la science dit vraiment',
     },
     excerpt: {
+    es: "La celulitis afecta al 80–90 % de las mujeres adultas. Sin embargo, persisten muchas ideas equivocadas. Una perspectiva clínica de Digital Clínica en Lisboa.",
       pt: 'A celulite afeta 80 a 90% das mulheres adultas. No entanto, persistem inúmeras crenças erradas. Descubra a explicação clínica da Digital Clínica.',
       en: 'Cellulite affects 80 to 90% of adult women. Yet many misconceptions remain widespread. Clinical insights by Digital Clínica in Lisbon.',
       fr: "La cellulite touche 80 à 90% des femmes adultes. Pourtant, les fausses croyances restent nombreuses. Décryptage avec la Digital Clínica à Lisbonne.",
     },
     content: {
+    es: "## ¿Qué es realmente la celulitis?\n\nLa celulitis no es una enfermedad. Es una modificación estructural del tejido adiposo subcutáneo, caracterizada por depósitos de grasa separados por tabiques fibrosos de tejido conjuntivo. Cuando estas bandas de colágeno se endurecen y la microcirculación se ralentiza, la superficie de la piel adquiere el característico aspecto irregular de «piel de naranja».\n\nContrariamente a lo que se suele creer, la celulitis no es simplemente un signo de sobrepeso. Las mujeres muy delgadas también pueden desarrollarla. La genética, el equilibrio hormonal (en particular los estrógenos) y el flujo vascular tienen un papel mucho más importante que el número de la báscula.\n\n## Mito n.º 1: «El ejercicio elimina por completo la celulitis»\n\n**La realidad**: La actividad física regular mejora la circulación linfática, tonifica la musculatura subyacente y puede reducir el porcentaje global de grasa corporal, lo que ayuda a suavizar la textura de la piel. Sin embargo, el ejercicio por sí solo no puede romper las bandas fibrosas verticales rígidas. Incluso las deportistas de élite tienen celulitis.\n\nLos ejercicios específicos (sentadillas, zancadas) fortalecen los glúteos y los muslos y ofrecen un soporte más firme, pero se necesita una terapia tisular específica para actuar sobre los tabiques conjuntivos.\n\n## Mito n.º 2: «Las cremas anticelulíticas son suficientes»\n\n**La realidad**: Las cremas pueden hidratar la superficie de la epidermis y algunos principios activos (cafeína, retinol) estimulan ligeramente el flujo capilar superficial. Sin embargo, su penetración transdérmica hasta el tejido subcutáneo profundo es limitada. No pueden reestructurar las bandas de colágeno endurecidas.\n\nEl masaje mecánico durante la aplicación produce la mayor parte de los beneficios linfáticos observados.\n\n## Mito n.º 3: «Solo las mujeres tienen celulitis»\n\n**La realidad**: Los hombres poseen una red de colágeno dérmico oblicua y entrecruzada que resiste de forma natural la protrusión de los adipocitos. En las mujeres, los tabiques de colágeno discurren verticalmente, por lo que la protrusión de la grasa es mucho más visible. Sin embargo, los hombres con determinados perfiles hormonales también pueden desarrollar celulitis.\n\n## Mito n.º 4: «La liposucción es la única solución real»\n\n**La realidad**: La liposucción quirúrgica elimina capas adiposas profundas, pero no trata las adherencias fibrosas superficiales. Si la piel carece de elasticidad, la aspiración quirúrgica puede empeorar sus ondulaciones. La estética médica no invasiva, como la cavitación ultrasónica, la radiofrecuencia y el drenaje linfático manual, resulta más adecuada para mejorar la superficie.\n\n## Tipos de celulitis y tratamientos adaptados\n\n### Celulitis acuosa\nAsociada a retención de líquidos y mala circulación linfática. Blanda al tacto y acompañada a menudo de sensación de piernas pesadas. Protocolo: drenaje linfático manual Vodder y presoterapia médica.\n\n### Celulitis adiposa\nAsociada a un exceso localizado de grasa. Blanda e indolora a la palpación. Protocolo: cavitación ultrasónica focalizada y masaje modelador reductor específico.\n\n### Celulitis fibrosa\nAntigua, dura y a veces sensible al tacto. Es la forma más resistente. Protocolo: radiofrecuencia multipolar, cavitación combinada y movilización de tejidos profundos.\n\n## Conclusión\n\nNo existe una cura milagrosa inmediata. Sin embargo, un protocolo clínico estructurado y adaptado a su tipo de tejido ofrece mejoras visibles y duraderas. En Digital Clínica, Lisboa, cada tratamiento comienza con una evaluación clínica exhaustiva para identificar su perfil exacto.",
       pt: `## O que é a celulite na realidade?
 
 A celulite não é uma doença. É uma alteração estrutural do tecido adiposo subcutâneo, caracterizada pela acumulação de gordura em lóbulos envolvidos por septos fibrosos. Quando estas bandas fibrosas perdem elasticidade e a microcirculação sanguínea e linfática diminui, a superfície da pele ganha o aspeto irregular em "casca de laranja".
@@ -156,6 +159,7 @@ Il n'existe pas de traitement miracle instantané. En revanche, une approche com
     coverImage: '/blog/blog_cellulite.png',
     tags: ['cellulite', 'minceur', 'corps', 'peau'],
     seoDescription: {
+    es: "Guía clínica sobre la celulitis: causas, tipos, mitos y tratamientos médico-estéticos probados de Digital Clínica en Lisboa.",
       pt: 'Análise clínica sobre a celulite: causas, tipos, mitos e tratamentos médicos eficazes. Guia elaborado pela Digital Clínica em Lisboa.',
       en: 'Clinical guide on cellulite: causes, types, myths and proven medical aesthetic treatments by Digital Clínica in Lisbon.',
       fr: 'Décryptage scientifique de la cellulite : types, mythes populaires et traitements réellement efficaces. Guide complet par la Digital Clínica.',
@@ -164,16 +168,19 @@ Il n'existe pas de traitement miracle instantané. En revanche, une approche com
   {
     slug: 'reeducation-post-partum-guide',
     title: {
+    es: "Rehabilitación posparto: la guía definitiva para las nuevas madres",
       pt: 'Reabilitação pós-parto: o guia completo para recém-mamãs',
       en: 'Postpartum rehabilitation: the definitive guide for new mothers',
       fr: 'Rééducation post-partum : le guide complet pour les jeunes mamans',
     },
     excerpt: {
+    es: "Tanto después de un parto vaginal como de una cesárea, la rehabilitación del periné y la musculatura abdominal profunda es fundamental para la salud a largo plazo. Todo lo que deben saber las nuevas madres.",
       pt: 'Parto por via vaginal ou cesariana: a recuperação perineal e abdominal é essencial para o bem-estar e saúde a longo prazo. Conheça as etapas clínicas.',
       en: 'Whether vaginal birth or C-section, perineal and deep core rehabilitation is crucial for long-term health. Everything new mothers need to know.',
       fr: "Accouchement vaginal ou césarienne, la rééducation périnéale et abdominale est essentielle. Voici tout ce que vous devez savoir.",
     },
     content: {
+    es: "## ¿Por qué es esencial la fisioterapia posparto?\n\nEl embarazo y el parto implican profundas adaptaciones anatómicas y biomecánicas: distensión de la pared abdominal, esfuerzo de los músculos del suelo pélvico y cambios en la alineación vertebral. La fisioterapia especializada posparto restaura la integridad muscular y previene disfunciones a largo plazo.\n\nEntre los problemas no tratados figuran la incontinencia urinaria de esfuerzo (que afecta hasta al 30 % de las mujeres tras el parto), la pesadez del suelo pélvico, el dolor lumbar crónico y la diástasis de los rectos abdominales. Estos síntomas son comunes, pero no son algo que deba simplemente aceptar.\n\n## ¿Cuándo debe empezar?\n\n### Después de un parto vaginal\nLa recuperación del suelo pélvico suele empezar alrededor de la **sexta semana posparto**, tras la revisión posnatal con su obstetra.\n\n### Después de una cesárea\nLa cicatrización de la incisión abdominal quirúrgica requiere aproximadamente 8 semanas antes de introducir carga activa sobre la musculatura abdominal. El entrenamiento suave del suelo pélvico y la reeducación postural pueden empezar de forma segura en la sexta semana.\n\n### Consideraciones sobre la lactancia\nLa lactancia mantiene niveles elevados de relaxina, lo que conserva la flexibilidad del tejido conjuntivo. Los ejercicios se ajustan teniendo esto en cuenta para proteger la estabilidad articular.\n\n## Etapas clínicas de su recuperación\n\n1. **Evaluación integral**: Valoración detallada del tono del suelo pélvico en reposo, la activación voluntaria, la resistencia y la distancia entre los rectos abdominales (diástasis).\n2. **Activación propioceptiva**: Recuperación de la conexión entre mente y músculo y de la coordinación respiratoria con el diafragma.\n3. **Fortalecimiento pélvico funcional**: Carga progresiva del suelo pélvico integrada en los movimientos cotidianos del cuidado del bebé (levantarlo, agacharse, subir escaleras).\n4. **Entrenamiento abdominal hipopresivo**: Fortalecimiento del transverso del abdomen sin una presión intraabdominal descendente peligrosa.\n5. **Regreso seguro a deportes de impacto**: Pruebas deportivas progresivas antes de retomar la carrera, el entrenamiento de intervalos de alta intensidad o el tenis.\n\n## Conclusión\n\nLa rehabilitación posparto es un derecho de salud esencial de toda madre. En Digital Clínica, Lisboa, adaptamos cada protocolo a su ritmo de recuperación para favorecer una comodidad duradera y la confianza al practicar deporte.",
       pt: `## Por que razão a reabilitação pós-parto é fundamental?
 
 A gravidez e o parto provocam transformações profundas na anatomia e biomecânica feminina: distensão dos músculos retos abdominais, sobrecarga do pavimento pélvico e alteração do centro de gravidade. A fisioterapia pós-parto restaura a integridade destas estruturas e previne complicações crónicas.
@@ -263,6 +270,7 @@ La rééducation post-partum est un droit et une nécessité médicale. À la Di
     coverImage: '/blog/blog_postpartum.png',
     tags: ['post-partum', 'périnée', 'grossesse', 'jeune maman'],
     seoDescription: {
+    es: "Guía clínica completa de rehabilitación posparto del suelo pélvico y abdominal de Digital Clínica en Lisboa.",
       pt: 'Guia clínico de reabilitação perineal e abdominal pós-parto. Quando iniciar, diástase abdominal e retorno ao desporto na Digital Clínica em Lisboa.',
       en: 'Complete clinical guide to postpartum pelvic floor and abdominal rehabilitation by Digital Clínica in Lisbon.',
       fr: "Guide complet de la rééducation périnéale et abdominale après accouchement. Quand commencer, diastasis, retour au sport — par Digital Clínica.",
@@ -271,16 +279,19 @@ La rééducation post-partum est un droit et une nécessité médicale. À la Di
   {
     slug: 'drainage-lymphatique-utilite',
     title: {
+    es: "Drenaje linfático manual: indicaciones clínicas y beneficios demostrados",
       pt: 'Drenagem linfática manual: para que serve e a quem se destina?',
       en: 'Manual lymphatic drainage: clinical indications and proven benefits',
       fr: 'Drainage lymphatique manuel : à qui ça sert vraiment ?',
     },
     excerpt: {
+    es: "El drenaje linfático se confunde a menudo con un simple masaje de bienestar. En realidad, es una técnica clínica avanzada con indicaciones terapéuticas precisas.",
       pt: 'A drenagem linfática é frequentemente confundida com uma massagem estética ligeira. Na verdade, é uma técnica fisioterapêutica com indicações rigorosas.',
       en: 'Lymphatic drainage is often mistaken for a simple spa pampering massage. In reality, it is an advanced clinical technique with precise therapeutic indications.',
       fr: "Le drainage lymphatique est souvent perçu comme un luxe spa. En réalité, c'est une technique médicale aux indications très précises.",
     },
     content: {
+    es: "## El sistema linfático: el equilibrio esencial de líquidos de su cuerpo\n\nAunque el sistema cardiovascular recibe la mayor atención, el sistema linfático es igual de importante para la salud. Funciona como una red paralela de capilares y ganglios linfáticos y cumple tres funciones esenciales:\n\n1. **Drenaje de líquidos**: Reabsorbe el líquido intersticial, las proteínas y los restos celulares y los devuelve al torrente sanguíneo.\n2. **Vigilancia inmunitaria**: Los ganglios filtran los patógenos y producen linfocitos para combatir la inflamación y las infecciones.\n3. **Transporte de residuos**: Retira los residuos celulares que los capilares venosos no pueden reabsorber.\n\nCuando el flujo linfático se altera por un traumatismo, una cirugía o una insuficiencia venosa, el líquido se acumula en los tejidos y produce edema.\n\n## Principales indicaciones clínicas\n\n### 1. Recuperación posquirúrgica\nLas intervenciones quirúrgicas alteran inevitablemente las vías linfáticas locales. El drenaje linfático manual (DLM) posoperatorio acelera la recuperación, reduce la equimosis (hematomas), previene los seromas subcutáneos y alivia la rigidez posoperatoria:\n- Liposucción y abdominoplastia (atención clínica de referencia)\n- Cirugía mamaria y estética\n- Intervenciones ortopédicas (artroplastia de cadera y rodilla)\n\n### 2. Piernas pesadas y estasis venolinfática\nPermanecer mucho tiempo de pie o sentado ante un escritorio provoca acumulación de líquidos en las extremidades inferiores. El embarazo también agrava la hinchazón de tobillos al final del día.\n\n### 3. Rendimiento y recuperación deportiva\nTras un entrenamiento intenso o una competición, el drenaje linfático específico favorece una rápida eliminación de residuos metabólicos y reduce el dolor muscular de aparición tardía.\n\n## La técnica Vodder: referencia clínica\n\nDesarrollado en 1936 por el Dr. Emil Vodder, este método utiliza maniobras rítmicas, suaves, en espiral y de bombeo, ajustadas a la frecuencia natural de contracción de los linfangiones (de 6 a 12 ciclos por minuto). Nunca debe resultar doloroso ni causar enrojecimiento de la piel.\n\nEn Digital Clínica, Lisboa, todos los tratamientos linfáticos siguen rigurosos estándares clínicos Vodder.",
       pt: `## O sistema linfático: o sistema de purificação do organismo
 
 O sistema linfático é muitas vezes esquecido em comparação com o sistema circulatório arterial e venoso. No entanto, é vital para o equilíbrio homeostático do corpo humano. Desempenha três papéis capitais:
@@ -368,6 +379,7 @@ Après un effort intense, il accélère l'élimination des déchets métabolique
     coverImage: '/blog/blog_drainage.png',
     tags: ['drainage', 'lymphatique', 'oedème', 'post-opératoire'],
     seoDescription: {
+    es: "Guía de drenaje linfático manual en Lisboa: técnica Vodder, recuperación posoperatoria y tratamiento de la retención de líquidos en Digital Clínica.",
       pt: 'Guia sobre drenagem linfática manual em Lisboa: técnica Vodder, indicações pós-cirúrgicas e tratamento do inchaço pela Digital Clínica.',
       en: 'Guide to manual lymphatic drainage in Lisbon: Vodder technique, post-op recovery and fluid retention treatment by Digital Clínica.',
       fr: 'Tout savoir sur le drainage lymphatique manuel : indications médicales, technique Vodder et bienfaits par la Digital Clínica.',
@@ -376,16 +388,19 @@ Après un effort intense, il accélère l'élimination des déchets métabolique
   {
     slug: 'posture-bureau-exercices',
     title: {
+    es: "5 ejercicios sencillos para mejorar su postura en el trabajo (sin material)",
       pt: '5 exercícios simples para corrigir a sua postura no escritório (sem equipamento)',
       en: '5 simple desk exercises to fix your posture at work (no equipment needed)',
       fr: '5 exercices simples pour corriger votre posture au bureau (sans équipement)',
     },
     excerpt: {
+    es: "¿Pasa 8 horas al día sentado ante un escritorio? Estos 5 ejercicios rápidos de fisioterapia le ayudarán a proteger la columna y aliviar la tensión cervical.",
       pt: 'Passa mais de 7 horas diárias sentado à frente do computador? Estes 5 exercícios fisioterapêuticos rápidos vão proteger a sua coluna lombar e cervical.',
       en: 'Sitting at a desk for 8 hours a day? These 5 quick clinical physical therapy exercises will safeguard your spine and relieve neck tension.',
       fr: "8 heures par jour assis devant un écran ? Ces 5 exercices, faisables entre deux réunions, peuvent sauver votre dos.",
     },
     content: {
+    es: "## El coste biomecánico de estar sentado mucho tiempo\n\nEl trabajo sedentario de oficina y la exposición prolongada a pantallas son causas principales de molestias musculoesqueléticas. Pasar muchas horas sentado provoca desequilibrios musculares previsibles:\n\n- **Acortamiento del psoas y de los flexores de cadera**: Inclina la pelvis hacia delante y aumenta la presión sobre los discos lumbares.\n- **Pectorales tensos y hombros adelantados**: Favorecen la cabeza adelantada y la sobrecarga cervical.\n- **Inhibición de los glúteos («amnesia glútea»)**: Desestabiliza la pelvis y sobrecarga la zona lumbar.\n- **Hiperactividad del trapecio superior**: Genera cefaleas cervicogénicas y tensión en los hombros.\n\n## 5 ejercicios de escritorio basados en la evidencia\n\n### 1. Extensión torácica sentado (2 min, cada 2 horas)\nEntrelace los dedos detrás de la cabeza. Separe los codos. Inspire y extienda suavemente la parte superior de la columna torácica sobre el respaldo de la silla. Mantenga 3 segundos, espire y repita 5 veces.\n\n### 2. Estiramiento de los flexores de cadera de pie (2 min)\nAdopte una posición de zancada con las manos en las caderas. Mantenga el tronco erguido y lleve la pelvis hacia atrás hasta notar un estiramiento profundo en la parte anterior de la cadera de la pierna retrasada. Mantenga 30 segundos por pierna.\n\n### 3. Retracción cervical (1 min)\nCon la mirada horizontal, desplace la barbilla recta hacia atrás, como si formara papada. Note cómo se alarga la nuca. Mantenga 5 segundos y repita 10 veces.\n\n### 4. Activación isométrica de glúteos (1 min)\nSentado con los pies apoyados en el suelo, contraiga firmemente los glúteos durante 5 segundos. Relaje durante 5 segundos. Realice 10 repeticiones para reactivar los estabilizadores pélvicos.\n\n### 5. Rotación torácica sentado (2 min)\nCruce los brazos sobre el pecho. Mantenga las caderas apoyadas y orientadas hacia delante y gire el tronco suavemente a la derecha y después a la izquierda. Realice 10 repeticiones suaves por lado.\n\n## Cuándo buscar atención clínica\n\nSi siente dolor que se irradia hacia un brazo o una pierna, entumecimiento en los dedos o molestias diarias persistentes, reserve una evaluación postural clínica en Digital Clínica, Lisboa. Nuestra reeducación postural global (RPG) aborda las causas mecánicas de origen.",
       pt: `## O impacto da postura de escritório na sua coluna
 
 O trabalho sedentário diante de computadores e smartphones é uma das principais causas de dorsalgias, lombalgias e cervicalgias crónicas em Portugal. A posição sentada contínua gera padrões musculares patológicos:
@@ -469,6 +484,7 @@ Si vos douleurs persistent plus de 3 semaines ou s'accompagnent d'engourdissemen
     coverImage: '/blog/blog_posture.png',
     tags: ['posture', 'bureau', 'exercices', 'mal de dos'],
     seoDescription: {
+    es: "5 ejercicios de fisioterapia para mejorar la postura en el escritorio y prevenir el dolor de espalda, de Digital Clínica en Lisboa.",
       pt: '5 exercícios de fisioterapia para melhorar a postura no trabalho e aliviar dores nas costas. Artigo clínico da Digital Clínica em Lisboa.',
       en: '5 physical therapy exercises to fix desk posture and prevent back pain by Digital Clínica in Lisbon.',
       fr: '5 exercices simples et efficaces pour corriger la posture au bureau et prévenir les douleurs de dos. Par Digital Clínica.',
@@ -477,16 +493,19 @@ Si vos douleurs persistent plus de 3 semaines ou s'accompagnent d'engourdissemen
   {
     slug: 'programme-minceur-estival',
     title: {
+    es: "Prepare su cuerpo para el verano: protocolo clínico de remodelado corporal",
       pt: 'Preparar o corpo para o verão: programa clínico de adelgaçamento',
       en: 'Sculpting your body for summer: clinical body contouring protocol',
       fr: 'Préparer son corps pour la plage : programme minceur estival dès maintenant',
     },
     excerpt: {
+    es: "Se acerca el verano en Lisboa y en la costa portuguesa. Descubra un plan clínico de remodelado corporal basado en la evidencia, sin dietas extremas.",
       pt: 'O verão em Lisboa e nas praias portuguesas aproxima-se. Descubra um plano clínico realista, sustentável e sem dietas ioiô para afinar a silhueta.',
       en: 'Summer in Lisbon and coastal Portugal is on the horizon. Discover an evidence-based clinical body contouring plan without crash diets.',
       fr: "L'été à Lisbonne approche. Voici un plan d'action concret, réaliste et sans régime yoyo pour affiner votre silhouette.",
     },
     content: {
+    es: "## La verdad sobre preparar el cuerpo para el verano\n\nCada primavera, las dietas extremas prometen grandes pérdidas de peso en pocos días. El resultado inevitable es la pérdida de tejido muscular valioso, el agotamiento general y la recuperación del peso perdido.\n\nUn programa de remodelado corporal eficaz combina estética clínica, actividad física específica y ajustes alimentarios ricos en nutrientes que mantienen el metabolismo basal. Lo ideal es empezar entre 8 y 12 semanas antes del verano.\n\n## Evaluación clínica: por dónde empezar\n\nAntes de establecer un calendario de tratamiento, nuestro equipo evalúa:\n- **Zonas objetivo**: Abdomen tras el embarazo, flancos, cara interna de los muslos o irregularidades en los glúteos.\n- **Características de los tejidos**: Retención de líquidos (linfática), grasa localizada o flacidez por pérdida de colágeno.\n- **Factores de estilo de vida**: Gasto físico diario, hábitos alimentarios y estado de hidratación.\n\n## Plan clínico estructurado de 8 semanas\n\n- **Semanas 1–2 (preparación y drenaje)**: Drenaje linfático manual para eliminar líquido intersticial, descongestionar tejidos y preparar la microcirculación.\n- **Semanas 3–6 (reducción adiposa)**: Sesiones de cavitación ultrasónica focalizada dirigidas a células grasas resistentes, combinadas con presoterapia y drenaje linfático.\n- **Semanas 7–8 (reafirmación y tono)**: Radiofrecuencia multipolar para estimular la formación de colágeno y reafirmar la piel.\n\n## 5 hábitos de alimentación mediterránea para el verano en Portugal\n\n1. **Priorice los alimentos mediterráneos frescos**: Pescado fresco del Atlántico, aceite de oliva virgen extra y abundantes verduras de temporada.\n2. **Hidratación suficiente**: Beba entre 2 y 2,5 litros de agua mineral al día para ayudar a eliminar los adipocitos movilizados.\n3. **Controle el sodio**: Reduzca los alimentos procesados para limitar la retención de líquidos en tobillos y muslos.\n4. **Evite una restricción calórica extrema**: Los déficits drásticos reducen las hormonas tiroideas y provocan catabolismo muscular.\n5. **Incluya ejercicio de fuerza**: Conserva la masa magra y aumenta el gasto energético basal.\n\nEn Digital Clínica, Lisboa, empezamos con una evaluación morfológica exhaustiva para diseñar un programa realista y eficaz.",
       pt: `## A verdade sobre a preparação corporal para o verão
 
 Todos os anos surgem promessas milagrosas de dietas relâmpago que prometem perder 5 kg em duas semanas. O resultado é invariavelmente a perda de massa muscular, fadiga e o inevitável efeito ioiô.
@@ -564,6 +583,7 @@ Privilégiez le poisson frais, les légumes de saison, l'huile d'olive et une hy
     coverImage: '/blog/blog_cryolipolyse.png',
     tags: ['minceur', 'été', 'plage', 'programme'],
     seoDescription: {
+    es: "Guía clínica de reducción corporal y reafirmación para el verano: cavitación, radiofrecuencia y drenaje en Digital Clínica, Lisboa.",
       pt: 'Programa clínico de emagrecimento e refirmação corporal para o verão: cavitação, radiofrequência e drenagem na Digital Clínica em Lisboa.',
       en: 'Clinical summer body slimming and skin tightening guide: cavitation, radiofrequency and drainage by Digital Clínica in Lisbon.',
       fr: "Programme minceur estival réaliste : cavitation, radiofréquence, drainage et nutrition par Digital Clínica à Lisbonne.",
@@ -572,16 +592,19 @@ Privilégiez le poisson frais, les légumes de saison, l'huile d'olive et une hy
   {
     slug: 'douleurs-lombaires-kiné-vs-automédication',
     title: {
+    es: "Dolor lumbar crónico: fisioterapia frente a automedicación",
       pt: 'Lombalgia crónica: fisioterapia ou automedicação? O que deve realmente fazer',
       en: 'Chronic lower back pain: physical therapy vs. self-medication',
       fr: 'Douleurs lombaires chroniques : kiné ou automédication ? Ce que vous devez vraiment faire',
     },
     excerpt: {
+    es: "Muchas personas con dolor de espalda toman analgésicos sin receta durante meses sin tratar la causa mecánica. Descubra las soluciones de la fisioterapia clínica.",
       pt: 'Muitos pacientes passam meses a tomar anti-inflamatórios sem tratar a causa da dor nas costas. Descubra os riscos da automedicação e a resposta da fisioterapia.',
       en: 'Many back pain sufferers rely on over-the-counter painkillers for months without treating the mechanical root cause. Clinical physical therapy solutions.',
       fr: "En cas de lombalgie, beaucoup s'automédiquent pendant des mois avant de consulter. Les conséquences peuvent être graves.",
     },
     content: {
+    es: "## Dolor lumbar: un reto clínico muy extendido\n\nLa lumbalgia es la principal causa de limitación de la actividad y de jornadas laborales perdidas en el mundo. Muchas personas recurren de forma crónica a antiinflamatorios no esteroideos y analgésicos sin receta, esperando que las molestias desaparezcan solas.\n\n**La realidad clínica**: Los medicamentos solo atenúan temporalmente la percepción del dolor; no corrigen la causa biomecánica subyacente, como el desplazamiento de un disco lumbar, la artrosis facetaria o la descompensación de los músculos posturales.\n\n## Dolor lumbar agudo frente a crónico\n\n### Dolor lumbar agudo (menos de 6 semanas)\nLa mayoría de los episodios agudos implican espasmos musculares protectores o pequeñas distensiones de ligamentos. El reposo estricto en cama es contraproducente; caminar suavemente y realizar movimientos activos protegidos favorece una recuperación más rápida.\n\n### Dolor lumbar crónico (más de 3 meses)\nCuando el dolor persiste más de 12 semanas, el sistema nervioso experimenta sensibilización central y aparecen patrones de protección muscular. El uso crónico de analgésicos conlleva riesgos gastrointestinales, hepáticos y renales importantes sin restaurar la función vertebral.\n\n## Signos de alarma que requieren atención médica inmediata\n\n- Dolor que se irradia por debajo de la rodilla acompañado de entumecimiento, hormigueo o pie caído (radiculopatía aguda).\n- Alteraciones del control intestinal o de la vejiga (síndrome de la cola de caballo).\n- Dolor nocturno intenso y persistente o pérdida de peso inexplicada.\n\n## Lo que consigue la fisioterapia y no las pastillas\n\n1. **Evaluación biomecánica precisa**: Distinguir el origen discal, facetario o miofascial del dolor.\n2. **Terapia manual y movilización articular**: Aliviar restricciones articulares y liberar musculatura profunda hipertónica.\n3. **Activación de estabilizadores profundos**: Reentrenar el transverso del abdomen y los multífidos lumbares para sostener dinámicamente los segmentos vertebrales.\n4. **Reeducación ergonómica y del movimiento**: Recuperar la mecánica al levantar cargas, la postura y las estrategias de autocuidado.\n\nEn Digital Clínica, Lisboa, nuestro equipo se especializa en una rehabilitación mecánica duradera para ayudarle a vivir sin dolor y sin dependencia de la medicación.",
       pt: `## A lombalgia: um desafio de saúde em Portugal
 
 A dor lombar (dor no fundo das costas) é uma das principais causas de incapacidade e absentismo laboral em Portugal. Grande parte das pessoas sofre em silêncio, recorrendo repetidamente a analgésicos e anti-inflamatórios de venda livre.
@@ -661,6 +684,7 @@ Les antalgiques masquent le signal d'alarme du corps sans corriger les déséqui
     coverImage: '/blog/blog_lombalgie.png',
     tags: ['lombalgie', 'dos', 'douleur chronique', 'kiné'],
     seoDescription: {
+    es: "Dolor lumbar crónico: riesgos de los analgésicos y beneficios de la fisioterapia en Digital Clínica, Lisboa.",
       pt: 'Lombalgia crónica: riscos da automedicação e vantagens da fisioterapia e RPG na Digital Clínica em Lisboa.',
       en: 'Chronic lower back pain: risks of painkillers and benefits of physical therapy by Digital Clínica in Lisbon.',
       fr: "Lombalgie chronique : pourquoi l'automédication est insuffisante et comment la kinésithérapie traite la cause. Par Digital Clínica.",
@@ -669,16 +693,19 @@ Les antalgiques masquent le signal d'alarme du corps sans corriger les déséqui
   {
     slug: 'radiofrequence-vs-cryolipolyse',
     title: {
+    es: "Radiofrecuencia o criolipólisis: cómo elegir el tratamiento estético adecuado",
       pt: 'Radiofrequência vs. Criolipólise: como escolher o tratamento certo?',
       en: 'Radiofrequency vs. Cryolipolysis: how to choose the right aesthetic treatment',
       fr: 'Radiofréquence vs Cryolipolyse : comment choisir le bon traitement pour vous ?',
     },
     excerpt: {
+    es: "Dos tecnologías estéticas no invasivas de referencia con mecanismos distintos. Cómo elegir entre reafirmar la piel y reducir la grasa.",
       pt: 'Duas tecnologias de vanguarda com mecanismos de ação distintos. Descubra qual é a indicada para celulite, gordura localizada ou flacidez cutânea.',
       en: 'Two gold-standard non-invasive aesthetic technologies with distinct mechanisms. How to choose between skin tightening and fat reduction.',
       fr: "Deux technologies, deux modes d'action, deux profils de patientes. Voici le guide de décision pour ne pas vous tromper.",
     },
     content: {
+    es: "## Dos tecnologías complementarias\n\nLa radiofrecuencia multipolar y la criolipólisis son dos de los tratamientos de remodelado corporal no invasivos más populares. Sin embargo, cumplen objetivos clínicos diferentes:\n\n- La **radiofrecuencia** actúa sobre la **flacidez cutánea y la reafirmación de los tejidos**.\n- La **criolipólisis** actúa sobre los **depósitos localizados de grasa subcutánea** y los elimina.\n\n## 1. Radiofrecuencia: reafirmación dérmica profunda\n\n### Mecanismo de acción\nLa radiofrecuencia transmite energía electromagnética de alta frecuencia a la dermis y eleva la temperatura del tejido a un intervalo terapéutico de 40–42 °C. Este estímulo térmico provoca una contracción inmediata de las fibrillas de colágeno existentes y activa la formación de nuevo colágeno a largo plazo por los fibroblastos dérmicos.\n\n### Candidatos ideales\n- Flacidez abdominal leve o moderada tras el embarazo o la pérdida de peso\n- Piel arrugada en la cara interna de los muslos, brazos o rodillas\n- Remodelado facial y reafirmación del cuello\n- Flacidez cutánea asociada a celulitis\n\n## 2. Criolipólisis: eliminación de adipocitos mediante frío controlado\n\n### Mecanismo de acción\nLa criolipólisis aplica frío controlado (entre −5 °C y −10 °C) directamente sobre un depósito de grasa. Los adipocitos son mucho más sensibles al choque térmico por frío que las estructuras dérmicas y vasculares circundantes, por lo que se activa su muerte celular programada por apoptosis. Durante las siguientes 6–12 semanas, el sistema de macrófagos del cuerpo metaboliza y elimina los adipocitos dañados.\n\n### Candidatos ideales\n- Depósitos de grasa delimitados que se pueden pellizcar (abdomen inferior, flancos, pliegues del sujetador)\n- Personas próximas a su peso objetivo con depósitos resistentes a la dieta\n\n## Tabla comparativa\n\n| Parámetro clínico | Radiofrecuencia | Criolipólisis |\n| :--- | :--- | :--- |\n| **Objetivo principal** | Colágeno dérmico y reafirmación cutánea | Volumen de grasa subcutánea localizada |\n| **Sensación** | Calor profundo, agradable y relajante | Frío intenso durante 5–8 min y después entumecimiento |\n| **Evolución** | Mejor aspecto inmediato y progresión durante 3 meses | Reducción progresiva en 6–12 semanas |\n| **Sesiones recomendadas** | De 6 a 8 sesiones | De 1 a 3 sesiones por depósito tratado |\n| **Aplicación facial** | Sí (rostro, mandíbula, cuello) | No |\n\nEn Digital Clínica, Lisboa, nuestro equipo de estética evalúa la elasticidad de sus tejidos y la distribución de la grasa subcutánea para recomendar el plan individual o combinado más eficaz.",
       pt: `## Duas tecnologias complementares, não concorrentes
 
 A radiofrequência e a criolipólise são duas das tecnologias estéticas não cirúrgicas mais eficazes do mercado, mas respondem a objetivos clínicos diferentes.
@@ -777,6 +804,7 @@ La radiofréquence chauffe le derme pour relancer la production de collagène, i
     coverImage: '/hero/slimming.jpg',
     tags: ['radiofréquence', 'cryolipolyse', 'minceur', 'comparatif'],
     seoDescription: {
+    es: "Comparación clínica de radiofrecuencia y criolipólisis: mecanismos, indicaciones y resultados en Digital Clínica, Lisboa.",
       pt: 'Comparativo clínico entre radiofrequência e criolipólise: indicações, mecanismos e resultados pela Digital Clínica em Lisboa.',
       en: 'Clinical comparison of radiofrequency vs cryolipolysis: mechanisms, indications and results by Digital Clínica in Lisbon.',
       fr: 'Comparatif radiofréquence vs cryolipolyse : mécanismes, indications et résultats. Guide par la Digital Clínica.',
@@ -785,16 +813,19 @@ La radiofréquence chauffe le derme pour relancer la production de collagène, i
   {
     slug: 'recuperation-sportive-role-kine',
     title: {
+    es: "Recuperación deportiva: el papel esencial de la fisioterapia en el rendimiento",
       pt: 'Recuperação desportiva: o papel essencial do fisioterapeuta',
       en: 'Athletic recovery: the vital role of physical therapy for peak performance',
       fr: 'Récupération sportive : le rôle sous-estimé du kinésithérapeute',
     },
     excerpt: {
+    es: "Dolor muscular, rigidez articular y prevención de lesiones: la fisioterapia deportiva va mucho más allá de un masaje básico para mejorar el rendimiento.",
       pt: 'Mialgias de esforço, rigidez muscular e prevenção de lesões: a fisioterapia desportiva vai muito além da massagem de alívio e otimiza a sua performance.',
       en: 'Muscle soreness, joint stiffness, and injury prevention: sports physical therapy goes far beyond basic rubdowns to elevate performance.',
       fr: 'Courbatures, douleurs musculaires, prévention des blessures : la kinésithérapie du sport va bien au-delà du massage de récupération.',
     },
     content: {
+    es: "## La recuperación es una fase activa del entrenamiento\n\nTanto si compite como si corre maratones de forma ocasional o practica ejercicio con entusiasmo, la recuperación determina su progreso fisiológico tanto como el volumen de entrenamiento. La hipertrofia muscular y la adaptación de los tejidos se producen durante el descanso, no durante el esfuerzo.\n\nSin embargo, muchos deportistas relegan la recuperación hasta que una lesión detiene su entrenamiento: distensiones recurrentes de isquiotibiales, tendinopatía rotuliana o irritación articular crónica.\n\n## Qué aporta un fisioterapeuta deportivo\n\n### 1. Evaluación del equilibrio muscular y del movimiento\nCada deporte refuerza asimetrías funcionales repetitivas: los corredores suelen mostrar predominio de los cuádriceps respecto a los isquiotibiales, mientras que golfistas y tenistas cargan cadenas rotacionales unilaterales. El fisioterapeuta detecta estos déficits antes de que se produzca una lesión del tejido.\n\n### 2. Recuperación miofascial acelerada\nLa terapia manual deportiva y la liberación miofascial específica mejoran la perfusión capilar, facilitan la eliminación de subproductos metabólicos y desactivan puntos gatillo hiperirritables.\n\n### 3. Terapia médica de compresión neumática\nLas cámaras de presoterapia neumática dinámica favorecen el retorno venolinfático y reducen el dolor muscular de aparición tardía tras entrenamientos intensos de piernas o pruebas de resistencia.\n\n### 4. Reentrenamiento propioceptivo para prevenir lesiones\nDespués de esguinces de tobillo, irritación meniscal o distensiones de ligamentos, volver a deportes de alta velocidad sin entrenamiento de estabilidad neuromuscular favorece la repetición de lesiones.\n\nEn Digital Clínica, Lisboa, ofrecemos a los deportistas protocolos de recuperación personalizados para que puedan seguir entrenando a su máximo nivel.",
       pt: `## A recuperação é parte integrante do treino
 
 Quer seja atleta de competição, corredor amador ou praticante regular de ginásio e crossfit, a qualidade da sua recuperação determina diretamente a sua evolução desportiva. Os músculos regeneram e aumentam a sua capacidade de carga durante o descanso, e não durante a sessão de treino.
@@ -857,6 +888,7 @@ Quel que soit votre niveau sportif, la récupération détermine votre progressi
     coverImage: '/hero_wellness_bg.png',
     tags: ['sport', 'récupération', 'blessures', 'kiné du sport'],
     seoDescription: {
+    es: "Fisioterapia deportiva y recuperación en Lisboa: prevención de lesiones y optimización del rendimiento en Digital Clínica.",
       pt: 'Recuperação desportiva na Digital Clínica em Lisboa: fisioterapia do desporto, massagem terapêutica e prevenção de lesões.',
       en: 'Sports physical therapy and athletic recovery in Lisbon: injury prevention and performance optimization by Digital Clínica.',
       fr: 'Récupération sportive : le rôle essentiel du kinésithérapeute du sport à Lisbonne par la Digital Clínica.',

@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
@@ -6,8 +7,7 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { SESSION_OPTIONS, type SessionData } from '@/lib/session';
 import {
-  dbCheckRateLimit,
-  dbRecordRateLimitAttempt,
+  dbConsumeRateLimit,
   dbResetRateLimit,
   dbGetOwnerAnalyticsPasswordHash,
   dbLogSecurityAudit,
@@ -31,13 +31,13 @@ export async function POST(request: NextRequest) {
   const session = auth.session;
 
   // 2. Rate Limiting: Max 10 failed attempts per 15 minutes per IP
-  const allowed = await dbCheckRateLimit(ip, 'owner_analytics_auth', 10, 15 * 60);
+  const allowed = await dbConsumeRateLimit(ip, 'owner_analytics_auth', 10, 15 * 60);
   if (!allowed) {
     await dbLogSecurityAudit('ANALYTICS_AUTH_BLOCKED_RATELIMIT', ip, userAgent, {
       reason: 'Too many failed attempts in 15m window',
     });
     return NextResponse.json(
-      { error: 'Trop de tentatives infructueuses. Veuillez attendre 15 minutes avant de réessayer.' },
+      { error: localizeApiError('Trop de tentatives infructueuses. Veuillez attendre 15 minutes avant de réessayer.', request) },
       { status: 429 }
     );
   }
@@ -46,16 +46,15 @@ export async function POST(request: NextRequest) {
   let body: { password?: string };
   try {
     body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Invalid JSON', request) }, { status: 400 });
   }
 
   const { password } = body;
   if (!password || typeof password !== 'string' || password.length > 128) {
-    await dbRecordRateLimitAttempt(ip, 'owner_analytics_auth');
     await dbLogSecurityAudit('ANALYTICS_AUTH_FAILURE', ip, userAgent, { reason: 'Empty or invalid format' });
-    return NextResponse.json({ error: 'Mot de passe propriétaire invalide' }, { status: 401 });
+    return NextResponse.json({ error: localizeApiError('Mot de passe propriétaire invalide', request) }, { status: 401 });
   }
 
   // 4. Verify Owner Password Hash
@@ -64,17 +63,16 @@ export async function POST(request: NextRequest) {
 
   if (!cleanHash) {
     console.error('[SECURITY] No owner analytics password hash configured.');
-    return NextResponse.json({ error: 'Erreur de configuration serveur' }, { status: 500 });
+    return NextResponse.json({ error: localizeApiError('Erreur de configuration serveur', request) }, { status: 500 });
   }
 
   const isValid = await bcrypt.compare(password, cleanHash);
 
   if (!isValid) {
-    await dbRecordRateLimitAttempt(ip, 'owner_analytics_auth');
     await dbLogSecurityAudit('ANALYTICS_AUTH_FAILURE', ip, userAgent, { reason: 'Incorrect owner password' });
     // Add delay to defend against timing / brute force attacks
     await new Promise((r) => setTimeout(r, 500));
-    return NextResponse.json({ error: 'Mot de passe propriétaire incorrect' }, { status: 401 });
+    return NextResponse.json({ error: localizeApiError('Mot de passe propriétaire incorrect', request) }, { status: 401 });
   }
 
   // Reset rate limit on success

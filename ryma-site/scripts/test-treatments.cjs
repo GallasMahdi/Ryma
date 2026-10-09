@@ -86,6 +86,8 @@ test(`Treatments lifecycle on isolated ${libsql?'libSQL':'SQLite'}`,async t=>{
     const invoice=await db.dbCreateInvoice({appointmentId:original.id,patientName:original.patientName,patientPhone:original.phone,serviceSlug:base.slug,amount:65.5,serviceName:base.name.pt});assert.equal(invoice.amountCents,6550);assert.equal(invoice.serviceName,base.name.pt);
     await save({pole:'minceur'});assert.equal((await db.dbGetInvoiceById(invoice.id)).servicePole,'kinesitherapie');
     assert((await db.dbGetInvoices({pole:'kinesitherapie'})).some(i=>i.id===invoice.id));assert(!(await db.dbGetInvoices({pole:'minceur'})).some(i=>i.id===invoice.id));
+    const duplicate=await route('invoices').POST(request('invoices','POST',{appointmentId:original.id,patientName:original.patientName,patientPhone:original.phone,serviceSlug:base.slug,clientRequestId:'historical-duplicate'}));assert.equal(duplicate.status,409);
+    await db.dbDeleteInvoice(invoice.id); // Explicit replacement keeps the old snapshot and releases the visit.
     const response=await route('invoices').POST(request('invoices','POST',{appointmentId:original.id,patientName:original.patientName,patientPhone:original.phone,serviceSlug:base.slug,clientRequestId:'historical-defaults'}));assert.equal(response.status,201);const created=(await response.json()).invoice;assert.equal(created.amountCents,6550);assert.equal(created.serviceName,base.name.pt);assert.equal(created.servicePole,'kinesitherapie');
     await save({pole:'kinesitherapie'});
   });

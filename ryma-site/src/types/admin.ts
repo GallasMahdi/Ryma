@@ -96,7 +96,69 @@ export interface SlotInfo {
 export type PaymentMethod = 'MULTIBANCO' | 'MBWAY' | 'CASH' | 'CARD' | 'TRANSFER';
 export type InvoicePaymentStatus = 'PAID' | 'PENDING' | 'CANCELLED' | 'REFUNDED';
 
+export interface InvoiceItem {
+  id: string;
+  invoiceId: string;
+  appointmentId: string | null;
+  sessionId: string | null;
+  serviceSlug: string;
+  serviceName: string;
+  servicePole: string | null;
+  date: string;
+  startTime: string | null;
+  practitionerId: string | null;
+  practitioner: string;
+  quantity: number;
+  unitPriceCents: number;
+  totalCents: number;
+  vatRate: number;
+  vatExemptionReason: string | null;
+  priceAdjustmentReason: string | null;
+  releasedAt: string | null;
+}
+
+export interface BillableSession {
+  key: string;
+  appointmentId: string | null;
+  sessionId: string | null;
+  version: number;
+  date: string;
+  startTime: string | null;
+  serviceSlug: string;
+  serviceName: string;
+  servicePole: string | null;
+  practitionerId: string | null;
+  practitioner: string;
+  unitPriceCents: number | null;
+  suggestedPriceCents: number | null;
+  invoiceId: string | null;
+  invoiceNumber: string | null;
+}
+
+export interface SessionInvoiceSelection {
+  key: string;
+  version: number;
+  unitPriceCents: number;
+  vatRate: number;
+  vatExemptionReason?: string;
+  priceAdjustmentReason?: string;
+}
+
+export interface CreateSessionInvoiceInput {
+  patientId: string;
+  patientNif?: string;
+  patientAddress?: string;
+  paymentMethod: PaymentMethod;
+  paymentStatus: 'PENDING' | 'PAID';
+  externalReference?: string;
+  notes?: string;
+  sessions: SessionInvoiceSelection[];
+}
+
 export interface Invoice {
+  items?: InvoiceItem[];
+  externalReference?: string | null;
+  documentKind?: string | null;
   servicePole?: string | null;
   practitionerId?: string | null;
   id: string;
@@ -250,22 +312,27 @@ export function formatSlotDateLabel(dateStr: string, lang: Lang): { title: strin
 
   const isSunday = d.getDay() === 0;
 
-  const locale = lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
+  const locale = lang === 'es' ? "es-ES" : lang === 'pt' ? 'pt-PT' : lang === 'en' ? 'en-US' : 'fr-FR';
   let title = d.toLocaleDateString(locale, { weekday: 'long' });
-  if (dateStr === todayStr) title = lang === 'pt' ? 'Hoje' : lang === 'en' ? 'Today' : "Aujourd'hui";
-  else if (dateStr === tomorrowStr) title = lang === 'pt' ? 'Amanhã' : lang === 'en' ? 'Tomorrow' : 'Demain';
+  if (dateStr === todayStr) title = lang === 'es' ? "Hoy" : lang === 'pt' ? 'Hoje' : lang === 'en' ? 'Today' : "Aujourd'hui";
+  else if (dateStr === tomorrowStr) title = lang === 'es' ? "Mañana" : lang === 'pt' ? 'Amanhã' : lang === 'en' ? 'Tomorrow' : 'Demain';
 
   const subtitle = d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
 
   return { title, subtitle, isSunday };
 }
 
-export const STATUS_CONFIG: Record<AppointmentStatus, { fr: string; pt: string; en: string; color: string; bg: string; border: string }> = {
-  PENDING:   { fr: 'En attente',   pt: 'Pendente',      en: 'Pending',     color: 'text-[#854D0E]', bg: 'bg-[#FEF9C3]', border: 'border-[#FEF08A]' },
-  CONFIRMED: { fr: 'Confirmé',     pt: 'Confirmado',    en: 'Confirmed',   color: 'text-[#166534]', bg: 'bg-[#DCFCE7]', border: 'border-[#BBF7D0]' },
-  CANCELLED: { fr: 'Annulé',       pt: 'Cancelado',     en: 'Cancelled',   color: 'text-[#991B1B]', bg: 'bg-[#FEE2E2]', border: 'border-[#FECACA]' },
-  COMPLETED: { fr: 'Terminé',      pt: 'Concluído',     en: 'Completed',   color: 'text-[#1E40AF]', bg: 'bg-[#DBEAFE]', border: 'border-[#BFDBFE]' },
-  NO_SHOW:   { fr: 'Non présenté', pt: 'Falta à Consulta', en: 'No-Show',     color: 'text-[#475569]', bg: 'bg-[#F1F5F9]', border: 'border-[#E2E8F0]' },
+export const STATUS_CONFIG: Record<AppointmentStatus, { fr: string; pt: string; en: string; es: string; color: string; bg: string; border: string }> = {
+  PENDING:   {
+    es: "Pendientes", fr: 'En attente',   pt: 'Pendente',      en: 'Pending',     color: 'text-[#854D0E]', bg: 'bg-[#FEF9C3]', border: 'border-[#FEF08A]' },
+  CONFIRMED: {
+    es: "Confirmadas", fr: 'Confirmé',     pt: 'Confirmado',    en: 'Confirmed',   color: 'text-[#166534]', bg: 'bg-[#DCFCE7]', border: 'border-[#BBF7D0]' },
+  CANCELLED: {
+    es: "Canceladas", fr: 'Annulé',       pt: 'Cancelado',     en: 'Cancelled',   color: 'text-[#991B1B]', bg: 'bg-[#FEE2E2]', border: 'border-[#FECACA]' },
+  COMPLETED: {
+    es: "Completadas", fr: 'Terminé',      pt: 'Concluído',     en: 'Completed',   color: 'text-[#1E40AF]', bg: 'bg-[#DBEAFE]', border: 'border-[#BFDBFE]' },
+  NO_SHOW:   {
+    es: "No presentado", fr: 'Non présenté', pt: 'Falta à Consulta', en: 'No-Show',     color: 'text-[#475569]', bg: 'bg-[#F1F5F9]', border: 'border-[#E2E8F0]' },
 };
 
 // ─── Patient Reviews ────────────────────────────────────────────────────────

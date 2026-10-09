@@ -1,3 +1,5 @@
+import { legacyText } from '@/data/translations/legacy-es';
+import type { Lang } from './locales';
 import { PatientPrescription } from '@/types/admin';
 import { SITE } from '@/lib/site';
 
@@ -19,16 +21,16 @@ function cssText(value:string):string {
  * Generate a standalone, pristine HTML document for an official Recommendation / Prescription Pad.
  * Formatted for A4 portrait printing without any background app bleed-through.
  */
-export function generatePrescriptionHtml(prescription: PatientPrescription): string {
+export function generatePrescriptionHtml(prescription: PatientPrescription, lang: Lang = 'pt'): string {
   const careProducts = prescription.items.filter(it => it.category === 'care_product');
   const equipment = prescription.items.filter(it => it.category === 'ergonomic_equipment');
   const habits = prescription.items.filter(it => it.category === 'lifestyle_habit');
 
   return `<!DOCTYPE html>
-<html lang="pt">
+<html lang="${lang}">
 <head>
   <meta charset="utf-8">
-  <title>Recomendações Clínicas - ${escapeHtml(prescription.patientName)} - Digital Clínica</title>
+  <title>${legacyText("Recomendações Clínicas", lang)} - ${escapeHtml(prescription.patientName)} - Digital Clínica</title>
   <style>
     @page {
       size: A4 portrait;
@@ -250,30 +252,30 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
           <div class="logo-badge">DC</div>
           <span class="clinic-title">${escapeHtml(SITE.name)}</span>
         </div>
-        <p class="clinic-subtitle">Clínica de Fisioterapia & Estética Médica Avançada</p>
-        <p class="clinic-address">Avenida da Liberdade 120, 1250-146 Lisboa, Portugal</p>
+        <p class="clinic-subtitle">${legacyText("Clínica de Fisioterapia & Estética Médica Avançada", lang)}</p>
+        <p class="clinic-address">${escapeHtml(SITE.address[lang] || SITE.address.pt || '')}</p>
         <div class="clinic-identifiers">
           ${SITE.clinicNif ? `<span><strong>NIF:</strong> ${escapeHtml(SITE.clinicNif)}</span>` : ''}
-          ${SITE.ersRegistration ? `<span><strong>Registo ERS:</strong> ${escapeHtml(SITE.ersRegistration)}</span>` : ''}
-          ${SITE.professionalLicense ? `<span><strong>Ordem Fisio:</strong> ${escapeHtml(SITE.professionalLicense)}</span>` : ''}
+          ${SITE.ersRegistration ? `<span><strong>${legacyText("Registo ERS:", lang)}</strong> ${escapeHtml(SITE.ersRegistration)}</span>` : ''}
+          ${SITE.professionalLicense ? `<span><strong>${legacyText("Ordem Fisio:", lang)}</strong> ${escapeHtml(SITE.professionalLicense)}</span>` : ''}
         </div>
       </div>
 
       <div class="doc-meta">
-        <div class="doc-title">Recomendações Clínicas</div>
-        <div class="doc-subtitle">Cuidados & Material Domiciliário</div>
-        <div class="doc-date">Data: <strong>${escapeHtml(prescription.date)}</strong></div>
+        <div class="doc-title">${legacyText("Recomendações Clínicas", lang)}</div>
+        <div class="doc-subtitle">${legacyText("Cuidados & Material Domiciliário", lang)}</div>
+        <div class="doc-date">${legacyText("Data:", lang)} <strong>${escapeHtml(prescription.date)}</strong></div>
       </div>
     </div>
 
     <!-- Patient Details -->
     <div class="patient-box">
       <div>
-        <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94A3B8;">Utente:</div>
+        <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94A3B8;">${legacyText("Utente:", lang)}</div>
         <div class="patient-name">${escapeHtml(prescription.patientName)}</div>
       </div>
       <div style="text-align: right;">
-        <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94A3B8;">Contacto:</div>
+        <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94A3B8;">${legacyText("Contacto:", lang)}</div>
         <div class="patient-phone">${escapeHtml(prescription.patientPhone)}</div>
       </div>
     </div>
@@ -281,7 +283,7 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
     ${
       prescription.diagnosisOrGoal
         ? `<div style="margin-bottom: 14px; font-size: 10.5px; color: #334155;">
-            <strong>Objetivo Clínico / Enquadramento:</strong> ${escapeHtml(prescription.diagnosisOrGoal)}
+            <strong>${legacyText("Objetivo Clínico / Enquadramento:", lang)}</strong> ${escapeHtml(prescription.diagnosisOrGoal)}
           </div>`
         : ''
     }
@@ -290,13 +292,13 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
     ${
       careProducts.length > 0
         ? `<div class="category-section">
-            <div class="category-header">🧴 1. Produtos & Cuidados Tópicos Recomendados</div>
+            <div class="category-header">${legacyText("🧴 1. Produtos & Cuidados Tópicos Recomendados", lang)}</div>
             ${careProducts
               .map(
                 it => `
               <div class="item-card">
                 <div class="item-title">${escapeHtml(it.title)}</div>
-                <div class="item-instructions"><strong>Posologia / Aplicação:</strong> ${escapeHtml(it.instructions)}</div>
+                <div class="item-instructions"><strong>${legacyText("Posologia / Aplicação:", lang)}</strong> ${escapeHtml(it.instructions)}</div>
               </div>`
               )
               .join('')}
@@ -308,13 +310,13 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
     ${
       equipment.length > 0
         ? `<div class="category-section">
-            <div class="category-header">🧘 2. Material Ergonómico & Auto-Reabilitação</div>
+            <div class="category-header">${legacyText("🧘 2. Material Ergonómico & Auto-Reabilitação", lang)}</div>
             ${equipment
               .map(
                 it => `
               <div class="item-card">
                 <div class="item-title">${escapeHtml(it.title)}</div>
-                <div class="item-instructions"><strong>Utilização Recomendada:</strong> ${escapeHtml(it.instructions)}</div>
+                <div class="item-instructions"><strong>${legacyText("Utilização Recomendada:", lang)}</strong> ${escapeHtml(it.instructions)}</div>
               </div>`
               )
               .join('')}
@@ -326,13 +328,13 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
     ${
       habits.length > 0
         ? `<div class="category-section">
-            <div class="category-header">💡 3. Hábitos & Higiene Postural de Vida</div>
+            <div class="category-header">${legacyText("💡 3. Hábitos & Higiene Postural de Vida", lang)}</div>
             ${habits
               .map(
                 it => `
               <div class="item-card">
                 <div class="item-title">${escapeHtml(it.title)}</div>
-                <div class="item-instructions"><strong>Conselho Clínico:</strong> ${escapeHtml(it.instructions)}</div>
+                <div class="item-instructions"><strong>${legacyText("Conselho Clínico:", lang)}</strong> ${escapeHtml(it.instructions)}</div>
               </div>`
               )
               .join('')}
@@ -344,7 +346,7 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
     ${
       prescription.generalNotes
         ? `<div class="notes-box">
-            <strong>Observações Adicionais do Fisioterapeuta:</strong><br>
+            <strong>${legacyText("Observações Adicionais do Fisioterapeuta:", lang)}</strong><br>
             ${escapeHtml(prescription.generalNotes).replace(/\n/g, '<br>')}
           </div>`
         : ''
@@ -353,11 +355,11 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
     <!-- Footer & Signatures -->
     <div class="footer">
       <div class="footer-note">
-        Este documento contém orientações terapêuticas personalizadas para apoio e continuidade do plano de tratamento em domicílio. Em caso de dor persistente ou dúvida, contacte a equipa clínica.
+        ${legacyText("Este documento contém orientações terapêuticas personalizadas para apoio e continuidade do plano de tratamento em domicílio. Em caso de dor persistente ou dúvida, contacte a equipa clínica.", lang)}
       </div>
       <div class="signature-block">
         <div class="signature-name">${escapeHtml(prescription.practitioner || SITE.professionalName)}</div>
-        <div class="signature-sub">Fisioterapeuta Licenciado / Assinatura</div>
+        <div class="signature-sub">${legacyText("Fisioterapeuta Licenciado / Assinatura", lang)}</div>
       </div>
     </div>
   </div>
@@ -376,8 +378,8 @@ export function generatePrescriptionHtml(prescription: PatientPrescription): str
 /**
  * Print or export the prescription pad using an isolated iframe.
  */
-export function printPrescriptionPdf(prescription: PatientPrescription) {
-  const html = generatePrescriptionHtml(prescription);
+export function printPrescriptionPdf(prescription: PatientPrescription, lang: Lang = 'pt') {
+  const html = generatePrescriptionHtml(prescription, lang);
 
   let iframe = document.getElementById('prescription-print-frame') as HTMLIFrameElement | null;
   if (!iframe) {
@@ -410,10 +412,22 @@ export function printPrescriptionPdf(prescription: PatientPrescription) {
 /**
  * Build preformatted WhatsApp message with the personalized recommendations.
  */
-export function formatPrescriptionWhatsAppMessage(prescription: PatientPrescription): string {
+export function formatPrescriptionWhatsAppMessage(prescription: PatientPrescription, lang: Lang = 'pt'): string {
   const careProducts = prescription.items.filter(it => it.category === 'care_product');
   const equipment = prescription.items.filter(it => it.category === 'ergonomic_equipment');
   const habits = prescription.items.filter(it => it.category === 'lifestyle_habit');
+
+  if (lang === 'es') {
+    const section = (title: string, items: typeof prescription.items) => items.length
+      ? `${title}\n${items.map(it => `• *${it.title}*\n  👉 ${it.instructions}`).join('\n')}\n\n` : '';
+    return `Hola, ${prescription.patientName}: 👋\n\nEstas son sus *recomendaciones y cuidados personalizados* de su sesión en *Digital Clínica* (${prescription.date}):\n\n`
+      + (prescription.diagnosisOrGoal ? `🎯 *Objetivo:* ${prescription.diagnosisOrGoal}\n\n` : '')
+      + section('🧴 *PRODUCTOS Y CUIDADOS TÓPICOS:*', careProducts)
+      + section('🧘 *MATERIAL RECOMENDADO:*', equipment)
+      + section('💡 *HÁBITOS Y POSTURA:*', habits)
+      + (prescription.generalNotes ? `📝 *Nota del fisioterapeuta:* ${prescription.generalNotes}\n\n` : '')
+      + '¡Estamos a su disposición si tiene alguna duda!\n*Digital Clínica — Lisboa* 🇵🇹';
+  }
 
   let text = `Olá ${prescription.patientName}! 👋\n\n`;
   text += `Aqui estão as suas *Recomendações e Cuidados Personalizados* da sua sessão na *Digital Clínica* (${prescription.date}):\n\n`;

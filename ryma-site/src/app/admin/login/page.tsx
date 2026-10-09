@@ -1,4 +1,7 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
+import { SITE } from '@/lib/site';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -111,7 +114,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
         const data = await res.json().catch(() => ({}));
         if (res.status === 429) {
           setError(
-            lang === 'fr'
+            lang === 'es' ? "Demasiados intentos. Espere 15 minutos." : lang === 'fr'
               ? 'Trop de tentatives. Veuillez patienter 15 minutes.'
               : lang === 'en'
                 ? 'Too many attempts. Please wait 15 minutes.'
@@ -119,7 +122,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
           );
         } else if (res.status === 503) {
           setError(
-            lang === 'fr'
+            lang === 'es' ? "El inicio de sesión no está disponible temporalmente. Vuelva a intentarlo en breve." : lang === 'fr'
               ? 'Connexion temporairement indisponible. Veuillez réessayer dans quelques instants.'
               : lang === 'en'
                 ? 'Sign-in is temporarily unavailable. Please try again shortly.'
@@ -127,7 +130,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
           );
         } else if (res.status >= 500) {
           setError(
-            lang === 'fr'
+            lang === 'es' ? "Un error del servidor impidió iniciar sesión. Vuelva a intentarlo." : lang === 'fr'
               ? 'Impossible de vous connecter en raison d’une erreur serveur. Veuillez réessayer.'
               : lang === 'en'
                 ? 'A server error prevented sign-in. Please try again.'
@@ -135,7 +138,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
           );
         } else {
           setError(
-            lang === 'fr'
+            lang === 'es' ? "Contraseña incorrecta" : lang === 'fr'
               ? 'Mot de passe incorrect'
               : lang === 'en'
                 ? 'Invalid password credentials'
@@ -146,7 +149,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
       }
     } catch {
       setError(
-        lang === 'fr'
+        lang === 'es' ? "Error de red. Vuelva a intentarlo." : lang === 'fr'
           ? 'Erreur réseau. Veuillez réessayer.'
           : lang === 'en'
             ? 'Network error. Please try again.'
@@ -165,7 +168,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
             htmlFor="admin-password"
             className="block text-[11px] font-semibold text-[#4A4540] tracking-wide uppercase font-mono"
           >
-            {lang === 'fr' ? 'Mot de passe maître' : lang === 'en' ? 'Master Password' : 'Palavra-passe'}
+            {lang === 'es' ? "Contraseña maestra" : lang === 'fr' ? 'Mot de passe maître' : lang === 'en' ? 'Master Password' : 'Palavra-passe'}
           </label>
 
           <button
@@ -174,7 +177,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
             className="text-[11px] text-[#9A7428] hover:text-[#1A1412] font-medium inline-flex items-center gap-1 transition-colors"
           >
             <IconHelpCircle size={12} />
-            <span>{lang === 'fr' ? 'Aide' : lang === 'en' ? 'Need help?' : 'Ajuda'}</span>
+            <span>{lang === 'es' ? "¿Necesita ayuda?" : lang === 'fr' ? 'Aide' : lang === 'en' ? 'Need help?' : 'Ajuda'}</span>
           </button>
         </div>
 
@@ -211,7 +214,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
             onClick={() => setShowPwd(!showPwd)}
             className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-[#8A8078] hover:text-[#1A1412] rounded-lg transition-colors focus:outline-none"
             tabIndex={-1}
-            aria-label={showPwd ? 'Hide password' : 'Show password'}
+            aria-label={lang === 'es' ? (showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña') : (showPwd ? 'Hide password' : 'Show password')}
           >
             {showPwd ? <IconEyeOff size={18} /> : <IconEye size={18} />}
           </button>
@@ -228,7 +231,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
             >
               <IconAlertCircle size={13} />
               <span>
-                {lang === 'fr'
+                {lang === 'es' ? "Bloq Mayús está activado" : lang === 'fr'
                   ? 'Touche Verrouillage Majuscule activée'
                   : lang === 'en'
                     ? 'Caps Lock is ON'
@@ -249,7 +252,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
             className="w-3.5 h-3.5 rounded border-[#C49A3C]/40 text-[#1A1412] focus:ring-[#C49A3C] accent-[#1A1412] cursor-pointer"
           />
           <span className="text-[11px] text-[#64748B]">
-            {lang === 'fr' ? 'Garder la session active (8h)' : lang === 'en' ? 'Keep session active (8h)' : 'Manter sessão iniciada (8h)'}
+            {lang === 'es' ? "Mantener la sesión activa (8 h)" : lang === 'fr' ? 'Garder la session active (8h)' : lang === 'en' ? 'Keep session active (8h)' : 'Manter sessão iniciada (8h)'}
           </span>
         </label>
       </div>
@@ -283,7 +286,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
           <>
             <IconLoader2 size={18} className="animate-spin text-[#E8C97A]" />
             <span>
-              {lang === 'fr'
+              {lang === 'es' ? "Verificando credenciales..." : lang === 'fr'
                 ? 'Vérification sécurisée...'
                 : lang === 'en'
                   ? 'Verifying credentials...'
@@ -294,7 +297,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
           <>
             <IconCheck size={18} className="text-[#22C55E]" />
             <span>
-              {lang === 'fr'
+              {lang === 'es' ? "Acceso autorizado" : lang === 'fr'
                 ? 'Accès autorisé'
                 : lang === 'en'
                   ? 'Access Granted'
@@ -305,7 +308,7 @@ const AdminLoginForm = React.memo(function AdminLoginForm({ lang, onOpenHelp }: 
           <>
             <IconLock size={16} className="text-[#E8C97A]" />
             <span>
-              {lang === 'fr'
+              {lang === 'es' ? "Acceder al portal de gestión" : lang === 'fr'
                 ? 'Déverrouiller le Portail'
                 : lang === 'en'
                   ? 'Unlock Management Portal'
@@ -342,6 +345,7 @@ export default function AdminLoginPage() {
     { code: 'pt', label: 'Português', flag: '🇵🇹' },
     { code: 'fr', label: 'Français', flag: '🇫🇷' },
     { code: 'en', label: 'English', flag: '🇬🇧' },
+    { code: 'es', label: 'Español', flag: '🇪🇸' },
   ];
 
   return (
@@ -380,7 +384,7 @@ export default function AdminLoginPage() {
           className="group inline-flex items-center gap-2 text-xs font-medium text-[#8A8078] hover:text-[#1A1412] transition-colors py-1.5 px-3 rounded-full hover:bg-black/5"
         >
           <IconArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-          <span>{lang === 'fr' ? 'Site public' : lang === 'en' ? 'Public site' : 'Website público'}</span>
+          <span>{lang === 'es' ? "Sitio público" : lang === 'fr' ? 'Site public' : lang === 'en' ? 'Public site' : 'Website público'}</span>
         </Link>
 
         {/* Right side widgets: Live Status & Language */}
@@ -424,14 +428,14 @@ export default function AdminLoginPage() {
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#C49A3C]/10 border border-[#C49A3C]/20 text-[10px] font-mono font-semibold tracking-wider text-[#9A7428] uppercase">
                 <IconSparkles size={10} />
                 <span>
-                  {lang === 'fr' ? 'Portail de Gestion' : lang === 'en' ? 'Management Portal' : 'Portal de Gestão'}
+                  {lang === 'es' ? "Portal de gestión" : lang === 'fr' ? 'Portail de Gestion' : lang === 'en' ? 'Management Portal' : 'Portal de Gestão'}
                 </span>
               </div>
 
               {/* Status pill */}
               <div className="flex items-center gap-1 text-[10px] font-medium text-[#166534] bg-[#F0FDF4] border border-[#BBF7D0] px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-ping" style={{ animationDuration: '2.5s' }} />
-                <span>Online</span>
+                <span>{legacyText("Online", lang)}</span>
               </div>
             </div>
 
@@ -452,7 +456,7 @@ export default function AdminLoginPage() {
                 Digital Clínica
               </h1>
               <p className="text-xs text-[#8A8078] mt-1 max-w-[280px]">
-                {lang === 'fr'
+                {lang === 'es' ? "Entorno seguro para profesionales y administradores de la clínica" : lang === 'fr'
                   ? 'Espace sécurisé réservé aux praticiens et administrateurs'
                   : lang === 'en'
                     ? 'Secure environment for clinic practitioners & administrators'
@@ -466,11 +470,11 @@ export default function AdminLoginPage() {
             {/* Keyboard shortcut hint */}
             <div className="mt-5 text-center">
               <span className="text-[11px] text-[#8A8078] inline-flex items-center gap-1.5">
-                <span>{lang === 'fr' ? 'Appuyez sur' : lang === 'en' ? 'Press' : 'Prima'}</span>
+                <span>{lang === 'es' ? "Pulse" : lang === 'fr' ? 'Appuyez sur' : lang === 'en' ? 'Press' : 'Prima'}</span>
                 <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-[#F4F2EE] border border-[#C49A3C]/20 rounded text-[#4A4540]">
                   ↵ Enter
                 </kbd>
-                <span>{lang === 'fr' ? 'pour vous connecter' : lang === 'en' ? 'to log in' : 'para aceder'}</span>
+                <span>{lang === 'es' ? "para iniciar sesión" : lang === 'fr' ? 'pour vous connecter' : lang === 'en' ? 'to log in' : 'para aceder'}</span>
               </span>
             </div>
           </div>
@@ -484,7 +488,7 @@ export default function AdminLoginPage() {
             <span>•</span>
             <div className="flex items-center gap-1">
               <IconShieldCheck size={11} className="text-[#22C55E]" />
-              <span>RateLimit Guard</span>
+              <span>{legacyText("RateLimit Guard", lang)}</span>
             </div>
             <span>•</span>
             <div className="flex items-center gap-1">
@@ -499,7 +503,7 @@ export default function AdminLoginPage() {
       <footer className="relative z-20 p-4 sm:p-6 text-center text-xs text-[#8A8078] flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6">
         <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#4A4540]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
-          <span>SSL 256-bit Encrypted Session</span>
+          <span>{legacyText("SSL 256-bit Encrypted Session", lang)}</span>
         </div>
         <span className="hidden sm:inline text-[#C49A3C]/40">•</span>
         <div className="text-[11px]">
@@ -531,10 +535,10 @@ export default function AdminLoginPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-sm text-[#1A1412]">
-                      {lang === 'fr' ? 'Assistance Connexion' : lang === 'en' ? 'Access Assistance' : 'Ajuda de Acesso'}
+                      {lang === 'es' ? "Ayuda de acceso" : lang === 'fr' ? 'Assistance Connexion' : lang === 'en' ? 'Access Assistance' : 'Ajuda de Acesso'}
                     </h3>
                     <p className="text-[11px] text-[#8A8078]">
-                      {lang === 'fr' ? 'Protocole de sécurité de la clinique' : lang === 'en' ? 'Clinic security protocol' : 'Protocolo de segurança da clínica'}
+                      {lang === 'es' ? "Protocolo de seguridad de la clínica" : lang === 'fr' ? 'Protocole de sécurité de la clinique' : lang === 'en' ? 'Clinic security protocol' : 'Protocolo de segurança da clínica'}
                     </p>
                   </div>
                 </div>
@@ -549,7 +553,7 @@ export default function AdminLoginPage() {
 
               <div className="space-y-3 text-xs text-[#4A4540] bg-[#FAFAF8] p-4 rounded-xl border border-[#E2E8F0]">
                 <p>
-                  {lang === 'fr'
+                  {lang === 'es' ? "El acceso a este portal está estrictamente restringido. Si ha olvidado la clave de seguridad, contacte con la administración:" : lang === 'fr'
                     ? 'L’accès à ce portail est strictement restreint. Si vous avez oublié la clé de sécurité, veuillez contacter la direction :'
                     : lang === 'en'
                       ? 'Access to this portal is strictly restricted. If you forgot the security key, please contact administration:'
@@ -558,11 +562,11 @@ export default function AdminLoginPage() {
                 <div className="space-y-1.5 pt-1">
                   <div className="flex items-center gap-2 text-[#1A1412] font-medium">
                     <IconMail size={14} className="text-[#C49A3C]" />
-                    <span className="font-mono text-[11px]">admin@digitalclinica.pt</span>
+                    <span className="font-mono text-[11px]">{SITE.email}</span>
                   </div>
                   <div className="flex items-center gap-2 text-[#1A1412] font-medium">
                     <IconPhone size={14} className="text-[#C49A3C]" />
-                    <span className="font-mono text-[11px]">+351 912 000 000</span>
+                    <span className="font-mono text-[11px]">{SITE.whatsappDisplay}</span>
                   </div>
                 </div>
               </div>
@@ -573,7 +577,7 @@ export default function AdminLoginPage() {
                   onClick={() => setHelpOpen(false)}
                   className="px-4 py-2 text-xs font-medium bg-[#1A1412] text-white rounded-xl hover:bg-[#2C2420] transition-colors"
                 >
-                  {lang === 'fr' ? 'Fermer' : lang === 'en' ? 'Close' : 'Fechar'}
+                  {lang === 'es' ? "Cerrar" : lang === 'fr' ? 'Fermer' : lang === 'en' ? 'Close' : 'Fechar'}
                 </button>
               </div>
             </motion.div>

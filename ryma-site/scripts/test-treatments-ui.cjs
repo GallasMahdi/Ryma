@@ -123,4 +123,40 @@ test('custom assessments retain their category on service cards and booking conf
   }
 });
 
+test('Spanish preference persists across provider mounts and is included in language cycling',async()=>{
+  const {LanguageProvider,useLanguage}=load('@/lib/i18n');
+  global.localStorage=dom.window.localStorage;
+  localStorage.clear();let context;
+  function Probe(){context=useLanguage();return React.createElement('p',null,context.t.common.back);}
+  let root=createRoot(document.getElementById('app'));
+  try {
+    await React.act(async()=>root.render(React.createElement(LanguageProvider,{initialLang:'fr'},React.createElement(Probe))));
+    await React.act(async()=>context.toggleLang());
+    assert.equal(context.lang,'es');assert.equal(document.querySelector('#app p').textContent,'Volver');
+    assert.equal(document.documentElement.lang,'es');assert.equal(localStorage.getItem('ryma_lang'),'es');assert.match(document.cookie,/ryma_lang=es/);
+    await React.act(async()=>root.unmount());root=createRoot(document.getElementById('app'));
+    await React.act(async()=>root.render(React.createElement(LanguageProvider,{initialLang:'pt'},React.createElement(Probe))));
+    assert.equal(context.lang,'es');
+    await React.act(async()=>context.toggleLang());assert.equal(context.lang,'pt');
+  }finally{await React.act(async()=>root.unmount());localStorage.clear();delete global.localStorage;}
+});
+
+test('Spanish admin treatment editor submits Spanish names, steps and FAQ without dropping other locales',async()=>{
+  let posted;
+  global.fetch=async(_url,options)=>{if(options?.method==='POST'){posted=JSON.parse(options.body);return Response.json({error:'Retener formulario de prueba'},{status:422});}return Response.json({...configuration(),treatments:[]});};
+  const root=createRoot(document.getElementById('app'));
+  try {
+    await React.act(async()=>{root.render(React.createElement(TreatmentsTab,{lang:'es'}));await tick()});
+    await click('Nuevo tratamiento');
+    await change('Nombre','Masaje de prueba');await change('Resumen','Atención individual');
+    await change('Pasos de la sesión','Evaluación\nTratamiento');
+    await click('Añadir pregunta');await change('Pregunta 1','¿Cómo reservar?');await change('Respuesta 1','Seleccione una fecha.');
+    await click('EN');await change('Nombre','Test massage');await click('ES');
+    await click('Guardar tratamiento');
+    assert.equal(posted.name.es,'Masaje de prueba');assert.equal(posted.shortDesc.es,'Atención individual');
+    assert.deepEqual(posted.sessionFlow.es,['Evaluación','Tratamiento']);assert.equal(posted.faq[0].a.es,'Seleccione una fecha.');
+    assert.equal(posted.name.en,'Test massage');assert.equal(posted.name.fr,'');
+  }finally{await React.act(async()=>root.unmount());}
+});
+
 test.after(()=>dom.window.close());

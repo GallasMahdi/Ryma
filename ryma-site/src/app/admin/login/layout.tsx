@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import type { Metadata } from 'next';
 
 const siteUrl =
@@ -8,7 +9,7 @@ const siteUrl =
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
   'https://digitalclinica.pt';
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: 'Acesso Admin — Digital Clínica',
   description: 'Painel de administração seguro da Digital Clínica. Acesso exclusivo para equipa autorizada.',
@@ -49,6 +50,18 @@ export const metadata: Metadata = {
     ],
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  if ((await cookies()).get('ryma_lang')?.value !== 'es') return baseMetadata;
+  const title = "Acceso de administración — Digital Clínica";
+  const description = "Panel de administración seguro de Digital Clínica. Acceso exclusivo para el equipo autorizado.";
+  const images = [{ url: `${siteUrl}/og-admin-login.jpg`, width: 1200, height: 630, alt: title }];
+  return { ...baseMetadata, title, description,
+    keywords: ['fisioterapia Lisboa', 'rehabilitación posparto', 'drenaje linfático', 'estética corporal', 'Digital Clínica'],
+    openGraph: { ...baseMetadata.openGraph, locale: 'es_ES', title, description, siteName: 'Digital Clínica', images },
+    twitter: { ...baseMetadata.twitter, title, description, images },
+  };
+}
 
 export default function AdminLoginLayout({ children }: { children: React.ReactNode }) {
   return children;

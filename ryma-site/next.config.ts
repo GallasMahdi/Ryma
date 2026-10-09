@@ -64,16 +64,7 @@ const nextConfig: NextConfig = {
         source: '/(.*)',
         headers: securityHeaders,
       },
-      // Edge Caching: Static pages cached at Cloudflare edge (1 day CDN, 1 year browser for assets)
-      {
-        source: '/(a-propos|services.*|tarifs|contact|mentions-legales|confidentialite|conditions-utilisation)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-          },
-        ],
-      },
+      // Language-cookie and live-catalogue pages use Next.js private defaults.
       // Blog pages depend on the language cookie. Keep Next.js page caching
       // defaults; immutable caching belongs to versioned assets, not article URLs.
       // Strict No-Cache for Admin & Dynamic API Endpoints

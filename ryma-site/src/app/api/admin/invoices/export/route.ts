@@ -1,8 +1,11 @@
+import { exportLabel, exportHeader } from '@/lib/export-i18n';
+import { requestLanguage } from '@/lib/api-i18n';
+import { localizeApiError } from '@/lib/api-i18n';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOwnerAnalytics } from '@/lib/requireAdmin';
 import { dbGetInvoices, dbAssertInvoiceAmountsReviewed, DocumentError } from '@/lib/db';
 import { invoiceFilters } from '@/lib/admin-validation';
-import { calculateVatBreakdown } from '@/types/admin';
+import { invoiceDisplayTotals } from '@/lib/invoice-display';
 
 function sanitizeCsvField(val: unknown): string {
   if (val === null || val === undefined) return '""';
@@ -16,10 +19,11 @@ function sanitizeCsvField(val: unknown): string {
 }
 
 export async function GET(request: NextRequest) {
+  const lang = requestLanguage(request);
   // Block top-level cross-site GET link hijacking for billing CSV downloads
   const secFetchSite = request.headers.get('sec-fetch-site');
   if (secFetchSite === 'cross-site') {
-    return NextResponse.json({ error: 'Cross-site request forbidden' }, { status: 403 });
+    return NextResponse.json({ error: localizeApiError('Cross-site request forbidden', request) }, { status: 403 });
   }
 
   const auth = await requireOwnerAnalytics(request);
@@ -32,14 +36,14 @@ export async function GET(request: NextRequest) {
   const dateTo = searchParams.get('dateTo') ?? undefined;
 
   let filters;
-  try { filters=invoiceFilters(searchParams); } catch { return NextResponse.json({error:'Invalid invoice filters'},{status:422}); }
-  try { await dbAssertInvoiceAmountsReviewed(); } catch(error) { if(error instanceof DocumentError)return NextResponse.json({error:error.message},{status:409});throw error; }
+  try { filters=invoiceFilters(searchParams); } catch { return NextResponse.json({error:localizeApiError('Invalid invoice filters', request)},{status:422}); }
+  try { await dbAssertInvoiceAmountsReviewed(); } catch(error) { if(error instanceof DocumentError)return NextResponse.json({error:localizeApiError(error.message, request)},{status:409});throw error; }
   const invoices = await dbGetInvoices(filters);
 
-  let csv = 'Numero Fatura-Recibo;Data Emissao;Nome Utente;NIF;Telefone;Email;Servico;Profissional;Incidencia Base EUR;Taxa IVA;Valor IVA EUR;Valor Total EUR;Motivo Isencao;Metodo Pagamento;Estado Pagamento;Data Pagamento;Seguro / Mutuelle;Numero Beneficiario;Notas\n';
+  let csv = exportHeader('Numero Documento;Data Emissao;Nome Utente;NIF;Telefone;Email;Servico;Profissional;Incidencia Base EUR;Taxa IVA;Valor IVA EUR;Valor Total EUR;Motivo Isencao;Metodo Pagamento;Estado Pagamento;Data Pagamento;Seguro / Mutuelle;Numero Beneficiario;Notas;Numero Sessoes;Datas Sessoes;Referencia Fatura Fiscal;Tipo Documento\n', lang);
 
   invoices.forEach(inv => {
-    const { incidence, vatAmount, vatRate } = calculateVatBreakdown(inv.amount, inv.vatRate);
+    const { incidence, vatAmount, vatRates, quantity, lines, totalAmount } = invoiceDisplayTotals(inv);
     const row = [
       sanitizeCsvField(inv.invoiceNumber),
       sanitizeCsvField(inv.createdAt.split('T')[0]),
@@ -50,16 +54,20 @@ export async function GET(request: NextRequest) {
       sanitizeCsvField(inv.serviceName),
       sanitizeCsvField(inv.practitioner),
       sanitizeCsvField(incidence.toFixed(2)),
-      sanitizeCsvField(`${vatRate}%`),
+      sanitizeCsvField(`${vatRates}%`),
       sanitizeCsvField(vatAmount.toFixed(2)),
-      sanitizeCsvField(Number(inv.amount).toFixed(2)),
-      sanitizeCsvField(inv.vatExemptionReason ?? ''),
-      sanitizeCsvField(inv.paymentMethod),
-      sanitizeCsvField(inv.paymentStatus),
+      sanitizeCsvField(totalAmount.toFixed(2)),
+      sanitizeCsvField([...new Set(lines.map(line => line.vatExemptionReason).filter(Boolean))].join(' | ')),
+      sanitizeCsvField(exportLabel(inv.paymentMethod, lang)),
+      sanitizeCsvField(exportLabel(inv.paymentStatus, lang)),
       sanitizeCsvField(inv.paidAt ? inv.paidAt.split('T')[0] : ''),
       sanitizeCsvField(inv.coverageProvider || inv.coverageType),
       sanitizeCsvField(inv.coverageNumber ?? ''),
       sanitizeCsvField(inv.notes ?? ''),
+      sanitizeCsvField(quantity),
+      sanitizeCsvField(lines.flatMap(line => line.dates).join(' | ')),
+      sanitizeCsvField(inv.externalReference ?? ''),
+      sanitizeCsvField(exportLabel('INTERNO - SEM VALOR FISCAL',lang)),
     ];
     csv += row.join(';') + '\n';
   });

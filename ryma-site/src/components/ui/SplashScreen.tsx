@@ -1,4 +1,7 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+import { useLanguage } from '@/lib/i18n';
+
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -139,6 +142,7 @@ function ProgressLine({ onComplete }: { onComplete: () => void }) {
 }
 
 export function SplashScreen() {
+  const { lang } = useLanguage();
   const pathname = usePathname();
   const [showSplash, setShowSplash] = useState(true);
   const [exitReady, setExitReady] = useState(false);
@@ -290,9 +294,7 @@ export function SplashScreen() {
                 <span
                   className="text-[11px] sm:text-xs tracking-[0.34em] uppercase text-white/75 font-medium"
                   style={{ fontFamily: 'var(--font-inter)' }}
-                >
-                  Fisioterapia & Estética Médica
-                </span>
+                >{legacyText("Fisioterapia & Estética Médica", lang)}</span>
               </motion.div>
 
               {/* Location in Soft Pure White */}

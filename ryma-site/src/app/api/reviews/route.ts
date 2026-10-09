@@ -1,6 +1,7 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isKnownTreatment } from '@/lib/treatments';
 import { NextRequest, NextResponse } from 'next/server';
-import { dbGetApprovedReviews, dbCreateReview, dbCheckRateLimit, dbRecordRateLimitAttempt } from '@/lib/db';
+import { dbGetApprovedReviews, dbGetApprovedReviewStats, dbCreateReview, dbConsumeRateLimit } from '@/lib/db';
 import { getClientIp } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -12,12 +13,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const serviceSlug = searchParams.get('serviceSlug') ?? undefined;
     const limitParam = searchParams.get('limit');
-    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+    const limit = limitParam === null ? 100 : Number(limitParam);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      return NextResponse.json({error:localizeApiError('limit must be an integer between 1 and 100', request)},{status:400});
+    }
 
-    const reviews = await dbGetApprovedReviews({ serviceSlug, limit });
+    const [reviews,stats] = await Promise.all([dbGetApprovedReviews({ serviceSlug, limit }),dbGetApprovedReviewStats(serviceSlug)]);
 
     return NextResponse.json(
-      { reviews },
+      { reviews, stats },
       {
         status: 200,
         headers: {
@@ -28,7 +32,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error('[GET /api/reviews Error]:');
     return NextResponse.json(
-      { error: 'Não foi possível carregar as avaliações.' },
+      { error: localizeApiError('Não foi possível carregar as avaliações.', request) },
       { status: 500 }
     );
   }
@@ -40,10 +44,10 @@ export async function POST(request: NextRequest) {
     const ip = getClientIp(request);
 
     // Rate Limiting: max 5 review submissions per IP per hour
-    const allowed = await dbCheckRateLimit(ip, 'review_post', 5, 3600);
+    const allowed = await dbConsumeRateLimit(ip, 'review_post', 5, 3600);
     if (!allowed) {
       return NextResponse.json(
-        { error: 'Demasiadas tentativas. Por favor aguarde antes de enviar outra avaliação.' },
+        { error: localizeApiError('Demasiadas tentativas. Por favor aguarde antes de enviar outra avaliação.', request) },
         { status: 429 }
       );
     }
@@ -52,10 +56,10 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: 'Formato JSON inválido.' }, { status: 400 });
+      return NextResponse.json({ error: localizeApiError('Formato JSON inválido.', request) }, { status: 400 });
     }
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
-      return NextResponse.json({ error: 'Formato JSON inválido.' }, { status: 400 });
+      return NextResponse.json({ error: localizeApiError('Formato JSON inválido.', request) }, { status: 400 });
     }
 
     const {
@@ -70,12 +74,12 @@ export async function POST(request: NextRequest) {
 
     // Bot detection honeypot field
     if (honeypot) {
-      return NextResponse.json({ error: 'Spam detectado.' }, { status: 400 });
+      return NextResponse.json({ error: localizeApiError('Spam detectado.', request) }, { status: 400 });
     }
 
     if (!patientName || typeof patientName !== 'string' || patientName.trim().length < 2) {
       return NextResponse.json(
-        { error: 'Por favor, indique o seu nome (mínimo 2 caracteres).' },
+        { error: localizeApiError('Por favor, indique o seu nome (mínimo 2 caracteres).', request) },
         { status: 400 }
       );
     }
@@ -84,30 +88,30 @@ export async function POST(request: NextRequest) {
 
     // Reject HTML tags, script injection, and formula injection
     if (/[<>]|javascript:|data:/i.test(cleanName)) {
-      return NextResponse.json({ error: 'Caracteres não permitidos detetados no nome.' }, { status: 422 });
+      return NextResponse.json({ error: localizeApiError('Caracteres não permitidos detetados no nome.', request) }, { status: 422 });
     }
     if (/^[=\+\-@\t\r]/.test(cleanName)) {
-      return NextResponse.json({ error: 'Formato inválido no nome.' }, { status: 422 });
+      return NextResponse.json({ error: localizeApiError('Formato inválido no nome.', request) }, { status: 422 });
     }
 
     const numRating = Number(rating);
     if (!numRating || isNaN(numRating) || numRating < 1 || numRating > 5) {
       return NextResponse.json(
-        { error: 'A classificação deve ser entre 1 e 5 estrelas.' },
+        { error: localizeApiError('A classificação deve ser entre 1 e 5 estrelas.', request) },
         { status: 400 }
       );
     }
 
     if (!comment || typeof comment !== 'string' || comment.trim().length < 5) {
       return NextResponse.json(
-        { error: 'Por favor, partilhe um comentário com pelo menos 5 caracteres.' },
+        { error: localizeApiError('Por favor, partilhe um comentário com pelo menos 5 caracteres.', request) },
         { status: 400 }
       );
     }
 
     if (comment.trim().length > 1500) {
       return NextResponse.json(
-        { error: 'O comentário excede o limite máximo de 1500 caracteres.' },
+        { error: localizeApiError('O comentário excede o limite máximo de 1500 caracteres.', request) },
         { status: 400 }
       );
     }
@@ -115,16 +119,16 @@ export async function POST(request: NextRequest) {
     const cleanComment = comment.trim().slice(0, 1500);
 
     if (/[<>]|javascript:|data:/i.test(cleanComment)) {
-      return NextResponse.json({ error: 'Caracteres não permitidos detetados no comentário.' }, { status: 422 });
+      return NextResponse.json({ error: localizeApiError('Caracteres não permitidos detetados no comentário.', request) }, { status: 422 });
     }
     if (/^[=\+\-@\t\r]/.test(cleanComment)) {
-      return NextResponse.json({ error: 'Formato inválido no comentário.' }, { status: 422 });
+      return NextResponse.json({ error: localizeApiError('Formato inválido no comentário.', request) }, { status: 422 });
     }
 
     const validSlug = typeof serviceSlug === 'string' ? serviceSlug.trim() : '';
 
     // A patient can review a treatment received before it was archived; all reviews are moderated.
-    if(!await isKnownTreatment(validSlug))return NextResponse.json({error:'Escolha um tratamento existente.'},{status:422});
+    if(!await isKnownTreatment(validSlug))return NextResponse.json({error:localizeApiError('Escolha um tratamento existente.', request)},{status:422});
 
     // Anti-defacement: Reviews require moderation (PENDING) before appearing publicly
     const review = await dbCreateReview({
@@ -138,8 +142,6 @@ export async function POST(request: NextRequest) {
       verified: false,
       isFeatured: false,
     });
-
-    await dbRecordRateLimitAttempt(ip, 'review_post');
 
     return NextResponse.json(
       {
@@ -161,7 +163,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('[POST /api/reviews Error]:');
     return NextResponse.json(
-      { error: 'Erro ao registar a avaliação. Por favor tente novamente.' },
+      { error: localizeApiError('Erro ao registar a avaliação. Por favor tente novamente.', request) },
       { status: 500 }
     );
   }

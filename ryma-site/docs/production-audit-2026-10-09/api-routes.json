@@ -1,0 +1,801 @@
+{
+  "observedAt": "2026-10-09T11:03:01.305Z",
+  "routeCount": 37,
+  "handlerCount": 55,
+  "routes": [
+    {
+      "route": "/api/admin/analytics/lock",
+      "file": "src/app/api/admin/analytics/lock/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 12
+        }
+      ],
+      "notes": "Revokes owner step-up grant for current admin session."
+    },
+    {
+      "route": "/api/admin/analytics/password",
+      "file": "src/app/api/admin/analytics/password/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Owner step-up",
+          "line": 16
+        }
+      ],
+      "notes": "Owner step-up and current-password check; atomic password-change quota; updates stored owner hash."
+    },
+    {
+      "route": "/api/admin/analytics",
+      "file": "src/app/api/admin/analytics/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Owner step-up",
+          "line": 10
+        }
+      ],
+      "notes": "Owner step-up required. Filtered financial and operational aggregates; no-store."
+    },
+    {
+      "route": "/api/admin/analytics/verify",
+      "file": "src/app/api/admin/analytics/verify/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 22
+        }
+      ],
+      "notes": "Admin session plus owner password; atomic attempt quota; expiring server-side step-up grant."
+    },
+    {
+      "route": "/api/admin/appointments/[id]",
+      "file": "src/app/api/admin/appointments/[id]/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 24
+        },
+        {
+          "method": "PATCH",
+          "access": "Admin session",
+          "line": 41
+        },
+        {
+          "method": "DELETE",
+          "access": "Admin session",
+          "line": 128
+        }
+      ],
+      "notes": "Single appointment read, validated reschedule/status changes and deletion; conflict protection preserves capacity."
+    },
+    {
+      "route": "/api/admin/appointments/multiple/preview",
+      "file": "src/app/api/admin/appointments/multiple/preview/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 34
+        }
+      ],
+      "notes": "Validated multi-session capacity proposal; response previews availability without final commitment."
+    },
+    {
+      "route": "/api/admin/appointments/multiple",
+      "file": "src/app/api/admin/appointments/multiple/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 18
+        }
+      ],
+      "notes": "Atomic multi-session booking, validates proposal and conflicts; idempotent retry support."
+    },
+    {
+      "route": "/api/admin/appointments",
+      "file": "src/app/api/admin/appointments/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 20
+        },
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 70
+        }
+      ],
+      "notes": "Filtered lists, bounded page/limit mode and summary mode; legacy no-page mode remains unbounded. POST validates and atomically books."
+    },
+    {
+      "route": "/api/admin/events",
+      "file": "src/app/api/admin/events/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 11
+        }
+      ],
+      "notes": "Authenticated SSE; checks session revocation and durable booking revision. Cleans up on disconnect/errors; reverse proxy buffering must be off."
+    },
+    {
+      "route": "/api/admin/export",
+      "file": "src/app/api/admin/export/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Owner step-up",
+          "line": 21
+        }
+      ],
+      "notes": "Owner-only CSV/full JSON backup export with spreadsheet-formula escaping and cross-site download guard; bulk in-memory export, needs large-dataset testing."
+    },
+    {
+      "route": "/api/admin/invoices/[id]",
+      "file": "src/app/api/admin/invoices/[id]/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 15
+        },
+        {
+          "method": "PUT",
+          "access": "Admin session",
+          "line": 32
+        },
+        {
+          "method": "DELETE",
+          "access": "Owner step-up",
+          "line": 75
+        }
+      ],
+      "notes": "Admin read/update; deletion requires owner step-up; amount/revision and dependency validation."
+    },
+    {
+      "route": "/api/admin/invoices/export",
+      "file": "src/app/api/admin/invoices/export/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Owner step-up",
+          "line": 18
+        }
+      ],
+      "notes": "Owner-only filtered billing CSV with formula escaping and cross-site download guard; buffered bulk export."
+    },
+    {
+      "route": "/api/admin/invoices",
+      "file": "src/app/api/admin/invoices/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 22
+        },
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 75
+        }
+      ],
+      "notes": "Paginated/filterable invoices and validated creation. Owner-only aggregate totals; legacy no-page mode unbounded."
+    },
+    {
+      "route": "/api/admin/invoices/sessions",
+      "file": "src/app/api/admin/invoices/sessions/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 8
+        }
+      ],
+      "notes": "Create an internal document for 1–100 completed visits of one patient; 64 KiB body cap, exact-cent totals, VAT validation, saved price snapshots, stable idempotency key and atomic duplicate-billing guards."
+    },
+    {
+      "route": "/api/admin/login",
+      "file": "src/app/api/admin/login/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Public / own-session",
+          "line": 17
+        }
+      ],
+      "notes": "Password login with atomic 10/IP/15-minute production quota, bcrypt and secure signed session; shipped defaults rejected."
+    },
+    {
+      "route": "/api/admin/logout",
+      "file": "src/app/api/admin/logout/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Public / own-session",
+          "line": 10
+        }
+      ],
+      "notes": "Clears cookie and persists revocation; anonymous logout is idempotently successful; 503 if authenticated revocation fails."
+    },
+    {
+      "route": "/api/admin/me",
+      "file": "src/app/api/admin/me/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 15
+        }
+      ],
+      "notes": "Admin status plus record counts; backup/no-show details cached for 60 seconds per process; no-store HTTP."
+    },
+    {
+      "route": "/api/admin/patients/[id]/billing-sessions",
+      "file": "src/app/api/admin/patients/[id]/billing-sessions/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 7
+        }
+      ],
+      "notes": "Paginated completed-visit selection, maximum 100 rows per page; optional date range, historical price and existing-document linkage; planned, future and archived visits excluded."
+    },
+    {
+      "route": "/api/admin/patients/[id]/sessions",
+      "file": "src/app/api/admin/patients/[id]/sessions/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 19
+        },
+        {
+          "method": "PATCH",
+          "access": "Admin session",
+          "line": 104
+        },
+        {
+          "method": "DELETE",
+          "access": "Admin session",
+          "line": 155
+        }
+      ],
+      "notes": "Create/update/delete clinical sessions with patient/appointment linkage checks and audit revisions."
+    },
+    {
+      "route": "/api/admin/patients",
+      "file": "src/app/api/admin/patients/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 24
+        },
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 98
+        },
+        {
+          "method": "DELETE",
+          "access": "Owner step-up",
+          "line": 179
+        }
+      ],
+      "notes": "Patient detail/directory/search and validated save; directory page size <=100. Legacy aggregate notes path is unbounded. Delete requires owner step-up."
+    },
+    {
+      "route": "/api/admin/practitioners",
+      "file": "src/app/api/admin/practitioners/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 8
+        },
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 17
+        }
+      ],
+      "notes": "Read/update full team, resources, working hours, service mappings and exceptions; version/conflict validation."
+    },
+    {
+      "route": "/api/admin/prescriptions/[id]",
+      "file": "src/app/api/admin/prescriptions/[id]/route.ts",
+      "handlers": [
+        {
+          "method": "DELETE",
+          "access": "Admin session",
+          "line": 9
+        }
+      ],
+      "notes": "Authenticated prescription deletion."
+    },
+    {
+      "route": "/api/admin/prescriptions",
+      "file": "src/app/api/admin/prescriptions/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 11
+        },
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 28
+        }
+      ],
+      "notes": "Patient-scoped prescription list and validated creation; no paginated history."
+    },
+    {
+      "route": "/api/admin/reviews",
+      "file": "src/app/api/admin/reviews/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 11
+        },
+        {
+          "method": "PATCH",
+          "access": "Admin session",
+          "line": 42
+        },
+        {
+          "method": "DELETE",
+          "access": "Admin session",
+          "line": 78
+        }
+      ],
+      "notes": "Unpaginated moderation list; approve/reject/feature or delete existing review. Needs pagination at larger volumes."
+    },
+    {
+      "route": "/api/admin/slots/bulk",
+      "file": "src/app/api/admin/slots/bulk/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 8
+        }
+      ],
+      "notes": "Validated bulk slot blocking/unblocking with conflict checks."
+    },
+    {
+      "route": "/api/admin/slots",
+      "file": "src/app/api/admin/slots/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 11
+        },
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 31
+        }
+      ],
+      "notes": "Live admin availability and manual slot blocking; checks active appointments."
+    },
+    {
+      "route": "/api/admin/treatments",
+      "file": "src/app/api/admin/treatments/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 8
+        },
+        {
+          "method": "POST",
+          "access": "Admin session",
+          "line": 13
+        }
+      ],
+      "notes": "Catalogue/configuration read and validated treatment save/archive/publication with revisions; catalogueOnly=1 reduces reads."
+    },
+    {
+      "route": "/api/admin/whatsapp",
+      "file": "src/app/api/admin/whatsapp/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Admin session",
+          "line": 8
+        }
+      ],
+      "notes": "Integration readiness and inbox/outbox aggregate counts; no secret values returned."
+    },
+    {
+      "route": "/api/appointments",
+      "file": "src/app/api/appointments/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Public / own-session",
+          "line": 29
+        }
+      ],
+      "notes": "Public booking: production CAPTCHA, IP and phone quotas, validated contact/service/date, atomic capacity and idempotency; mail runs after response."
+    },
+    {
+      "route": "/api/contact",
+      "file": "src/app/api/contact/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Public / own-session",
+          "line": 10
+        }
+      ],
+      "notes": "Validated contact mail: 16 KiB streamed body cap, 5/IP/hour, production CAPTCHA; 200 only after SMTP acceptance; 503 on delivery failure."
+    },
+    {
+      "route": "/api/health",
+      "file": "src/app/api/health/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Public / own-session",
+          "line": 24
+        }
+      ],
+      "notes": "Read/write database readiness; concurrent probes share a 5-second result. 503 on unavailable/non-writable storage; errors redacted."
+    },
+    {
+      "route": "/api/practitioners",
+      "file": "src/app/api/practitioners/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Public / own-session",
+          "line": 5
+        }
+      ],
+      "notes": "Public active practitioner/service projection; live database read, no-store."
+    },
+    {
+      "route": "/api/reviews",
+      "file": "src/app/api/reviews/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Public / own-session",
+          "line": 10
+        },
+        {
+          "method": "POST",
+          "access": "Public / own-session",
+          "line": 41
+        }
+      ],
+      "notes": "GET approved reviews only (default/max 100), independent global rating/count; POST pending moderated submission, 5/IP/hour, honeypot. No CAPTCHA on reviews."
+    },
+    {
+      "route": "/api/slots",
+      "file": "src/app/api/slots/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Public / own-session",
+          "line": 18
+        }
+      ],
+      "notes": "Live capacity by validated date/service/practitioner; no-store. Repeated scheduling reads should be profiled against the target database."
+    },
+    {
+      "route": "/api/treatments",
+      "file": "src/app/api/treatments/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Public / own-session",
+          "line": 4
+        }
+      ],
+      "notes": "Published database catalogue only; no-store; 503 on dependency failure."
+    },
+    {
+      "route": "/api/whatsapp/jobs",
+      "file": "src/app/api/whatsapp/jobs/route.ts",
+      "handlers": [
+        {
+          "method": "POST",
+          "access": "Bearer job secret",
+          "line": 9
+        }
+      ],
+      "notes": "Bearer job secret; requires configured integration; processes durable inbox/outbox. External scheduler must POST every minute."
+    },
+    {
+      "route": "/api/whatsapp/webhook",
+      "file": "src/app/api/whatsapp/webhook/route.ts",
+      "handlers": [
+        {
+          "method": "GET",
+          "access": "Verify token",
+          "line": 11
+        },
+        {
+          "method": "POST",
+          "access": "HMAC signature",
+          "line": 18
+        }
+      ],
+      "notes": "GET token challenge; POST app-secret HMAC verification, 64 KiB limit and durable enqueue before acknowledgment. Provider integration still needs staging verification."
+    }
+  ],
+  "anonymousProbes": [
+    {
+      "route": "/api/admin/analytics/lock",
+      "method": "POST",
+      "status": 401,
+      "ms": 353
+    },
+    {
+      "route": "/api/admin/analytics/password",
+      "method": "POST",
+      "status": 401,
+      "ms": 238
+    },
+    {
+      "route": "/api/admin/analytics",
+      "method": "GET",
+      "status": 401,
+      "ms": 184
+    },
+    {
+      "route": "/api/admin/analytics/verify",
+      "method": "POST",
+      "status": 401,
+      "ms": 245
+    },
+    {
+      "route": "/api/admin/appointments/[id]",
+      "method": "GET",
+      "status": 401,
+      "ms": 170
+    },
+    {
+      "route": "/api/admin/appointments/[id]",
+      "method": "PATCH",
+      "status": 401,
+      "ms": 32
+    },
+    {
+      "route": "/api/admin/appointments/[id]",
+      "method": "DELETE",
+      "status": 401,
+      "ms": 39
+    },
+    {
+      "route": "/api/admin/appointments/multiple/preview",
+      "method": "POST",
+      "status": 401,
+      "ms": 324
+    },
+    {
+      "route": "/api/admin/appointments/multiple",
+      "method": "POST",
+      "status": 401,
+      "ms": 334
+    },
+    {
+      "route": "/api/admin/appointments",
+      "method": "GET",
+      "status": 401,
+      "ms": 20
+    },
+    {
+      "route": "/api/admin/appointments",
+      "method": "POST",
+      "status": 401,
+      "ms": 23
+    },
+    {
+      "route": "/api/admin/events",
+      "method": "GET",
+      "status": 401,
+      "ms": 25
+    },
+    {
+      "route": "/api/admin/export",
+      "method": "GET",
+      "status": 401,
+      "ms": 269
+    },
+    {
+      "route": "/api/admin/invoices/[id]",
+      "method": "GET",
+      "status": 401,
+      "ms": 56
+    },
+    {
+      "route": "/api/admin/invoices/[id]",
+      "method": "PUT",
+      "status": 401,
+      "ms": 62
+    },
+    {
+      "route": "/api/admin/invoices/[id]",
+      "method": "DELETE",
+      "status": 401,
+      "ms": 37
+    },
+    {
+      "route": "/api/admin/invoices/export",
+      "method": "GET",
+      "status": 401,
+      "ms": 392
+    },
+    {
+      "route": "/api/admin/invoices",
+      "method": "GET",
+      "status": 401,
+      "ms": 33
+    },
+    {
+      "route": "/api/admin/invoices",
+      "method": "POST",
+      "status": 401,
+      "ms": 31
+    },
+    {
+      "route": "/api/admin/invoices/sessions",
+      "method": "POST",
+      "status": 401,
+      "ms": 23
+    },
+    {
+      "route": "/api/admin/me",
+      "method": "GET",
+      "status": 401,
+      "ms": 25
+    },
+    {
+      "route": "/api/admin/patients/[id]/billing-sessions",
+      "method": "GET",
+      "status": 401,
+      "ms": 38
+    },
+    {
+      "route": "/api/admin/patients/[id]/sessions",
+      "method": "POST",
+      "status": 401,
+      "ms": 1705
+    },
+    {
+      "route": "/api/admin/patients/[id]/sessions",
+      "method": "PATCH",
+      "status": 401,
+      "ms": 38
+    },
+    {
+      "route": "/api/admin/patients/[id]/sessions",
+      "method": "DELETE",
+      "status": 401,
+      "ms": 25
+    },
+    {
+      "route": "/api/admin/patients",
+      "method": "GET",
+      "status": 401,
+      "ms": 32
+    },
+    {
+      "route": "/api/admin/patients",
+      "method": "POST",
+      "status": 401,
+      "ms": 21
+    },
+    {
+      "route": "/api/admin/patients",
+      "method": "DELETE",
+      "status": 401,
+      "ms": 16
+    },
+    {
+      "route": "/api/admin/practitioners",
+      "method": "GET",
+      "status": 401,
+      "ms": 31
+    },
+    {
+      "route": "/api/admin/practitioners",
+      "method": "POST",
+      "status": 401,
+      "ms": 18
+    },
+    {
+      "route": "/api/admin/prescriptions/[id]",
+      "method": "DELETE",
+      "status": 401,
+      "ms": 1330
+    },
+    {
+      "route": "/api/admin/prescriptions",
+      "method": "GET",
+      "status": 401,
+      "ms": 273
+    },
+    {
+      "route": "/api/admin/prescriptions",
+      "method": "POST",
+      "status": 401,
+      "ms": 23
+    },
+    {
+      "route": "/api/admin/reviews",
+      "method": "GET",
+      "status": 401,
+      "ms": 40
+    },
+    {
+      "route": "/api/admin/reviews",
+      "method": "PATCH",
+      "status": 401,
+      "ms": 33
+    },
+    {
+      "route": "/api/admin/reviews",
+      "method": "DELETE",
+      "status": 401,
+      "ms": 31
+    },
+    {
+      "route": "/api/admin/slots/bulk",
+      "method": "POST",
+      "status": 401,
+      "ms": 448
+    },
+    {
+      "route": "/api/admin/slots",
+      "method": "GET",
+      "status": 401,
+      "ms": 22
+    },
+    {
+      "route": "/api/admin/slots",
+      "method": "POST",
+      "status": 401,
+      "ms": 30
+    },
+    {
+      "route": "/api/admin/treatments",
+      "method": "GET",
+      "status": 401,
+      "ms": 27
+    },
+    {
+      "route": "/api/admin/treatments",
+      "method": "POST",
+      "status": 401,
+      "ms": 21
+    },
+    {
+      "route": "/api/admin/whatsapp",
+      "method": "GET",
+      "status": 401,
+      "ms": 325
+    },
+    {
+      "route": "/api/whatsapp/jobs",
+      "method": "POST",
+      "status": 401,
+      "ms": 262
+    }
+  ]
+}

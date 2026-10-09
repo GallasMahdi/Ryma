@@ -17,7 +17,7 @@ interface MapPoint {
   cy: number;
   position3D?: [number, number, number];
   zone: BodyZone;
-  label: { fr: string; pt?: string; en?: string; ar?: string };
+  label: { fr: string; pt?: string; en?: string; es?: string; ar?: string };
 }
 
 const BORDER = '#e4e5de';
@@ -31,24 +31,34 @@ const ZONE_ICONS: Record<BodyZone, React.ReactNode> = {
   back:  <IconBone size={13} />,
 };
 
-const ZONE_LABELS: Record<BodyZone, { fr: string; pt: string; en: string }> = {
-  all:   { fr: 'Tout le corps', pt: 'Corpo Inteiro', en: 'Full Body' },
-  torso: { fr: 'Buste & Abdomen', pt: 'Torso e Abdómen', en: 'Torso & Abdomen' },
-  legs:  { fr: 'Membres Inférieurs', pt: 'Membros Inferiores', en: 'Lower Limbs' },
-  arms:  { fr: 'Membres Supérieurs', pt: 'Membros Superiores', en: 'Upper Limbs' },
-  back:  { fr: 'Rachis & Dos', pt: 'Coluna e Costas', en: 'Spine & Back' },
+const ZONE_LABELS: Record<BodyZone, { fr: string; pt: string; en: string; es: string; }> = {
+  all:   {
+    es: "Cuerpo completo", fr: 'Tout le corps', pt: 'Corpo Inteiro', en: 'Full Body' },
+  torso: {
+    es: "Torso y abdomen", fr: 'Buste & Abdomen', pt: 'Torso e Abdómen', en: 'Torso & Abdomen' },
+  legs:  {
+    es: "Extremidades inferiores", fr: 'Membres Inférieurs', pt: 'Membros Inferiores', en: 'Lower Limbs' },
+  arms:  {
+    es: "Extremidades superiores", fr: 'Membres Supérieurs', pt: 'Membros Superiores', en: 'Upper Limbs' },
+  back:  {
+    es: "Columna y espalda", fr: 'Rachis & Dos', pt: 'Coluna e Costas', en: 'Spine & Back' },
 };
 
 const ZONE_ORDER: BodyZone[] = ['all', 'torso', 'legs', 'arms', 'back'];
 
 export type MedicalGoal = 'all' | 'douleur' | 'minceur' | 'drainage' | 'post-partum';
 
-const MEDICAL_GOALS: { id: MedicalGoal; label: { fr: string; pt: string; en: string }; icon: React.ReactNode }[] = [
-  { id: 'all',         label: { fr: 'Tous les objectifs',       pt: 'Todos os Objetivos',    en: 'All Goals' }, icon: <IconSparkles size={14} /> },
-  { id: 'douleur',     label: { fr: 'Anti-douleur & Santé',    pt: 'Alívio da Dor e Saúde', en: 'Pain Relief & Health' }, icon: <IconStethoscope size={14} /> },
-  { id: 'minceur',     label: { fr: 'Minceur & Remodelage',    pt: 'Emagrecimento e Escultura', en: 'Slimming & Sculpting' }, icon: <IconFlame size={14} /> },
-  { id: 'drainage',    label: { fr: 'Drainage & Lymphe',       pt: 'Drenagem e Linfa',       en: 'Drainage & Lymph' }, icon: <IconDroplet size={14} /> },
-  { id: 'post-partum', label: { fr: 'Post-Partum & Périnée',   pt: 'Pós-Parto e Períneo',    en: 'Postpartum & Pelvic Floor' }, icon: <IconAdjustmentsHorizontal size={14} /> },
+const MEDICAL_GOALS: { id: MedicalGoal; label: { fr: string; pt: string; en: string; es: string; }; icon: React.ReactNode }[] = [
+  { id: 'all',         label: {
+    es: "Todos los objetivos", fr: 'Tous les objectifs',       pt: 'Todos os Objetivos',    en: 'All Goals' }, icon: <IconSparkles size={14} /> },
+  { id: 'douleur',     label: {
+    es: "Alivio del dolor y salud", fr: 'Anti-douleur & Santé',    pt: 'Alívio da Dor e Saúde', en: 'Pain Relief & Health' }, icon: <IconStethoscope size={14} /> },
+  { id: 'minceur',     label: {
+    es: "Reducción y remodelado corporal", fr: 'Minceur & Remodelage',    pt: 'Emagrecimento e Escultura', en: 'Slimming & Sculpting' }, icon: <IconFlame size={14} /> },
+  { id: 'drainage',    label: {
+    es: "Drenaje y sistema linfático", fr: 'Drainage & Lymphe',       pt: 'Drenagem e Linfa',       en: 'Drainage & Lymph' }, icon: <IconDroplet size={14} /> },
+  { id: 'post-partum', label: {
+    es: "Posparto y suelo pélvico", fr: 'Post-Partum & Périnée',   pt: 'Pós-Parto e Períneo',    en: 'Postpartum & Pelvic Floor' }, icon: <IconAdjustmentsHorizontal size={14} /> },
 ];
 
 function StatCell({
@@ -151,9 +161,9 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
   const reduced = useReducedMotion();
 
   const isKine = service.pole === 'kinesitherapie';
-  const poleBadgeLabel = service.pole === 'bilan' ? (lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : isKine
-    ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
-    : lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming Care' : 'Soin Minceur';
+  const poleBadgeLabel = service.pole === 'bilan' ? (lang === 'es' ? "Evaluación" : lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : isKine
+    ? lang === 'es' ? "Fisioterapia" : lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
+    : lang === 'es' ? "Tratamientos reductores" : lang === 'pt' ? 'Emagrecimento' : lang === 'en' ? 'Slimming Care' : 'Soin Minceur';
 
   return (
     <motion.div
@@ -209,7 +219,7 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
               <button
                 type="button"
                 onClick={onClose}
-                aria-label={lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer'}
+                aria-label={lang === 'es' ? "Cerrar" : lang === 'pt' ? 'Fechar' : lang === 'en' ? 'Close' : 'Fermer'}
                 className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-[#292c28] text-white shadow-md hover:bg-[#748461] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#748461] active:scale-95"
               >
                 <IconX size={18} strokeWidth={2.5} />
@@ -220,24 +230,24 @@ const ServiceDetailCard = memo(function ServiceDetailCard({
           {/* Key metrics */}
           <div className={styles.detailStats}>
             <StatCell
-              label={lang === 'pt' ? 'Valor' : lang === 'en' ? 'Rate' : 'Tarif'}
+              label={lang === 'es' ? "Tarifa" : lang === 'pt' ? 'Valor' : lang === 'en' ? 'Rate' : 'Tarif'}
               value={<span className="text-[#748461]">{service.price} <span className="text-sm font-medium text-[#8A8078]">{t.common.currency}</span></span>}
             />
             <StatCell
-              label={lang === 'pt' ? 'Duração' : lang === 'en' ? 'Duration' : 'Durée'}
+              label={lang === 'es' ? "Duración" : lang === 'pt' ? 'Duração' : lang === 'en' ? 'Duration' : 'Durée'}
               value={<span className="text-[#292c28]">{service.duration}</span>}
-              sub={<span className="flex items-center gap-1 text-[#8A8078]"><IconClock size={10} className="text-[#748461]" />{lang === 'pt' ? 'por sessão' : lang === 'en' ? 'per session' : 'par session'}</span>}
+              sub={<span className="flex items-center gap-1 text-[#8A8078]"><IconClock size={10} className="text-[#748461]" />{lang === 'es' ? "por sesión" : lang === 'pt' ? 'por sessão' : lang === 'en' ? 'per session' : 'par session'}</span>}
             />
             <StatCell
-              label={lang === 'pt' ? 'Seguro / ADSE' : lang === 'en' ? 'Insurance' : 'Mutuelle / Assur.'}
+              label={lang === 'es' ? "Seguro" : lang === 'pt' ? 'Seguro / ADSE' : lang === 'en' ? 'Insurance' : 'Mutuelle / Assur.'}
               value={
                 isKine ? (
                   <span className="text-xs font-bold text-[#15803D]">
-                    {lang === 'pt' ? 'Elegível p/ Recibo' : lang === 'en' ? 'Receipt Provided' : 'Reçu délivré'}
+                    {lang === 'es' ? "Se entrega recibo" : lang === 'pt' ? 'Elegível p/ Recibo' : lang === 'en' ? 'Receipt Provided' : 'Reçu délivré'}
                   </span>
                 ) : (
                   <span className="text-xs font-semibold text-[#8A8078]">
-                    {lang === 'pt' ? 'Regime Privado' : lang === 'en' ? 'Private Care' : 'Soin Privé'}
+                    {lang === 'es' ? "Atención privada" : lang === 'pt' ? 'Regime Privado' : lang === 'en' ? 'Private Care' : 'Soin Privé'}
                   </span>
                 )
               }
@@ -365,7 +375,7 @@ export const BodyMap = memo(function BodyMap({ embedded = false, hideHeader = fa
     detailRef.current?.focus({ preventScroll: true });
     if (window.innerWidth < 900) detailRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
   }, [selection]);
-  const copy = (pt: string, en: string, fr: string) => lang === 'pt' ? pt : lang === 'en' ? en : fr;
+  const copy = (pt: string, en: string, fr: string, es: string) => lang === 'es' ? es : lang === 'pt' ? pt : lang === 'en' ? en : fr;
   const serviceBySlug = useMemo(() => new Map(SERVICES.map(s => [s.slug, s])), [SERVICES]);
   // Areas and goals are chosen by the administrator, independent of treatment identifiers.
   const points = useMemo<MapPoint[]>(() => SERVICES.map(s=>({serviceSlug:s.slug,cx:s.bodyMapPoint?.x??50,cy:s.bodyMapPoint?.y??50,zone:s.bodyZones?.[0]??'all',label:ZONE_LABELS[s.bodyZones?.[0]??'all']})), [SERVICES]);
@@ -394,36 +404,36 @@ export const BodyMap = memo(function BodyMap({ embedded = false, hideHeader = fa
   const activeService = selection ? serviceBySlug.get(selection.serviceSlug) : undefined;
   return (
     <section id={embedded ? undefined : 'body-map'} className={styles.explorer} style={embedded ? undefined : { maxWidth: 1200, margin: '64px auto' }}>
-      {!hideHeader && <header className={styles.intro}><span className={styles.eyebrow}>{copy('O seu guia de cuidados', 'Your care guide', 'Votre guide de soins')}</span><h2>{t.bodyMap.title}</h2><p>{t.bodyMap.subtitle}</p></header>}
+      {!hideHeader && <header className={styles.intro}><span className={styles.eyebrow}>{copy('O seu guia de cuidados', 'Your care guide', 'Votre guide de soins', "Su guía de cuidados")}</span><h2>{t.bodyMap.title}</h2><p>{t.bodyMap.subtitle}</p></header>}
       <div className={styles.toolbar}>
-        <div><span className={styles.eyebrow}>{copy('COMECE POR SI', 'START WITH YOU', 'COMMENCEZ PAR VOUS')}</span><h3>{copy('De que precisa o seu corpo?', 'What does your body need?', 'De quoi votre corps a-t-il besoin ?')}</h3></div>
-        <label className={styles.search}><IconSearch size={18} aria-hidden="true" /><span className="sr-only">{copy('Pesquisar cuidados', 'Search treatments', 'Rechercher un soin')}</span><input type="search" value={query} onChange={e => { setQuery(e.target.value); setSelection(null); }} placeholder={copy('Pesquisar um cuidado…', 'Find a treatment…', 'Rechercher un soin…')} /></label>
+        <div><span className={styles.eyebrow}>{copy('COMECE POR SI', 'START WITH YOU', 'COMMENCEZ PAR VOUS', "EMPIECE POR USTED")}</span><h3>{copy('De que precisa o seu corpo?', 'What does your body need?', 'De quoi votre corps a-t-il besoin ?', "¿Qué necesita su cuerpo?")}</h3></div>
+        <label className={styles.search}><IconSearch size={18} aria-hidden="true" /><span className="sr-only">{copy('Pesquisar cuidados', 'Search treatments', 'Rechercher un soin', "Buscar tratamientos")}</span><input type="search" value={query} onChange={e => { setQuery(e.target.value); setSelection(null); }} placeholder={copy('Pesquisar um cuidado…', 'Find a treatment…', 'Rechercher un soin…', "Buscar un tratamiento…")} /></label>
       </div>
-      <div className={styles.goals} role="group" aria-label={copy('Objetivo', 'Care goal', 'Objectif')}>
+      <div className={styles.goals} role="group" aria-label={copy('Objetivo', 'Care goal', 'Objectif', "Objetivo del tratamiento")}>
         {MEDICAL_GOALS.map(g => <button type="button" key={g.id} aria-pressed={goal === g.id} onClick={() => { setGoal(g.id); setSelection(null); }}>{g.icon}{g.label[lang]}</button>)}
       </div>
       <div className={styles.workspace}>
         <div className={styles.mapPanel}>
-          <div className={styles.panelHeading}><span className={styles.step}>01</span><div><h4>{copy('Escolha uma zona', 'Choose an area', 'Choisissez une zone')}</h4><p>{copy('Selecione no corpo ou na lista abaixo.', 'Select on the body or from the list below.', 'Sélectionnez sur le corps ou dans la liste.')}</p></div></div>
-          <div className={styles.viewToggle} role="group" aria-label={copy('Vista do corpo', 'Body view', 'Vue du corps')}>
-            {(['front', 'back'] as const).map(v => <button type="button" key={v} aria-pressed={view === v} onClick={() => { setView(v); setZone('all'); setSelection(null); }}>{v === 'front' ? copy('Frente', 'Front', 'Face') : copy('Costas', 'Back', 'Dos')}</button>)}
+          <div className={styles.panelHeading}><span className={styles.step}>01</span><div><h4>{copy('Escolha uma zona', 'Choose an area', 'Choisissez une zone', "Elija una zona")}</h4><p>{copy('Selecione no corpo ou na lista abaixo.', 'Select on the body or from the list below.', 'Sélectionnez sur le corps ou dans la liste.', "Seleccione en el cuerpo o en la lista inferior.")}</p></div></div>
+          <div className={styles.viewToggle} role="group" aria-label={copy('Vista do corpo', 'Body view', 'Vue du corps', "Vista del cuerpo")}>
+            {(['front', 'back'] as const).map(v => <button type="button" key={v} aria-pressed={view === v} onClick={() => { setView(v); setZone('all'); setSelection(null); }}>{v === 'front' ? copy('Frente', 'Front', 'Face', "Frontal") : copy('Costas', 'Back', 'Dos', "Espalda")}</button>)}
           </div>
           <AnatomicalSVGViewer view={view} selectedZone={zone} onZoneSelect={chooseZone} lang={lang} />
-          <div className={styles.zones} role="group" aria-label={copy('Zonas do corpo', 'Body areas', 'Zones du corps')}>
+          <div className={styles.zones} role="group" aria-label={copy('Zonas do corpo', 'Body areas', 'Zones du corps', "Zonas corporales")}>
             {ZONE_ORDER.map(z => <button type="button" key={z} aria-pressed={zone === z} onClick={() => chooseZone(z)}>{ZONE_ICONS[z]}<span>{ZONE_LABELS[z][lang]}</span><span className={styles.count}>{matching.filter(p => inZone(p,z)).length}</span></button>)}
           </div>
         </div>
         <div className={styles.resultsPanel}>
-          <div className={styles.panelHeading}><span className={styles.step}>02</span><div><h4>{copy('Explore os cuidados', 'Explore your options', 'Explorez les soins')}</h4><p aria-live="polite">{results.length} {copy('cuidados', 'treatments', 'soins')} · {ZONE_LABELS[zone][lang]}</p></div>{(zone !== 'all' || goal !== 'all' || query) && <button className={styles.reset} type="button" onClick={reset}>{copy('Limpar', 'Reset', 'Effacer')}</button>}</div>
+          <div className={styles.panelHeading}><span className={styles.step}>02</span><div><h4>{copy('Explore os cuidados', 'Explore your options', 'Explorez les soins', "Explore sus opciones")}</h4><p aria-live="polite">{results.length} {copy('cuidados', 'treatments', 'soins', "tratamientos")} · {ZONE_LABELS[zone][lang]}</p></div>{(zone !== 'all' || goal !== 'all' || query) && <button className={styles.reset} type="button" onClick={reset}>{copy('Limpar', 'Reset', 'Effacer', "Restablecer")}</button>}</div>
           <div ref={detailRef} tabIndex={-1} className={styles.detail} onKeyDown={e => { if (e.key === 'Escape') closeDetail(); }}>
-            {selection && activeService ? <><button type="button" className={styles.back} onClick={closeDetail}>← {copy('Voltar aos cuidados', 'Back to treatments', 'Retour aux soins')}</button><ServiceDetailCard point={selection} service={activeService} lang={lang} t={t} onClose={closeDetail} hideClose /></> : <div className={styles.list}>
+            {selection && activeService ? <><button type="button" className={styles.back} onClick={closeDetail}>← {copy('Voltar aos cuidados', 'Back to treatments', 'Retour aux soins', "Volver a los tratamientos")}</button><ServiceDetailCard point={selection} service={activeService} lang={lang} t={t} onClose={closeDetail} hideClose /></> : <div className={styles.list}>
               {results.map(p => { const s = serviceBySlug.get(p.serviceSlug)!; return <button type="button" key={p.serviceSlug} className={styles.treatment} data-treatment={p.serviceSlug} onClick={() => { lastTrigger.current = p.serviceSlug; setSelection(p); }}>
-                <span className={styles.treatmentIcon}>{ZONE_ICONS[p.zone]}</span><span className={styles.treatmentCopy}><span className={styles.category}>{s.pole === 'bilan' ? copy('Avaliação', 'Assessment', 'Bilan') : s.pole === 'kinesitherapie' ? copy('Fisioterapia', 'Physiotherapy', 'Kinésithérapie') : copy('Emagrecimento', 'Slimming care', 'Minceur')}</span><strong>{getLocalizedText(s.name, lang)}</strong><span className={styles.meta}><IconClock size={13} />{s.duration}<span>·</span>{getLocalizedText(p.label, lang)}</span></span><span className={styles.price}>{s.price} {t.common.currency}<IconArrowRight size={18} /></span>
+                <span className={styles.treatmentIcon}>{ZONE_ICONS[p.zone]}</span><span className={styles.treatmentCopy}><span className={styles.category}>{s.pole === 'bilan' ? copy('Avaliação', 'Assessment', 'Bilan', "Evaluación") : s.pole === 'kinesitherapie' ? copy('Fisioterapia', 'Physiotherapy', 'Kinésithérapie', "Fisioterapia") : copy('Emagrecimento', 'Slimming care', 'Minceur', "Tratamientos reductores")}</span><strong>{getLocalizedText(s.name, lang)}</strong><span className={styles.meta}><IconClock size={13} />{s.duration}<span>·</span>{getLocalizedText(p.label, lang)}</span></span><span className={styles.price}>{s.price} {t.common.currency}<IconArrowRight size={18} /></span>
               </button>; })}
-              {results.length === 0 && <div className={styles.empty}><IconSearch size={30} /><h4>{copy('Nenhum cuidado encontrado', 'No treatments found', 'Aucun soin trouvé')}</h4><p>{copy('Experimente outra zona ou ajuste a pesquisa.', 'Try another area or adjust your search.', 'Essayez une autre zone ou modifiez votre recherche.')}</p><button type="button" onClick={reset}>{copy('Ver todos os cuidados', 'Show all treatments', 'Voir tous les soins')}</button></div>}
+              {results.length === 0 && <div className={styles.empty}><IconSearch size={30} /><h4>{copy('Nenhum cuidado encontrado', 'No treatments found', 'Aucun soin trouvé', "No se han encontrado tratamientos")}</h4><p>{copy('Experimente outra zona ou ajuste a pesquisa.', 'Try another area or adjust your search.', 'Essayez une autre zone ou modifiez votre recherche.', "Pruebe otra zona o ajuste la búsqueda.")}</p><button type="button" onClick={reset}>{copy('Ver todos os cuidados', 'Show all treatments', 'Voir tous les soins', "Mostrar todos los tratamientos")}</button></div>}
             </div>}
           </div>
-          <div className={styles.guidance}><IconStethoscope size={22} aria-hidden="true" /><div><strong>{copy('Não sabe por onde começar?', 'Not sure where to start?', 'Besoin d’être accompagné ?')}</strong><p>{copy('Encontre o cuidado certo numa avaliação personalizada.', 'Find the right care with a personal consultation.', 'Trouvez le soin adapté lors d’un bilan personnalisé.')}</p><a href="/rendez-vous">{copy('Marcar uma avaliação', 'Book a consultation', 'Réserver un bilan')} <IconArrowRight size={14} /></a></div></div>
+          <div className={styles.guidance}><IconStethoscope size={22} aria-hidden="true" /><div><strong>{copy('Não sabe por onde começar?', 'Not sure where to start?', 'Besoin d’être accompagné ?', "¿No sabe por dónde empezar?")}</strong><p>{copy('Encontre o cuidado certo numa avaliação personalizada.', 'Find the right care with a personal consultation.', 'Trouvez le soin adapté lors d’un bilan personnalisé.', "Encuentre los cuidados adecuados con una consulta personal.")}</p><a href="/rendez-vous">{copy('Marcar uma avaliação', 'Book a consultation', 'Réserver un bilan', "Reservar una consulta")} <IconArrowRight size={14} /></a></div></div>
         </div>
       </div>
     </section>

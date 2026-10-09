@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +30,10 @@ interface AdminDateJumpPickerProps {
 }
 
 const MONTH_NAMES: Record<Lang, string[]> = {
+    es: [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ],
   pt: [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -43,6 +49,7 @@ const MONTH_NAMES: Record<Lang, string[]> = {
 };
 
 const WEEKDAY_NAMES: Record<Lang, string[]> = {
+    es: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
   pt: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
   fr: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
   en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -61,8 +68,8 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const txt = (fr: string, en: string, pt: string) =>
-    lang === 'fr' ? fr : lang === 'en' ? en : pt;
+  const txt = (fr: string, en: string, pt: string, es: string) =>
+    lang === 'es' ? es : lang === 'fr' ? fr : lang === 'en' ? en : pt;
 
   const todayStr = useMemo(() => formatLocalDate(new Date()), []);
   const tomorrowStr = useMemo(() => {
@@ -242,11 +249,11 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
   // Formatted date label for trigger button
   const formattedTriggerLabel = useMemo(() => {
     if (!selectedDate || !/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
-      return txt('Choisir une date', 'Pick a date', 'Escolher data');
+      return txt('Choisir une date', 'Pick a date', 'Escolher data', "Elija una fecha");
     }
     const [y, m, d] = selectedDate.split('-').map(Number);
     const dateObj = new Date(y, m - 1, d, 12, 0, 0);
-    const locale = lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'pt-PT';
+    const locale = lang === 'es' ? "es-ES" : lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'pt-PT';
     return dateObj.toLocaleDateString(locale, {
       weekday: 'short',
       day: 'numeric',
@@ -263,14 +270,14 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
           type="button"
           onClick={handlePrevMonth}
           className="w-8 h-8 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] flex items-center justify-center transition-colors touch-target"
-          title={txt('Mois précédent', 'Previous month', 'Mês anterior')}
+          title={txt('Mois précédent', 'Previous month', 'Mês anterior', "Mes anterior")}
         >
           <IconChevronLeft size={16} />
         </button>
 
         <div className="flex items-center gap-1.5">
           <select
-            aria-label={txt('Mois', 'Month', 'Mês')}
+            aria-label={txt('Mois', 'Month', 'Mês', "Mes")}
             value={viewMonth}
             onChange={(e) => setViewMonth(Number(e.target.value))}
             className="bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-2 py-1 text-xs font-bold text-[#0F172A] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
@@ -283,7 +290,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
           </select>
 
           <select
-            aria-label={txt('Année', 'Year', 'Ano')}
+            aria-label={txt('Année', 'Year', 'Ano', "Año")}
             value={viewYear}
             onChange={(e) => setViewYear(Number(e.target.value))}
             className="bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-2 py-1 text-xs font-bold text-[#0F172A] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#0F172A]"
@@ -300,7 +307,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
           type="button"
           onClick={handleNextMonth}
           className="w-8 h-8 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#475569] flex items-center justify-center transition-colors touch-target"
-          title={txt('Mois suivant', 'Next month', 'Mês seguinte')}
+          title={txt('Mois suivant', 'Next month', 'Mês seguinte', "Mes siguiente")}
         >
           <IconChevronRight size={16} />
         </button>
@@ -316,7 +323,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
               : 'bg-[#F8FAFC] text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9]'
             }`}
         >
-          {txt('Aujourd’hui', 'Today', 'Hoje')}
+          {txt('Aujourd’hui', 'Today', 'Hoje', "Hoy")}
         </button>
         <button
           type="button"
@@ -326,21 +333,21 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
               : 'bg-[#F8FAFC] text-[#334155] border-[#E2E8F0] hover:bg-[#F1F5F9]'
             }`}
         >
-          {txt('Demain', 'Tomorrow', 'Amanhã')}
+          {txt('Demain', 'Tomorrow', 'Amanhã', "Mañana")}
         </button>
         <button
           type="button"
           onClick={handleJumpNextWeek}
           className="py-1.5 sm:py-1 px-1 rounded-lg bg-[#F8FAFC] text-[#334155] border border-[#E2E8F0] hover:bg-[#F1F5F9] text-center transition-colors truncate"
         >
-          +7 {txt('Jours', 'Days', 'Dias')}
+          +7 {txt('Jours', 'Days', 'Dias', "Días")}
         </button>
         <button
           type="button"
           onClick={handleJumpNextMonth}
           className="py-1.5 sm:py-1 px-1 rounded-lg bg-[#F8FAFC] text-[#334155] border border-[#E2E8F0] hover:bg-[#F1F5F9] text-center transition-colors truncate"
         >
-          +1 {txt('Mois', 'Month', 'Mês')}
+          +1 {txt('Mois', 'Month', 'Mês', "Mes")}
         </button>
       </div>
 
@@ -359,7 +366,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
 
       {/* Calendar Days Matrix (7x6) */}
       <p className="text-[11px] text-[#64748B] text-center">
-        {txt('Choisissez un jour pour afficher les rendez-vous.', 'Choose a day to show its appointments.', 'Escolha um dia para ver as consultas.')}
+        {txt('Choisissez un jour pour afficher les rendez-vous.', 'Choose a day to show its appointments.', 'Escolha um dia para ver as consultas.', "Elija un día para mostrar sus citas.")}
       </p>
       <div className="grid grid-cols-7 gap-1">
         {calendarDays.map((day, idx) => {
@@ -390,7 +397,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
                 <span
                   className={`w-1.5 h-1.5 rounded-full absolute bottom-1 ${day.isSelected ? 'bg-[#C49A3C]' : 'bg-[#2563EB]'
                     }`}
-                  title={`${day.appointmentCount} ${txt('rendez-vous', 'appointments', 'consultas')}`}
+                  title={`${day.appointmentCount} ${txt('rendez-vous', 'appointments', 'consultas', "citas")}`}
                 />
               )}
             </button>
@@ -402,11 +409,11 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
       <div className="pt-2 border-t border-[#F1F5F9] flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-[#64748B] font-medium">
-            {txt('Saisie:', 'Type:', 'Digitar:')}
+            {txt('Saisie:', 'Type:', 'Digitar:', "Introducir:")}
           </span>
           <input
             type="date"
-            aria-label={txt('Saisir une date', 'Type a date', 'Digitar uma data')}
+            aria-label={txt('Saisir une date', 'Type a date', 'Digitar uma data', "Introduzca una fecha")}
             value={selectedDate}
             onChange={(e) => {
               if (e.target.value) {
@@ -427,7 +434,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
             }}
             className="px-2.5 py-1 rounded-lg bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#334155] font-semibold text-[11px] transition-colors touch-target"
           >
-            {txt('Voir tout', 'Show all', 'Ver tudo')}
+            {txt('Voir tout', 'Show all', 'Ver tudo', "Mostrar todas")}
           </button>
         )}
       </div>
@@ -447,7 +454,7 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
                 ? 'bg-[#FAF6EE] text-[#C49A3C] border-[#C49A3C] font-bold'
                 : 'bg-white hover:bg-[#F8FAFC] text-[#0F172A] border-[#E2E8F0]'
             }`}
-          title={txt('Sélecteur direct de calendrier', 'Jump to date in calendar', 'Salto direto de data no calendário')}
+          title={txt('Sélecteur direct de calendrier', 'Jump to date in calendar', 'Salto direto de data no calendário', "Ir a la fecha en el calendario")}
         >
           <div className="w-5 h-5 rounded-md bg-[#0F172A]/5 group-hover:bg-[#0F172A]/10 flex items-center justify-center text-[#C49A3C]">
             <IconCalendar size={13} />
@@ -467,14 +474,14 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
             }`}
         >
           <IconCalendarEvent size={14} className={isDateFilterActive ? 'text-[#C49A3C]' : ''} />
-          <span>{isDateFilterActive ? formattedTriggerLabel : txt('Date spécifique', 'Specific date', 'Data específica')}</span>
+          <span>{isDateFilterActive ? formattedTriggerLabel : txt('Date spécifique', 'Specific date', 'Data específica', "Fecha concreta")}</span>
         </button>
       ) : (
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
           className="p-1.5 rounded-lg bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] transition-colors"
-          title={txt('Calendrier', 'Calendar', 'Calendário')}
+          title={txt('Calendrier', 'Calendar', 'Calendário', "Calendario")}
         >
           <IconCalendar size={15} />
         </button>
@@ -520,14 +527,14 @@ export const AdminDateJumpPicker = React.memo(function AdminDateJumpPicker({
                   <div className="flex items-center gap-1.5 pt-1.5">
                     <IconCalendar size={16} className="text-[#C49A3C]" />
                     <span className="font-bold text-sm text-[#0F172A]">
-                      {txt('Accéder à une Date', 'Jump to Date', 'Ir para Data')}
+                      {txt('Accéder à une Date', 'Jump to Date', 'Ir para Data', "Ir a fecha")}
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
                     className="p-1.5 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors touch-target flex items-center justify-center"
-                    aria-label="Fermer"
+                    aria-label={legacyText("Fermer", lang)}
                   >
                     <IconX size={18} />
                   </button>

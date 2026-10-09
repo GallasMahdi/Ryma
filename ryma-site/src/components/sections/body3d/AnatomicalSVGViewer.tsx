@@ -12,10 +12,14 @@ export interface AnatomicalSVGViewerProps {
 }
 
 const labels = {
-  arms: { pt: 'Braços', en: 'Arms', fr: 'Bras' },
-  torso: { pt: 'Abdómen', en: 'Abdomen', fr: 'Abdomen' },
-  back: { pt: 'Costas', en: 'Back', fr: 'Dos' },
-  legs: { pt: 'Pernas', en: 'Legs', fr: 'Jambes' },
+  arms: {
+    es: "Brazos", pt: 'Braços', en: 'Arms', fr: 'Bras' },
+  torso: {
+    es: "Abdomen", pt: 'Abdómen', en: 'Abdomen', fr: 'Abdomen' },
+  back: {
+    es: "Espalda", pt: 'Costas', en: 'Back', fr: 'Dos' },
+  legs: {
+    es: "Piernas", pt: 'Pernas', en: 'Legs', fr: 'Jambes' },
 };
 
 /** A lightweight body-area selector. Native buttons below provide the same keyboard path. */
@@ -30,7 +34,7 @@ export function AnatomicalSVGViewer({ view, selectedZone, onZoneSelect, lang }: 
   ];
   return (
     <div className="relative mx-auto w-full max-w-[390px] py-2">
-      <svg viewBox="0 0 320 402" className="mx-auto block h-[340px] w-full sm:h-[370px]" role="group" aria-label={lang === 'pt' ? 'Selecionar uma zona do corpo' : lang === 'en' ? 'Select a body area' : 'Sélectionner une zone du corps'}>
+      <svg viewBox="0 0 320 402" className="mx-auto block h-[340px] w-full sm:h-[370px]" role="group" aria-label={lang === 'es' ? "Seleccione una zona corporal" : lang === 'pt' ? 'Selecionar uma zona do corpo' : lang === 'en' ? 'Select a body area' : 'Sélectionner une zone du corps'}>
         <defs><linearGradient id={gradient} x1="0" x2="1"><stop stopColor="#dce2d4"/><stop offset=".48" stopColor="#f1f3eb"/><stop offset="1" stopColor="#cdd7c3"/></linearGradient></defs>
         <ellipse cx="160" cy="210" rx="112" ry="163" fill="#eef1e7" />
         <ellipse cx="160" cy="384" rx="43" ry="5" fill="#dce2d3" opacity=".55" />

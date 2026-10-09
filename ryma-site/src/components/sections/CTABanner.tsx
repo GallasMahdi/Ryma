@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 
 import React from 'react';
 import { useLanguage } from '@/lib/i18n';
@@ -10,9 +12,8 @@ export function CTABanner() {
   const { lang, t } = useLanguage();
 
   const trustItems = [
-    { text: lang === 'pt' ? 'Faturas-recibo para reembolso de seguros e ADSE' : lang === 'en' ? 'Receipts for health insurance reimbursement' : 'Factures-reçus pour mutuelles et assurances' },
-    { text: lang === 'pt' ? 'Sem compromisso' : lang === 'en' ? 'No commitment required' : 'Sans engagement' },
-    { text: lang === 'pt' ? 'Lembrete automático 24h antes' : lang === 'en' ? 'Automatic 24h SMS reminder' : 'Rappel automatique 24h avant' },
+    { text: lang === 'es' ? "Recibos para el reembolso del seguro médico" : lang === 'pt' ? 'Faturas-recibo para reembolso de seguros e ADSE' : lang === 'en' ? 'Receipts for health insurance reimbursement' : 'Factures-reçus pour mutuelles et assurances' },
+    { text: lang === 'es' ? "Sin compromiso" : lang === 'pt' ? 'Sem compromisso' : lang === 'en' ? 'No commitment required' : 'Sans engagement' },
   ];
 
   return (
@@ -36,17 +37,17 @@ export function CTABanner() {
       <div className="relative mx-auto max-w-4xl px-6 md:px-12 text-center">
         <ScrollReveal>
           <span className="font-mono text-xs tracking-widest text-[#9A7428] uppercase font-semibold mb-4 block">
-            {lang === 'pt' ? '— Pronto(a) para começar a sua transformação ? —' : lang === 'en' ? '— Ready to start your health journey ? —' : '— Prêt(e) à commencer votre parcours ? —'}
+            {lang === 'es' ? "— ¿Preparado para empezar a cuidar de su salud? —" : lang === 'pt' ? '— Pronto(a) para começar a sua transformação ? —' : lang === 'en' ? '— Ready to start your health journey ? —' : '— Prêt(e) à commencer votre parcours ? —'}
           </span>
           <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-[#1A1412] mb-6">
-            {lang === 'pt'
+            {lang === 'es' ? <>{legacyText("Your well-being,", lang)}<br /><span className="text-gradient-gold">{legacyText("our priority", lang)}</span></> : lang === 'pt'
               ? <>O seu bem-estar,<br /><span className="text-gradient-gold">a nossa prioridade</span></>
               : lang === 'en'
-              ? <>Your well-being,<br /><span className="text-gradient-gold">our priority</span></>
+              ? <>{legacyText("Your well-being,", lang)}<br /><span className="text-gradient-gold">{legacyText("our priority", lang)}</span></>
               : <>Votre bien-être,<br /><span className="text-gradient-gold">notre priorité</span></>}
           </h2>
           <p className="text-[#6B5A3A] text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
-            {lang === 'pt'
+            {lang === 'es' ? "Reserve su cita en línea o contacte directamente por WhatsApp. Descubra los tratamientos disponibles." : lang === 'pt'
               ? 'Agende a sua consulta online ou envie-nos uma mensagem no WhatsApp. Consulte os tratamentos disponíveis.'
               : lang === 'en'
               ? 'Book your appointment online or contact us directly via WhatsApp. Explore the available treatments.'
@@ -65,7 +66,7 @@ export function CTABanner() {
             size="lg"
           >
             <IconBrandWhatsapp size={18} className="me-2" />
-            {lang === 'pt' ? 'WhatsApp Direto' : lang === 'en' ? 'Direct WhatsApp' : 'WhatsApp Direct'}
+            {lang === 'es' ? "WhatsApp directo" : lang === 'pt' ? 'WhatsApp Direto' : lang === 'en' ? 'Direct WhatsApp' : 'WhatsApp Direct'}
           </Button>
         </ScrollReveal>
 

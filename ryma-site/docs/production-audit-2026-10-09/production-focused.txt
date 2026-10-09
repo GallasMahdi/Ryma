@@ -1,0 +1,29 @@
+[Healthcheck Failure]:
+✔ health coalesces concurrent probes and reports read-only storage as unavailable (746.8884ms)
+✔ health never publishes a database exception or secret (58.615ms)
+✔ production rejects missing CAPTCHA and wrong actions before storing an appointment (965.2477ms)
+✔ untrusted Cloudflare and made-up Vercel IP headers do not override ingress IP (186.022ms)
+{"schemaRestartQueries":3,"remoteEquivalentQueries":2,"localRestartReadMs":8.14469999999983,"rateLimitAllowed":5,"rateLimitRequests":20}
+✔ fresh libSQL instance reads the durable schema version without rerunning migrations (4916.4929ms)
+✔ production rejects shipped default hashes and implicit SQLite paths (656.4025ms)
+✔ contact validates payloads, limits chunked bodies and only succeeds after SMTP acceptance (81.1913ms)
+✔ bounded public review lists retain global totals and reject excessive limits (151.0399ms)
+✔ review form submits without reCAPTCHA and creates a pending review through the real route (1109.5424ms)
+✔ blocked Google scripts and missing or placeholder keys do not delay review submission (942.2291ms)
+✔ public review endpoint accepts submissions without a token, including stale clients (751.2297ms)
+✔ network failure preserves the review text and allows retry (850.8857ms)
+✔ review validation still rejects incomplete and unsafe input (435.2029ms)
+✔ rate limits, honeypots and malformed payloads still block submissions (525.408ms)
+✔ shared client helper preserves the booking action and local unconfigured behavior (221.7981ms)
+✔ approval refreshes an already-open public page without exposing pending or rejected reviews (293.1382ms)
+✔ homepage refreshes approved reviews and clears its carousel when none remain (241.9925ms)
+✔ background refresh pauses while hidden and stops after unmount (210.5354ms)
+✔ a failed refresh preserves the last approved data and recovers on focus (271.7359ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9085.0849

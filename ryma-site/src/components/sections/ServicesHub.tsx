@@ -1,4 +1,6 @@
 'use client';
+import { legacyText } from '@/data/translations/legacy-es';
+
 import { useServices } from '@/components/ServiceCatalogProvider';
 
 import React, { useState, useMemo, useCallback, useRef, useEffect, memo } from 'react';
@@ -32,29 +34,33 @@ type CategoryFilter = 'all' | 'kine' | 'slimming' | 'postpartum_drainage';
 
 interface CategoryTab {
   id: CategoryFilter;
-  label: { pt: string; en: string; fr: string };
+  label: { pt: string; en: string; es: string; fr: string };
   icon: (size?: number) => React.ReactNode;
 }
 
 const CATEGORIES: CategoryTab[] = [
   {
     id: 'all',
-    label: { pt: 'Todos os Cuidados', en: 'All Treatments', fr: 'Tous les Soins' },
+    label: {
+    es: "Todos los tratamientos", pt: 'Todos os Cuidados', en: 'All Treatments', fr: 'Tous les Soins' },
     icon: (s = 15) => <IconSparkles size={s} />,
   },
   {
     id: 'kine',
-    label: { pt: 'Fisioterapia & Postura', en: 'Physiotherapy & Spine', fr: 'Kinésithérapie & Posture' },
+    label: {
+    es: "Fisioterapia y columna", pt: 'Fisioterapia & Postura', en: 'Physiotherapy & Spine', fr: 'Kinésithérapie & Posture' },
     icon: (s = 15) => <IconActivity size={s} />,
   },
   {
     id: 'slimming',
-    label: { pt: 'Estética Médica & Minceur', en: 'Medical Aesthetics', fr: 'Soins Minceur & Fermeté' },
+    label: {
+    es: "Estética médica", pt: 'Estética Médica & Minceur', en: 'Medical Aesthetics', fr: 'Soins Minceur & Fermeté' },
     icon: (s = 15) => <IconFlame size={s} />,
   },
   {
     id: 'postpartum_drainage',
-    label: { pt: 'Saúde Pós-Parto & Drenagem', en: 'Postpartum & Drainage', fr: 'Post-Partum & Drainage' },
+    label: {
+    es: "Posparto y drenaje", pt: 'Saúde Pós-Parto & Drenagem', en: 'Postpartum & Drainage', fr: 'Post-Partum & Drainage' },
     icon: (s = 15) => <IconHeartbeat size={s} />,
   },
 ];
@@ -123,9 +129,9 @@ const ServiceCarouselCard = memo(function ServiceCarouselCard({ service, index, 
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md text-[10px] font-sans font-bold uppercase tracking-wider text-[#8A6A24] border border-[#C49A3C]/30 shadow-xs">
             {getServiceIcon(service.icon, 13)}
             <span>
-              {service.pole === 'bilan' ? (lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : isKine
-                ? lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
-                : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming' : 'Soins Minceur'}
+              {service.pole === 'bilan' ? (lang === 'es' ? "Evaluación" : lang === 'pt' ? 'Avaliação' : lang === 'en' ? 'Assessment' : 'Bilan') : isKine
+                ? lang === 'es' ? "Fisioterapia" : lang === 'pt' ? 'Fisioterapia' : lang === 'en' ? 'Physiotherapy' : 'Kinésithérapie'
+                : lang === 'es' ? "Reducción corporal" : lang === 'pt' ? 'Estética Minceur' : lang === 'en' ? 'Slimming' : 'Soins Minceur'}
             </span>
           </span>
 
@@ -138,7 +144,7 @@ const ServiceCarouselCard = memo(function ServiceCarouselCard({ service, index, 
         {/* Bottom Price inside Image */}
         <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between">
           <span className="font-mono text-xs sm:text-sm font-bold text-[#E8C97A] drop-shadow-sm">
-            {service.price} {t.common.currency} <span className="text-[10px] text-white/80 font-normal">/ sessão</span>
+            {service.price} {t.common.currency} <span className="text-[10px] text-white/80 font-normal">{legacyText("/ sessão", lang)}</span>
           </span>
         </div>
       </Link>
@@ -192,7 +198,7 @@ const ServiceCarouselCard = memo(function ServiceCarouselCard({ service, index, 
             }}
             className="flex items-center justify-center gap-1 py-2 px-3 rounded-xl border border-[#C49A3C]/30 hover:border-[#C49A3C] bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-white font-bold text-xs transition-all shadow-2xs group/btn"
           >
-            <span>{lang === 'pt' ? 'Selecionar' : lang === 'en' ? 'Select' : 'Sélectionner'}</span>
+            <span>{lang === 'es' ? "Seleccionar" : lang === 'pt' ? 'Selecionar' : lang === 'en' ? 'Select' : 'Sélectionner'}</span>
             <IconArrowRight size={13} className="group-hover/btn:translate-x-0.5 transition-transform" />
           </Link>
 
@@ -206,7 +212,7 @@ const ServiceCarouselCard = memo(function ServiceCarouselCard({ service, index, 
             className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-[#C49A3C] to-[#9A7428] hover:from-[#B88E32] hover:to-[#8A6620] text-white font-bold text-xs transition-all shadow-xs hover:shadow-md"
           >
             <IconCalendarEvent size={13} />
-            <span>{lang === 'pt' ? 'Agendar' : lang === 'en' ? 'Book' : 'Réserver'}</span>
+            <span>{lang === 'es' ? "Reservar" : lang === 'pt' ? 'Agendar' : lang === 'en' ? 'Book' : 'Réserver'}</span>
           </Link>
         </div>
       </div>
@@ -370,22 +376,24 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
             <div className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md border border-[#C49A3C]/40 px-4 py-1.5 rounded-full mb-3 sm:mb-4 shadow-xs">
               <IconSparkles size={14} className="text-[#C49A3C]" />
               <span className="font-sans text-[11px] sm:text-xs tracking-[0.22em] text-[#9A7428] uppercase font-bold">
-                {lang === 'pt' ? 'Polos Clínicos de Excelência' : lang === 'en' ? 'Centers of Clinical Excellence' : "Pôles de Soins d'Excellence"}
+                {lang === 'es' ? "Áreas de excelencia clínica" : lang === 'pt' ? 'Polos Clínicos de Excelência' : lang === 'en' ? 'Centers of Clinical Excellence' : "Pôles de Soins d'Excellence"}
               </span>
             </div>
 
             <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal text-[#1A1412] mb-3 sm:mb-4 tracking-tight">
-              {lang === 'pt' ? (
+              {lang === 'es' ? (
+                <>{legacyText("Clinical Care &", lang)}{" "}<span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">{legacyText("Specialized Treatments", lang)}</span></>
+              ) : lang === 'pt' ? (
                 <>Cuidados Clínicos & <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">Tratamentos Especializados</span></>
               ) : lang === 'en' ? (
-                <>Clinical Care & <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">Specialized Treatments</span></>
+                <>{legacyText("Clinical Care &", lang)}{" "}<span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">{legacyText("Specialized Treatments", lang)}</span></>
               ) : (
                 <>Soins Médicaux & <span className="italic font-medium bg-gradient-to-r from-[#9A7428] via-[#C49A3C] to-[#7D5B18] bg-clip-text text-transparent">Protocoles Spécialisés</span></>
               )}
             </h2>
 
             <p className="text-[#6B6058] max-w-2xl mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-normal">
-              {lang === 'pt'
+              {lang === 'es' ? `${SERVICES.length} protocolos clínicos personalizados para la postura, el alivio articular y el remodelado corporal no invasivo.` : lang === 'pt'
                 ? `${SERVICES.length} protocolos clínicos estruturados para postura, alívio de dor e remodelação corporal não invasiva.`
                 : lang === 'en'
                 ? `${SERVICES.length} tailored clinical protocols for spinal posture, joint relief, and non-invasive body contouring.`
@@ -434,17 +442,17 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
               <IconSearch size={14} className="text-[#8A8078] shrink-0 me-2" />
               <input
                 type="search"
-                aria-label={lang === 'pt' ? 'Pesquisar cuidados' : lang === 'en' ? 'Search treatments' : 'Rechercher un soin'}
+                aria-label={lang === 'es' ? "Buscar tratamientos" : lang === 'pt' ? 'Pesquisar cuidados' : lang === 'en' ? 'Search treatments' : 'Rechercher un soin'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={lang === 'pt' ? 'Pesquisar...' : lang === 'en' ? 'Search...' : 'Rechercher...'}
+                placeholder={lang === 'es' ? "Buscar..." : lang === 'pt' ? 'Pesquisar...' : lang === 'en' ? 'Search...' : 'Rechercher...'}
                 className="w-full bg-transparent text-[#1A1412] text-xs focus:outline-none placeholder-[#A8A098]"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
                   className="text-[#8A8078] hover:text-[#1A1412] p-0.5"
-                  aria-label="Clear search"
+                  aria-label={legacyText("Clear search", lang)}
                 >
                   <IconX size={13} />
                 </button>
@@ -459,7 +467,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
               {String(Math.min(currentSlideIndex + 1, slideCount)).padStart(2, '0')} <span className="text-[#A8A098] font-normal">/</span> {String(slideCount).padStart(2, '0')}
             </span>
             <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#8A8078]">
-              <span>{lang === 'pt' ? 'Deslize ou arraste para navegar' : lang === 'en' ? 'Swipe or drag to browse' : 'Faites glisser pour parcourir'}</span>
+              <span>{lang === 'es' ? "Deslice o arrastre para explorar" : lang === 'pt' ? 'Deslize ou arraste para navegar' : lang === 'en' ? 'Swipe or drag to browse' : 'Faites glisser pour parcourir'}</span>
             </span>
           </div>
 
@@ -470,7 +478,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
               onClick={handlePrev}
               disabled={slideCount <= 1}
               className="p-2 sm:p-2.5 rounded-full bg-white hover:bg-[#FAF5EA] border border-[#C49A3C]/40 text-[#554C42] hover:text-[#9A7428] shadow-xs hover:shadow-md transition-all duration-200 touch-target flex items-center justify-center active:scale-95 disabled:opacity-40 disabled:cursor-default"
-              aria-label={lang === 'pt' ? 'Cuidado anterior' : lang === 'en' ? 'Previous treatment' : 'Soin précédent'}
+              aria-label={lang === 'es' ? "Tratamiento anterior" : lang === 'pt' ? 'Cuidado anterior' : lang === 'en' ? 'Previous treatment' : 'Soin précédent'}
             >
               <IconChevronLeft size={18} />
             </button>
@@ -479,7 +487,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
               onClick={handleNext}
               disabled={slideCount <= 1}
               className="p-2 sm:p-2.5 rounded-full bg-white hover:bg-[#FAF5EA] border border-[#C49A3C]/40 text-[#554C42] hover:text-[#9A7428] shadow-xs hover:shadow-md transition-all duration-200 touch-target flex items-center justify-center active:scale-95 disabled:opacity-40 disabled:cursor-default"
-              aria-label={lang === 'pt' ? 'Próximo cuidado' : lang === 'en' ? 'Next treatment' : 'Soin suivant'}
+              aria-label={lang === 'es' ? "Tratamiento siguiente" : lang === 'pt' ? 'Próximo cuidado' : lang === 'en' ? 'Next treatment' : 'Soin suivant'}
             >
               <IconChevronRight size={18} />
             </button>
@@ -507,7 +515,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
               event.stopPropagation();
             }}
             tabIndex={0}
-            aria-label={lang === 'pt' ? 'Carrossel de cuidados' : lang === 'en' ? 'Treatment carousel' : 'Carrousel des soins'}
+            aria-label={lang === 'es' ? "Carrusel de tratamientos" : lang === 'pt' ? 'Carrossel de cuidados' : lang === 'en' ? 'Treatment carousel' : 'Carrousel des soins'}
             onKeyDown={(event) => {
               if (event.target !== event.currentTarget) return;
               if (event.key === 'ArrowRight') { event.preventDefault(); handleNext(); }
@@ -527,7 +535,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
                   <IconSearch size={22} />
                 </div>
                 <h3 className="font-serif text-lg font-bold text-[#1A1412]">
-                  {lang === 'pt' ? 'Nenhum tratamento encontrado' : lang === 'en' ? 'No treatments found' : 'Aucun soin trouvé'}
+                  {lang === 'es' ? "No se han encontrado tratamientos" : lang === 'pt' ? 'Nenhum tratamento encontrado' : lang === 'en' ? 'No treatments found' : 'Aucun soin trouvé'}
                 </h3>
                 <button
                   onClick={() => {
@@ -538,7 +546,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FAF5EA] hover:bg-[#C49A3C] text-[#8A6A24] hover:text-white text-xs font-bold transition-all border border-[#C49A3C]/30"
                 >
                   <IconX size={13} />
-                  <span>{lang === 'pt' ? 'Limpar Filtros' : lang === 'en' ? 'Clear Filters' : 'Réinitialiser'}</span>
+                  <span>{lang === 'es' ? "Borrar filtros" : lang === 'pt' ? 'Limpar Filtros' : lang === 'en' ? 'Clear Filters' : 'Réinitialiser'}</span>
                 </button>
               </div>
             ) : (
@@ -571,7 +579,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
                       : 'w-2 bg-[#D8D0C5] hover:bg-[#C49A3C]/60'
                   }`}
                   aria-current={isCurrent ? 'true' : undefined}
-                  aria-label={lang === 'pt' ? `Ir para a posição ${i + 1}` : lang === 'en' ? `Go to position ${i + 1}` : `Aller à la position ${i + 1}`}
+                  aria-label={lang === 'es' ? `Ir a la posición ${i + 1}` : lang === 'pt' ? `Ir para a posição ${i + 1}` : lang === 'en' ? `Go to position ${i + 1}` : `Aller à la position ${i + 1}`}
                 />
               );
             })}
@@ -585,7 +593,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
               <div className="flex items-center gap-2 px-2.5 text-xs text-[#554C42]">
                 <IconShieldCheck size={16} className="text-[#6F8F72] shrink-0" />
                 <span className="font-semibold">
-                  {lang === 'pt'
+                  {lang === 'es' ? "Evaluación clínica personalizada y recibos certificados para el seguro médico" : lang === 'pt'
                     ? 'Avaliação personalizada e recibos para comparticipação ADSE / Seguros de Saúde'
                     : lang === 'en'
                     ? 'Personalized clinical assessment & certified receipts for health insurance'
@@ -597,7 +605,7 @@ export const ServicesHub = memo(function ServicesHub({ embedded = false, hideHea
                 onClick={playSoftClick}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl sm:rounded-full bg-[#1A1412] hover:bg-[#2C2420] text-[#E8C97A] text-xs font-bold transition-all shadow-xs"
               >
-                <span>{lang === 'pt' ? 'Ver Catálogo Completo' : lang === 'en' ? 'View Full Catalog' : 'Voir le Catalogue'}</span>
+                <span>{lang === 'es' ? "Ver catálogo completo" : lang === 'pt' ? 'Ver Catálogo Completo' : lang === 'en' ? 'View Full Catalog' : 'Voir le Catalogue'}</span>
                 <IconArrowRight size={13} />
               </Link>
             </div>

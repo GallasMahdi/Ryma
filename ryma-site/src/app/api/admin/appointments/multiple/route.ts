@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isKnownTreatment, getTreatments } from '@/lib/treatments';
 import { isJsonObject, isCalendarDate } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,29 +23,29 @@ export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
   try {
     body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
   } catch {
-    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('JSON inválido', request) }, { status: 400 });
   }
 
   const patientName = String(body.patientName || '').trim();
   if (patientName.length < 2) {
-    return NextResponse.json({ error: 'Nome do utente inválido (mínimo 2 caracteres).' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Nome do utente inválido (mínimo 2 caracteres).', request) }, { status: 422 });
   }
 
   const phoneValidation = validateAndNormalizePhone(body.phone);
   if (!phoneValidation.isValid) {
-    return NextResponse.json({ error: phoneValidation.error, errorCode: phoneValidation.errorCode }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError(phoneValidation.error, request), errorCode: phoneValidation.errorCode }, { status: 422 });
   }
 
   const service = String(body.service || '').trim();
   if (!service || !(await isKnownTreatment(service))) {
-    return NextResponse.json({ error: 'Tratamento / serviço inválido.' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Tratamento / serviço inválido.', request) }, { status: 422 });
   }
 
   const rawSessions = Array.isArray(body.sessions) ? body.sessions : [];
   if (rawSessions.length === 0 || rawSessions.length > 50) {
-    return NextResponse.json({ error: 'Nenhuma sessão fornecida para marcação.' }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError('Nenhuma sessão fornecida para marcação.', request) }, { status: 422 });
   }
 
   const validatedSessions: {
@@ -57,17 +58,17 @@ export async function POST(request: NextRequest) {
   for (let i = 0; i < rawSessions.length; i++) {
     const s = rawSessions[i];
     const validation=validateAppointmentInput({...body,date:s?.date,startTime:s?.startTime});
-    if(!validation.ok)return NextResponse.json({error:validation.error,errorCode:validation.errorCode},{status:422});
-    if(s.evaPainScore!==undefined&&(typeof s.evaPainScore!=='number'||!Number.isInteger(s.evaPainScore)||s.evaPainScore<0||s.evaPainScore>10))return NextResponse.json({error:'Invalid pain score'},{status:422});
+    if(!validation.ok)return NextResponse.json({error:localizeApiError(validation.error, request),errorCode:validation.errorCode},{status:422});
+    if(s.evaPainScore!==undefined&&(typeof s.evaPainScore!=='number'||!Number.isInteger(s.evaPainScore)||s.evaPainScore<0||s.evaPainScore>10))return NextResponse.json({error:localizeApiError('Invalid pain score', request)},{status:422});
     const sDate = String(s?.date || '').trim();
     const sTime = String(s?.startTime || '').trim();
 
     if (!isCalendarDate(sDate)) {
-      return NextResponse.json({ error: `Sessão #${i + 1}: Data inválida (${sDate}).` }, { status: 422 });
+      return NextResponse.json({ error: localizeApiError(`Sessão #${i + 1}: Data inválida (${sDate}).`, request) }, { status: 422 });
     }
 
     if (!VALID_TIME_SLOTS.includes(sTime as any)) {
-      return NextResponse.json({ error: `Sessão #${i + 1}: Horário inválido (${sTime}).` }, { status: 422 });
+      return NextResponse.json({ error: localizeApiError(`Sessão #${i + 1}: Horário inválido (${sTime}).`, request) }, { status: 422 });
     }
 
     validatedSessions.push({
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
   if (!result.success) {
     return NextResponse.json(
       {
-        error: result.error,
+        error: localizeApiError(result.error, request),
         message: result.message,
         conflicts: result.conflicts,
       },

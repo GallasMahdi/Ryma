@@ -1,0 +1,138 @@
+{
+  "checkedAt": "2026-10-09T09:08:19.368Z",
+  "scope": "configured database; Vercel environment equivalence is unverified",
+  "tables": [
+    {
+      "table": "patients",
+      "total": 101,
+      "syntheticIds": 100
+    },
+    {
+      "table": "invoices",
+      "total": 287,
+      "syntheticIds": 287
+    },
+    {
+      "table": "prescriptions",
+      "total": 50,
+      "syntheticIds": 50
+    },
+    {
+      "table": "security_audit_logs",
+      "total": 664,
+      "syntheticIds": 0
+    },
+    {
+      "table": "appointments",
+      "total": 432,
+      "syntheticIds": 431
+    },
+    {
+      "table": "reviews",
+      "total": 44,
+      "syntheticIds": 36
+    },
+    {
+      "table": "booking_sync",
+      "total": 1,
+      "syntheticIds": 0
+    },
+    {
+      "table": "practitioners",
+      "total": 5,
+      "syntheticIds": 4
+    },
+    {
+      "table": "schedule_exceptions",
+      "total": 3,
+      "syntheticIds": 3
+    },
+    {
+      "table": "resources",
+      "total": 3,
+      "syntheticIds": 3
+    },
+    {
+      "table": "treatment_revisions",
+      "total": 17,
+      "syntheticIds": 17
+    },
+    {
+      "table": "blocked_slots",
+      "total": 92,
+      "syntheticIds": 3
+    },
+    {
+      "table": "patient_sessions",
+      "total": 421,
+      "syntheticIds": 421
+    },
+    {
+      "table": "clinical_session_revisions",
+      "total": 9,
+      "syntheticIds": 9
+    },
+    {
+      "table": "whatsapp_inbox",
+      "total": 6,
+      "syntheticIds": 6
+    },
+    {
+      "table": "whatsapp_outbox",
+      "total": 6,
+      "syntheticIds": 6
+    },
+    {
+      "table": "ryma_demo_imports",
+      "total": 1,
+      "syntheticIds": 0
+    }
+  ],
+  "dependencies": [
+    {
+      "table": "appointments",
+      "nonDemoRecordsReferencingDemoPatients": 0
+    },
+    {
+      "table": "invoices",
+      "nonDemoRecordsReferencingDemoPatients": 0
+    },
+    {
+      "table": "patient_sessions",
+      "nonDemoRecordsReferencingDemoPatients": 0
+    },
+    {
+      "table": "prescriptions",
+      "nonDemoRecordsReferencingDemoPatients": 0
+    }
+  ],
+  "imports": [
+    {
+      "id": "ryma-professional-demo-v1",
+      "importedAt": "2026-10-08T14:34:41.255Z",
+      "totals": {
+        "practitioners": 4,
+        "resources": 3,
+        "treatment_catalog": 15,
+        "practitioner_services": 36,
+        "working_hours": 32,
+        "schedule_exceptions": 3,
+        "service_resources": 5,
+        "patients": 100,
+        "patient_notes": 100,
+        "appointments": 431,
+        "patient_sessions": 421,
+        "invoices": 287,
+        "prescriptions": 50,
+        "clinical_session_revisions": 9,
+        "treatment_revisions": 17,
+        "reviews": 36,
+        "blocked_slots": 3,
+        "idempotency_keys": 10,
+        "whatsapp_conversations": 6,
+        "whatsapp_inbox": 6,
+        "whatsapp_outbox": 6
+      }
+    }
+  ]
+}

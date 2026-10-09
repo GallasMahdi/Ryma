@@ -1,3 +1,4 @@
+import { localizeApiError } from '@/lib/api-i18n';
 import { isJsonObject } from '@/lib/admin-validation';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   const patientId = searchParams.get('patientId');
 
   if (!patientPhone && !patientId) {
-    return NextResponse.json({ error: 'patientId or patientPhone query parameter is required' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('patientId or patientPhone query parameter is required', request) }, { status: 400 });
   }
 
   const prescriptions = patientId ? await dbGetPrescriptionsByPatientId(patientId) : await dbGetPrescriptionsByPatientPhone(patientPhone!);
@@ -32,25 +33,25 @@ export async function POST(request: NextRequest) {
   let body: Record<string, any>;
   try {
     body = await request.json();
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'JSON object required' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: localizeApiError('JSON object required', request) }, { status: 400 });
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Invalid JSON body', request) }, { status: 400 });
   }
 
   const { patientPhone, patientName, items } = body;
 
   const phoneValidation = validateAndNormalizePhone(patientPhone);
   if (!phoneValidation.isValid) {
-    return NextResponse.json({ error: phoneValidation.error, errorCode: phoneValidation.errorCode }, { status: 422 });
+    return NextResponse.json({ error: localizeApiError(phoneValidation.error, request), errorCode: phoneValidation.errorCode }, { status: 422 });
   }
   if (!patientName || !String(patientName).trim()) {
-    return NextResponse.json({ error: 'Nome do utente é obrigatório' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Nome do utente é obrigatório', request) }, { status: 400 });
   }
   if (!Array.isArray(items) || items.length === 0) {
-    return NextResponse.json({ error: 'Selecione pelo menos uma recomendação ou produto' }, { status: 400 });
+    return NextResponse.json({ error: localizeApiError('Selecione pelo menos uma recomendação ou produto', request) }, { status: 400 });
   }
 
-  if (items.length > 50 || items.some(it => !isJsonObject(it) || typeof it.title !== 'string' || !it.title.trim() || it.title.length > 200 || typeof it.instructions !== 'string' || it.instructions.length > 2000 || (it.category !== undefined && !['care_product', 'ergonomic_equipment', 'lifestyle_habit'].includes(String(it.category))))) return NextResponse.json({ error: 'Invalid prescription items' }, { status: 422 });
+  if (items.length > 50 || items.some(it => !isJsonObject(it) || typeof it.title !== 'string' || !it.title.trim() || it.title.length > 200 || typeof it.instructions !== 'string' || it.instructions.length > 2000 || (it.category !== undefined && !['care_product', 'ergonomic_equipment', 'lifestyle_habit'].includes(String(it.category))))) return NextResponse.json({ error: localizeApiError('Invalid prescription items', request) }, { status: 422 });
   try {
   const prescription = await dbCreatePrescription({
     practitionerId: typeof body.practitionerId === "string" ? body.practitionerId : undefined,
@@ -69,5 +70,5 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ prescription }, { status: 201 });
-  } catch(error) { return NextResponse.json({error: error instanceof Error ? error.message : 'Unable to create prescription'}, {status:422}); }
+  } catch(error) { return NextResponse.json({error: localizeApiError(error instanceof Error ? error.message : 'Unable to create prescription', request)}, {status:422}); }
 }

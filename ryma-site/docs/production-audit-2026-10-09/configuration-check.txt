@@ -1,0 +1,67 @@
+{"configuredDatabaseCounts":{"patients":101,"appointments":432,"invoices":287,"reviews":44,"treatment_catalog":15}}
+{
+  "checkedAt": "2026-10-09T09:22:20.063Z",
+  "ready": false,
+  "checks": [
+    {
+      "name": "ADMIN_PASSWORD_HASH is configured with bcrypt cost >= 12",
+      "ok": true
+    },
+    {
+      "name": "ADMIN_PASSWORD_HASH does not use a published demo password",
+      "ok": false
+    },
+    {
+      "name": "OWNER_ANALYTICS_PASSWORD_HASH is configured with bcrypt cost >= 12",
+      "ok": true
+    },
+    {
+      "name": "OWNER_ANALYTICS_PASSWORD_HASH does not use a published demo password",
+      "ok": false
+    },
+    {
+      "name": "SESSION_SECRET is unique and at least 32 characters",
+      "ok": false
+    },
+    {
+      "name": "Database is explicitly persistent",
+      "ok": true
+    },
+    {
+      "name": "Booking reCAPTCHA has both keys",
+      "ok": true
+    },
+    {
+      "name": "SMTP and notification recipient are configured",
+      "ok": true
+    },
+    {
+      "name": "NEXT_PUBLIC_SITE_URL is configured",
+      "ok": false
+    },
+    {
+      "name": "NEXT_PUBLIC_CLINIC_PHONE is configured",
+      "ok": false
+    },
+    {
+      "name": "NEXT_PUBLIC_CLINIC_EMAIL is configured",
+      "ok": false
+    },
+    {
+      "name": "NEXT_PUBLIC_CLINIC_ADDRESS is configured",
+      "ok": false
+    },
+    {
+      "name": "Canonical origin uses HTTPS",
+      "ok": false
+    },
+    {
+      "name": "Configured database is reachable",
+      "ok": true
+    },
+    {
+      "name": "Configured database has no demo-generator or hosted-import marker",
+      "ok": false
+    }
+  ]
+}

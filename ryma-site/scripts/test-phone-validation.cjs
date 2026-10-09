@@ -97,6 +97,7 @@ test('every write API rejects invalid phones and passes only E.164 to persistenc
     dbCreatePrescription: async input => { writes.push(input); return input; },
   }, { get(target, key) { if (!(key in target)) throw new Error(`Unexpected database access: ${String(key)}`); return target[key]; } });
   const loadRoute = createLoader({
+    'next/server': {NextRequest,NextResponse,after(){}},
     '@/lib/db': db,
     '@/lib/treatments': {getTreatments:async()=>require('./fixtures/services.cjs').SERVICES,isKnownTreatment:async slug=>require('./fixtures/services.cjs').SERVICES.some(s=>s.slug===slug)},
     '@/lib/booking-service': { findBookingReplay: async () => null },
