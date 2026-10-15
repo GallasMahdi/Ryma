@@ -25,6 +25,9 @@ import {
   IconShieldCheck,
   IconLifebuoy,
   IconWifi,
+  IconMessageHeart,
+  IconStethoscope,
+  IconUsersGroup,
 } from '@tabler/icons-react';
 import { Lang } from '@/lib/i18n';
 import { AdminTab } from './AdminMobileNav';
@@ -340,6 +343,45 @@ export function AdminCommandPalette({
         icon: IconReceiptTax,
         onSelect: () => {
           setActiveTab('invoices');
+          onClose();
+        },
+      },
+      {
+        id: 'nav-reviews',
+        category: 'navigation',
+        title: txt('Avis & Témoignages', 'Reviews & Feedback', 'Avaliações & Opiniões', "Opiniones y comentarios"),
+        subtitle: txt('Modération et témoignages du site', 'Moderate patient feedback and site testimonials', 'Moderação e testemunhos do site', "Moderación y testimonios del sitio"),
+        badge: txt('Avis', 'Reviews', 'Avaliações', "Opiniones"),
+        badgeColor: 'bg-pink-100 text-pink-800',
+        icon: IconMessageHeart,
+        onSelect: () => {
+          setActiveTab('reviews');
+          onClose();
+        },
+      },
+      {
+        id: 'nav-treatments',
+        category: 'navigation',
+        title: txt('Catalogue des Soins', 'Treatment Catalogue', 'Catálogo de Tratamentos', "Catálogo de tratamientos"),
+        subtitle: txt('Gérer les soins et services proposés', 'Manage clinic treatments and services', 'Gerir tratamentos e serviços da clínica', "Gestionar tratamientos y servicios de la clínica"),
+        badge: txt('Catalogue', 'Catalogue', 'Catálogo', "Catálogo"),
+        badgeColor: 'bg-emerald-100 text-emerald-800',
+        icon: IconStethoscope,
+        onSelect: () => {
+          setActiveTab('treatments');
+          onClose();
+        },
+      },
+      {
+        id: 'nav-team',
+        category: 'navigation',
+        title: txt('Équipe & Praticiens', 'Team & Practitioners', 'Equipa & Profissionais', "Equipo y profesionales"),
+        subtitle: txt('Gérer les praticiens et leurs horaires', 'Manage practitioners and working hours', 'Gerir profissionais e horários de trabalho', "Gestionar profesionales y horarios de trabajo"),
+        badge: txt('Équipe', 'Team', 'Equipa', "Equipo"),
+        badgeColor: 'bg-violet-100 text-violet-800',
+        icon: IconUsersGroup,
+        onSelect: () => {
+          setActiveTab('team');
           onClose();
         },
       },
