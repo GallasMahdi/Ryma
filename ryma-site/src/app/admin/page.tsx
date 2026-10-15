@@ -9,9 +9,9 @@ import { PractitionersTab } from '@/components/admin/PractitionersTab';
 import { bookingRequestKey } from '@/lib/booking-request';
 import { readAdminJson, invalidateAdminReads } from '@/lib/admin-read';
 
-import React, { useState, useMemo, useEffect, useCallback, useRef, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 
 import { IconAlertTriangle, IconLock } from '@tabler/icons-react';
@@ -73,58 +73,17 @@ async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
   return res.json() as T;
 }
 
-const VALID_ADMIN_TABS: AdminTab[] = ['appointments', 'slots', 'patients', 'invoices', 'reviews', 'analytics', 'team', 'treatments'];
-
-// AdminDashboardContent no longer calls useSearchParams() itself — that hook
-// lives in the thin AdminPageShell wrapper below, which is the component that
-// actually sits inside the Suspense boundary. This prevents Suspense from
-// unmounting+remounting the dashboard (and all its effects) during hydration.
-function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) {
+function AdminDashboardContent() {
   const SERVICES = useServices();
   const { getServiceName } = useServiceLabels();
   const { lang, toggleLang } = useLanguage();
   const router = useRouter();
 
-  // Read initial tab from the prop passed by the shell — no flash!
-  const tabFromUrl = initialTab;
-  const [activeTab, setActiveTabState] = useState<AdminTab>(() => {
-    if (tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl)) {
-      return tabFromUrl;
-    }
-    return 'appointments';
-  });
+  const [activeTab, setActiveTabState] = useState<AdminTab>('appointments');
 
-  // Keep state in sync if URL query changes
-  useEffect(() => {
-    if (tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl)) {
-      setActiveTabState(tabFromUrl);
-    }
-  }, [tabFromUrl]);
-
-  // If no tab in URL on initial load, check localStorage once
-  useEffect(() => {
-    if (!tabFromUrl) {
-      try {
-        const saved = localStorage.getItem('ryma_admin_active_tab') as AdminTab | null;
-        if (saved && VALID_ADMIN_TABS.includes(saved) && saved !== 'appointments') {
-          setActiveTabState(saved);
-          const url = new URL(window.location.href);
-          url.searchParams.set('tab', saved);
-          window.history.replaceState(null, '', url.toString());
-        }
-      } catch {}
-    }
-  }, [tabFromUrl]);
-
-  // Update active tab and persist to URL and localStorage
+  // Tab selection is session-only; opening the dashboard always starts at Appointments.
   const setActiveTab = useCallback((tab: AdminTab) => {
     setActiveTabState(tab);
-    try {
-      localStorage.setItem('ryma_admin_active_tab', tab);
-      const url = new URL(window.location.href);
-      url.searchParams.set('tab', tab);
-      window.history.replaceState(null, '', url.toString());
-    } catch {}
   }, []);
 
   // ── Ultra-Fast Tab Switching: Visited Tabs In-Memory Preservation ─────────
@@ -1643,35 +1602,26 @@ function AdminDashboardContent({ initialTab }: { initialTab: AdminTab | null }) 
   );
 }
 
-// Thin shell: owns useSearchParams() so that AdminDashboardContent itself is
-// never suspended mid-render. Suspense resolves here, then the dashboard mounts
-// exactly once with a stable initialTab prop.
+// Delay the dashboard until client hydration so startup preferences can be cleared
+// before the first dashboard render.
 function AdminPageShell() {
   const { lang } = useLanguage();
   const [hydrated, setHydrated] = useState(false);
-  useEffect(() => { setHydrated(true); }, []);
-  const searchParams = useSearchParams();
-  const tabFromUrl = searchParams.get('tab') as AdminTab | null;
-  const initialTab =
-    tabFromUrl && VALID_ADMIN_TABS.includes(tabFromUrl) ? tabFromUrl : null;
+  useEffect(() => {
+    setHydrated(true);
+    try {
+      localStorage.removeItem('ryma_admin_active_tab');
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('tab')) {
+        url.searchParams.delete('tab');
+        window.history.replaceState(null, '', url.toString());
+      }
+    } catch {}
+  }, []);
   if (!hydrated) return <div role="status" className="min-h-screen grid place-items-center">{legacyText("A carregar painel...", lang)}</div>;
-  return <ServiceCatalogProvider admin><AdminDashboardContent initialTab={initialTab} /></ServiceCatalogProvider>;
+  return <ServiceCatalogProvider admin><AdminDashboardContent /></ServiceCatalogProvider>;
 }
 
 export default function AdminPage() {
-  const { lang } = useLanguage();
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-sans">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 rounded-full border-2 border-[#0F172A] border-t-transparent animate-spin" />
-            <span className="text-xs text-[#64748B] font-medium">{legacyText("A carregar painel...", lang)}</span>
-          </div>
-        </div>
-      }
-    >
-      <AdminPageShell />
-    </Suspense>
-  );
+  return <AdminPageShell />;
 }
