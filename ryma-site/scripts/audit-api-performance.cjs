@@ -7,7 +7,7 @@ const output=path.join(ROOT,'docs','backend-reliability-audit-2026-10-15');
 const directory=fs.mkdtempSync(path.join(os.tmpdir(),'ryma-api-perf-'));
 const fixture=path.join(directory,'fixture.db');
 let port=31876,server;
-const env={...demoEnvironment(fixture,'test'),RYMA_PREVIEW_DB:fixture,RYMA_PREVIEW_PORT:String(port),RECAPTCHA_SECRET_KEY:'isolated-http-secret'};
+const env={...demoEnvironment(fixture,'test'),RYMA_PREVIEW_DB:fixture,RYMA_PREVIEW_PORT:String(port)};
 Object.assign(process.env,env);
 const api=path.join(ROOT,'src','app','api');
 function files(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?files(path.join(dir,e.name)):e.name==='route.ts'?[path.join(dir,e.name)]:[]);}
@@ -22,7 +22,7 @@ async function freePort(){for(;port<31976;port++){try{await new Promise((resolve
 async function start(){
   port=await freePort();env.RYMA_PREVIEW_PORT=String(port);
   const db=createAppLoader()('@/lib/db');await require('./fixtures/services.cjs').seedTestServices(db);db.getDb().close();
-  server=spawn(process.execPath,['--require',path.join(__dirname,'fixtures/recaptcha-preload.cjs'),require.resolve('next/dist/bin/next'),'start','--hostname','127.0.0.1','--port',String(port)],{cwd:ROOT,env:{...env,NODE_ENV:'production',ADMIN_PASSWORD_HASH:require('bcryptjs').hashSync('audit-only-admin',10),OWNER_ANALYTICS_PASSWORD_HASH:require('bcryptjs').hashSync('audit-only-owner',10)},stdio:['ignore',fs.openSync(path.join(directory,'server.log'),'w'),'ignore'],windowsHide:true});
+  server=spawn(process.execPath,[require.resolve('next/dist/bin/next'),'start','--hostname','127.0.0.1','--port',String(port)],{cwd:ROOT,env:{...env,NODE_ENV:'production',ADMIN_PASSWORD_HASH:require('bcryptjs').hashSync('audit-only-admin',10),OWNER_ANALYTICS_PASSWORD_HASH:require('bcryptjs').hashSync('audit-only-owner',10)},stdio:['ignore',fs.openSync(path.join(directory,'server.log'),'w'),'ignore'],windowsHide:true});
   const base='http://127.0.0.1:'+port;
   for(let i=0;i<50;i++){if(server.exitCode!==null)throw Error('Isolated HTTP server exited; diagnostics retained in temp fixture');try{const r=await fetch(base+'/api/health');await r.arrayBuffer();if(r.status===200)return base;}catch{}await new Promise(r=>setTimeout(r,200));}
   throw Error('Isolated HTTP server did not become ready');
@@ -67,12 +67,7 @@ async function main(){
   }
   const bookingDate=new Date(Date.now()+30*86400000);while(bookingDate.getUTCDay()===0)bookingDate.setUTCDate(bookingDate.getUTCDate()+1);
   const bookingPayload=(phone,key,token)=>({patientName:'Performance Fixture',phone,service:'reeducation-posturale',date:bookingDate.toISOString().slice(0,10),startTime:'09:00',_form_rendered_at:Date.now()-5000,clientRequestId:key,...(token?{recaptchaToken:token}:{})});
-  const captchaGate=[];
-  for(const [caseName,payload] of [
-    ['missing-token',bookingPayload('+351963199001','audit-captcha-missing')],
-    ['invalid-token',bookingPayload('+351963199002','audit-captcha-invalid','invalid-isolated-token')],
-    ['valid-token',bookingPayload('+351963199003','audit-captcha-valid','isolated-http-token')],
-  ])captchaGate.push({case:caseName,...await request('/api/appointments','POST',JSON.stringify(payload),false)});
+  const bookingGate=[{case:'no-captcha-token',...await request('/api/appointments','POST',JSON.stringify(bookingPayload('+351963199001','audit-no-captcha-token')),false)}];
   // Bound every concurrency scenario to 100 read-only requests on the local fixture.
   const load=[];const core=[
     ['/api/health','public'],['/api/treatments','public'],['/api/practitioners','public'],['/api/reviews?limit=12','public'],
@@ -91,8 +86,9 @@ async function main(){
     const found=records.find(x=>x.route===item.route&&x.method===item.method);rows.push({route:item.route,method:item.method,...found});
   }
   fs.mkdirSync(output,{recursive:true});
-  fs.writeFileSync(path.join(output,'endpoint-timings.json'),JSON.stringify({measuredAt:new Date().toISOString(),target:'isolated loopback Next.js production server; disposable SQLite fixture; synthetic credentials; external delivery disabled',runtime:process.version,next:require('next/package.json').version,routePaths:new Set(routes.map(x=>x.route)).size,handlerCount:routes.length,perEndpoint:records,load,captchaGate,oneOff:rows.filter(x=>['/api/admin/login','/api/admin/analytics/verify','/api/admin/analytics/lock','/api/admin/logout'].includes(x.route))},null,2));
-  console.log(JSON.stringify({routePaths:new Set(routes.map(x=>x.route)).size,handlers:routes.length,timedHandlers:records.length+4,loadScenarios:load.length,captchaGate,perEndpoint:records.map(x=>`${x.method} ${x.route}: ${x.requests} req, ${Object.keys(x.statusCodes).join(',')} p95=${x.p95Ms.toFixed(1)}ms`),load:load.map(x=>`${x.concurrency} concurrency ${x.url}: ${x.requests} req/${x.durationMs.toFixed(0)}ms; p95=${x.p95Ms.toFixed(1)}ms; errors=${x.failed}`)},null,2));
+  assert.equal(bookingGate[0].status,201,'Booking without CAPTCHA should succeed while verification is disabled');
+  fs.writeFileSync(path.join(output,'endpoint-timings.json'),JSON.stringify({measuredAt:new Date().toISOString(),target:'isolated loopback Next.js production server; disposable SQLite fixture; synthetic credentials; external delivery disabled',runtime:process.version,next:require('next/package.json').version,routePaths:new Set(routes.map(x=>x.route)).size,handlerCount:routes.length,perEndpoint:records,load,bookingGate,oneOff:rows.filter(x=>['/api/admin/login','/api/admin/analytics/verify','/api/admin/analytics/lock','/api/admin/logout'].includes(x.route))},null,2));
+  console.log(JSON.stringify({routePaths:new Set(routes.map(x=>x.route)).size,handlers:routes.length,timedHandlers:records.length+4,loadScenarios:load.length,bookingGate,perEndpoint:records.map(x=>`${x.method} ${x.route}: ${x.requests} req, ${Object.keys(x.statusCodes).join(',')} p95=${x.p95Ms.toFixed(1)}ms`),load:load.map(x=>`${x.concurrency} concurrency ${x.url}: ${x.requests} req/${x.durationMs.toFixed(0)}ms; p95=${x.p95Ms.toFixed(1)}ms; errors=${x.failed}`)},null,2));
 }
 main().catch(error=>{console.error(error.message);process.exitCode=1;}).finally(async()=>{
   if(server&&server.exitCode===null){server.kill();await new Promise(resolve=>server.once('exit',resolve));}

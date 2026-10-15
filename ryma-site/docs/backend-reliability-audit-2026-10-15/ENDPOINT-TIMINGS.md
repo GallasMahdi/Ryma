@@ -2,6 +2,8 @@
 
 Source: [endpoint-timings.json](endpoint-timings.json). Run against an isolated local production-mode Next server and disposable SQLite fixture. Percentiles are client-observed wall-clock HTTP latency; small-fixture timings are not production SLO evidence.
 
+The saved timing snapshot was measured before booking reCAPTCHA was temporarily disabled. Its separate CAPTCHA cases are historical results and do not describe current booking behavior. The current harness tests a booking without a CAPTCHA token and requires a 201 response.
+
 The “success” column counts 2xx responses. “4xx/5xx” responses here include deliberate validation errors, missing-record probes, authorization failures, and expected unavailable-provider responses; they are not all unexpected defects. Read handlers received 10 samples; most write handlers received one intentionally invalid or missing-record probe. See the report for workflow tests that exercise successful writes.
 
 | Handler | Access exercised | Samples | Status distribution | Mean ms | p95 ms | 2xx / samples |
@@ -61,6 +63,6 @@ The “success” column counts 2xx responses. “4xx/5xx” responses here incl
 ## Special cases
 
 - Four stateful auth lifecycle handlers were separately exercised once: login 200 (146.8 ms), owner verification 200 (120.0 ms), lock 200 (23.7 ms), logout 200 (14.2 ms).
-- Booking CAPTCHA gate: missing token 403 (20.3 ms), invalid/wrong-action token 403 (14.6 ms), synthetic valid token 201 (17.9 ms). The synthetic verifier does not contact Google.
+- Historical booking CAPTCHA gate (captured before the temporary disable): missing token 403 (20.3 ms), invalid/wrong-action token 403 (14.6 ms), synthetic valid token 201 (17.9 ms). The synthetic verifier did not contact Google.
 - WhatsApp webhook POST returned 503 because the integration is deliberately disabled in the fixture. The jobs endpoint returned 401 without the configured bearer scheduler secret.
 - Prescription DELETE returned 200 for a nonexistent id in this fixture, indicating idempotent/no-op deletion behavior at HTTP level; consider returning 404 or documenting this contract consistently.

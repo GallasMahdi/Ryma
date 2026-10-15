@@ -4,7 +4,7 @@ Every exported HTTP handler is enumerated from the final TypeScript source. Auto
 
 **37 route paths; 55 exported handlers. 43 anonymous authorization probes passed on the isolated local server.**
 
-This inventory was re-scanned against current source on 15 October 2026. The booking POST now performs server-side production reCAPTCHA verification before rate limiting or persistence; see [the audit report](REPORT.md#finding-1-public-booking-captcha-was-not-enforced-server-side--fixed).
+This inventory was re-scanned against current source on 15 October 2026. Per user request, appointment booking currently does not enforce reCAPTCHA while the real booking integration is being configured; it retains IP/phone rate limits, honeypot, minimum form-time, input validation, and transactional slot checks. The contact form's separate CAPTCHA behavior is unchanged. See [the audit report](REPORT.md#booking-recaptcha-temporarily-disabled-on-request).
 
 Source review and authentication probes do not prove every success/error branch. See the main report for behavioral test and integration coverage.
 
@@ -38,7 +38,7 @@ Source review and authentication probes do not prove every success/error branch.
 | [`/api/admin/slots`](../../src/app/api/admin/slots/route.ts) | GET: Admin session<br>POST: Admin session | Live admin availability and manual slot blocking; checks active appointments. |
 | [`/api/admin/treatments`](../../src/app/api/admin/treatments/route.ts) | GET: Admin session<br>POST: Admin session | Catalogue/configuration read and validated treatment save/archive/publication with revisions; catalogueOnly=1 reduces reads. |
 | [`/api/admin/whatsapp`](../../src/app/api/admin/whatsapp/route.ts) | GET: Admin session | Integration readiness and inbox/outbox aggregate counts; no secret values returned. |
-| [`/api/appointments`](../../src/app/api/appointments/route.ts) | POST: Public / own-session | Public booking: production CAPTCHA, IP and phone quotas, validated contact/service/date, atomic capacity and idempotency; mail runs after response. |
+| [`/api/appointments`](../../src/app/api/appointments/route.ts) | POST: Public / own-session | Public booking: IP and phone quotas, honeypot/minimum form-time, validated contact/service/date, atomic capacity and idempotency; booking CAPTCHA is temporarily disabled pending real integration; mail runs after response. |
 | [`/api/contact`](../../src/app/api/contact/route.ts) | POST: Public / own-session | Validated contact mail: 16 KiB streamed body cap, 5/IP/hour, production CAPTCHA; 200 only after SMTP acceptance; 503 on delivery failure. |
 | [`/api/health`](../../src/app/api/health/route.ts) | GET: Public / own-session | Read/write database readiness; concurrent probes share a 5-second result. 503 on unavailable/non-writable storage; errors redacted. |
 | [`/api/practitioners`](../../src/app/api/practitioners/route.ts) | GET: Public / own-session | Public active practitioner/service projection; live database read, no-store. |

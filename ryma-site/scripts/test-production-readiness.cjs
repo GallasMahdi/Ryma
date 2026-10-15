@@ -59,24 +59,27 @@ test('health never publishes a database exception or secret',async()=>{
   const {GET}=loader({'@/lib/db':{dbHealthCheck:async()=>{throw Error('private-token-123 /private/database');}}})('@/app/api/health/route');
   const r=await GET();assert.equal(r.status,503);assert(!/private-token|private\/database/.test(await r.text()));
 });
-test('production rejects missing CAPTCHA and wrong actions before storing an appointment',async()=>{
-  const original={...process.env};process.env.NODE_ENV='production';process.env.RECAPTCHA_SECRET_KEY='fixture';
+test('production booking remains available without CAPTCHA until booking reCAPTCHA is configured',async()=>{
+  const original={...process.env};process.env.NODE_ENV='production';delete process.env.RECAPTCHA_SECRET_KEY;
   try {
     let writes=0;
-    const load=loader({'@/lib/db':{dbConsumeRateLimit:async()=>true,dbCreateAppointment:async()=>{writes++;}},'@/lib/booking-service':{},'@/lib/email':{},'@/lib/events':{}});
+    let captchaCalls=0;
+    const nextServer=require('next/server');
+    const appointment={id:'audit-appointment',date:'2030-01-01',startTime:'09:00',service:'reeducation-posturale',serviceNameJson:null,servicePriceCents:5000,practitionerId:'audit-practitioner',practitionerName:'Audit Practitioner',durationMinutes:60,status:'pending'};
+    const load=loader({
+      'next/server':{...nextServer,after:()=>{}},
+      '@/lib/db':{dbConsumeRateLimit:async()=>true,dbCreateAppointment:async()=>{writes++;return {success:true,appointment};}},
+      '@/lib/booking-service':{findBookingReplay:async()=>null},
+      '@/lib/recaptcha':{verifyRecaptchaToken:async()=>{captchaCalls++;return {valid:false};}},
+      '@/lib/email':{sendAppointmentConfirmationEmail:async()=>{},sendAdminNewBookingNotification:async()=>{}},
+      '@/lib/events':{broadcastAppointmentCreated:()=>{}},
+    });
     const route=load('@/app/api/appointments/route');
     const {NextRequest}=require('next/server');
     const bookingDate=new Date();bookingDate.setUTCDate(bookingDate.getUTCDate()+30);while(bookingDate.getUTCDay()===0)bookingDate.setUTCDate(bookingDate.getUTCDate()+1);
     const booking={patientName:'Audit Fixture',phone:'+351912345678',service:'reeducation-posturale',date:bookingDate.toISOString().slice(0,10),startTime:'09:00',_form_rendered_at:Date.now()-5000};
     const r=await route.POST(new NextRequest('http://localhost/api/appointments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(booking)}));
-    assert.equal(r.status,403);assert.equal(writes,0);
-    const originalFetch=globalThis.fetch;
-    try {
-      globalThis.fetch=async()=>Response.json({success:true,score:0.9,action:'other'});
-      assert.equal((await load('@/lib/recaptcha').verifyRecaptchaToken('fixture','booking')).valid,false);
-      const wrongAction=await route.POST(new NextRequest('http://localhost/api/appointments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...booking,recaptchaToken:'fixture-token'})}));
-      assert.equal(wrongAction.status,403);assert.equal(writes,0);
-    }finally{globalThis.fetch=originalFetch;}
+    assert.equal(r.status,201);assert.equal(writes,1);assert.equal(captchaCalls,0);
   }finally{process.env=original;}
 });
 test('untrusted Cloudflare and made-up Vercel IP headers do not override ingress IP',()=>{

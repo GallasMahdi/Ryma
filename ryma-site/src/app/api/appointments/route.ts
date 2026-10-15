@@ -9,7 +9,6 @@ import {
   dbConsumeRateLimit,
 } from '@/lib/db';
 import { validateAppointmentInput, getClientIp } from '@/lib/validation';
-import { verifyRecaptchaToken } from '@/lib/recaptcha';
 import { broadcastAppointmentCreated } from '@/lib/events';
 import { sendAppointmentConfirmationEmail, sendAdminNewBookingNotification } from '@/lib/email';
 import { validateAndNormalizePhone } from '@/lib/phone';
@@ -73,22 +72,6 @@ export async function POST(request: NextRequest) {
     const validation = validateAppointmentInput(body);
     if (!validation.ok) {
       return NextResponse.json({ error: localizeApiError(validation.error, request), errorCode: validation.errorCode }, { status: 422 });
-    }
-
-    // Production bookings must pass server-side CAPTCHA verification before any
-    // patient or appointment write. In development, validate a supplied token
-    // while keeping local booking walkthroughs usable without provider keys.
-    if (process.env.NODE_ENV === 'production' || body.recaptchaToken) {
-      const captcha = await verifyRecaptchaToken(
-        typeof body.recaptchaToken === 'string' ? body.recaptchaToken : null,
-        'booking',
-      );
-      if (!captcha.valid) {
-        return NextResponse.json(
-          { error: localizeApiError('Security check failed. Please retry.', request) },
-          { status: 403 },
-        );
-      }
     }
 
     // Per-phone rate limit: 3 bookings per normalized phone number per hour
