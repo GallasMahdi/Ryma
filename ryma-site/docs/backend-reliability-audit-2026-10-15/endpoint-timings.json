@@ -1,0 +1,2698 @@
+{
+  "measuredAt": "2026-10-15T10:54:06.123Z",
+  "target": "isolated loopback Next.js production server; disposable SQLite fixture; synthetic credentials; external delivery disabled",
+  "runtime": "v24.18.0",
+  "next": "16.3.8",
+  "routePaths": 37,
+  "handlerCount": 55,
+  "perEndpoint": [
+    {
+      "route": "/api/admin/analytics/password",
+      "method": "POST",
+      "access": "owner",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 66.9581578471602,
+      "avgMs": 14.934700000000248,
+      "medianMs": 14.934700000000248,
+      "p90Ms": 14.934700000000248,
+      "p95Ms": 14.934700000000248,
+      "p99Ms": 14.934700000000248,
+      "maxMs": 14.934700000000248,
+      "statusCodes": {
+        "400": 1
+      },
+      "samples": [
+        {
+          "status": 400,
+          "ms": 14.934700000000248
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/analytics",
+      "method": "GET",
+      "access": "owner",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 54.63561324105027,
+      "avgMs": 18.303079999999955,
+      "medianMs": 16.071500000000015,
+      "p90Ms": 23.07459999999992,
+      "p95Ms": 26.225800000000163,
+      "p99Ms": 26.225800000000163,
+      "maxMs": 26.225800000000163,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 22.766799999999876
+        },
+        {
+          "status": 200,
+          "ms": 20.642799999999625
+        },
+        {
+          "status": 200,
+          "ms": 15.465400000000045
+        },
+        {
+          "status": 200,
+          "ms": 16.071500000000015
+        },
+        {
+          "status": 200,
+          "ms": 16.38640000000032
+        },
+        {
+          "status": 200,
+          "ms": 15.210099999999784
+        },
+        {
+          "status": 200,
+          "ms": 13.3746000000001
+        },
+        {
+          "status": 200,
+          "ms": 23.07459999999992
+        },
+        {
+          "status": 200,
+          "ms": 13.812799999999697
+        },
+        {
+          "status": 200,
+          "ms": 26.225800000000163
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/appointments/[id]",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 0,
+      "failed": 10,
+      "httpErrorRate": 1,
+      "throughputRps": 76.14870318758491,
+      "avgMs": 13.132199999999965,
+      "medianMs": 13.548899999999776,
+      "p90Ms": 16.309600000000046,
+      "p95Ms": 17.07069999999976,
+      "p99Ms": 17.07069999999976,
+      "maxMs": 17.07069999999976,
+      "statusCodes": {
+        "404": 10
+      },
+      "samples": [
+        {
+          "status": 404,
+          "ms": 12.087100000000191
+        },
+        {
+          "status": 404,
+          "ms": 12.023499999999785
+        },
+        {
+          "status": 404,
+          "ms": 16.309600000000046
+        },
+        {
+          "status": 404,
+          "ms": 14.804900000000089
+        },
+        {
+          "status": 404,
+          "ms": 13.548899999999776
+        },
+        {
+          "status": 404,
+          "ms": 3.6421000000000276
+        },
+        {
+          "status": 404,
+          "ms": 11.946800000000167
+        },
+        {
+          "status": 404,
+          "ms": 14.828700000000026
+        },
+        {
+          "status": 404,
+          "ms": 17.07069999999976
+        },
+        {
+          "status": 404,
+          "ms": 15.059699999999793
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/appointments/[id]",
+      "method": "PATCH",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 61.71506156077362,
+      "avgMs": 16.203500000000076,
+      "medianMs": 16.203500000000076,
+      "p90Ms": 16.203500000000076,
+      "p95Ms": 16.203500000000076,
+      "p99Ms": 16.203500000000076,
+      "maxMs": 16.203500000000076,
+      "statusCodes": {
+        "404": 1
+      },
+      "samples": [
+        {
+          "status": 404,
+          "ms": 16.203500000000076
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/appointments/[id]",
+      "method": "DELETE",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 57.4712643678173,
+      "avgMs": 17.399999999999636,
+      "medianMs": 17.399999999999636,
+      "p90Ms": 17.399999999999636,
+      "p95Ms": 17.399999999999636,
+      "p99Ms": 17.399999999999636,
+      "maxMs": 17.399999999999636,
+      "statusCodes": {
+        "404": 1
+      },
+      "samples": [
+        {
+          "status": 404,
+          "ms": 17.399999999999636
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/appointments/multiple/preview",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 135.29602770862599,
+      "avgMs": 7.391200000000026,
+      "medianMs": 7.391200000000026,
+      "p90Ms": 7.391200000000026,
+      "p95Ms": 7.391200000000026,
+      "p99Ms": 7.391200000000026,
+      "maxMs": 7.391200000000026,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 7.391200000000026
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/appointments/multiple",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 156.31350236032682,
+      "avgMs": 6.397400000000289,
+      "medianMs": 6.397400000000289,
+      "p90Ms": 6.397400000000289,
+      "p95Ms": 6.397400000000289,
+      "p99Ms": 6.397400000000289,
+      "maxMs": 6.397400000000289,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 6.397400000000289
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/appointments",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 54.4317515647765,
+      "avgMs": 18.371630000000096,
+      "medianMs": 15.370699999999943,
+      "p90Ms": 25.184600000000046,
+      "p95Ms": 34.433300000000145,
+      "p99Ms": 34.433300000000145,
+      "maxMs": 34.433300000000145,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 34.433300000000145
+        },
+        {
+          "status": 200,
+          "ms": 11.447900000000118
+        },
+        {
+          "status": 200,
+          "ms": 25.184600000000046
+        },
+        {
+          "status": 200,
+          "ms": 19.759100000000217
+        },
+        {
+          "status": 200,
+          "ms": 16.38550000000032
+        },
+        {
+          "status": 200,
+          "ms": 15.685500000000047
+        },
+        {
+          "status": 200,
+          "ms": 15.361399999999776
+        },
+        {
+          "status": 200,
+          "ms": 15.096700000000055
+        },
+        {
+          "status": 200,
+          "ms": 15.370699999999943
+        },
+        {
+          "status": 200,
+          "ms": 14.99160000000029
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/appointments",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 59.36479667557209,
+      "avgMs": 16.8449999999998,
+      "medianMs": 16.8449999999998,
+      "p90Ms": 16.8449999999998,
+      "p95Ms": 16.8449999999998,
+      "p99Ms": 16.8449999999998,
+      "maxMs": 16.8449999999998,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 16.8449999999998
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/events",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 170.23594702257407,
+      "avgMs": 5.874199999999973,
+      "medianMs": 4.247799999999643,
+      "p90Ms": 5.681800000000294,
+      "p95Ms": 18.29469999999992,
+      "p99Ms": 18.29469999999992,
+      "maxMs": 18.29469999999992,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 18.29469999999992
+        },
+        {
+          "status": 200,
+          "ms": 5.38779999999997
+        },
+        {
+          "status": 200,
+          "ms": 3.924800000000232
+        },
+        {
+          "status": 200,
+          "ms": 3.7154999999997926
+        },
+        {
+          "status": 200,
+          "ms": 3.9122000000002117
+        },
+        {
+          "status": 200,
+          "ms": 4.234899999999925
+        },
+        {
+          "status": 200,
+          "ms": 4.4625999999998385
+        },
+        {
+          "status": 200,
+          "ms": 5.681800000000294
+        },
+        {
+          "status": 200,
+          "ms": 4.247799999999643
+        },
+        {
+          "status": 200,
+          "ms": 4.879899999999907
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/export",
+      "method": "GET",
+      "access": "owner",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 78.41944049297588,
+      "avgMs": 12.751940000000014,
+      "medianMs": 14.943699999999808,
+      "p90Ms": 16.121999999999844,
+      "p95Ms": 19.752600000000257,
+      "p99Ms": 19.752600000000257,
+      "maxMs": 19.752600000000257,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 6.998700000000099
+        },
+        {
+          "status": 200,
+          "ms": 4.247100000000046
+        },
+        {
+          "status": 200,
+          "ms": 7.220600000000104
+        },
+        {
+          "status": 200,
+          "ms": 14.943699999999808
+        },
+        {
+          "status": 200,
+          "ms": 19.752600000000257
+        },
+        {
+          "status": 200,
+          "ms": 10.801300000000083
+        },
+        {
+          "status": 200,
+          "ms": 16.029099999999744
+        },
+        {
+          "status": 200,
+          "ms": 15.410200000000259
+        },
+        {
+          "status": 200,
+          "ms": 15.99409999999989
+        },
+        {
+          "status": 200,
+          "ms": 16.121999999999844
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/invoices/[id]",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 0,
+      "failed": 10,
+      "httpErrorRate": 1,
+      "throughputRps": 71.92790522203785,
+      "avgMs": 13.902809999999999,
+      "medianMs": 15.19210000000021,
+      "p90Ms": 16.5313000000001,
+      "p95Ms": 19.647099999999682,
+      "p99Ms": 19.647099999999682,
+      "maxMs": 19.647099999999682,
+      "statusCodes": {
+        "404": 10
+      },
+      "samples": [
+        {
+          "status": 404,
+          "ms": 19.647099999999682
+        },
+        {
+          "status": 404,
+          "ms": 10.768000000000029
+        },
+        {
+          "status": 404,
+          "ms": 15.19210000000021
+        },
+        {
+          "status": 404,
+          "ms": 15.700399999999718
+        },
+        {
+          "status": 404,
+          "ms": 16.088900000000194
+        },
+        {
+          "status": 404,
+          "ms": 14.494200000000092
+        },
+        {
+          "status": 404,
+          "ms": 15.663300000000163
+        },
+        {
+          "status": 404,
+          "ms": 16.5313000000001
+        },
+        {
+          "status": 404,
+          "ms": 3.9620999999997366
+        },
+        {
+          "status": 404,
+          "ms": 10.98070000000007
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/invoices/[id]",
+      "method": "PUT",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 64.28429084784618,
+      "avgMs": 15.555899999999838,
+      "medianMs": 15.555899999999838,
+      "p90Ms": 15.555899999999838,
+      "p95Ms": 15.555899999999838,
+      "p99Ms": 15.555899999999838,
+      "maxMs": 15.555899999999838,
+      "statusCodes": {
+        "404": 1
+      },
+      "samples": [
+        {
+          "status": 404,
+          "ms": 15.555899999999838
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/invoices/[id]",
+      "method": "DELETE",
+      "access": "owner",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 63.85165982389812,
+      "avgMs": 15.661299999999756,
+      "medianMs": 15.661299999999756,
+      "p90Ms": 15.661299999999756,
+      "p95Ms": 15.661299999999756,
+      "p99Ms": 15.661299999999756,
+      "maxMs": 15.661299999999756,
+      "statusCodes": {
+        "404": 1
+      },
+      "samples": [
+        {
+          "status": 404,
+          "ms": 15.661299999999756
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/invoices/export",
+      "method": "GET",
+      "access": "owner",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 71.64647907707894,
+      "avgMs": 13.957419999999956,
+      "medianMs": 15.51470000000063,
+      "p90Ms": 16.513500000000022,
+      "p95Ms": 17.657400000000052,
+      "p99Ms": 17.657400000000052,
+      "maxMs": 17.657400000000052,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 17.657400000000052
+        },
+        {
+          "status": 200,
+          "ms": 3.5743999999999687
+        },
+        {
+          "status": 200,
+          "ms": 9.442000000000007
+        },
+        {
+          "status": 200,
+          "ms": 14.365899999999783
+        },
+        {
+          "status": 200,
+          "ms": 15.314699999999903
+        },
+        {
+          "status": 200,
+          "ms": 15.606399999999667
+        },
+        {
+          "status": 200,
+          "ms": 16.513500000000022
+        },
+        {
+          "status": 200,
+          "ms": 15.880699999999706
+        },
+        {
+          "status": 200,
+          "ms": 15.51470000000063
+        },
+        {
+          "status": 200,
+          "ms": 15.704499999999825
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/invoices",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 59.74986317281384,
+      "avgMs": 16.736439999999856,
+      "medianMs": 15.07169999999951,
+      "p90Ms": 18.53309999999965,
+      "p95Ms": 26.722600000000057,
+      "p99Ms": 26.722600000000057,
+      "maxMs": 26.722600000000057,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 18.53309999999965
+        },
+        {
+          "status": 200,
+          "ms": 12.899699999999939
+        },
+        {
+          "status": 200,
+          "ms": 15.07169999999951
+        },
+        {
+          "status": 200,
+          "ms": 15.074599999999919
+        },
+        {
+          "status": 200,
+          "ms": 18.055699999999888
+        },
+        {
+          "status": 200,
+          "ms": 14.450699999999415
+        },
+        {
+          "status": 200,
+          "ms": 17.76220000000012
+        },
+        {
+          "status": 200,
+          "ms": 14.445800000000418
+        },
+        {
+          "status": 200,
+          "ms": 14.348299999999654
+        },
+        {
+          "status": 200,
+          "ms": 26.722600000000057
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/invoices",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 46.31473642283448,
+      "avgMs": 21.59140000000025,
+      "medianMs": 21.59140000000025,
+      "p90Ms": 21.59140000000025,
+      "p95Ms": 21.59140000000025,
+      "p99Ms": 21.59140000000025,
+      "maxMs": 21.59140000000025,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 21.59140000000025
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/invoices/sessions",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 54.38004034998898,
+      "avgMs": 18.389100000000326,
+      "medianMs": 18.389100000000326,
+      "p90Ms": 18.389100000000326,
+      "p95Ms": 18.389100000000326,
+      "p99Ms": 18.389100000000326,
+      "maxMs": 18.389100000000326,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 18.389100000000326
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/me",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 72.21076879194979,
+      "avgMs": 13.848350000000028,
+      "medianMs": 15.093300000000454,
+      "p90Ms": 17.057299999999486,
+      "p95Ms": 19.26010000000042,
+      "p99Ms": 19.26010000000042,
+      "maxMs": 19.26010000000042,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 6.987299999999777
+        },
+        {
+          "status": 200,
+          "ms": 19.26010000000042
+        },
+        {
+          "status": 200,
+          "ms": 16.447300000000723
+        },
+        {
+          "status": 200,
+          "ms": 15.093300000000454
+        },
+        {
+          "status": 200,
+          "ms": 15.517899999999827
+        },
+        {
+          "status": 200,
+          "ms": 17.057299999999486
+        },
+        {
+          "status": 200,
+          "ms": 14.624299999999494
+        },
+        {
+          "status": 200,
+          "ms": 2.923700000000281
+        },
+        {
+          "status": 200,
+          "ms": 14.215699999999742
+        },
+        {
+          "status": 200,
+          "ms": 16.35660000000007
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/patients/[id]/billing-sessions",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 0,
+      "failed": 10,
+      "httpErrorRate": 1,
+      "throughputRps": 64.54061282602757,
+      "avgMs": 15.494119999999839,
+      "medianMs": 15.329600000000028,
+      "p90Ms": 16.624299999999494,
+      "p95Ms": 17.83140000000003,
+      "p99Ms": 17.83140000000003,
+      "maxMs": 17.83140000000003,
+      "statusCodes": {
+        "404": 10
+      },
+      "samples": [
+        {
+          "status": 404,
+          "ms": 15.550700000000688
+        },
+        {
+          "status": 404,
+          "ms": 13.596199999999953
+        },
+        {
+          "status": 404,
+          "ms": 15.22320000000036
+        },
+        {
+          "status": 404,
+          "ms": 16.624299999999494
+        },
+        {
+          "status": 404,
+          "ms": 15.511799999999312
+        },
+        {
+          "status": 404,
+          "ms": 16.060899999999492
+        },
+        {
+          "status": 404,
+          "ms": 14.224599999999555
+        },
+        {
+          "status": 404,
+          "ms": 15.329600000000028
+        },
+        {
+          "status": 404,
+          "ms": 14.988499999999476
+        },
+        {
+          "status": 404,
+          "ms": 17.83140000000003
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/patients/[id]/sessions",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 58.21975629209988,
+      "avgMs": 17.176300000000083,
+      "medianMs": 17.176300000000083,
+      "p90Ms": 17.176300000000083,
+      "p95Ms": 17.176300000000083,
+      "p99Ms": 17.176300000000083,
+      "maxMs": 17.176300000000083,
+      "statusCodes": {
+        "404": 1
+      },
+      "samples": [
+        {
+          "status": 404,
+          "ms": 17.176300000000083
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/patients/[id]/sessions",
+      "method": "PATCH",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 77.44493665004084,
+      "avgMs": 12.912400000000162,
+      "medianMs": 12.912400000000162,
+      "p90Ms": 12.912400000000162,
+      "p95Ms": 12.912400000000162,
+      "p99Ms": 12.912400000000162,
+      "maxMs": 12.912400000000162,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 12.912400000000162
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/patients/[id]/sessions",
+      "method": "DELETE",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 276.1134273959978,
+      "avgMs": 3.6216999999996915,
+      "medianMs": 3.6216999999996915,
+      "p90Ms": 3.6216999999996915,
+      "p95Ms": 3.6216999999996915,
+      "p99Ms": 3.6216999999996915,
+      "maxMs": 3.6216999999996915,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 3.6216999999996915
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/patients",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 73.07639186776727,
+      "avgMs": 13.684309999999915,
+      "medianMs": 15.236899999999878,
+      "p90Ms": 16.172099999999773,
+      "p95Ms": 16.942399999999907,
+      "p99Ms": 16.942399999999907,
+      "maxMs": 16.942399999999907,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 14.096199999999953
+        },
+        {
+          "status": 200,
+          "ms": 4.295399999999972
+        },
+        {
+          "status": 200,
+          "ms": 7.951300000000629
+        },
+        {
+          "status": 200,
+          "ms": 16.172099999999773
+        },
+        {
+          "status": 200,
+          "ms": 16.942399999999907
+        },
+        {
+          "status": 200,
+          "ms": 15.236899999999878
+        },
+        {
+          "status": 200,
+          "ms": 15.6899999999996
+        },
+        {
+          "status": 200,
+          "ms": 14.906100000000151
+        },
+        {
+          "status": 200,
+          "ms": 15.516899999999623
+        },
+        {
+          "status": 200,
+          "ms": 16.035799999999654
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/patients",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 66.91335389803737,
+      "avgMs": 14.944700000000012,
+      "medianMs": 14.944700000000012,
+      "p90Ms": 14.944700000000012,
+      "p95Ms": 14.944700000000012,
+      "p99Ms": 14.944700000000012,
+      "maxMs": 14.944700000000012,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 14.944700000000012
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/patients",
+      "method": "DELETE",
+      "access": "owner",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 221.75407473111744,
+      "avgMs": 4.509500000000116,
+      "medianMs": 4.509500000000116,
+      "p90Ms": 4.509500000000116,
+      "p95Ms": 4.509500000000116,
+      "p99Ms": 4.509500000000116,
+      "maxMs": 4.509500000000116,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 4.509500000000116
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/practitioners",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 91.97017591135506,
+      "avgMs": 10.873090000000047,
+      "medianMs": 12.356899999999769,
+      "p90Ms": 15.992699999999786,
+      "p95Ms": 16.38890000000083,
+      "p99Ms": 16.38890000000083,
+      "maxMs": 16.38890000000083,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 12.758699999999408
+        },
+        {
+          "status": 200,
+          "ms": 4.204800000000432
+        },
+        {
+          "status": 200,
+          "ms": 9.55540000000019
+        },
+        {
+          "status": 200,
+          "ms": 15.186999999999898
+        },
+        {
+          "status": 200,
+          "ms": 15.835100000000239
+        },
+        {
+          "status": 200,
+          "ms": 15.992699999999786
+        },
+        {
+          "status": 200,
+          "ms": 3.2116000000005442
+        },
+        {
+          "status": 200,
+          "ms": 12.356899999999769
+        },
+        {
+          "status": 200,
+          "ms": 16.38890000000083
+        },
+        {
+          "status": 200,
+          "ms": 3.239799999999377
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/practitioners",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 80.53604793505595,
+      "avgMs": 12.416799999999967,
+      "medianMs": 12.416799999999967,
+      "p90Ms": 12.416799999999967,
+      "p95Ms": 12.416799999999967,
+      "p99Ms": 12.416799999999967,
+      "maxMs": 12.416799999999967,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 12.416799999999967
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/prescriptions/[id]",
+      "method": "DELETE",
+      "access": "admin",
+      "requests": 1,
+      "success": 1,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 56.95539253656506,
+      "avgMs": 17.557600000000093,
+      "medianMs": 17.557600000000093,
+      "p90Ms": 17.557600000000093,
+      "p95Ms": 17.557600000000093,
+      "p99Ms": 17.557600000000093,
+      "maxMs": 17.557600000000093,
+      "statusCodes": {
+        "200": 1
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 17.557600000000093
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/prescriptions",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 72.42094529611501,
+      "avgMs": 13.808159999999953,
+      "medianMs": 15.568900000000212,
+      "p90Ms": 15.923200000000179,
+      "p95Ms": 16.203299999999217,
+      "p99Ms": 16.203299999999217,
+      "maxMs": 16.203299999999217,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 15.70430000000033
+        },
+        {
+          "status": 200,
+          "ms": 3.0994999999993524
+        },
+        {
+          "status": 200,
+          "ms": 10.188900000000103
+        },
+        {
+          "status": 200,
+          "ms": 16.203299999999217
+        },
+        {
+          "status": 200,
+          "ms": 14.91780000000017
+        },
+        {
+          "status": 200,
+          "ms": 15.820200000000114
+        },
+        {
+          "status": 200,
+          "ms": 15.923200000000179
+        },
+        {
+          "status": 200,
+          "ms": 15.047100000000682
+        },
+        {
+          "status": 200,
+          "ms": 15.568900000000212
+        },
+        {
+          "status": 200,
+          "ms": 15.608399999999165
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/prescriptions",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 61.067583494651274,
+      "avgMs": 16.375300000000607,
+      "medianMs": 16.375300000000607,
+      "p90Ms": 16.375300000000607,
+      "p95Ms": 16.375300000000607,
+      "p99Ms": 16.375300000000607,
+      "maxMs": 16.375300000000607,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 16.375300000000607
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/reviews",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 91.56964100122379,
+      "avgMs": 10.920649999999842,
+      "medianMs": 12.532500000000255,
+      "p90Ms": 16.508999999999105,
+      "p95Ms": 16.604299999999967,
+      "p99Ms": 16.604299999999967,
+      "maxMs": 16.604299999999967,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 7.18579999999929
+        },
+        {
+          "status": 200,
+          "ms": 9.336700000000747
+        },
+        {
+          "status": 200,
+          "ms": 13.072499999999309
+        },
+        {
+          "status": 200,
+          "ms": 15.787500000000364
+        },
+        {
+          "status": 200,
+          "ms": 16.508999999999105
+        },
+        {
+          "status": 200,
+          "ms": 2.7663999999995212
+        },
+        {
+          "status": 200,
+          "ms": 12.666299999999865
+        },
+        {
+          "status": 200,
+          "ms": 16.604299999999967
+        },
+        {
+          "status": 200,
+          "ms": 2.7454999999999927
+        },
+        {
+          "status": 200,
+          "ms": 12.532500000000255
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/reviews",
+      "method": "PATCH",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 61.25349144901214,
+      "avgMs": 16.325600000000122,
+      "medianMs": 16.325600000000122,
+      "p90Ms": 16.325600000000122,
+      "p95Ms": 16.325600000000122,
+      "p99Ms": 16.325600000000122,
+      "maxMs": 16.325600000000122,
+      "statusCodes": {
+        "400": 1
+      },
+      "samples": [
+        {
+          "status": 400,
+          "ms": 16.325600000000122
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/reviews",
+      "method": "DELETE",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 67.4845797735231,
+      "avgMs": 14.818199999999706,
+      "medianMs": 14.818199999999706,
+      "p90Ms": 14.818199999999706,
+      "p95Ms": 14.818199999999706,
+      "p99Ms": 14.818199999999706,
+      "maxMs": 14.818199999999706,
+      "statusCodes": {
+        "400": 1
+      },
+      "samples": [
+        {
+          "status": 400,
+          "ms": 14.818199999999706
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/slots/bulk",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 168.53743216368662,
+      "avgMs": 5.933399999999892,
+      "medianMs": 5.933399999999892,
+      "p90Ms": 5.933399999999892,
+      "p95Ms": 5.933399999999892,
+      "p99Ms": 5.933399999999892,
+      "maxMs": 5.933399999999892,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 5.933399999999892
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/slots",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 66.23174487531848,
+      "avgMs": 15.098500000000058,
+      "medianMs": 15.457999999999629,
+      "p90Ms": 15.728900000000067,
+      "p95Ms": 15.805499999999483,
+      "p99Ms": 15.805499999999483,
+      "maxMs": 15.805499999999483,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 12.966699999999946
+        },
+        {
+          "status": 200,
+          "ms": 14.947299999999814
+        },
+        {
+          "status": 200,
+          "ms": 14.242299999999886
+        },
+        {
+          "status": 200,
+          "ms": 15.728900000000067
+        },
+        {
+          "status": 200,
+          "ms": 15.603500000000167
+        },
+        {
+          "status": 200,
+          "ms": 15.014100000000326
+        },
+        {
+          "status": 200,
+          "ms": 15.805499999999483
+        },
+        {
+          "status": 200,
+          "ms": 15.637400000000525
+        },
+        {
+          "status": 200,
+          "ms": 15.581300000000738
+        },
+        {
+          "status": 200,
+          "ms": 15.457999999999629
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/slots",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 72.04870492452895,
+      "avgMs": 13.879500000000007,
+      "medianMs": 13.879500000000007,
+      "p90Ms": 13.879500000000007,
+      "p95Ms": 13.879500000000007,
+      "p99Ms": 13.879500000000007,
+      "maxMs": 13.879500000000007,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 13.879500000000007
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/treatments",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 64.21650723848417,
+      "avgMs": 15.572320000000127,
+      "medianMs": 15.32299999999941,
+      "p90Ms": 16.52390000000014,
+      "p95Ms": 17.63220000000001,
+      "p99Ms": 17.63220000000001,
+      "maxMs": 17.63220000000001,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 17.63220000000001
+        },
+        {
+          "status": 200,
+          "ms": 13.058799999999792
+        },
+        {
+          "status": 200,
+          "ms": 15.84479999999985
+        },
+        {
+          "status": 200,
+          "ms": 15.32299999999941
+        },
+        {
+          "status": 200,
+          "ms": 16.434000000000196
+        },
+        {
+          "status": 200,
+          "ms": 15.879400000000714
+        },
+        {
+          "status": 200,
+          "ms": 16.52390000000014
+        },
+        {
+          "status": 200,
+          "ms": 14.767800000000534
+        },
+        {
+          "status": 200,
+          "ms": 15.201200000000426
+        },
+        {
+          "status": 200,
+          "ms": 15.058100000000195
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/treatments",
+      "method": "POST",
+      "access": "admin",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 55.892462901378615,
+      "avgMs": 17.891499999999724,
+      "medianMs": 17.891499999999724,
+      "p90Ms": 17.891499999999724,
+      "p95Ms": 17.891499999999724,
+      "p99Ms": 17.891499999999724,
+      "maxMs": 17.891499999999724,
+      "statusCodes": {
+        "409": 1
+      },
+      "samples": [
+        {
+          "status": 409,
+          "ms": 17.891499999999724
+        }
+      ]
+    },
+    {
+      "route": "/api/admin/whatsapp",
+      "method": "GET",
+      "access": "admin",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 71.82494250413458,
+      "avgMs": 13.922739999999795,
+      "medianMs": 15.414099999999962,
+      "p90Ms": 17.286799999999857,
+      "p95Ms": 17.297299999999268,
+      "p99Ms": 17.297299999999268,
+      "maxMs": 17.297299999999268,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 17.286799999999857
+        },
+        {
+          "status": 200,
+          "ms": 11.966999999999643
+        },
+        {
+          "status": 200,
+          "ms": 15.503099999999904
+        },
+        {
+          "status": 200,
+          "ms": 17.297299999999268
+        },
+        {
+          "status": 200,
+          "ms": 13.432399999999689
+        },
+        {
+          "status": 200,
+          "ms": 16.696100000000115
+        },
+        {
+          "status": 200,
+          "ms": 15.414099999999962
+        },
+        {
+          "status": 200,
+          "ms": 15.755299999999806
+        },
+        {
+          "status": 200,
+          "ms": 2.6358000000000175
+        },
+        {
+          "status": 200,
+          "ms": 13.23949999999968
+        }
+      ]
+    },
+    {
+      "route": "/api/appointments",
+      "method": "POST",
+      "access": "public",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 209.41531244764437,
+      "avgMs": 4.775200000000041,
+      "medianMs": 4.775200000000041,
+      "p90Ms": 4.775200000000041,
+      "p95Ms": 4.775200000000041,
+      "p99Ms": 4.775200000000041,
+      "maxMs": 4.775200000000041,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 4.775200000000041
+        }
+      ]
+    },
+    {
+      "route": "/api/contact",
+      "method": "POST",
+      "access": "public",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 73.80291669126609,
+      "avgMs": 13.549600000000282,
+      "medianMs": 13.549600000000282,
+      "p90Ms": 13.549600000000282,
+      "p95Ms": 13.549600000000282,
+      "p99Ms": 13.549600000000282,
+      "maxMs": 13.549600000000282,
+      "statusCodes": {
+        "422": 1
+      },
+      "samples": [
+        {
+          "status": 422,
+          "ms": 13.549600000000282
+        }
+      ]
+    },
+    {
+      "route": "/api/health",
+      "method": "GET",
+      "access": "public",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 72.4446595245892,
+      "avgMs": 13.803639999999996,
+      "medianMs": 15.159499999999753,
+      "p90Ms": 16.180699999999888,
+      "p95Ms": 16.977100000000064,
+      "p99Ms": 16.977100000000064,
+      "maxMs": 16.977100000000064,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 11.641900000000533
+        },
+        {
+          "status": 200,
+          "ms": 14.96349999999984
+        },
+        {
+          "status": 200,
+          "ms": 15.85910000000058
+        },
+        {
+          "status": 200,
+          "ms": 2.5047999999997046
+        },
+        {
+          "status": 200,
+          "ms": 13.461099999999533
+        },
+        {
+          "status": 200,
+          "ms": 15.459899999999834
+        },
+        {
+          "status": 200,
+          "ms": 16.180699999999888
+        },
+        {
+          "status": 200,
+          "ms": 16.977100000000064
+        },
+        {
+          "status": 200,
+          "ms": 15.159499999999753
+        },
+        {
+          "status": 200,
+          "ms": 15.828800000000228
+        }
+      ]
+    },
+    {
+      "route": "/api/practitioners",
+      "method": "GET",
+      "access": "public",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 64.26830216642047,
+      "avgMs": 15.559769999999935,
+      "medianMs": 14.93289999999979,
+      "p90Ms": 17.736700000000383,
+      "p95Ms": 18.59059999999954,
+      "p99Ms": 18.59059999999954,
+      "maxMs": 18.59059999999954,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 18.59059999999954
+        },
+        {
+          "status": 200,
+          "ms": 12.534499999999753
+        },
+        {
+          "status": 200,
+          "ms": 14.553299999999581
+        },
+        {
+          "status": 200,
+          "ms": 16.469600000000355
+        },
+        {
+          "status": 200,
+          "ms": 16.550900000000183
+        },
+        {
+          "status": 200,
+          "ms": 14.93289999999979
+        },
+        {
+          "status": 200,
+          "ms": 14.747999999999593
+        },
+        {
+          "status": 200,
+          "ms": 17.736700000000383
+        },
+        {
+          "status": 200,
+          "ms": 14.543800000000374
+        },
+        {
+          "status": 200,
+          "ms": 14.937399999999798
+        }
+      ]
+    },
+    {
+      "route": "/api/reviews",
+      "method": "GET",
+      "access": "public",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 64.07270457934075,
+      "avgMs": 15.60726999999988,
+      "medianMs": 15.52849999999944,
+      "p90Ms": 16.51599999999962,
+      "p95Ms": 17.110399999999572,
+      "p99Ms": 17.110399999999572,
+      "maxMs": 17.110399999999572,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 17.110399999999572
+        },
+        {
+          "status": 200,
+          "ms": 13.996500000000196
+        },
+        {
+          "status": 200,
+          "ms": 15.52849999999944
+        },
+        {
+          "status": 200,
+          "ms": 15.547599999999875
+        },
+        {
+          "status": 200,
+          "ms": 16.204999999999927
+        },
+        {
+          "status": 200,
+          "ms": 14.375
+        },
+        {
+          "status": 200,
+          "ms": 15.934799999999996
+        },
+        {
+          "status": 200,
+          "ms": 15.459499999999935
+        },
+        {
+          "status": 200,
+          "ms": 15.399400000000242
+        },
+        {
+          "status": 200,
+          "ms": 16.51599999999962
+        }
+      ]
+    },
+    {
+      "route": "/api/reviews",
+      "method": "POST",
+      "access": "public",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 64.28801028608045,
+      "avgMs": 15.555000000000291,
+      "medianMs": 15.555000000000291,
+      "p90Ms": 15.555000000000291,
+      "p95Ms": 15.555000000000291,
+      "p99Ms": 15.555000000000291,
+      "maxMs": 15.555000000000291,
+      "statusCodes": {
+        "400": 1
+      },
+      "samples": [
+        {
+          "status": 400,
+          "ms": 15.555000000000291
+        }
+      ]
+    },
+    {
+      "route": "/api/slots",
+      "method": "GET",
+      "access": "public",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 77.99983464035067,
+      "avgMs": 12.820539999999983,
+      "medianMs": 13.191600000000108,
+      "p90Ms": 16.66359999999986,
+      "p95Ms": 20.0016999999998,
+      "p99Ms": 20.0016999999998,
+      "maxMs": 20.0016999999998,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 20.0016999999998
+        },
+        {
+          "status": 200,
+          "ms": 13.191600000000108
+        },
+        {
+          "status": 200,
+          "ms": 15.90519999999924
+        },
+        {
+          "status": 200,
+          "ms": 16.66359999999986
+        },
+        {
+          "status": 200,
+          "ms": 4.8072000000001935
+        },
+        {
+          "status": 200,
+          "ms": 10.13000000000011
+        },
+        {
+          "status": 200,
+          "ms": 4.609000000000378
+        },
+        {
+          "status": 200,
+          "ms": 12.239000000000487
+        },
+        {
+          "status": 200,
+          "ms": 14.810099999999693
+        },
+        {
+          "status": 200,
+          "ms": 15.847999999999956
+        }
+      ]
+    },
+    {
+      "route": "/api/treatments",
+      "method": "GET",
+      "access": "public",
+      "requests": 10,
+      "success": 10,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 73.1464149844826,
+      "avgMs": 13.671209999999883,
+      "medianMs": 14.767899999999827,
+      "p90Ms": 15.953599999999824,
+      "p95Ms": 16.852899999999863,
+      "p99Ms": 16.852899999999863,
+      "maxMs": 16.852899999999863,
+      "statusCodes": {
+        "200": 10
+      },
+      "samples": [
+        {
+          "status": 200,
+          "ms": 16.852899999999863
+        },
+        {
+          "status": 200,
+          "ms": 12.470299999999952
+        },
+        {
+          "status": 200,
+          "ms": 15.777200000000448
+        },
+        {
+          "status": 200,
+          "ms": 14.48279999999977
+        },
+        {
+          "status": 200,
+          "ms": 15.953599999999824
+        },
+        {
+          "status": 200,
+          "ms": 1.9203999999999724
+        },
+        {
+          "status": 200,
+          "ms": 13.305499999999483
+        },
+        {
+          "status": 200,
+          "ms": 15.273000000000138
+        },
+        {
+          "status": 200,
+          "ms": 14.767899999999827
+        },
+        {
+          "status": 200,
+          "ms": 15.908499999999549
+        }
+      ]
+    },
+    {
+      "route": "/api/whatsapp/jobs",
+      "method": "POST",
+      "access": "job-secret",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 53.863928942704334,
+      "avgMs": 18.565300000000207,
+      "medianMs": 18.565300000000207,
+      "p90Ms": 18.565300000000207,
+      "p95Ms": 18.565300000000207,
+      "p99Ms": 18.565300000000207,
+      "maxMs": 18.565300000000207,
+      "statusCodes": {
+        "401": 1
+      },
+      "samples": [
+        {
+          "status": 401,
+          "ms": 18.565300000000207
+        }
+      ]
+    },
+    {
+      "route": "/api/whatsapp/webhook",
+      "method": "GET",
+      "access": "public",
+      "requests": 10,
+      "success": 0,
+      "failed": 10,
+      "httpErrorRate": 1,
+      "throughputRps": 73.07057155801205,
+      "avgMs": 13.685399999999754,
+      "medianMs": 15.038099999999758,
+      "p90Ms": 16.16109999999935,
+      "p95Ms": 16.878999999999905,
+      "p99Ms": 16.878999999999905,
+      "maxMs": 16.878999999999905,
+      "statusCodes": {
+        "403": 10
+      },
+      "samples": [
+        {
+          "status": 403,
+          "ms": 16.878999999999905
+        },
+        {
+          "status": 403,
+          "ms": 12.246399999999994
+        },
+        {
+          "status": 403,
+          "ms": 15.520799999999326
+        },
+        {
+          "status": 403,
+          "ms": 16.16109999999935
+        },
+        {
+          "status": 403,
+          "ms": 2.688799999999901
+        },
+        {
+          "status": 403,
+          "ms": 13.062399999999798
+        },
+        {
+          "status": 403,
+          "ms": 14.850999999999658
+        },
+        {
+          "status": 403,
+          "ms": 15.144600000000537
+        },
+        {
+          "status": 403,
+          "ms": 15.038099999999758
+        },
+        {
+          "status": 403,
+          "ms": 15.261799999999312
+        }
+      ]
+    },
+    {
+      "route": "/api/whatsapp/webhook",
+      "method": "POST",
+      "access": "public",
+      "requests": 1,
+      "success": 0,
+      "failed": 1,
+      "httpErrorRate": 1,
+      "throughputRps": 66.00747204583497,
+      "avgMs": 15.149800000000141,
+      "medianMs": 15.149800000000141,
+      "p90Ms": 15.149800000000141,
+      "p95Ms": 15.149800000000141,
+      "p99Ms": 15.149800000000141,
+      "maxMs": 15.149800000000141,
+      "statusCodes": {
+        "503": 1
+      },
+      "samples": [
+        {
+          "status": 503,
+          "ms": 15.149800000000141
+        }
+      ]
+    }
+  ],
+  "load": [
+    {
+      "url": "/api/health",
+      "access": "public",
+      "concurrency": 10,
+      "durationMs": 167.4987999999994,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 597.0192025256322,
+      "avgMs": 10.397277999999996,
+      "medianMs": 10.62159999999949,
+      "p90Ms": 15.64179999999942,
+      "p95Ms": 16.5011999999997,
+      "p99Ms": 17.447699999999713,
+      "maxMs": 17.692800000000716,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/treatments",
+      "access": "public",
+      "concurrency": 10,
+      "durationMs": 213.26090000000022,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 468.90920932997983,
+      "avgMs": 12.469929999999968,
+      "medianMs": 12.686200000000099,
+      "p90Ms": 20.811099999999897,
+      "p95Ms": 22.376500000000306,
+      "p99Ms": 25.040500000000065,
+      "maxMs": 26.451899999999114,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/practitioners",
+      "access": "public",
+      "concurrency": 10,
+      "durationMs": 330.66619999999966,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 302.41978164082116,
+      "avgMs": 18.91224299999996,
+      "medianMs": 17.47779999999966,
+      "p90Ms": 33.2518,
+      "p95Ms": 40.76590000000033,
+      "p99Ms": 53.51330000000053,
+      "maxMs": 57.55079999999998,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/reviews?limit=12",
+      "access": "public",
+      "concurrency": 10,
+      "durationMs": 243.3131999999996,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 410.9929095503251,
+      "avgMs": 14.222226999999993,
+      "medianMs": 14.025099999999838,
+      "p90Ms": 23.161300000000665,
+      "p95Ms": 25.69930000000022,
+      "p99Ms": 29.674399999999878,
+      "maxMs": 31.246100000000297,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/slots?date=2026-10-29&service=reeducation-posturale",
+      "access": "public",
+      "concurrency": 10,
+      "durationMs": 543.1012000000001,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 184.12774635740078,
+      "avgMs": 33.15971899999999,
+      "medianMs": 32.25470000000041,
+      "p90Ms": 55.159999999999854,
+      "p95Ms": 61.5610999999999,
+      "p99Ms": 71.63010000000031,
+      "maxMs": 75.98349999999937,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/appointments?page=1&limit=20",
+      "access": "admin",
+      "concurrency": 10,
+      "durationMs": 255.0072999999993,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 392.1456366151097,
+      "avgMs": 19.971556999999994,
+      "medianMs": 19.477499999999054,
+      "p90Ms": 28.806300000000192,
+      "p95Ms": 31.713999999999942,
+      "p99Ms": 34.25430000000051,
+      "maxMs": 34.953300000001036,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/patients?directory=1&limit=20",
+      "access": "admin",
+      "concurrency": 10,
+      "durationMs": 311.71320000000014,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 320.80771683714374,
+      "avgMs": 23.991252999999997,
+      "medianMs": 23.89509999999973,
+      "p90Ms": 31.833699999999226,
+      "p95Ms": 33.25959999999941,
+      "p99Ms": 36.037500000000364,
+      "maxMs": 37.01710000000094,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/invoices?page=1&limit=20",
+      "access": "admin",
+      "concurrency": 10,
+      "durationMs": 310.505799999999,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 322.0551757809365,
+      "avgMs": 24.137545000000028,
+      "medianMs": 23.000299999999697,
+      "p90Ms": 39.009500000000116,
+      "p95Ms": 41.63659999999982,
+      "p99Ms": 45.17829999999958,
+      "maxMs": 46.104699999999866,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/me",
+      "access": "admin",
+      "concurrency": 10,
+      "durationMs": 269.6743000000006,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 370.8176863720413,
+      "avgMs": 21.989945999999964,
+      "medianMs": 19.510200000000623,
+      "p90Ms": 31.926799999999275,
+      "p95Ms": 40.37669999999889,
+      "p99Ms": 45.06710000000021,
+      "maxMs": 45.927700000000186,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/health",
+      "access": "public",
+      "concurrency": 50,
+      "durationMs": 155.17609999999877,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 644.4291356723155,
+      "avgMs": 41.63823200000019,
+      "medianMs": 41.06370000000061,
+      "p90Ms": 69.03909999999996,
+      "p95Ms": 72.10780000000159,
+      "p99Ms": 77.75140000000101,
+      "maxMs": 78.98010000000068,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/treatments",
+      "access": "public",
+      "concurrency": 50,
+      "durationMs": 191.83380000000034,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 521.2845702894892,
+      "avgMs": 51.66531299999984,
+      "medianMs": 51.32599999999911,
+      "p90Ms": 84.56529999999839,
+      "p95Ms": 89.89620000000104,
+      "p99Ms": 96.76240000000143,
+      "maxMs": 99.6831000000002,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/practitioners",
+      "access": "public",
+      "concurrency": 50,
+      "durationMs": 220.9330000000009,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 452.62590921229327,
+      "avgMs": 58.58288099999996,
+      "medianMs": 59.303399999998874,
+      "p90Ms": 96.7543999999998,
+      "p95Ms": 102.77450000000135,
+      "p99Ms": 106.33050000000003,
+      "maxMs": 107.58079999999973,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/reviews?limit=12",
+      "access": "public",
+      "concurrency": 50,
+      "durationMs": 167.41309999999976,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 597.3248210564176,
+      "avgMs": 41.765073000000136,
+      "medianMs": 40.40190000000075,
+      "p90Ms": 75.21309999999903,
+      "p95Ms": 79.64980000000105,
+      "p99Ms": 84.33029999999962,
+      "maxMs": 85.29420000000027,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/slots?date=2026-10-29&service=reeducation-posturale",
+      "access": "public",
+      "concurrency": 50,
+      "durationMs": 388.6825000000008,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 257.2793989953234,
+      "avgMs": 98.76317600000006,
+      "medianMs": 95.27369999999974,
+      "p90Ms": 175.0627000000004,
+      "p95Ms": 184.2555999999986,
+      "p99Ms": 190.32510000000002,
+      "maxMs": 192.55010000000038,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/appointments?page=1&limit=20",
+      "access": "admin",
+      "concurrency": 50,
+      "durationMs": 203.26990000000114,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 491.9567530657487,
+      "avgMs": 80.59304700000013,
+      "medianMs": 79.92870000000039,
+      "p90Ms": 95.20110000000022,
+      "p95Ms": 98.95179999999891,
+      "p99Ms": 101.83579999999893,
+      "maxMs": 102.63479999999981,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/patients?directory=1&limit=20",
+      "access": "admin",
+      "concurrency": 50,
+      "durationMs": 289.3075000000008,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 345.6529816890323,
+      "avgMs": 101.29484400000008,
+      "medianMs": 99.61130000000048,
+      "p90Ms": 129.90569999999934,
+      "p95Ms": 137.5583000000006,
+      "p99Ms": 140.17859999999928,
+      "maxMs": 142.35339999999997,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/invoices?page=1&limit=20",
+      "access": "admin",
+      "concurrency": 50,
+      "durationMs": 244.49189999999908,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 409.0115050846281,
+      "avgMs": 83.6354700000001,
+      "medianMs": 82.96689999999944,
+      "p90Ms": 108.65110000000095,
+      "p95Ms": 111.95889999999963,
+      "p99Ms": 126.46750000000065,
+      "maxMs": 127.8731000000007,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/me",
+      "access": "admin",
+      "concurrency": 50,
+      "durationMs": 184.46630000000005,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 542.1044385885117,
+      "avgMs": 72.95499200000013,
+      "medianMs": 71.62920000000122,
+      "p90Ms": 95.37279999999919,
+      "p95Ms": 96.56960000000072,
+      "p99Ms": 96.8077000000012,
+      "maxMs": 96.83389999999963,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/health",
+      "access": "public",
+      "concurrency": 100,
+      "durationMs": 118.320099999999,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 845.1649381635144,
+      "avgMs": 68.57775499999981,
+      "medianMs": 68.85220000000118,
+      "p90Ms": 102.79770000000099,
+      "p95Ms": 107.43759999999929,
+      "p99Ms": 111.92640000000029,
+      "maxMs": 112.61440000000039,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/treatments",
+      "access": "public",
+      "concurrency": 100,
+      "durationMs": 137.68169999999918,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 726.312937739733,
+      "avgMs": 68.55989699999996,
+      "medianMs": 65.87960000000021,
+      "p90Ms": 120.26540000000023,
+      "p95Ms": 125.97350000000006,
+      "p99Ms": 130.57819999999992,
+      "maxMs": 132.34790000000066,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/practitioners",
+      "access": "public",
+      "concurrency": 100,
+      "durationMs": 154.57800000000134,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 646.9225892429656,
+      "avgMs": 77.44671399999991,
+      "medianMs": 76.86839999999938,
+      "p90Ms": 137.1868999999988,
+      "p95Ms": 144.34469999999965,
+      "p99Ms": 150.08170000000064,
+      "maxMs": 151.30249999999978,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/reviews?limit=12",
+      "access": "public",
+      "concurrency": 100,
+      "durationMs": 164.34439999999995,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 608.4782931453706,
+      "avgMs": 88.96098699999995,
+      "medianMs": 91.39750000000095,
+      "p90Ms": 146.31700000000092,
+      "p95Ms": 151.83460000000014,
+      "p99Ms": 156.28579999999965,
+      "maxMs": 157.16300000000047,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/slots?date=2026-10-29&service=reeducation-posturale",
+      "access": "public",
+      "concurrency": 100,
+      "durationMs": 342.73499999999876,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 291.77060994646115,
+      "avgMs": 167.99300099999994,
+      "medianMs": 160.8173999999999,
+      "p90Ms": 301.8928999999989,
+      "p95Ms": 319.4282000000003,
+      "p99Ms": 332.84100000000035,
+      "maxMs": 337.4280000000017,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/appointments?page=1&limit=20",
+      "access": "admin",
+      "concurrency": 100,
+      "durationMs": 220.59009999999944,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 453.3295011879511,
+      "avgMs": 174.7618100000002,
+      "medianMs": 176.15369999999893,
+      "p90Ms": 205.16539999999986,
+      "p95Ms": 211.33649999999943,
+      "p99Ms": 213.54289999999855,
+      "maxMs": 214.09449999999924,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/patients?directory=1&limit=20",
+      "access": "admin",
+      "concurrency": 100,
+      "durationMs": 275.3217999999997,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 363.21134032975266,
+      "avgMs": 198.7634769999999,
+      "medianMs": 198.4430999999986,
+      "p90Ms": 256.91400000000067,
+      "p95Ms": 263.41959999999926,
+      "p99Ms": 267.71039999999994,
+      "maxMs": 270.97189999999864,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/invoices?page=1&limit=20",
+      "access": "admin",
+      "concurrency": 100,
+      "durationMs": 283.8391999999985,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 352.3121542056225,
+      "avgMs": 201.60427700000014,
+      "medianMs": 201.6152000000002,
+      "p90Ms": 261.9876000000004,
+      "p95Ms": 270.1081000000013,
+      "p99Ms": 276.1197000000011,
+      "maxMs": 277.7522000000008,
+      "statusCodes": {
+        "200": 100
+      }
+    },
+    {
+      "url": "/api/admin/me",
+      "access": "admin",
+      "concurrency": 100,
+      "durationMs": 195.39919999999984,
+      "requests": 100,
+      "success": 100,
+      "failed": 0,
+      "httpErrorRate": 0,
+      "throughputRps": 511.7728219972246,
+      "avgMs": 153.49933100000004,
+      "medianMs": 156.0038999999997,
+      "p90Ms": 182.4994000000006,
+      "p95Ms": 187.3780999999999,
+      "p99Ms": 189.85909999999967,
+      "maxMs": 190.33250000000044,
+      "statusCodes": {
+        "200": 100
+      }
+    }
+  ],
+  "captchaGate": [
+    {
+      "case": "missing-token",
+      "status": 403,
+      "ms": 20.29489999999987
+    },
+    {
+      "case": "invalid-token",
+      "status": 403,
+      "ms": 14.575200000000223
+    },
+    {
+      "case": "valid-token",
+      "status": 201,
+      "ms": 17.868500000000495
+    }
+  ],
+  "oneOff": [
+    {
+      "route": "/api/admin/login",
+      "method": "POST",
+      "status": 200,
+      "ms": 146.7814000000003
+    },
+    {
+      "route": "/api/admin/analytics/verify",
+      "method": "POST",
+      "status": 200,
+      "ms": 119.96990000000005
+    },
+    {
+      "route": "/api/admin/analytics/lock",
+      "method": "POST",
+      "status": 200,
+      "ms": 23.65560000000005
+    },
+    {
+      "route": "/api/admin/logout",
+      "method": "POST",
+      "status": 200,
+      "ms": 14.235500000000684
+    }
+  ]
+}

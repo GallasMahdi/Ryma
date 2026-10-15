@@ -66,10 +66,17 @@ test('production rejects missing CAPTCHA and wrong actions before storing an app
     const load=loader({'@/lib/db':{dbConsumeRateLimit:async()=>true,dbCreateAppointment:async()=>{writes++;}},'@/lib/booking-service':{},'@/lib/email':{},'@/lib/events':{}});
     const route=load('@/app/api/appointments/route');
     const {NextRequest}=require('next/server');
-    const r=await route.POST(new NextRequest('http://localhost/api/appointments',{method:'POST',body:JSON.stringify({patientName:'Fixture'})}));
+    const bookingDate=new Date();bookingDate.setUTCDate(bookingDate.getUTCDate()+30);while(bookingDate.getUTCDay()===0)bookingDate.setUTCDate(bookingDate.getUTCDate()+1);
+    const booking={patientName:'Audit Fixture',phone:'+351912345678',service:'reeducation-posturale',date:bookingDate.toISOString().slice(0,10),startTime:'09:00',_form_rendered_at:Date.now()-5000};
+    const r=await route.POST(new NextRequest('http://localhost/api/appointments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(booking)}));
     assert.equal(r.status,403);assert.equal(writes,0);
     const originalFetch=globalThis.fetch;
-    try {globalThis.fetch=async()=>Response.json({success:true,score:0.9,action:'other'});assert.equal((await load('@/lib/recaptcha').verifyRecaptchaToken('fixture','booking')).valid,false);}finally{globalThis.fetch=originalFetch;}
+    try {
+      globalThis.fetch=async()=>Response.json({success:true,score:0.9,action:'other'});
+      assert.equal((await load('@/lib/recaptcha').verifyRecaptchaToken('fixture','booking')).valid,false);
+      const wrongAction=await route.POST(new NextRequest('http://localhost/api/appointments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...booking,recaptchaToken:'fixture-token'})}));
+      assert.equal(wrongAction.status,403);assert.equal(writes,0);
+    }finally{globalThis.fetch=originalFetch;}
   }finally{process.env=original;}
 });
 test('untrusted Cloudflare and made-up Vercel IP headers do not override ingress IP',()=>{
