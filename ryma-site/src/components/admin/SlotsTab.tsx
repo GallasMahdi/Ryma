@@ -700,9 +700,7 @@ export const SlotsTab = React.memo(function SlotsTab({
       {/* Period / Vacation Blocking Modal */}
       <ResponsiveModal
         isOpen={isRangeModalOpen}
-        onClose={() => {
-          if (!rangeSubmitting) setIsRangeModalOpen(false);
-        }}
+        onClose={() => setIsRangeModalOpen(false)}
         title={txt('Fermeture Exceptionnelle / Période', 'Block Period / Vacation Days', 'Bloquear Período / Férias', "Bloquear periodo / días de vacaciones")}
         subtitle={txt(
           'Bloquer ou débloquer une plage de dates (congés, vacances, jours fériés)',

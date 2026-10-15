@@ -16,15 +16,20 @@ test('QA-14 modal traps keyboard focus, protects drafts and restores the trigger
   const trigger=document.querySelector('#trigger');trigger.focus();
   try{
     await React.act(async()=>render());
-    const dialog=document.querySelector('[role=dialog]');assert(dialog);assert.equal(dialog.getAttribute('aria-modal'),'true');assert.equal(document.getElementById(dialog.getAttribute('aria-labelledby')).textContent,'Clinical record');assert(dialog.contains(document.activeElement));assert.equal(trigger.inert,true);
+    let dialog=document.querySelector('[role=dialog]');assert(dialog);assert.equal(dialog.getAttribute('aria-modal'),'true');assert.equal(document.getElementById(dialog.getAttribute('aria-labelledby')).textContent,'Clinical record');assert(dialog.contains(document.activeElement));assert.equal(trigger.inert,true);
+    const cleanClose=dialog.querySelector('button[aria-label="Close"]');assert(cleanClose,'Header close button should have an accessible name');
+    await React.act(async()=>cleanClose.click());assert.equal(closed,1);assert.equal(document.querySelector('[role=dialog]'),null);assert.equal(document.activeElement,trigger);assert(!trigger.inert);
+    open=true;await React.act(async()=>render());dialog=document.querySelector('[role=dialog]');assert(dialog);assert.equal(trigger.inert,true);
     const buttons=[...dialog.querySelectorAll('button')],first=buttons[0],last=buttons.at(-1);
     await React.act(async()=>{last.focus();last.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));});assert.equal(document.activeElement,first);
     await React.act(async()=>{first.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true,cancelable:true}));});assert.equal(document.activeElement,last);
     const input=dialog.querySelector('input');await React.act(async()=>{input.value='Unsaved clinical note';input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));input.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));});
-    assert.equal(closed,0);const confirm=document.querySelector('[role=alertdialog]');assert(confirm);assert(confirm.contains(document.activeElement));
+    assert.equal(closed,1);let confirm=document.querySelector('[role=alertdialog]');assert(confirm);assert(confirm.contains(document.activeElement));
     await React.act(async()=>confirm.querySelector('button').click());assert.equal(document.querySelector('[role=alertdialog]'),null);assert.equal(input.value,'Unsaved clinical note');assert(dialog.contains(document.activeElement));
-    await React.act(async()=>dialog.querySelector('[data-modal-dismiss]').click());assert(document.querySelector('[role=alertdialog]'));assert.equal(closed,0);
+    await React.act(async()=>dialog.querySelector('button[aria-label="Close"]').click());confirm=document.querySelector('[role=alertdialog]');assert(confirm,'Header close should ask before discarding a draft');assert.equal(closed,1);
+    await React.act(async()=>confirm.querySelector('button').click());assert.equal(document.querySelector('[role=alertdialog]'),null);
+    await React.act(async()=>dialog.querySelector('[data-modal-dismiss]').click());assert(document.querySelector('[role=alertdialog]'));assert.equal(closed,1);
     await React.act(async()=>[...document.querySelectorAll('[role=alertdialog] button')].at(-1).click());
-    assert.equal(closed,1);assert.equal(document.querySelector('[role=dialog]'),null);assert.equal(document.activeElement,trigger);assert(!trigger.inert);
+    assert.equal(closed,2);assert.equal(document.querySelector('[role=dialog]'),null);assert.equal(document.activeElement,trigger);assert(!trigger.inert);
   }finally{await React.act(async()=>root.unmount());dom.window.close();delete global.window;delete global.document;delete global.HTMLElement;delete global.IS_REACT_ACT_ENVIRONMENT;}
 });

@@ -680,6 +680,7 @@ export const AnalyticsTab = React.memo(function AnalyticsTab({
                   type="button"
                   onClick={() => setIsCustomModalOpen(false)}
                   className="p-1 rounded-lg text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors cursor-pointer"
+                  aria-label={txt('Fermer', 'Close', 'Fechar', "Cerrar")}
                 >
                   <IconX size={18} />
                 </button>

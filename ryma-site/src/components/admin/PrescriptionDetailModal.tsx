@@ -111,6 +111,7 @@ export const PrescriptionDetailModal = React.memo(function PrescriptionDetailMod
                   onClick={onClose}
                   className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors ms-1 touch-target"
                   title={legacyText("Fechar", lang)}
+                  aria-label={legacyText("Fechar", lang)}
                 >
                   <IconX size={20} />
                 </button>

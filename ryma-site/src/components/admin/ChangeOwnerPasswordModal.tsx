@@ -130,6 +130,7 @@ export const ChangeOwnerPasswordModal = React.memo(function ChangeOwnerPasswordM
                 type="button"
                 onClick={onClose}
                 className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+                aria-label={txt('Fermer','Close','Fechar', "Cerrar")}
               >
                 <IconX size={18} />
               </button>

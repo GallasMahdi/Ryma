@@ -160,6 +160,7 @@ export const InvoiceDetailModal = React.memo(function InvoiceDetailModal({
                   onClick={onClose}
                   className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors ms-1 touch-target"
                   title={txt('Fermer', 'Close', 'Fechar', "Cerrar")}
+                  aria-label={txt('Fermer', 'Close', 'Fechar', "Cerrar")}
                 >
                   <IconX size={20} />
                 </button>

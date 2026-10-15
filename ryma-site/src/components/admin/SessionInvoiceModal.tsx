@@ -98,7 +98,7 @@ export function SessionInvoiceModal({ isOpen, onClose, onCreated, onSingle, lang
     finally{inFlight.current=false;setSaving(false);}
   }
 
-  return <ResponsiveModal isOpen={isOpen} onClose={()=>{if(!inFlight.current)onClose();}} lang={lang} maxWidth="2xl"
+  return <ResponsiveModal isOpen={isOpen} onClose={onClose} lang={lang} maxWidth="2xl"
     title={txt('Facturer les séances','Bill completed sessions','Faturar sessões', "Facturar sesiones completadas")}
     subtitle={txt('Un patient, plusieurs séances, un seul document.','One patient, several sessions, one document.','Um utente, várias sessões, um documento.', "Un paciente, varias sesiones, un documento.")}>
     <form onSubmit={submit} className="space-y-5 text-sm text-slate-700">
