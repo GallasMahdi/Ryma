@@ -52,7 +52,7 @@ Configure encrypted scheduled backups, retention, restricted access and a tested
 
 ## Integration acceptance
 
-- Register the staging/production domains in reCAPTCHA. Verify valid booking/contact, absent/wrong-action rejection, idempotent retries and competing slot reservations.
+- Register the staging/production domains in reCAPTCHA. Verify valid contact submissions and reCAPTCHA rejection cases, then verify booking submissions, idempotent retries and competing slot reservations.
 - Send an authorized staging email and inspect inbox delivery plus the mail provider's sender authentication setup. Exercise failure paths. Booking mail currently has no durable retry outbox.
 - Leave `WHATSAPP_ENABLED=false` until Meta onboarding/signature tests pass. Schedule authenticated `POST /api/whatsapp/jobs` every minute using its job secret. Webhook `after` processing alone is not a retry scheduler. Monitor pending/failed deliveries.
 - Check public Git history for old DB revisions/secrets; untracking a file does not erase history.

@@ -181,7 +181,6 @@ export const ERRORS_ES: Record<string,string> = {
   "Unable to save the treatment. Reload to verify its current state before retrying.": "No se ha podido guardar el tratamiento. Recargue para comprobar su estado antes de volver a intentarlo.",
   "Trop de demandes. Veuillez réessayer plus tard.": "Demasiadas solicitudes. Vuelva a intentarlo más tarde.",
   "Validation de sécurité échouée (activité automatisée détectée).": "Ha fallado la comprobación de seguridad (se ha detectado actividad automatizada).",
-  "Validation de sécurité échouée (activité automatisée détectée). Veuillez rafraîchir la page.": "Ha fallado la comprobación de seguridad (se ha detectado actividad automatizada). Actualice la página.",
   "Soumission trop rapide. Veuillez réessayer.": "El formulario se ha enviado demasiado rápido. Vuelva a intentarlo.",
   "Vous avez déjà effectué plusieurs réservations. Veuillez patienter avant d'en faire une nouvelle.": "Ya ha realizado varias reservas. Espere antes de hacer otra.",
   "Erreur lors de l'enregistrement de la réservation. Veuillez réessayer.": "Error al registrar la reserva. Vuelva a intentarlo.",

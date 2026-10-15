@@ -15,7 +15,7 @@ for(const key of ['ADMIN_PASSWORD_HASH','OWNER_ANALYTICS_PASSWORD_HASH']) {
 check('SESSION_SECRET is unique and at least 32 characters',(process.env.SESSION_SECRET||'').length>=32&&process.env.SESSION_SECRET!=='c3a640f6a9b29b4c507540a4492d5b55be8c2002ebc420bbfc09f4b848908b46');
 const cloud=Boolean(process.env.TURSO_DATABASE_URL),serverless=Boolean(process.env.VERCEL||process.env.AWS_LAMBDA_FUNCTION_NAME||process.env.NETLIFY);
 check('Database is explicitly persistent',cloud ? /^libsql:\/\//.test(process.env.TURSO_DATABASE_URL)&&Boolean(process.env.TURSO_AUTH_TOKEN) : !serverless&&process.env.ALLOW_SQLITE_FALLBACK==='true'&&path.isAbsolute(process.env.DATABASE_PATH||'')&&!/[\\/]\.demo[\\/]|ryma-demo|fixture\.db/i.test(process.env.DATABASE_PATH));
-check('Booking reCAPTCHA has both keys',process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY&&process.env.RECAPTCHA_SECRET_KEY);
+check('Contact-form reCAPTCHA has both keys',process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY&&process.env.RECAPTCHA_SECRET_KEY);
 check('SMTP and notification recipient are configured',process.env.SMTP_HOST&&process.env.SMTP_USER&&process.env.SMTP_PASS&&process.env.ADMIN_NOTIFICATION_EMAIL);
 for(const key of ['NEXT_PUBLIC_SITE_URL','NEXT_PUBLIC_CLINIC_PHONE','NEXT_PUBLIC_CLINIC_EMAIL','NEXT_PUBLIC_CLINIC_ADDRESS'])check(key+' is configured',process.env[key]);
 check('Canonical origin uses HTTPS',/^https:\/\//.test(process.env.NEXT_PUBLIC_SITE_URL||''));

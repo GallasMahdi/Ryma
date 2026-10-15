@@ -11,7 +11,6 @@ import {
 import { validateAppointmentInput, getClientIp } from '@/lib/validation';
 import { broadcastAppointmentCreated } from '@/lib/events';
 import { sendAppointmentConfirmationEmail, sendAdminNewBookingNotification } from '@/lib/email';
-import { verifyRecaptchaToken } from '@/lib/recaptcha';
 import { validateAndNormalizePhone } from '@/lib/phone';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +21,7 @@ export const revalidate = 0;
  * Public endpoint — creates a patient-facing appointment request.
  *
  * Protected by:
- *  - Google reCAPTCHA v3 bot scoring
+ *  - Honeypot and minimum submission-time checks
  *  - Per-phone rate limiting (3 bookings per phone number per hour)
  *  - IP rate limiting (100 attempts per IP per hour)
  *  - Server-side input validation
@@ -49,8 +48,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: localizeApiError('Corps de requête invalide', request) }, { status: 400 });
     }
 
-    // Bot defense: Google reCAPTCHA v3 with human fallback for adblockers / slow networks
-    const recaptchaToken = typeof body.recaptchaToken === 'string' ? body.recaptchaToken : null;
     const honeypot = typeof body._hp_company === 'string' ? body._hp_company : '';
     const formTimestamp = typeof body._form_rendered_at === 'number' ? body._form_rendered_at : 0;
     const elapsedMs = formTimestamp > 0 ? Date.now() - formTimestamp : 5000;
@@ -63,23 +60,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (recaptchaToken || process.env.NODE_ENV === 'production') {
-      const recaptchaResult = await verifyRecaptchaToken(recaptchaToken, 'booking');
-      if (!recaptchaResult.valid) {
-        return NextResponse.json(
-          { error: localizeApiError('Validation de sécurité échouée (activité automatisée détectée). Veuillez rafraîchir la page.', request) },
-          { status: 403 }
-        );
-      }
-    } else {
-      // Human fallback for ad blockers (uBlock/Brave) or slow 3G/4G connections where reCAPTCHA CDN was blocked/delayed
-      if (formTimestamp > 0 && elapsedMs < 1200) {
-        return NextResponse.json(
-          { error: localizeApiError('Soumission trop rapide. Veuillez réessayer.', request) },
-          { status: 403 }
-        );
-      }
-      // Token-free requests are supported only by local development/test fixtures.
+    // Reject submissions that arrive too quickly to be a normal completion of the booking form.
+    if (formTimestamp > 0 && elapsedMs < 1200) {
+      return NextResponse.json(
+        { error: localizeApiError('Soumission trop rapide. Veuillez réessayer.', request) },
+        { status: 403 }
+      );
     }
 
     // Server-side validation — never trust client values

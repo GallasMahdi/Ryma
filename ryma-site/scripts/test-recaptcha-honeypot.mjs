@@ -2,9 +2,9 @@ import assert from 'assert';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3005';
 
-async function testHoneypotAndFallback() {
+async function testBookingBotProtection() {
   console.log('===============================================================');
-  console.log('🛡️ TESTING BOT DEFENSE: HONEYPOT & RECAPTCHA FALLBACK 🛡️');
+  console.log('🛡️ TESTING BOT DEFENSE: HONEYPOT & SUBMISSION-TIME CHECK 🛡️');
   console.log('===============================================================\n');
 
   const testDate = '2028-11-20';
@@ -51,7 +51,7 @@ async function testHoneypotAndFallback() {
   console.log('✅ Case 2 Passed: Timing trap caught the automated script.\n');
 
   // 3. Test Human with Ad-Blocker (No reCAPTCHA token, empty honeypot, >1.2s human timing)
-  console.log('[Case 3] Legitimate human with Ad-Blocker (no recaptchaToken, >1.2s elapsed)...');
+  console.log('[Case 3] Legitimate human booking without a reCAPTCHA token (>1.2s elapsed)...');
   const humanPhone = `+351914${Math.floor(100000 + Math.random() * 900000)}`;
   const humanDate = `2028-11-${String(Math.floor(10 + Math.random() * 18)).padStart(2, '0')}`;
   const humanRes = await fetch(`${BASE_URL}/api/appointments`, {
@@ -72,14 +72,14 @@ async function testHoneypotAndFallback() {
   const humanBody = await humanRes.json();
   assert.ok(humanBody.confirmation?.date, 'Appointment confirmation should be returned');
   console.log('Appointment Confirmed for:', humanBody.confirmation.date, humanBody.confirmation.startTime);
-  console.log('✅ Case 3 Passed: Legitimate user booked successfully without reCAPTCHA token.\n');
+  console.log('✅ Case 3 Passed: Legitimate user booked successfully without reCAPTCHA.\n');
 
   console.log('===============================================================');
-  console.log('🎉 ALL BOT DEFENSE & RECAPTCHA FALLBACK TESTS PASSED! 🎉');
+  console.log('🎉 ALL HONEYPOT & SUBMISSION-TIME CHECKS PASSED! 🎉');
   console.log('===============================================================');
 }
 
-testHoneypotAndFallback().catch(err => {
+testBookingBotProtection().catch(err => {
   console.error('❌ Bot Defense Test Failed:', err);
   process.exit(1);
 });

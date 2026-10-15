@@ -5,7 +5,6 @@ import { PractitionerSelect } from '@/components/booking/PractitionerSelect';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import Script from 'next/script';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/lib/i18n';
@@ -24,7 +23,6 @@ import { AppointmentConfirmation } from '@/components/booking/AppointmentConfirm
 import { TreatmentSelector, BookingServiceIcon } from '@/components/booking/TreatmentSelector';
 import { SITE } from '@/lib/site';
 import { playSoftClick } from '@/lib/sound';
-import { getRecaptchaToken } from '@/lib/recaptcha-client';
 import { validateAndNormalizePhone } from '@/lib/phone';
 
 interface SlotInfo {
@@ -552,9 +550,6 @@ function BookingWizardContent() {
 
     try {
       bookingRequestRef.current ||= crypto.randomUUID();
-      // Execute invisible Google reCAPTCHA v3 verification
-      const recaptchaToken = await getRecaptchaToken('booking');
-
       const res = await fetch('/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -570,7 +565,6 @@ function BookingWizardContent() {
           service: selectedService.slug,
           date: selectedDate,
           startTime: selectedSlot,
-          recaptchaToken: recaptchaToken || undefined,
           _form_rendered_at: formRenderedAt.current,
           _hp_company: formHoneypot,
           lang,
@@ -699,14 +693,6 @@ function BookingWizardContent() {
 
   return (
     <>
-      {/* ── Google reCAPTCHA v3 Script ─────────────────────────────────────── */}
-      {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
-        <Script
-          src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
-          strategy="lazyOnload"
-        />
-      )}
-
       {/* ── Enterprise Toast Banner ────────────────────────────────────────── */}
       <BookingToastBanner toasts={toasts} onDismiss={dismissToast} />
       {/* ── Hero ─────────────────────────────────────── */}
